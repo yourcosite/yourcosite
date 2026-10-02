@@ -2,24 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-
-const steps = [
-  {
-    n: "1",
-    title: "Berätta om er",
-    body: "Namn, ton, färger och egna bilder — så mycket eller lite ni vill.",
-  },
-  {
-    n: "2",
-    title: "Vi bygger sajten",
-    body: "Text, bilder och design sätts samman snabbt och effektivt.",
-  },
-  {
-    n: "3",
-    title: "Fortsätt i samtalet",
-    body: "Be om ändringar när som helst — och se dem direkt i sajten.",
-  },
-];
+import HeroChatDemo from "@/components/HeroChatDemo";
+import StepsDemo from "@/components/StepsDemo";
 
 export default function LandingPage() {
   return (
@@ -60,24 +44,27 @@ export default function LandingPage() {
             <div className="bg-[#1C1C20] px-4 py-2.5 text-[11.5px] text-[#9E9C97]">
               solglantansbageri.se — byggd med YourCoSite
             </div>
-            <div className="relative h-[300px] md:h-[360px]">
-              <Image
-                src="/images/hero-bakery.jpg"
-                alt="Solgläntans Bageri — exempel på en hemsida byggd med YourCoSite"
-                fill
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <div className="font-serif italic text-[13px] text-accent mb-1">
-                  Nybakat med kärlek — sedan 1998
+            <div className="flex h-[300px] md:h-[360px]">
+              <div className="relative flex-1 min-w-0">
+                <Image
+                  src="/images/hero-bakery.jpg"
+                  alt="Solgläntans Bageri — exempel på en hemsida byggd med YourCoSite"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                  <div className="font-serif italic text-[13px] text-accent mb-1">
+                    Nybakat med kärlek — sedan 1998
+                  </div>
+                  <div className="font-serif text-2xl">Solgläntans Bageri</div>
+                  <p className="text-[13.5px] text-[#E9E6E0] mt-1 max-w-[36ch]">
+                    Surdegsbröd, kanelbullar och fika i hjärtat av stan
+                  </p>
                 </div>
-                <div className="font-serif text-2xl">Solgläntans Bageri</div>
-                <p className="text-[13.5px] text-[#E9E6E0] mt-1 max-w-[36ch]">
-                  Surdegsbröd, kanelbullar och fika i hjärtat av stan
-                </p>
               </div>
+              <HeroChatDemo />
             </div>
           </div>
         </div>
@@ -89,19 +76,7 @@ export default function LandingPage() {
           <h2 className="text-[28px] md:text-[32px] font-medium text-center mb-12">
             Så här enkelt är det
           </h2>
-          <div className="grid md:grid-cols-3 gap-10">
-            {steps.map((s) => (
-              <div key={s.n}>
-                <span className="font-serif italic text-accent-ink bg-accent w-9 h-9 rounded-full inline-flex items-center justify-center text-[15px] mb-4">
-                  {s.n}
-                </span>
-                <h3 className="text-[19px] font-medium mb-2">{s.title}</h3>
-                <p className="text-[14.5px] leading-relaxed text-ink-dim max-w-[32ch]">
-                  {s.body}
-                </p>
-              </div>
-            ))}
-          </div>
+          <StepsDemo />
           <div className="text-center mt-14">
             <Link
               href="/funktioner"

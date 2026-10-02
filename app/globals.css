@@ -14,3 +14,35 @@ body {
 h1, h2, h3 {
   font-family: "Fraunces", Georgia, serif;
 }
+
+@keyframes yc-pulse {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+@keyframes yc-fade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes yc-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes yc-spin {
+  to { transform: rotate(360deg); }
+}
+@keyframes yc-type {
+  0% { width: 0; }
+  60% { width: 100%; }
+  100% { width: 100%; }
+}
+@keyframes yc-caret {
+  50% { border-color: transparent; }
+}
+@keyframes yc-pop {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes yc-bar {
+  0% { width: 6%; }
+  100% { width: 100%; }
+}
