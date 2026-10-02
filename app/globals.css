@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: #F7F5F2;
+  color: #17171A;
+}
+
+h1, h2, h3 {
+  font-family: "Fraunces", Georgia, serif;
+}
