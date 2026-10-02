@@ -50,15 +50,6 @@ export default function AboutPage() {
                 medierådgivning.
               </p>
               <p>
-                Carl har lång erfarenhet av marknadsföring, PR och
-                kommunikation, med bakgrund från Corren, Stångåstaden,
-                Astacus och Linköpings Stadsmission, samt som marknadschef på
-                Östenssons Livs AB. Bland uppdragsgivarna finns allt från
-                Skidskytteförbundet och några av Sveriges största artister
-                till Sveriges största turistattraktion — och inte minst en
-                lång rad lokala kunder.
-              </p>
-              <p>
                 När Carl byggde om cskb.se tillsammans med Claude — helt
                 genom ett samtal, utan att skriva en rad kod själv — insåg
                 han hur mycket det förändrade arbetet. YourCoSite föddes ur
