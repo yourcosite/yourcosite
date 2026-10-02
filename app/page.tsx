@@ -41,8 +41,10 @@ export default function LandingPage() {
           </div>
 
           <div className="rounded-2xl overflow-hidden shadow-[0_30px_60px_rgba(0,0,0,0.4)] border border-white/10">
-            <div className="bg-[#1C1C20] px-4 py-2.5 text-[11.5px] text-[#9E9C97]">
-              solglantansbageri.se — byggd med YourCoSite
+            <div className="bg-[#1C1C20] px-4 py-2.5 flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
             </div>
             <div className="flex h-[300px] md:h-[360px]">
               <div className="relative flex-1 min-w-0">
