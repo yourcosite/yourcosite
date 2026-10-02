@@ -32,16 +32,17 @@ export default function RestaurantExamplePage() {
         <div className="font-serif italic text-[21px]">Björkängens Kök</div>
         <nav className="hidden md:flex items-center gap-9 text-[13.5px] font-semibold" style={{ color: colors.inkDim }}>
           <span style={{ color: "#fff" }}>Hem</span>
-          <span>Meny</span>
-          <span>Om oss</span>
-          <span>Kontakt</span>
+          <Link href="/exempel/restaurang/meny">Meny</Link>
+          <Link href="/exempel/restaurang/om-oss">Om oss</Link>
+          <Link href="/exempel/restaurang/kontakt">Kontakt</Link>
         </nav>
-        <div
+        <Link
+          href="/exempel/restaurang/kontakt"
           className="text-[13px] font-semibold px-5 py-2.5 rounded-full"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
           Boka bord
-        </div>
+        </Link>
       </header>
 
       <section className="relative">
@@ -74,11 +75,18 @@ export default function RestaurantExamplePage() {
 
       <section className="max-w-5xl mx-auto px-6 md:px-16 py-20 grid md:grid-cols-3 gap-10">
         {[
-          { title: "Lokalt och säsongsbaserat", body: "Råvaror från gårdar vi känner, menyn byts när säsongen gör det." },
-          { title: "Öppen köksyta", body: "Se hela tillagningen från ert bord — plats för trettio gäster." },
-          { title: "Enkel bordsbokning", body: "Boka online på under en minut, ingen app krävs." },
+          { title: "Lokalt och säsongsbaserat", body: "Råvaror från gårdar vi känner, menyn byts när säsongen gör det.", img: "/images/restaurant-feature-1.jpg" },
+          { title: "Öppen köksyta", body: "Se hela tillagningen från ert bord — plats för trettio gäster.", img: "/images/restaurant-feature-2.jpg" },
+          { title: "Enkel bordsbokning", body: "Boka online på under en minut, ingen app krävs.", img: "/images/restaurant-feature-3.jpg" },
         ].map((f) => (
           <div key={f.title}>
+            <div className="relative h-[130px] rounded-xl overflow-hidden mb-4">
+              <Image src={f.img} alt={f.title} fill className="object-cover" />
+              <div
+                className="absolute inset-0"
+                style={{ background: "linear-gradient(0deg, rgba(27,18,13,0.55), rgba(27,18,13,0.1))" }}
+              />
+            </div>
             <div className="font-serif text-[19px] mb-2.5">{f.title}</div>
             <p className="text-[14px] leading-relaxed" style={{ color: colors.inkDim }}>
               {f.body}
@@ -88,25 +96,31 @@ export default function RestaurantExamplePage() {
       </section>
 
       <section
-        className="text-center px-6 py-20"
+        className="relative text-center px-6 py-20"
         style={{ borderTop: `1px solid ${colors.line}`, borderBottom: `1px solid ${colors.line}` }}
       >
-        <div className="font-serif italic text-[26px] max-w-xl mx-auto leading-relaxed">
+        <Image src="/images/restaurant-quote-bg.jpg" alt="" fill className="object-cover" />
+        <div
+          className="absolute inset-0"
+          style={{ background: "linear-gradient(90deg, rgba(27,18,13,0.75) 0%, rgba(27,18,13,0.15) 55%)" }}
+        />
+        <div className="font-serif italic text-[26px] max-w-xl mx-auto leading-relaxed relative">
           &ldquo;En meny som andas den plats den kommer ifrån.&rdquo;
         </div>
-        <div className="text-[13.5px] mt-5" style={{ color: colors.inkDim }}>
+        <div className="text-[13.5px] mt-5 relative" style={{ color: colors.inkDim }}>
           — Köksfilosofin bakom Björkängens Kök
         </div>
       </section>
 
       <section className="text-center px-6 py-20">
         <h2 className="font-serif text-[26px] mb-6">Nyfiken på kvällens meny?</h2>
-        <div
+        <Link
+          href="/exempel/restaurang/meny"
           className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
           Se hela menyn →
-        </div>
+        </Link>
       </section>
 
       <footer

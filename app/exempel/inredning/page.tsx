@@ -32,16 +32,17 @@ export default function InredningExamplePage() {
         <div className="font-serif text-[20px] font-medium">Nordlys Inredning</div>
         <nav className="hidden md:flex items-center gap-9 text-[13px] font-semibold tracking-wide" style={{ color: colors.inkDim }}>
           <span style={{ color: colors.ink }}>HEM</span>
-          <span>KOLLEKTION</span>
-          <span>VAD VI GÖR</span>
-          <span>KONTAKT</span>
+          <Link href="/exempel/inredning/kollektion">KOLLEKTION</Link>
+          <Link href="/exempel/inredning/vad-vi-gor">VAD VI GÖR</Link>
+          <Link href="/exempel/inredning/kontakt">KONTAKT</Link>
         </nav>
-        <div
+        <Link
+          href="/exempel/inredning/kontakt"
           className="text-[13px] font-semibold px-5 py-2.5 rounded-full"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
           Boka besök
-        </div>
+        </Link>
       </header>
 
       <section className="grid md:grid-cols-2 items-center">
@@ -70,11 +71,14 @@ export default function InredningExamplePage() {
 
       <section className="px-8 md:px-16 py-20 grid md:grid-cols-3 gap-10" style={{ background: colors.surface }}>
         {[
-          { title: "Egen kollektion", body: "Formgiven i studion, tillverkad i Europa." },
-          { title: "Inredningsrådgivning", body: "Boka en stund med vår stylist, i butik eller hemma hos er." },
-          { title: "Hem hos butiken", body: "Storgatan 12, Motala — öppet alla vardagar." },
+          { title: "Egen kollektion", body: "Formgiven i studion, tillverkad i Europa.", img: "/images/inredning-feature-1.jpg" },
+          { title: "Inredningsrådgivning", body: "Boka en stund med vår stylist, i butik eller hemma hos er.", img: "/images/inredning-feature-2.jpg" },
+          { title: "Hem hos butiken", body: "Storgatan 12, Motala — öppet alla vardagar.", img: "/images/inredning-feature-3.jpg" },
         ].map((f) => (
           <div key={f.title}>
+            <div className="relative h-[170px] rounded-md overflow-hidden mb-4">
+              <Image src={f.img} alt={f.title} fill className="object-cover" />
+            </div>
             <div className="font-serif text-[18px] mb-2.5">{f.title}</div>
             <p className="text-[14px] leading-relaxed" style={{ color: colors.inkDim }}>
               {f.body}
@@ -85,12 +89,13 @@ export default function InredningExamplePage() {
 
       <section className="text-center px-6 py-20">
         <h2 className="font-serif text-[26px] mb-6">Se hela vårkollektionen</h2>
-        <div
+        <Link
+          href="/exempel/inredning/kollektion"
           className="inline-block font-semibold text-[13px] tracking-wide px-7 py-3.5"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
           SE KOLLEKTIONEN
-        </div>
+        </Link>
       </section>
 
       <footer
