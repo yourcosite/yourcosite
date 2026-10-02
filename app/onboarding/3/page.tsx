@@ -1,0 +1,185 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import OnboardingShell from "@/components/OnboardingShell";
+
+type Page = {
+  id: string;
+  label: string;
+  menuName: string;
+  brief: string;
+  included: boolean;
+  removable: boolean;
+  isNew?: boolean;
+};
+
+const initialPages: Page[] = [
+  { id: "start", label: "Startsida", menuName: "Hem", brief: "Kort presentation, de bästa bilderna, vad vi gör och en tydlig call-to-action.", included: true, removable: false },
+  { id: "om", label: "Om oss", menuName: "Om oss", brief: "Vår historia, vilka vi är och varför vi gör det vi gör.", included: true, removable: true },
+  { id: "tjanster", label: "Tjänster", menuName: "Vad vi gör", brief: "Lista över tjänster/produkter, med en kort beskrivning av varje.", included: true, removable: true },
+  { id: "inspiration", label: "Inspiration / Portfolio", menuName: "Inspiration", brief: "Bildgalleri med tidigare projekt eller referensjobb.", included: false, removable: true },
+  { id: "nyheter", label: "Nyheter", menuName: "Nyheter", brief: "Nyheter och erbjudanden, kategoriserat. Kan fyllas på med ett AI-skrivet utkast en gång i månaden.", included: false, removable: true, isNew: true },
+  { id: "kontakt", label: "Kontakt", menuName: "Kontakt", brief: "Adress, telefon, e-post, karta och ett kontaktformulär.", included: true, removable: true },
+];
+
+export default function OnboardingStep3() {
+  const [pages, setPages] = useState(initialPages);
+  const [customCount, setCustomCount] = useState(0);
+
+  const toggle = (id: string) =>
+    setPages((ps) => ps.map((p) => (p.id === id ? { ...p, included: !p.included } : p)));
+  const remove = (id: string) => setPages((ps) => ps.filter((p) => p.id !== id));
+  const addPage = () => {
+    const n = customCount + 1;
+    setPages((ps) => [
+      ...ps,
+      { id: `custom-${n}`, label: `Ny sida ${n}`, menuName: `Ny sida ${n}`, brief: "", included: true, removable: true },
+    ]);
+    setCustomCount(n);
+  };
+
+  return (
+    <OnboardingShell step={3} stepLabel="INNEHÅLL">
+      <div className="w-full max-w-[680px]">
+        <h1 className="text-[34px] font-medium mb-2.5">
+          Vilka sidor vill du ha?
+        </h1>
+        <p className="text-[15.5px] text-ink-dim mb-5">
+          Kryssa för de sidor du vill ha med, bestäm vad de ska heta i
+          menyn, och skriv en kort brief om vad varje sida ska innehålla.
+        </p>
+
+        <div className="flex flex-col gap-2.5 mb-3.5">
+          {pages.map((p) => (
+            <div
+              key={p.id}
+              className={`rounded-xl px-4 py-3.5 border ${
+                p.included ? "border-line bg-surface" : "border-dashed border-line bg-bg"
+              }`}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => toggle(p.id)}
+                    aria-label={`Inkludera ${p.label}`}
+                    className={`w-[18px] h-[18px] rounded-[5px] flex items-center justify-center flex-shrink-0 border-[1.5px] ${
+                      p.included ? "bg-accent border-accent" : "bg-surface border-line"
+                    }`}
+                  >
+                    {p.included && (
+                      <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#0C1004" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    )}
+                  </button>
+                  <span className={`font-semibold text-[14.5px] ${p.included ? "text-ink" : "text-ink-dim"}`}>
+                    {p.label}
+                  </span>
+                  {p.isNew && (
+                    <span className="text-[10.5px] font-bold text-ink bg-accent-soft px-2 py-0.5 rounded-full">
+                      NYTT
+                    </span>
+                  )}
+                </div>
+                {p.removable && (
+                  <button
+                    type="button"
+                    onClick={() => remove(p.id)}
+                    aria-label={`Ta bort ${p.label}`}
+                    className="w-7 h-7 rounded-lg flex items-center justify-center text-ink-dim"
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="3 6 5 6 21 6" />
+                      <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <div className="flex gap-3">
+                <div className="w-[170px] flex-shrink-0">
+                  <label className="block text-[11px] font-semibold text-ink-dim tracking-wide mb-1">
+                    NAMN I MENYN
+                  </label>
+                  <input
+                    defaultValue={p.menuName}
+                    className="w-full box-border px-2.5 py-2 border border-line rounded-lg text-[13.5px] bg-surface"
+                  />
+                </div>
+                <div className="flex-1">
+                  <label className="block text-[11px] font-semibold text-ink-dim tracking-wide mb-1">
+                    VAD SKA SIDAN INNEHÅLLA?
+                  </label>
+                  <input
+                    defaultValue={p.brief}
+                    className="w-full box-border px-2.5 py-2 border border-line rounded-lg text-[13.5px] bg-surface"
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <button
+          type="button"
+          onClick={addPage}
+          className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5 mb-7"
+        >
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Lägg till egen sida
+        </button>
+
+        <div className="h-px bg-line my-1.5 mb-6" />
+
+        <h2 className="text-[27px] font-medium mb-2.5">
+          Har du texter eller bilder?
+        </h2>
+        <p className="text-[15.5px] text-ink-dim mb-7">
+          Lägg till det du redan har. Resten skriver och väljer YourCoSite
+          åt dig — du godkänner allt innan sajten publiceras.
+        </p>
+
+        <div className="border-[1.5px] border-dashed border-line rounded-2xl px-10 py-10 text-center mb-5 bg-surface">
+          <div className="w-[46px] h-[46px] rounded-full bg-accent-soft flex items-center justify-center mx-auto mb-3.5">
+            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#17171A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+          </div>
+          <div className="font-semibold text-[15.5px]">
+            Släpp filer här, eller bläddra
+          </div>
+          <div className="text-[13px] text-ink-dim mt-1.5">
+            Bilder, Word-dokument eller PDF — vi sorterar ut det som passar
+          </div>
+        </div>
+
+        <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mb-9">
+          <span className="text-[13.5px] text-ink leading-relaxed">
+            YourCoSite kan inte generera egna bilder åt dig — av
+            upphovsrättsskäl skapar vi aldrig nya foton eller
+            illustrationer. Ladda upp dina egna bilder ovan, eller välj
+            bland royaltyfria bilder längre fram i processen.
+          </span>
+        </div>
+
+        <div className="flex justify-between">
+          <Link href="/onboarding/2" className="text-ink-dim font-semibold text-[15px] py-3.5 px-2.5">
+            ← Tillbaka
+          </Link>
+          <Link
+            href="/onboarding/4"
+            className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px]"
+          >
+            Nästa →
+          </Link>
+        </div>
+      </div>
+    </OnboardingShell>
+  );
+}
