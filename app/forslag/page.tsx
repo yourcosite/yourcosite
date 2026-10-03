@@ -143,11 +143,12 @@ export default function SuggestionsPage() {
                       REKOMMENDERAS
                     </div>
                   )}
-                  {/* Bredare kort (2 per rad istället för 3) + lite mer höjd gör
-                      att förhandsvisningen både blir mer "liggande"/bred som en
-                      riktig webbläsarruta, och hinner visa mer av sidan (inte
-                      bara hero-blocket) innan den beskärs. */}
-                  <div className="h-[260px] overflow-hidden relative border-b border-line">
+                  {/* Bredare kort (2 per rad istället för 3) + 16:9-förhållande
+                      (samma som de flesta skärmar) gör att förhandsvisningen
+                      ser ut som en riktig webbläsarruta oavsett kortbredd —
+                      en fast pixelhöjd skulle bara råka stämma vid en enda
+                      bredd och bli fel vid alla andra skärmstorlekar. */}
+                  <div className="aspect-[16/9] overflow-hidden relative border-b border-line">
                     <div
                       className="absolute top-0 left-0 w-[400%] origin-top-left"
                       style={{ transform: "scale(0.25)" }}
