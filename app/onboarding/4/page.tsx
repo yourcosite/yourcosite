@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 
@@ -64,11 +65,46 @@ function ColorCircle({
 }
 
 export default function OnboardingStep4() {
+  const router = useRouter();
   const [styleId, setStyleId] = useState("warm");
   const [mainColor, setMainColor] = useState("#C6FF5E");
   const [extraColors, setExtraColors] = useState<string[]>(["#2F5D50"]);
   const [mainHexDraft, setMainHexDraft] = useState("#C6FF5E");
   const [extraHexDraft, setExtraHexDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/onboarding/current")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.site) {
+          if (data.site.style_id) setStyleId(data.site.style_id);
+          if (data.site.accent_color) setMain(data.site.accent_color);
+          if (data.site.secondary_colors?.length) setExtraColors(data.site.secondary_colors);
+        }
+      })
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const build = async () => {
+    setSaving(true);
+    try {
+      const res = await fetch("/api/onboarding/step4", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ styleId, accentColor: mainColor, secondaryColors: extraColors }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Något gick fel.");
+      }
+      router.push("/bygger");
+    } catch (e: any) {
+      alert(e.message);
+      setSaving(false);
+    }
+  };
 
   const setMain = (hex: string) => {
     setMainColor(hex);
@@ -264,12 +300,14 @@ export default function OnboardingStep4() {
           <Link href="/onboarding/3" className="text-ink-dim font-semibold text-[15px] py-3.5 px-2.5">
             ← Tillbaka
           </Link>
-          <Link
-            href="/bygger"
-            className="bg-accent text-accent-ink font-semibold text-[15.5px] px-7.5 py-3.5 rounded-[10px]"
+          <button
+            type="button"
+            onClick={build}
+            disabled={saving}
+            className="bg-accent text-accent-ink font-semibold text-[15.5px] px-7.5 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            Bygg min sajt →
-          </Link>
+            {saving ? "Sparar …" : "Bygg min sajt →"}
+          </button>
         </div>
       </div>
     </OnboardingShell>

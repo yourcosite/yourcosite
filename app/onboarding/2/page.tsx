@@ -1,7 +1,43 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 
 export default function OnboardingStep2() {
+  const router = useRouter();
+  const [u1, setU1] = useState("");
+  const [u2, setU2] = useState("");
+  const [u3, setU3] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/onboarding/current")
+      .then((r) => r.json())
+      .then((data) => {
+        const links: string[] = data.site?.inspiration_links || [];
+        setU1(links[0] || "");
+        setU2(links[1] || "");
+        setU3(links[2] || "");
+      })
+      .catch(() => {});
+  }, []);
+
+  const next = async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/onboarding/step2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ links: [u1, u2, u3] }),
+      });
+      router.push("/onboarding/3");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <OnboardingShell step={2} stepLabel="INSPIRATION">
       <div className="w-full max-w-[620px]">
@@ -12,7 +48,13 @@ export default function OnboardingStep2() {
           Helt valfritt.
         </p>
 
-        <form className="flex flex-col gap-4">
+        <form
+          className="flex flex-col gap-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            next();
+          }}
+        >
           <div>
             <label htmlFor="u1" className="block text-[13.5px] font-semibold mb-1.5">
               Länk 1
@@ -20,6 +62,8 @@ export default function OnboardingStep2() {
             <input
               id="u1"
               type="url"
+              value={u1}
+              onChange={(e) => setU1(e.target.value)}
               placeholder="https://"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
             />
@@ -31,6 +75,8 @@ export default function OnboardingStep2() {
             <input
               id="u2"
               type="url"
+              value={u2}
+              onChange={(e) => setU2(e.target.value)}
               placeholder="https://"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
             />
@@ -42,6 +88,8 @@ export default function OnboardingStep2() {
             <input
               id="u3"
               type="url"
+              value={u3}
+              onChange={(e) => setU3(e.target.value)}
               placeholder="https://"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
             />
@@ -49,8 +97,7 @@ export default function OnboardingStep2() {
 
           <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mt-2">
             <span className="text-[13.5px] text-ink leading-relaxed">
-              Har du ingen favorit? Hoppa över det här steget — vi föreslår
-              ändå tre olika stilriktningar i nästa steg.
+              Har du ingen favorit? Hoppa över det här steget.
             </span>
           </div>
 
@@ -61,12 +108,13 @@ export default function OnboardingStep2() {
             >
               ← Tillbaka
             </Link>
-            <Link
-              href="/onboarding/3"
-              className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px]"
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
             >
-              Nästa →
-            </Link>
+              {saving ? "Sparar …" : "Nästa →"}
+            </button>
           </div>
         </form>
       </div>

@@ -1,13 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 
 const tones = ["Personlig", "Professionell", "Lekfull", "Klassisk"];
 
 export default function OnboardingStep1() {
+  const router = useRouter();
+  const [name, setName] = useState("");
+  const [industry, setIndustry] = useState("");
+  const [desc, setDesc] = useState("");
   const [tone, setTone] = useState("Personlig");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/onboarding/current")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.site) {
+          setName(data.site.name === "Min sajt" ? "" : data.site.name);
+          setIndustry(data.site.industry || "");
+          setDesc(data.site.description || "");
+          setTone(data.site.tone || "Personlig");
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const next = async () => {
+    if (!name.trim()) {
+      setError("Skriv in företagsnamnet.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/onboarding/step1", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, industry, description: desc, tone }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      router.push("/onboarding/2");
+    } catch (e: any) {
+      setError(e.message);
+      setSaving(false);
+    }
+  };
 
   return (
     <OnboardingShell step={1} stepLabel="VERKSAMHET">
@@ -19,7 +62,13 @@ export default function OnboardingStep1() {
           Ju mer du berättar, desto mindre behöver du rätta i efterhand.
         </p>
 
-        <form className="flex flex-col gap-5">
+        <form
+          className="flex flex-col gap-5"
+          onSubmit={(e) => {
+            e.preventDefault();
+            next();
+          }}
+        >
           <div>
             <label htmlFor="name" className="block text-[13.5px] font-semibold mb-1.5">
               Företagsnamn
@@ -27,6 +76,8 @@ export default function OnboardingStep1() {
             <input
               id="name"
               type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="T.ex. Brunneby Musteri AB"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
             />
@@ -38,6 +89,8 @@ export default function OnboardingStep1() {
             <input
               id="industry"
               type="text"
+              value={industry}
+              onChange={(e) => setIndustry(e.target.value)}
               placeholder="T.ex. Musteri och gårdsbutik"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
             />
@@ -49,6 +102,8 @@ export default function OnboardingStep1() {
             <textarea
               id="desc"
               rows={4}
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
               placeholder="Vad gör ni, för vem, och vad gör er annorlunda?"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px] resize-none"
             />
@@ -76,6 +131,8 @@ export default function OnboardingStep1() {
             </div>
           </div>
 
+          {error && <p className="text-[13px] text-red-600 m-0">{error}</p>}
+
           <div className="flex items-center justify-between mt-4">
             <p className="text-[11.5px] text-ink-dim leading-relaxed max-w-[320px] m-0">
               Genom att fortsätta godkänner du våra{" "}
@@ -88,12 +145,13 @@ export default function OnboardingStep1() {
               </Link>
               .
             </p>
-            <Link
-              href="/onboarding/2"
-              className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] flex-shrink-0"
+            <button
+              type="submit"
+              disabled={saving}
+              className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] flex-shrink-0 disabled:opacity-60"
             >
-              Nästa →
-            </Link>
+              {saving ? "Sparar …" : "Nästa →"}
+            </button>
           </div>
         </form>
       </div>

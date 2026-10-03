@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 
@@ -14,7 +15,7 @@ type Page = {
   isNew?: boolean;
 };
 
-const initialPages: Page[] = [
+const defaultPages: Page[] = [
   { id: "start", label: "Startsida", menuName: "Hem", brief: "Kort presentation, de bästa bilderna, vad vi gör och en tydlig call-to-action.", included: true, removable: false },
   { id: "om", label: "Om oss", menuName: "Om oss", brief: "Vår historia, vilka vi är och varför vi gör det vi gör.", included: true, removable: true },
   { id: "tjanster", label: "Tjänster", menuName: "Vad vi gör", brief: "Lista över tjänster/produkter, med en kort beskrivning av varje.", included: true, removable: true },
@@ -23,9 +24,43 @@ const initialPages: Page[] = [
   { id: "kontakt", label: "Kontakt", menuName: "Kontakt", brief: "Adress, telefon, e-post, karta och ett kontaktformulär.", included: true, removable: true },
 ];
 
+function slugify(s: string) {
+  return (
+    s
+      .toLowerCase()
+      .replace(/[åä]/g, "a")
+      .replace(/ö/g, "o")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "sida"
+  );
+}
+
 export default function OnboardingStep3() {
-  const [pages, setPages] = useState(initialPages);
+  const router = useRouter();
+  const [pages, setPages] = useState(defaultPages);
   const [customCount, setCustomCount] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetch("/api/onboarding/current")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.pages && data.pages.length > 0) {
+          setPages(
+            data.pages.map((p: any) => ({
+              id: p.path === "/" ? "start" : p.path.replace(/^\//, ""),
+              label: p.label,
+              menuName: p.label,
+              brief: p.brief || "",
+              included: true,
+              removable: p.path !== "/",
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const toggle = (id: string) =>
     setPages((ps) => ps.map((p) => (p.id === id ? { ...p, included: !p.included } : p)));
@@ -37,6 +72,38 @@ export default function OnboardingStep3() {
       { id: `custom-${n}`, label: `Ny sida ${n}`, menuName: `Ny sida ${n}`, brief: "", included: true, removable: true },
     ]);
     setCustomCount(n);
+  };
+  const updateField = (id: string, field: "menuName" | "brief", value: string) =>
+    setPages((ps) => ps.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
+
+  const next = async () => {
+    const included = pages.filter((p) => p.included);
+    if (included.length === 0) {
+      setError("Välj minst en sida.");
+      return;
+    }
+    setSaving(true);
+    setError("");
+    try {
+      const body = {
+        pages: included.map((p) => ({
+          label: p.menuName || p.label,
+          path: p.id === "start" ? "/" : "/" + slugify(p.menuName || p.label),
+          brief: p.brief,
+        })),
+      };
+      const res = await fetch("/api/onboarding/step3", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      router.push("/onboarding/4");
+    } catch (e: any) {
+      setError(e.message);
+      setSaving(false);
+    }
   };
 
   return (
@@ -103,7 +170,8 @@ export default function OnboardingStep3() {
                     NAMN I MENYN
                   </label>
                   <input
-                    defaultValue={p.menuName}
+                    value={p.menuName}
+                    onChange={(e) => updateField(p.id, "menuName", e.target.value)}
                     className="w-full box-border px-2.5 py-2 border border-line rounded-lg text-[13.5px] bg-surface"
                   />
                 </div>
@@ -112,7 +180,8 @@ export default function OnboardingStep3() {
                     VAD SKA SIDAN INNEHÅLLA?
                   </label>
                   <input
-                    defaultValue={p.brief}
+                    value={p.brief}
+                    onChange={(e) => updateField(p.id, "brief", e.target.value)}
                     className="w-full box-border px-2.5 py-2 border border-line rounded-lg text-[13.5px] bg-surface"
                   />
                 </div>
@@ -168,16 +237,20 @@ export default function OnboardingStep3() {
           </span>
         </div>
 
+        {error && <p className="text-[13px] text-red-600 mb-4">{error}</p>}
+
         <div className="flex justify-between">
           <Link href="/onboarding/2" className="text-ink-dim font-semibold text-[15px] py-3.5 px-2.5">
             ← Tillbaka
           </Link>
-          <Link
-            href="/onboarding/4"
-            className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px]"
+          <button
+            type="button"
+            onClick={next}
+            disabled={saving}
+            className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            Nästa →
-          </Link>
+            {saving ? "Sparar …" : "Nästa →"}
+          </button>
         </div>
       </div>
     </OnboardingShell>

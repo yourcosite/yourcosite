@@ -70,7 +70,13 @@ create table if not exists sites (
   name text not null,
   domain text,
   industry text,
+  description text,
   tone text,
+  style_id text,
+  inspiration_links text[] default '{}',
+  -- Innehållsmodellen (se lib/contentModel.ts) för sajten, satt av AI:n när
+  -- förstagenereringen är klar. null tills onboardingen har byggt sajten.
+  content jsonb,
   status text not null default 'draft' check (status in ('draft', 'live', 'pausad')),
   accent_color text default '#C6FF5E',
   secondary_colors text[] default '{}',
@@ -101,6 +107,9 @@ create table if not exists site_pages (
   site_id uuid not null references sites (id) on delete cascade,
   label text not null,
   path text not null,
+  -- Kundens egen brief ("vad ska sidan innehålla?") från onboardingens steg 3.
+  -- Skickas med till AI:n som underlag när den skriver sidans innehåll.
+  brief text,
   status text not null default 'utkast' check (status in ('utkast', 'live')),
   locked boolean not null default false,
   sort_order int not null default 0,
