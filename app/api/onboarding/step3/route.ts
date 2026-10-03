@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
+import { SOCIAL_PLATFORMS } from "@/lib/socialPlatforms";
 
 type IncomingPage = {
   label: string;
   path: string;
   brief?: string;
 };
+
+const VALID_PLATFORM_IDS = SOCIAL_PLATFORMS.map((p) => p.id);
 
 // Sparar kundens sidval för onboarding-utkastet. Vi tar bort de gamla
 // sidraderna och skriver in de valda på nytt — enklast eftersom kunden kan
@@ -21,6 +24,21 @@ export async function POST(request: Request) {
   // Kundens godkännande att AI:n får fylla ut text där briefen inte täcker
   // allt. Förval true (annars blir sidor med tom brief orimligt tunna).
   const allowAiTextFill = body.allowAiTextFill !== false;
+
+  // Sociala medier-länkar: bara kända plattformar och bara rader där kunden
+  // faktiskt fyllt i en URL.
+  const socialLinks = Array.isArray(body.socialLinks)
+    ? body.socialLinks
+        .filter(
+          (s: any) =>
+            s &&
+            typeof s.platform === "string" &&
+            VALID_PLATFORM_IDS.includes(s.platform) &&
+            typeof s.url === "string" &&
+            s.url.trim() !== ""
+        )
+        .map((s: any) => ({ platform: s.platform, url: s.url.trim() }))
+    : [];
 
   if (pages.length === 0) {
     return NextResponse.json({ error: "Minst en sida krävs." }, { status: 400 });
@@ -50,7 +68,7 @@ export async function POST(request: Request) {
 
   const { error: siteError } = await supabase
     .from("sites")
-    .update({ allow_ai_text_fill: allowAiTextFill })
+    .update({ allow_ai_text_fill: allowAiTextFill, social_links: socialLinks })
     .eq("id", draft.id);
   if (siteError) return NextResponse.json({ error: siteError.message }, { status: 500 });
 

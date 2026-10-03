@@ -73,6 +73,9 @@ export default function SitePreview({
           palette={palette}
           alt={i % 2 === 1}
           socialLinks={content.socialLinks}
+          // Startsidans första sektion är besökarens allra första intryck —
+          // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
+          heroEmphasis={page.path === "/" && i === 0}
         />
       ))}
       <Footer siteName={siteName} palette={palette} socialLinks={content.socialLinks} />
@@ -115,6 +118,7 @@ function Header({
             <Link
               key={p.path}
               href={homeHref(p.path)}
+              prefetch={false}
               style={{ color: p.path === activePath ? palette.text : palette.textDim }}
             >
               {p.label}
@@ -202,6 +206,7 @@ function SectionBlock({
   palette,
   alt,
   socialLinks,
+  heroEmphasis,
 }: {
   section: Section;
   accent: string;
@@ -210,6 +215,9 @@ function SectionBlock({
   palette: Palette;
   alt: boolean;
   socialLinks?: SocialLink[];
+  // true för startsidans första sektion — ger hero-layouterna en större,
+  // mer dramatisk bild/rubrik oavsett vilken layout AI:n valt.
+  heroEmphasis?: boolean;
 }) {
   const sectionBg = alt ? palette.bgAlt : undefined;
   const art = artBackground(mode, accent, secondary);
@@ -220,16 +228,24 @@ function SectionBlock({
 
       if (layout === "split-left" || layout === "split-right") {
         const imageFirst = layout === "split-left";
-        const imageCol = <ImageOrArt imageUrl={section.imageUrl} art={art} className="h-[320px] md:h-[440px]" />;
+        const imageCol = (
+          <ImageOrArt
+            imageUrl={section.imageUrl}
+            art={art}
+            className={heroEmphasis ? "h-[420px] md:h-[600px]" : "h-[320px] md:h-[440px]"}
+          />
+        );
         const textCol = (
-          <div className={`flex flex-col justify-center px-8 md:px-14 py-10 ${imageFirst ? "md:text-left" : "md:text-right md:items-end"}`}>
+          <div className={`flex flex-col justify-center px-8 md:px-14 ${heroEmphasis ? "py-10 md:py-0" : "py-10"} ${imageFirst ? "md:text-left" : "md:text-right md:items-end"}`}>
             {section.eyebrow && (
               <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
                 {section.eyebrow.toUpperCase()}
               </div>
             )}
-            <h1 className="font-serif text-[30px] md:text-[36px] leading-[1.15] mb-4">{section.headline}</h1>
-            <p className="text-[15px] leading-relaxed mb-6 max-w-[420px]" style={{ color: palette.textDim }}>
+            <h1 className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[30px] md:text-[36px]"}`}>
+              {section.headline}
+            </h1>
+            <p className={`leading-relaxed mb-6 max-w-[420px] ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`} style={{ color: palette.textDim }}>
               {section.body}
             </p>
             {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
@@ -254,20 +270,22 @@ function SectionBlock({
 
       if (layout === "overlay-bottom") {
         return (
-          <div className="relative h-[460px] md:h-[560px]">
+          <div className={`relative ${heroEmphasis ? "h-[560px] md:h-[720px]" : "h-[460px] md:h-[560px]"}`}>
             <ImageOrArt imageUrl={section.imageUrl} art={art} className="absolute inset-0" dark />
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.05) 75%)" }}
             />
-            <div className="absolute bottom-0 left-0 right-0 px-8 md:px-14 pb-10 md:pb-14 max-w-[560px] text-white">
+            <div className={`absolute bottom-0 left-0 right-0 px-8 md:px-14 pb-10 md:pb-14 text-white ${heroEmphasis ? "max-w-[680px]" : "max-w-[560px]"}`}>
               {section.eyebrow && (
                 <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
                   {section.eyebrow.toUpperCase()}
                 </div>
               )}
-              <h1 className="font-serif text-[32px] md:text-[42px] leading-[1.12] mb-4">{section.headline}</h1>
-              <p className="text-[15px] leading-relaxed mb-6 opacity-85">{section.body}</p>
+              <h1 className={`font-serif leading-[1.08] mb-4 ${heroEmphasis ? "text-[40px] md:text-[56px]" : "text-[32px] md:text-[42px]"}`}>
+                {section.headline}
+              </h1>
+              <p className={`leading-relaxed mb-6 opacity-85 ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}>{section.body}</p>
               {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
             </div>
           </div>
@@ -281,9 +299,16 @@ function SectionBlock({
       // färgade yta, och aldrig utanför eller in i bilden ovanför.
       return (
         <div className="relative pb-6">
-          <ImageOrArt imageUrl={section.imageUrl} art={art} className="h-[300px] md:h-[380px]" dark={mode === "dark"} />
+          <ImageOrArt
+            imageUrl={section.imageUrl}
+            art={art}
+            className={heroEmphasis ? "h-[420px] md:h-[580px]" : "h-[300px] md:h-[380px]"}
+            dark={mode === "dark"}
+          />
           <div
-            className="max-w-2xl mx-auto text-center px-8 md:px-12 py-10 md:py-12 -mt-14 md:-mt-16 relative rounded-2xl"
+            className={`max-w-2xl mx-auto text-center px-8 md:px-12 relative rounded-2xl ${
+              heroEmphasis ? "py-12 md:py-16 -mt-16 md:-mt-20" : "py-10 md:py-12 -mt-14 md:-mt-16"
+            }`}
             style={{ background: palette.cardBg, boxShadow: "0 16px 40px rgba(0,0,0,0.10)" }}
           >
             {section.eyebrow && (
@@ -291,8 +316,10 @@ function SectionBlock({
                 {section.eyebrow.toUpperCase()}
               </div>
             )}
-            <h1 className="font-serif text-[32px] md:text-[40px] leading-[1.15] mb-5">{section.headline}</h1>
-            <p className="text-[15.5px] leading-relaxed mb-7" style={{ color: palette.textDim }}>
+            <h1 className={`font-serif leading-[1.12] mb-5 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[32px] md:text-[40px]"}`}>
+              {section.headline}
+            </h1>
+            <p className={`leading-relaxed mb-7 ${heroEmphasis ? "text-[16.5px]" : "text-[15.5px]"}`} style={{ color: palette.textDim }}>
               {section.body}
             </p>
             {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}

@@ -3,6 +3,11 @@ import { createClient } from "@/lib/supabase/server";
 import SitePreview from "@/components/SitePreview";
 import { isValidSiteContent } from "@/lib/contentModel";
 
+// Alltid färskt innehåll — ingen cachning av det här utkastet, som annars
+// kan visas kort efter att sajten precis byggts om (se next.config.mjs).
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 // Riktig, klickbar förhandsvisning av kundens genererade sajt — man kan
 // surfa mellan sidorna precis som en besökare skulle, inte bara se
 // förstasidan. Chattredigeraren (/redigera) är fortfarande nästa fas och

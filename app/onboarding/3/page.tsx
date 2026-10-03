@@ -6,6 +6,7 @@ import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 import LogoUpload from "@/components/LogoUpload";
 import FileDropzone from "@/components/FileDropzone";
+import SocialLinksFields, { type SocialLinksValue } from "@/components/SocialLinksFields";
 
 type Page = {
   id: string;
@@ -45,6 +46,7 @@ export default function OnboardingStep3() {
   const [error, setError] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [allowAiTextFill, setAllowAiTextFill] = useState(true);
+  const [socialLinks, setSocialLinks] = useState<SocialLinksValue>({});
 
   useEffect(() => {
     fetch("/api/onboarding/current")
@@ -53,6 +55,10 @@ export default function OnboardingStep3() {
         if (data.site?.logo_url) setLogoUrl(data.site.logo_url);
         if (typeof data.site?.allow_ai_text_fill === "boolean") {
           setAllowAiTextFill(data.site.allow_ai_text_fill);
+        }
+        const existingSocial: { platform: string; url: string }[] = data.site?.social_links || [];
+        if (existingSocial.length > 0) {
+          setSocialLinks(Object.fromEntries(existingSocial.map((s) => [s.platform, s.url])));
         }
         if (data.pages && data.pages.length > 0) {
           setPages(
@@ -100,6 +106,7 @@ export default function OnboardingStep3() {
           brief: p.brief,
         })),
         allowAiTextFill,
+        socialLinks: Object.entries(socialLinks).map(([platform, url]) => ({ platform, url })),
       };
       const res = await fetch("/api/onboarding/step3", {
         method: "POST",
@@ -262,6 +269,17 @@ export default function OnboardingStep3() {
             illustrationer. Ladda upp dina egna bilder ovan, eller välj
             bland royaltyfria bilder längre fram i processen.
           </span>
+        </div>
+
+        <div className="h-px bg-line my-1.5 mb-6" />
+
+        <h2 className="text-[27px] font-medium mb-2.5">Sociala medier</h2>
+        <p className="text-[15.5px] text-ink-dim mb-5">
+          Lägg till dina konton — vi länkar dit från sidfoten och
+          kontaktsidan. Fyll bara i de du faktiskt har, helt valfritt.
+        </p>
+        <div className="mb-9 rounded-xl border border-line bg-surface px-4 py-4">
+          <SocialLinksFields value={socialLinks} onChange={setSocialLinks} />
         </div>
 
         {error && <p className="text-[13px] text-red-600 mb-4">{error}</p>}

@@ -165,6 +165,10 @@ ${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehål
 
 VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (den är sidans enda garanterade bildplats tillsammans med "grid" — se till att minst en av dem finns på varje sida, annars blir sidan bildlös).
 
+VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. Lägg inte startsidans tyngsta, mest avskalade layout här — "overlay-bottom" eller "split-left"/"split-right" ger oftast ett mer imponerande förstaintryck än "centered", men välj det som faktiskt passar bäst utifrån ton och bransch.
+
+VIKTIGT — variation mellan olika kunder: två sajter i samma bransch och ton ska ändå inte kunna förväxlas. Variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder — luta dig hårt på kundens egna ord, bransch-specifika detaljer och eventuell inspiration för att göra strukturella val, inte bara texten.
+
 VIKTIGT — layout per sektion: varje sektion (utom "about") har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst.
 
 Anropa verktyget "generate_site" med hela resultatet.`;

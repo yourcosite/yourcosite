@@ -14,6 +14,7 @@ export default function LogoUpload({
 }) {
   const [logoUrl, setLogoUrl] = useState(initialUrl || "");
   const [uploading, setUploading] = useState(false);
+  const [removingBg, setRemovingBg] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,6 +33,27 @@ export default function LogoUpload({
       setError(e.message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  // Kör helt i webbläsaren (ingen bild skickas till någon extern tjänst) —
+  // tar bort bakgrunden från en redan uppladdad logga och laddar upp
+  // resultatet som en ny PNG via samma flöde som vanlig uppladdning. Kan ta
+  // några sekunder första gången (hämtar sin egen AI-modell), snabbare
+  // efteråt eftersom webbläsaren cachar den.
+  const removeBackground = async () => {
+    if (!logoUrl) return;
+    setRemovingBg(true);
+    setError("");
+    try {
+      const { removeBackground: removeBg } = await import("@imgly/background-removal");
+      const resultBlob = await removeBg(logoUrl);
+      const file = new File([resultBlob], "logo-friLagd.png", { type: "image/png" });
+      await upload(file);
+    } catch (e: any) {
+      setError("Kunde inte frilägga loggan just nu: " + (e?.message || "okänt fel"));
+    } finally {
+      setRemovingBg(false);
     }
   };
 
@@ -78,14 +100,27 @@ export default function LogoUpload({
         }}
       />
       {logoUrl ? (
-        <button
-          type="button"
-          onClick={remove}
-          disabled={uploading}
-          className="text-[12.5px] font-semibold text-ink-dim border border-line px-3.5 py-2 rounded-lg flex-shrink-0 disabled:opacity-60"
-        >
-          Ta bort
-        </button>
+        <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={removeBackground}
+              disabled={uploading || removingBg}
+              title="Tar bort bakgrunden från loggan, helt i din webbläsare"
+              className="text-[12.5px] font-semibold text-ink bg-bg border border-line px-3.5 py-2 rounded-lg disabled:opacity-60"
+            >
+              {removingBg ? "Frilägger …" : "Frilägg bakgrund"}
+            </button>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={uploading || removingBg}
+              className="text-[12.5px] font-semibold text-ink-dim border border-line px-3.5 py-2 rounded-lg disabled:opacity-60"
+            >
+              Ta bort
+            </button>
+          </div>
+        </div>
       ) : (
         <button
           type="button"
