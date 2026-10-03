@@ -102,6 +102,20 @@ create table if not exists sites (
   status text not null default 'draft' check (status in ('draft', 'live', 'pausad')),
   accent_color text default '#C6FF5E',
   secondary_colors text[] default '{}',
+  -- Kundens egen integritetspolicy för SIN sajt (onboarding steg 5) — skild
+  -- från YourCoSites egna juridiska sidor. "uploaded" = kunden laddade upp
+  -- en egen fil (t.ex. en PDF från sin jurist) och sidfoten länkar direkt
+  -- till den. "generated" = kunden hade ingen egen och fick en enkel
+  -- textpolicy skriven åt sig utifrån de uppgifter de angav nedan — ett
+  -- fast kodtemplate (se lib/privacyPolicyTemplate.ts), ALDRIG fritt
+  -- AI-skrivet, eftersom juridiskt grundinnehåll inte ska vara kreativ
+  -- copy. null = inget valt, ingen policy-länk visas i sidfoten.
+  privacy_policy_mode text check (privacy_policy_mode in ('uploaded', 'generated')),
+  privacy_policy_file_url text,
+  privacy_policy_text text,
+  privacy_policy_org_number text,
+  privacy_policy_address text,
+  privacy_policy_email text,
   plan text not null default 'bas' check (plan in ('bas', 'standard', 'premium')),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

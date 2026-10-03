@@ -3,10 +3,12 @@ import Logo from "./Logo";
 
 export default function OnboardingShell({
   step,
+  totalSteps = 5,
   stepLabel,
   children,
 }: {
   step: number;
+  totalSteps?: number;
   stepLabel: string;
   children: React.ReactNode;
 }) {
@@ -23,7 +25,7 @@ export default function OnboardingShell({
 
       <div className="px-6 md:px-12 pt-6">
         <div className="flex items-center gap-2.5 max-w-xl">
-          {[1, 2, 3, 4].map((n) => (
+          {Array.from({ length: totalSteps }, (_, i) => i + 1).map((n) => (
             <div
               key={n}
               className={`flex-1 h-1 rounded-full ${
@@ -33,7 +35,7 @@ export default function OnboardingShell({
           ))}
         </div>
         <div className="text-[13px] text-ink-dim mt-2.5 font-medium">
-          STEG {step} AV 4 · {stepLabel}
+          STEG {step} AV {totalSteps} · {stepLabel}
         </div>
       </div>
 

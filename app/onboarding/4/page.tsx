@@ -119,7 +119,7 @@ export default function OnboardingStep4() {
         const data = await res.json();
         throw new Error(data.error || "Något gick fel.");
       }
-      router.push("/bygger");
+      router.push("/onboarding/5");
     } catch (e: any) {
       alert(e.message);
       setSaving(false);
@@ -358,7 +358,7 @@ export default function OnboardingStep4() {
             disabled={saving}
             className="bg-accent text-accent-ink font-semibold text-[15.5px] px-7.5 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? "Sparar …" : "Bygg min sajt →"}
+            {saving ? "Sparar …" : "Nästa →"}
           </button>
         </div>
       </div>

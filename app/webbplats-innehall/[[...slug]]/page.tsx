@@ -33,6 +33,9 @@ export default async function WebsiteRawContent({
       siteName={site.name}
       activePath={requestedPath}
       basePath="/webbplats-innehall"
+      privacyPolicyMode={site.privacy_policy_mode}
+      privacyPolicyFileUrl={site.privacy_policy_file_url}
+      privacyPolicyText={site.privacy_policy_text}
     />
   );
 }

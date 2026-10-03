@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
@@ -30,6 +30,12 @@ const PALETTES: Record<BackgroundMode, { bg: string; bgAlt: string; text: string
 
 type Palette = (typeof PALETTES)[BackgroundMode];
 
+// Fast sökväg för kundens egen integritetspolicy (onboarding steg 5) — en
+// "virtuell" sida som INTE finns i content.pages (AI:n väljer den aldrig)
+// och därför heller inte dyker upp i huvudmenyn, bara länkad från
+// sidfoten — precis som juridiska sidor brukar vara.
+const PRIVACY_POLICY_PATH = "/integritetspolicy";
+
 export default function SitePreview({
   content,
   siteName,
@@ -37,6 +43,9 @@ export default function SitePreview({
   backgroundModeOverride,
   activePath,
   basePath,
+  privacyPolicyMode,
+  privacyPolicyFileUrl,
+  privacyPolicyText,
 }: {
   content: SiteContent;
   siteName?: string;
@@ -45,10 +54,21 @@ export default function SitePreview({
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
   // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
-  // (t.ex. i /forslag-miniatyrerna) är menyn bara text, inte länkar.
+  // (t.ex. i /forslag-miniatyrerna) är menyn bara text, inte länkar, och
+  // cookiebannern visas inte (se nedan).
   basePath?: string;
+  // Kundens egen integritetspolicy, satt i onboarding steg 5. "uploaded"
+  // länkar sidfoten direkt till filen (ny flik); "generated" renderas som
+  // en egen sida på PRIVACY_POLICY_PATH utifrån den sparade texten.
+  privacyPolicyMode?: "uploaded" | "generated" | null;
+  privacyPolicyFileUrl?: string | null;
+  privacyPolicyText?: string | null;
 }) {
-  const page = content.pages.find((p) => p.path === activePath) || content.pages[0];
+  const isPrivacyPolicyPage =
+    activePath === PRIVACY_POLICY_PATH && privacyPolicyMode === "generated" && !!privacyPolicyText;
+  const page = isPrivacyPolicyPage
+    ? { path: PRIVACY_POLICY_PATH, label: "Integritetspolicy", sections: [] }
+    : content.pages.find((p) => p.path === activePath) || content.pages[0];
   const font = fontOverride ?? content.theme.font;
   const mode = backgroundModeOverride ?? content.theme.backgroundMode ?? "light";
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
@@ -64,6 +84,13 @@ export default function SitePreview({
   const overlayHeader =
     page.path === "/" && firstSection?.type === "hero" && (firstSection.layout || "centered") === "overlay-bottom";
   const restSections = overlayHeader ? page.sections.slice(1) : page.sections;
+
+  // Cookiebannern ska synas automatiskt på en RIKTIG sajt (alla sidor,
+  // besökaren klickar runt) men aldrig i de små, icke-interaktiva
+  // /forslag-miniatyrerna (sex stycken på samma skärm samtidigt) — basePath
+  // är satt precis när förhandsvisningen är den klickbara, "riktiga"
+  // varianten (se app/webbplats), så den används som villkor här.
+  const showCookieBanner = !!basePath;
 
   return (
     <div className={fontClass} style={{ background: palette.bg, color: palette.text }}>
@@ -90,22 +117,134 @@ export default function SitePreview({
           />
         )}
       </div>
-      {restSections.map((section, i) => (
-        <SectionBlock
-          key={section.id}
-          section={section}
-          accent={accent}
-          secondary={secondary}
-          mode={mode}
+      {isPrivacyPolicyPage ? (
+        <PrivacyPolicyBlock text={privacyPolicyText!} palette={palette} />
+      ) : (
+        restSections.map((section, i) => (
+          <SectionBlock
+            key={section.id}
+            section={section}
+            accent={accent}
+            secondary={secondary}
+            mode={mode}
+            palette={palette}
+            alt={(overlayHeader ? i + 1 : i) % 2 === 1}
+            socialLinks={content.socialLinks}
+            // Startsidans första sektion är besökarens allra första intryck —
+            // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
+            heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
+          />
+        ))
+      )}
+      <Footer
+        siteName={siteName}
+        palette={palette}
+        socialLinks={content.socialLinks}
+        basePath={basePath}
+        privacyPolicyMode={privacyPolicyMode}
+        privacyPolicyFileUrl={privacyPolicyFileUrl}
+      />
+      {showCookieBanner && (
+        <CookieBanner
           palette={palette}
-          alt={(overlayHeader ? i + 1 : i) % 2 === 1}
-          socialLinks={content.socialLinks}
-          // Startsidans första sektion är besökarens allra första intryck —
-          // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
-          heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
+          policyHref={
+            privacyPolicyMode === "generated"
+              ? `${basePath}${PRIVACY_POLICY_PATH}`
+              : privacyPolicyMode === "uploaded"
+              ? privacyPolicyFileUrl || undefined
+              : undefined
+          }
         />
-      ))}
-      <Footer siteName={siteName} palette={palette} socialLinks={content.socialLinks} />
+      )}
+    </div>
+  );
+}
+
+// Minimal "markdown-lite"-rendering av den genererade policytexten (se
+// lib/privacyPolicyTemplate.ts) — bara "## "-rubriker och
+// tomrad-separerade stycken, det är allt mallen någonsin producerar.
+function PrivacyPolicyBlock({ text, palette }: { text: string; palette: Palette }) {
+  const blocks = text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
+  return (
+    <div className="px-8 md:px-14 py-14 max-w-[720px] mx-auto">
+      {blocks.map((block, i) =>
+        block.startsWith("## ") ? (
+          <h2 key={i} className="font-serif text-[22px] mt-9 mb-3 first:mt-0">
+            {block.slice(3)}
+          </h2>
+        ) : (
+          <p key={i} className="text-[14.5px] leading-relaxed mb-3" style={{ color: palette.textDim }}>
+            {block}
+          </p>
+        )
+      )}
+    </div>
+  );
+}
+
+// Enkel cookiebanner, visas automatiskt (se showCookieBanner ovan) tills
+// besökaren gjort ett val — valet sparas i webbläsarens localStorage så
+// bannern inte dyker upp igen vid nästa sidvisning. Ett nytt val krävs
+// aldrig av oss centralt (det skulle i så fall vara kundens egen
+// cookieinställning, inte något vi bygger i den här förhandsvisningen).
+function CookieBanner({ palette, policyHref }: { palette: Palette; policyHref?: string }) {
+  // Börjar alltid som "pending" (samma på server och vid första klient-
+  // rendringen, annars hydration-mismatch) — useEffect kollar sen det
+  // sparade valet precis efter mount, vilket ger en knappt märkbar
+  // flimmer-risk hellre än ett React-varningsfel.
+  const [choice, setChoice] = useState<"pending" | "decided">("pending");
+
+  useEffect(() => {
+    try {
+      if (window.localStorage.getItem("yc_cookie_consent")) setChoice("decided");
+    } catch {
+      // Privat läge/blockerad lagring — bannern visas då varje gång, inget
+      // farligare än det.
+    }
+  }, []);
+
+  if (choice === "decided") return null;
+
+  const decide = (value: "all" | "necessary") => {
+    try {
+      window.localStorage.setItem("yc_cookie_consent", value);
+    } catch {
+      // Privat läge/blockerad lagring — bannern döljs ändå för den här
+      // sidvisningen, den behöver bara inte komma ihåg valet.
+    }
+    setChoice("decided");
+  };
+
+  return (
+    <div
+      className="fixed bottom-0 left-0 right-0 z-30 flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 sm:px-8"
+      style={{ background: palette.cardBg, borderTop: `1px solid ${palette.cardBorder}`, boxShadow: "0 -8px 24px rgba(0,0,0,0.08)" }}
+    >
+      <p className="text-[12.5px] leading-relaxed max-w-[560px]" style={{ color: palette.textDim }}>
+        Vi använder cookies för att ge dig en bättre upplevelse.{" "}
+        {policyHref && (
+          <a href={policyHref} target={policyHref.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="underline" style={{ color: palette.text }}>
+            Läs mer i vår integritetspolicy
+          </a>
+        )}
+      </p>
+      <div className="flex items-center gap-2.5 flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => decide("necessary")}
+          className="text-[12.5px] font-semibold px-4 py-2 rounded-lg border"
+          style={{ borderColor: palette.cardBorder, color: palette.text }}
+        >
+          Endast nödvändiga
+        </button>
+        <button
+          type="button"
+          onClick={() => decide("all")}
+          className="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-accent text-accent-ink"
+        >
+          Acceptera alla
+        </button>
+      </div>
     </div>
   );
 }
@@ -253,17 +392,46 @@ function Footer({
   siteName,
   palette,
   socialLinks,
+  basePath,
+  privacyPolicyMode,
+  privacyPolicyFileUrl,
 }: {
   siteName?: string;
   palette: Palette;
   socialLinks?: SocialLink[];
+  basePath?: string;
+  privacyPolicyMode?: "uploaded" | "generated" | null;
+  privacyPolicyFileUrl?: string | null;
 }) {
+  // "uploaded" länkar rakt till kundens egen fil (ny flik); "generated" går
+  // till den genererade sidan på /integritetspolicy. Finns ingen policy
+  // alls (mode null/ej satt) visas ingen länk — det finns inget att länka
+  // till.
+  const policyHref =
+    privacyPolicyMode === "uploaded"
+      ? privacyPolicyFileUrl || undefined
+      : privacyPolicyMode === "generated"
+      ? `${basePath || ""}/integritetspolicy`
+      : undefined;
+
   return (
     <div
       className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 md:px-12 py-6 text-[12px]"
       style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
     >
-      <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+      <span className="flex items-center gap-4 flex-wrap justify-center">
+        <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+        {policyHref && (
+          <a
+            href={policyHref}
+            target={privacyPolicyMode === "uploaded" ? "_blank" : undefined}
+            rel="noopener noreferrer"
+            className="underline"
+          >
+            Integritetspolicy
+          </a>
+        )}
+      </span>
       {socialLinks && socialLinks.length > 0 && <SocialIcons socialLinks={socialLinks} palette={palette} />}
     </div>
   );
