@@ -160,6 +160,23 @@ export function countImageSlots(content: SiteContent): { used: number; total: nu
   return { used, total };
 }
 
+const VALID_SECTION_TYPES = ["hero", "about", "grid", "testimonials", "cta", "contact"];
+
+// Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så
+// chattredigerarens patch-svar (se /api/sites/edit — den skickar bara
+// TILLBAKA de sidor som faktiskt ändrades, inte hela sajten, för snabbhetens
+// skull) kan valideras sida för sida innan de klistras in i den befintliga
+// sajten.
+export function isValidSitePage(value: unknown): value is SitePageContent {
+  if (!value || typeof value !== "object") return false;
+  const page = value as any;
+  if (typeof page.path !== "string" || typeof page.label !== "string") return false;
+  if (!Array.isArray(page.sections)) return false;
+  return page.sections.every(
+    (s: any) => s && typeof s.id === "string" && VALID_SECTION_TYPES.includes(s.type)
+  );
+}
+
 // Snäv typ-koll av vad Claude skickar tillbaka, så vi aldrig sparar skräp i
 // databasen. Inte en fullständig validator, men fångar de vanligaste felen
 // (fel typ, saknade obligatoriska fält).
@@ -170,13 +187,5 @@ export function isValidSiteContent(value: unknown): value is SiteContent {
   if (!Array.isArray(v.theme.secondaryColors)) return false;
   if (!Array.isArray(v.pages) || v.pages.length === 0) return false;
 
-  const validSectionTypes = ["hero", "about", "grid", "testimonials", "cta", "contact"];
-
-  return v.pages.every((page: any) => {
-    if (typeof page.path !== "string" || typeof page.label !== "string") return false;
-    if (!Array.isArray(page.sections)) return false;
-    return page.sections.every(
-      (s: any) => s && typeof s.id === "string" && validSectionTypes.includes(s.type)
-    );
-  });
+  return v.pages.every(isValidSitePage);
 }

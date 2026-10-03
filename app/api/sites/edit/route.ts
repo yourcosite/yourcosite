@@ -2,52 +2,112 @@ import { NextResponse } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
-import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteContentSchema";
+import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
-// emot EN riktad ändringsönskan mot en sajt som redan finns, och skriver
-// om bara det som behövs. Samma mönster som gav onboardingen pålitlig
-// JSON tillbaka (tvingat verktygsanrop mot contentModel.ts) återanvänds
-// här, se lib/siteContentSchema.ts.
+// emot EN riktad ändringsönskan mot en sajt som redan finns.
+//
+// Den skriver INTE om hela sajten varje gång. Tidigare gjorde den det (bad
+// Claude svara med alla sidors fulla innehåll på nytt för varje ändring),
+// vilket gjorde även en enkel rubrikändring långsam på en sajt med flera
+// sidor — mängden text Claude måste SKRIVA UT styr hur lång tid svaret tar,
+// inte hur stor sajten är i övrigt. Nu ber vi istället Claude svara med en
+// "patch": bara de sidor som ändringen faktiskt rörde (se
+// lib/siteContentSchema.ts, EDIT_PATCH_PROPERTIES), och klistrar in dem i
+// den befintliga sajten här på servern — se applyPatch() nedan.
 export const maxDuration = 60;
 
 const EDIT_TOOL = {
   name: "edit_site",
   description:
-    "Returnerar HELA sajtens uppdaterade innehåll efter att ha gjort den ändring kunden bad om, plus en kort sammanfattning av vad som ändrades.",
+    "Returnerar de DELAR av sajtens innehåll som ändrats för att uppfylla kundens önskemål (inte hela sajten), plus en kort sammanfattning.",
   input_schema: {
     type: "object" as const,
     properties: {
-      ...SITE_CONTENT_PROPERTIES,
+      ...EDIT_PATCH_PROPERTIES,
       summary: {
         type: "string",
         description:
           "En kort mening på svenska, riktad direkt till kunden (t.ex. \"Bytte rubriken och gjorde texten kortare.\"), som beskriver vad som ändrades — eller varför inget ändrades om önskemålet inte gick att utföra.",
       },
     },
-    required: [...SITE_CONTENT_REQUIRED, "summary"],
+    required: [...EDIT_PATCH_REQUIRED, "summary"],
   },
 };
 
-function buildEditPrompt(content: SiteContent, message: string) {
-  return `Du redigerar en BEFINTLIG kundwebbplats hos YourCoSite. Nedan är sajtens nuvarande innehåll som JSON (innehållsmodellen i lib/contentModel.ts):
+type EditPatch = {
+  theme?: Partial<SiteContent["theme"]>;
+  changedPages?: SitePageContent[];
+  removedPagePaths?: string[];
+  summary: string;
+};
+
+type Attachment = {
+  kind: "image" | "document";
+  url: string;
+  name: string;
+  mimeType?: string;
+  // Bara för kind "document" — redan extraherad text (se
+  // /api/sites/attachments/extract), skickas aldrig som rå fil hit.
+  text?: string;
+};
+
+function buildEditPrompt(content: SiteContent, message: string, attachmentNote: string) {
+  const pagePaths = content.pages.map((p) => `${p.path} ("${p.label}")`).join(", ");
+  return `Du redigerar en BEFINTLIG kundwebbplats hos YourCoSite. Nedan är sajtens NUVARANDE innehåll som JSON, bara som underlag för dig — du skriver INTE ut det igen (innehållsmodellen i lib/contentModel.ts):
 
 ${JSON.stringify(content, null, 2)}
 
+Sajtens sidor just nu: ${pagePaths}
+${attachmentNote}
 Kundens önskemål just nu: "${message}"
 
-Uppdatera ENDAST det som faktiskt behövs för att uppfylla önskemålet — bevara allt annat exakt som det är (exakt text, id, sidordning, sektioner som inte berörs).
+Uppdatera ENDAST det som faktiskt behövs för att uppfylla önskemålet.
 
-VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort, byta ut eller hitta på ett nytt) om inte kunden uttryckligen bett om en bildändring du inte kan utföra på annat sätt — de sätts av vårt system utifrån kundens egna uppladdade foton, aldrig av dig. Flyttas en sektion följer dess imageUrl med. Lägger du till en helt ny sektion/sida som behöver en bild, UTELÄMNA "imageUrl" helt för den (ingen påhittad url, ingen tom sträng) — en snygg platshållare visas automatiskt istället.
+VIKTIGT — svara smalt: lägg i "changedPages" ENDAST de hela sidobjekt (path, label, alla sektioner) som denna ändring faktiskt påverkar. Rör en ändring bara EN sida, ta bara med den sidan — skriv INTE ut sajtens övriga, oberörda sidor, de lämnas automatiskt som de är. Gäller ändringen en sektion mitt på en sida, skriv ut HELA den sidans sektionslista (med den ändrade sektionen uppdaterad och resten oförändrad), inte bara den enskilda sektionen. Utelämna "theme" helt om inget färgtema-/typsnittsbyte efterfrågades.
 
-VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kunden att en knapp ska leda till en av sajtens sidor, sätt ctaLink till exakt den sidans "path" ur listan av sidor ovan (t.ex. "/kontakt") — hitta aldrig på en sökväg som inte finns där. Ber kunden om en extern länk, använd en fullständig URL (https://...). Vill kunden att knappen inte ska gå att klicka på, utelämna ctaLink helt.
+VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort, byta ut eller hitta på ett nytt) om inte kunden uttryckligen bett om en bildändring du inte kan utföra på annat sätt — de sätts av vårt system utifrån kundens egna uppladdade foton, aldrig av dig. Flyttas en sektion följer dess imageUrl med. Lägger du till en helt ny sektion som behöver en bild, UTELÄMNA "imageUrl" helt för den (ingen påhittad url, ingen tom sträng) — en snygg platshållare visas automatiskt istället.
 
-Svara alltid med HELA sajtens innehåll (alla sidor, inte bara den som ändrades) via verktyget "edit_site", plus ett kort "summary" riktat direkt till kunden.
+VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kunden att en knapp ska leda till en av sajtens sidor, sätt ctaLink till exakt den sidans "path" (se listan ovan) — hitta aldrig på en sökväg som inte finns där. Ber kunden om en extern länk, använd en fullständig URL (https://...). Vill kunden att knappen inte ska gå att klicka på, utelämna ctaLink helt.
 
-Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (returnera innehållet precis som det kom in) och förklara kort varför i "summary".`;
+Svara alltid via verktyget "edit_site", plus ett kort "summary" riktat direkt till kunden.
+
+Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (utelämna "changedPages" eller lämna den tom) och förklara kort varför i "summary".`;
+}
+
+function buildAttachmentNote(attachment: Attachment | undefined): string {
+  if (!attachment) return "";
+  if (attachment.kind === "image") {
+    return `\nKunden har bifogat en bild i det här meddelandet, "${attachment.name}" (visas för dig som bild). Dess permanenta webbadress — använd EXAKT den som "imageUrl" om kunden vill använda bilden någonstans på sajten, hitta aldrig på en annan — är: ${attachment.url}\nSätt bara in den om kundens meddelande faktiskt ber om att använda/lägga till/byta ut en bild med den. Är bilden bara skickad som referens (t.ex. en stilbild), beskriv den inte i onödan — fokusera på det kunden faktiskt skrev.\n`;
+  }
+  const text = (attachment.text || "").trim();
+  return `\nKunden har bifogat dokumentet "${attachment.name}". Textinnehåll (kan vara avkortat):\n"""\n${text}\n"""\nAnvänd det som källa bara om kundens meddelande faktiskt ber om det (t.ex. "lägg in texten ovan", "sammanfatta det bifogade dokumentet som brödtext"). Hitta inte på innehåll utöver det du ser här eller det kunden själv skriver.\n`;
+}
+
+// Klistrar in Claudes patch i den befintliga, redan sparade sajten:
+// ersätter matchande sidor (på path), lägger till nya, tar bort begärda —
+// allt annat lämnas exakt som det var, orört av den här ändringen.
+function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
+  const removed = new Set(patch.removedPagePaths || []);
+  const changedByPath = new Map((patch.changedPages || []).map((p) => [p.path, p]));
+
+  const pages: SitePageContent[] = [];
+  for (const page of content.pages) {
+    if (removed.has(page.path)) continue;
+    pages.push(changedByPath.get(page.path) || page);
+    changedByPath.delete(page.path);
+  }
+  // Det som blir kvar i changedByPath är helt nya sidor — läggs sist.
+  for (const page of changedByPath.values()) pages.push(page);
+
+  return {
+    ...content,
+    theme: patch.theme ? { ...content.theme, ...patch.theme } : content.theme,
+    pages,
+  };
 }
 
 export async function POST(request: Request) {
@@ -58,6 +118,27 @@ export async function POST(request: Request) {
   const body = await request.json();
   const message = typeof body.message === "string" ? body.message.trim() : "";
   if (!message) return NextResponse.json({ error: "Skriv vad du vill ändra." }, { status: 400 });
+
+  const rawAttachment = body.attachment;
+  let attachment: Attachment | undefined;
+  if (rawAttachment && typeof rawAttachment === "object") {
+    const kind = rawAttachment.kind === "image" || rawAttachment.kind === "document" ? rawAttachment.kind : undefined;
+    const url = typeof rawAttachment.url === "string" ? rawAttachment.url : "";
+    // Säkerhetskoll: bilagan måste ligga i kundens egen uppladdningsmapp i
+    // vår "uploads"-bucket — annars ignoreras den tyst istället för att
+    // låta ett godtyckligt klientskickat objekt styra vad som skickas till
+    // Claude (eller, för bilder, vilken extern URL som kan landa i en
+    // sparad imageUrl).
+    if (kind && url.includes(`/uploads/${user.id}/`)) {
+      attachment = {
+        kind,
+        url,
+        name: typeof rawAttachment.name === "string" ? rawAttachment.name : "bifogad fil",
+        mimeType: typeof rawAttachment.mimeType === "string" ? rawAttachment.mimeType : undefined,
+        text: typeof rawAttachment.text === "string" ? rawAttachment.text.slice(0, 20000) : undefined,
+      };
+    }
+  }
 
   // Bara de senaste turerna — räcker för att förstå uppföljningar som
   // "gör den lite större", utan att låta samtalet växa obegränsat i
@@ -80,19 +161,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
+  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachment));
+
+  // Bara bildbilagor görs om till ett multimodalt meddelande (Claude ser
+  // själva bilden) — textdokument är redan omvandlade till ren text i
+  // prompten ovan, de behöver inget eget innehållsblock.
+  const finalContent: Anthropic.MessageParam["content"] =
+    attachment?.kind === "image"
+      ? [
+          { type: "image", source: { type: "url", url: attachment.url } },
+          { type: "text", text: promptText },
+        ]
+      : promptText;
+
   const messages: Anthropic.MessageParam[] = [
     ...history.map((m): Anthropic.MessageParam => ({
       role: m.from === "user" ? "user" : "assistant",
       content: m.text,
     })),
-    { role: "user", content: buildEditPrompt(site.content, message) },
+    { role: "user", content: finalContent },
   ];
 
   let response;
   try {
     response = await client.messages.create({
       model: CLAUDE_MODEL,
-      max_tokens: 8000,
+      // Svaret är nu proportionerligt mot ÄNDRINGEN (en eller ett par
+      // sidor) istället för mot hela sajten, så 8000 var ett tak som i
+      // praktiken nästan aldrig behövdes — sänkt för att inte ge modellen
+      // utrymme att av misstag ändå skriva ut mer än nödvändigt.
+      max_tokens: 4000,
       tools: [EDIT_TOOL],
       tool_choice: { type: "tool", name: "edit_site" },
       messages,
@@ -111,12 +209,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "AI-svaret innehöll ingen uppdatering." }, { status: 502 });
   }
 
-  const input = toolUse.input as SiteContent & { summary: string };
-  const { summary, ...rest } = input;
-  const updatedContent = rest as SiteContent;
-
-  if (!isValidSiteContent(updatedContent)) {
+  const patch = toolUse.input as EditPatch;
+  if (patch.changedPages && !patch.changedPages.every(isValidSitePage)) {
     return NextResponse.json({ error: "AI-svaret hade fel format." }, { status: 502 });
+  }
+
+  const updatedContent = applyPatch(site.content, patch);
+  if (!updatedContent.pages.length) {
+    return NextResponse.json({ error: "Ändringen skulle lämna sajten utan sidor." }, { status: 502 });
   }
 
   // Loggan och sociala länkar sätts i kod från onboardingen, aldrig av
@@ -134,8 +234,7 @@ export async function POST(request: Request) {
       // Färgerna kan kunden faktiskt be om att ändra i chatten — till
       // skillnad från genereringen vid onboarding tillåter vi det här, men
       // sparar då undan det nya valet så det inte råkar nollställas av ett
-      // senare, orelaterat chattmeddelande (som bara skickar in sajtens
-      // nuvarande innehåll, inklusive den redan ändrade färgen).
+      // senare, orelaterat chattmeddelande.
       accent_color: updatedContent.theme.accentColor,
       secondary_colors: updatedContent.theme.secondaryColors,
     })
@@ -143,5 +242,5 @@ export async function POST(request: Request) {
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
 
-  return NextResponse.json({ content: updatedContent, summary });
+  return NextResponse.json({ content: updatedContent, summary: patch.summary });
 }

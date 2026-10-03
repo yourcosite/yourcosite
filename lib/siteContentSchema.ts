@@ -133,3 +133,47 @@ export const SITE_CONTENT_PROPERTIES = {
 };
 
 export const SITE_CONTENT_REQUIRED = ["theme", "pages"];
+
+// Egenskaperna för EN RIKTAD ÄNDRING (chattredigeraren, /api/sites/edit) —
+// till skillnad från SITE_CONTENT_PROPERTIES ovan (hela sajten, varje gång,
+// använt vid förstagångsgenereringen) ber den här versionen Claude svara
+// med ENDAST de sidor som ändringen faktiskt rörde. En redigering som "byt
+// rubriken på startsidan" på en sajt med fem sidor tvingade tidigare Claude
+// att skriva ut alla fem sidors fulla innehåll igen, vilket gjorde varje
+// liten ändring märkbart långsam — nu är svaret proportionerligt mot
+// ändringen istället för mot sajtens storlek. Servern slår ihop de
+// returnerade sidorna (matchat på path) med de sidor som inte skickades
+// med, se app/api/sites/edit/route.ts.
+export const EDIT_PATCH_PROPERTIES = {
+  theme: {
+    type: "object",
+    description:
+      "Utelämna HELA detta fält om färgtemat inte ska ändras (vanligast). Ange det bara om kunden uttryckligen bad om en färg-/typsnittsändring.",
+    properties: {
+      accentColor: { type: "string" },
+      secondaryColors: { type: "array", items: { type: "string" } },
+      font: { type: "string", enum: ["serif", "sans"] },
+    },
+  },
+  changedPages: {
+    type: "array",
+    description:
+      "ENDAST de sidor (hela sidobjekt: path, label och ALLA dess sektioner, inte bara den ändrade sektionen) som faktiskt påverkas av den här ändringen. Sidor som inte berörs ska INTE tas med här — de lämnas orörda automatiskt. En helt ny sida läggs till genom att ta med den här med en path som inte redan finns.",
+    items: {
+      type: "object",
+      properties: {
+        path: { type: "string" },
+        label: { type: "string" },
+        sections: { type: "array", items: SECTION_SCHEMA },
+      },
+      required: ["path", "label", "sections"],
+    },
+  },
+  removedPagePaths: {
+    type: "array",
+    items: { type: "string" },
+    description: "path för sidor som ska tas bort helt, bara om kunden uttryckligen bad om det.",
+  },
+};
+
+export const EDIT_PATCH_REQUIRED = ["changedPages"];
