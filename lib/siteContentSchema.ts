@@ -146,6 +146,22 @@ export const SITE_CONTENT_PROPERTIES = {
 
 export const SITE_CONTENT_REQUIRED = ["theme", "pages"];
 
+// Google Analytics/Meta Pixel-ID — se SiteContent.gaMeasurementId i
+// lib/contentModel.ts. Bara i EDIT_PATCH_PROPERTIES nedan (inte i
+// SITE_CONTENT_PROPERTIES ovan): dessa sätts aldrig vid förstagångs-
+// genereringen, bara senare av kunden själv (sajtinställningarna i
+// chattredigeraren, eller genom att be Millie om det).
+const GA_MEASUREMENT_ID_SCHEMA = {
+  type: "string",
+  description:
+    "Kundens Google Analytics-mät-ID, t.ex. \"G-XXXXXXXXXX\" (äldre \"UA-XXXXXXX-X\" går också). Sätt bara när kunden uttryckligen gett dig ett ID att koppla på. Vill kunden koppla BORT Google Analytics, sätt till en tom sträng.",
+};
+const META_PIXEL_ID_SCHEMA = {
+  type: "string",
+  description:
+    "Kundens Meta (Facebook) Pixel-ID — bara siffror. Sätt bara när kunden uttryckligen gett dig ett ID att koppla på. Vill kunden koppla bort den, sätt till en tom sträng.",
+};
+
 // Egenskaperna för EN RIKTAD ÄNDRING (chattredigeraren, /api/sites/edit) —
 // till skillnad från SITE_CONTENT_PROPERTIES ovan (hela sajten, varje gång,
 // använt vid förstagångsgenereringen) ber den här versionen Claude svara
@@ -167,6 +183,8 @@ export const EDIT_PATCH_PROPERTIES = {
       font: { type: "string", enum: ["serif", "sans"] },
     },
   },
+  gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,
+  metaPixelId: META_PIXEL_ID_SCHEMA,
   changedPages: {
     type: "array",
     description:

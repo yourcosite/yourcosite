@@ -31,6 +31,7 @@ export default async function WebsiteRawContent({
     <SitePreview
       content={site.content}
       siteName={site.name}
+      siteId={site.id}
       activePath={requestedPath}
       basePath="/webbplats-innehall"
       privacyPolicyMode={site.privacy_policy_mode}

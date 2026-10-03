@@ -181,6 +181,36 @@ create policy "Ägare kan hantera sina sidor"
   );
 
 -- ============================================================
+-- SITE_PAGEVIEWS
+-- Vår egen, cookiefria besöksstatistik — en rad per sidvisning, skriven av
+-- PageviewBeacon i components/SitePreview.tsx via /api/analytics/track
+-- (publik rutt, service role, se den filen). Medvetet MINIMAL: inget
+-- besökar-id, ingen cookie, ingen IP sparas — bara vilken sida, varifrån
+-- (referrer) och när. Kan inte kopplas till en enskild person, så den
+-- behöver inget cookiesamtycke (till skillnad från Google Analytics/Meta
+-- Pixel, se SiteContent.gaMeasurementId i lib/contentModel.ts). Visas för
+-- kunden på /statistik.
+-- ============================================================
+create table if not exists site_pageviews (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  path text not null,
+  referrer text,
+  visited_at timestamptz not null default now()
+);
+
+create index if not exists site_pageviews_site_id_idx on site_pageviews (site_id, visited_at desc);
+
+alter table site_pageviews enable row level security;
+
+create policy "Ägare kan läsa sin egen statistik"
+  on site_pageviews for select using (
+    exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid())
+  );
+create policy "Staff kan läsa all statistik"
+  on site_pageviews for select using (public.is_staff());
+
+-- ============================================================
 -- SITE_ASSETS
 -- Egna foton/dokument kunden laddar upp i onboardingens steg 3. "kind"
 -- styr var filen kan användas: bilder kan placeras i sajtens design,

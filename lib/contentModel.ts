@@ -142,6 +142,14 @@ export interface SiteContent {
   // aldrig valda eller hittade på av AI:n. Visas i sidfoten och på
   // kontaktsidan.
   socialLinks?: SocialLink[];
+  // Google Analytics (GA4 "G-XXXXXXXXXX", eller äldre "UA-XXXXXXX-X") och
+  // Meta Pixel-ID — satta av kunden själv (i chattredigerarens
+  // sajtinställningar, eller genom att be Millie om det) och injicerade i
+  // sajten, se TrackingScripts i components/SitePreview.tsx. Laddas ENDAST
+  // när besökaren godkänt "Alla cookies" i cookiebannern — se
+  // CookieBanner/showCookieBanner i samma fil.
+  gaMeasurementId?: string;
+  metaPixelId?: string;
 }
 
 // Räknar hur många av sajtens bildbärande platser (hero + grid-items) som

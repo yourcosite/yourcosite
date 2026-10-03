@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
@@ -39,6 +40,7 @@ const PRIVACY_POLICY_PATH = "/integritetspolicy";
 export default function SitePreview({
   content,
   siteName,
+  siteId,
   fontOverride,
   backgroundModeOverride,
   activePath,
@@ -50,6 +52,12 @@ export default function SitePreview({
 }: {
   content: SiteContent;
   siteName?: string;
+  // Sajtens id i databasen — bara för vår egen, cookiefria besöksstatistik
+  // (PageviewBeacon nedan). Valfri eftersom den bara ska skickas med från
+  // den RIKTIGA, publikt nåbara renderingen (se basePath/showCookieBanner),
+  // aldrig från /forslag-miniatyrerna eller chattredigerarens egen
+  // förhandsvisning — annars skulle ägarens egna klick räknas som besök.
+  siteId?: string;
   fontOverride?: ThemeFont;
   backgroundModeOverride?: BackgroundMode;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
@@ -99,8 +107,36 @@ export default function SitePreview({
   // besökaren klickar runt) men aldrig i de små, icke-interaktiva
   // /forslag-miniatyrerna (sex stycken på samma skärm samtidigt) — basePath
   // är satt precis när förhandsvisningen är den klickbara, "riktiga"
-  // varianten (se app/webbplats), så den används som villkor här.
+  // varianten (se app/webbplats), så den används som villkor här. Samma
+  // villkor styr om Google Analytics/Meta Pixel och vår egen
+  // besöksräkning över huvud taget kan bli aktuella (se nedan) — ingen
+  // anledning att ladda in spårning i en miniatyr eller i kundens egen
+  // redigeringsvy.
   const showCookieBanner = !!basePath;
+
+  // Cookie-samtycket ägs här (inte i CookieBanner) eftersom
+  // TrackingScripts nedan också behöver veta det — båda ska reagera
+  // direkt när besökaren klickar "Alla cookies", utan omladdning.
+  const [cookieChoice, setCookieChoice] = useState<"pending" | "necessary" | "all">("pending");
+  useEffect(() => {
+    if (!showCookieBanner) return;
+    try {
+      const saved = window.localStorage.getItem("yc_cookie_consent");
+      if (saved === "all" || saved === "necessary") setCookieChoice(saved);
+    } catch {
+      // Privat läge/blockerad lagring — bannern visas då varje gång,
+      // spårning förblir avstängd tills besökaren uttryckligen godkänner
+      // den i just den här sessionen.
+    }
+  }, [showCookieBanner]);
+  const decideCookies = (value: "all" | "necessary") => {
+    try {
+      window.localStorage.setItem("yc_cookie_consent", value);
+    } catch {
+      // Se kommentaren ovan — valet gäller då bara den här sidvisningen.
+    }
+    setCookieChoice(value);
+  };
 
   return (
     <div className={fontClass} style={{ background: palette.bg, color: palette.text }}>
@@ -163,7 +199,7 @@ export default function SitePreview({
         privacyPolicyMode={privacyPolicyMode}
         privacyPolicyFileUrl={privacyPolicyFileUrl}
       />
-      {showCookieBanner && (
+      {showCookieBanner && cookieChoice === "pending" && (
         <CookieBanner
           palette={palette}
           policyHref={
@@ -173,8 +209,13 @@ export default function SitePreview({
               ? privacyPolicyFileUrl || undefined
               : undefined
           }
+          onDecide={decideCookies}
         />
       )}
+      {showCookieBanner && cookieChoice === "all" && (
+        <TrackingScripts gaMeasurementId={content.gaMeasurementId} metaPixelId={content.metaPixelId} />
+      )}
+      {showCookieBanner && siteId && <PageviewBeacon siteId={siteId} path={page.path} />}
     </div>
   );
 }
@@ -202,38 +243,18 @@ function PrivacyPolicyBlock({ text, palette }: { text: string; palette: Palette 
 }
 
 // Enkel cookiebanner, visas automatiskt (se showCookieBanner ovan) tills
-// besökaren gjort ett val — valet sparas i webbläsarens localStorage så
-// bannern inte dyker upp igen vid nästa sidvisning. Ett nytt val krävs
-// aldrig av oss centralt (det skulle i så fall vara kundens egen
-// cookieinställning, inte något vi bygger i den här förhandsvisningen).
-function CookieBanner({ palette, policyHref }: { palette: Palette; policyHref?: string }) {
-  // Börjar alltid som "pending" (samma på server och vid första klient-
-  // rendringen, annars hydration-mismatch) — useEffect kollar sen det
-  // sparade valet precis efter mount, vilket ger en knappt märkbar
-  // flimmer-risk hellre än ett React-varningsfel.
-  const [choice, setChoice] = useState<"pending" | "decided">("pending");
-
-  useEffect(() => {
-    try {
-      if (window.localStorage.getItem("yc_cookie_consent")) setChoice("decided");
-    } catch {
-      // Privat läge/blockerad lagring — bannern visas då varje gång, inget
-      // farligare än det.
-    }
-  }, []);
-
-  if (choice === "decided") return null;
-
-  const decide = (value: "all" | "necessary") => {
-    try {
-      window.localStorage.setItem("yc_cookie_consent", value);
-    } catch {
-      // Privat läge/blockerad lagring — bannern döljs ändå för den här
-      // sidvisningen, den behöver bara inte komma ihåg valet.
-    }
-    setChoice("decided");
-  };
-
+// besökaren gjort ett val — valet (och var det faktiskt sparas i
+// localStorage) ägs av SitePreview, inte här, eftersom TrackingScripts
+// också behöver känna till det, se cookieChoice ovan.
+function CookieBanner({
+  palette,
+  policyHref,
+  onDecide,
+}: {
+  palette: Palette;
+  policyHref?: string;
+  onDecide: (value: "all" | "necessary") => void;
+}) {
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-30 flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 sm:px-8"
@@ -250,7 +271,7 @@ function CookieBanner({ palette, policyHref }: { palette: Palette; policyHref?: 
       <div className="flex items-center gap-2.5 flex-shrink-0">
         <button
           type="button"
-          onClick={() => decide("necessary")}
+          onClick={() => onDecide("necessary")}
           className="text-[12.5px] font-semibold px-4 py-2 rounded-lg border"
           style={{ borderColor: palette.cardBorder, color: palette.text }}
         >
@@ -258,7 +279,7 @@ function CookieBanner({ palette, policyHref }: { palette: Palette; policyHref?: 
         </button>
         <button
           type="button"
-          onClick={() => decide("all")}
+          onClick={() => onDecide("all")}
           className="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-accent text-accent-ink"
         >
           Acceptera alla
@@ -266,6 +287,67 @@ function CookieBanner({ palette, policyHref }: { palette: Palette; policyHref?: 
       </div>
     </div>
   );
+}
+
+// Kundens egen Google Analytics/Meta Pixel (se SiteContent.gaMeasurementId
+// i lib/contentModel.ts) — renderas bara efter att besökaren uttryckligen
+// godkänt "Alla cookies" (se cookieChoice ovan), aldrig innan. Så fort
+// kunden kopplar ett ID (sajtinställningarna i chattredigeraren, eller
+// genom att be Millie om det) börjar de dyka upp här automatiskt, utan
+// någon ytterligare kod.
+function TrackingScripts({ gaMeasurementId, metaPixelId }: { gaMeasurementId?: string; metaPixelId?: string }) {
+  return (
+    <>
+      {gaMeasurementId && (
+        <>
+          <Script src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(gaMeasurementId)}`} strategy="afterInteractive" />
+          <Script id="yc-ga-init" strategy="afterInteractive">
+            {`window.dataLayer = window.dataLayer || [];
+              function gtag(){dataLayer.push(arguments);}
+              gtag('js', new Date());
+              gtag('config', '${gaMeasurementId}');`}
+          </Script>
+        </>
+      )}
+      {metaPixelId && (
+        <>
+          <Script id="yc-meta-pixel-init" strategy="afterInteractive">
+            {`!function(f,b,e,v,n,t,s)
+              {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+              n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+              if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+              n.queue=[];t=b.createElement(e);t.async=!0;
+              t.src=v;s=b.getElementsByTagName(e)[0];
+              s.parentNode.insertBefore(t,s)}(window, document,'script',
+              'https://connect.facebook.net/en_US/fbevents.js');
+              fbq('init', '${metaPixelId}');
+              fbq('track', 'PageView');`}
+          </Script>
+          <noscript>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img height="1" width="1" style={{ display: "none" }} src={`https://www.facebook.com/tr?id=${encodeURIComponent(metaPixelId)}&ev=PageView&noscript=1`} alt="" />
+          </noscript>
+        </>
+      )}
+    </>
+  );
+}
+
+// Vårt eget, cookiefria sidvisningsräknare — se app/api/analytics/track och
+// /statistik (kundportalen). Till skillnad från GA/Pixel ovan kräver den
+// INGET samtycke: ingen cookie, inget sparat besökar-id, bara en siffra
+// per sida och dag i vår egen databas. "fire and forget" — misslyckas
+// anropet (nätverk nere, adblocker) stör det aldrig besökarens sidvisning.
+function PageviewBeacon({ siteId, path }: { siteId: string; path: string }) {
+  useEffect(() => {
+    fetch("/api/analytics/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ siteId, path, referrer: document.referrer || undefined }),
+      keepalive: true,
+    }).catch(() => {});
+  }, [siteId, path]);
+  return null;
 }
 
 function Header({

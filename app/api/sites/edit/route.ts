@@ -45,6 +45,8 @@ const EDIT_TOOL = {
 
 type EditPatch = {
   theme?: Partial<SiteContent["theme"]>;
+  gaMeasurementId?: string;
+  metaPixelId?: string;
   changedPages?: SitePageContent[];
   removedPagePaths?: string[];
   summary: string;
@@ -80,6 +82,8 @@ VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort
 VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kunden att en knapp ska leda till en av sajtens sidor, sätt ctaLink till exakt den sidans "path" (se listan ovan) — hitta aldrig på en sökväg som inte finns där. Ber kunden om en extern länk, använd en fullständig URL (https://...). Vill kunden att knappen inte ska gå att klicka på, utelämna ctaLink helt.
 
 VIKTIGT — bakgrundsfärg på EN enskild sida (t.ex. "gör Om oss-sidan svart/mörk"): detta STÖDS, via "backgroundMode" på sidobjektet i "changedPages" — se verktygets fältbeskrivning. Välj det av de tre lägena (light/warm/dark) som bäst matchar vad kunden bad om, texten justeras automatiskt. Gäller önskemålet istället HELA sajtens färgtema (t.ex. "byt till svart genomgående" eller bara "byt accentfärg"), använd "theme" högst upp som vanligt, inte detta fält.
+
+VIKTIGT — Google Analytics/Meta Pixel: ber kunden att koppla på Google Analytics eller Meta (Facebook) Pixel och GER dig ett ID i samma meddelande, sätt det i "gaMeasurementId" respektive "metaPixelId". Ber kunden om det men utan att ange något ID, svara i "summary" och be om ID:t istället — hitta aldrig på ett. Vill kunden koppla BORT en redan kopplad tagg, sätt motsvarande fält till en tom sträng. Scripten laddas bara in på sajten efter att besökaren godkänt "Alla cookies" i cookiebannern — nämn det kort om kunden undrar varför de inte ser något direkt i förhandsvisningen utan att godkänna den.
 
 Svara alltid via verktyget "edit_site", plus ett kort "summary" riktat direkt till kunden.
 
@@ -120,11 +124,25 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
   // Det som blir kvar i changedByPath är helt nya sidor — läggs sist.
   for (const page of changedByPath.values()) pages.push(page);
 
-  return {
+  const merged: SiteContent = {
     ...content,
     theme: patch.theme ? { ...content.theme, ...patch.theme } : content.theme,
     pages,
   };
+  // Tomma strängar är kundens sätt att be Claude koppla BORT en tagg (se
+  // promptens instruktion) — sparas aldrig som en tom sträng, fältet tas
+  // bort helt istället, annars tolkar renderaren det som "sätt in en
+  // Google Analytics-tagg med ID:t '' ". undefined (fältet utelämnat)
+  // betyder "orört", inte "ta bort" — därför den uttryckliga kollen.
+  if (patch.gaMeasurementId !== undefined) {
+    if (patch.gaMeasurementId) merged.gaMeasurementId = patch.gaMeasurementId;
+    else delete merged.gaMeasurementId;
+  }
+  if (patch.metaPixelId !== undefined) {
+    if (patch.metaPixelId) merged.metaPixelId = patch.metaPixelId;
+    else delete merged.metaPixelId;
+  }
+  return merged;
 }
 
 export async function POST(request: Request) {
