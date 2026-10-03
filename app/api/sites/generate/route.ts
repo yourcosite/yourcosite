@@ -355,9 +355,38 @@ export async function POST() {
   const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
   const finalContent = assignUploadedImages(contentWithImageSlots, imageUrls, site.hero_image_url);
 
+  // Inspirationsbilderna (skärmdumpar av ANDRA sajter kunden visat som
+  // referens) har nu gjort sitt jobb — de användes ovan bara för att styra
+  // layoutvalet, aldrig som bilder i den färdiga sajten. Vi lovar kunden att
+  // de inte sparas kvar, så vi städar bort dem ur Storage och tömmer fältet
+  // i samma veva som sajtens innehåll sparas. (Skulle själva AI-anropet
+  // eller spar-steget ovan fela innan vi når hit lämnas bilderna kvar, så
+  // kunden slipper ladda upp dem på nytt vid ett omförsök.)
+  const inspirationUrls: string[] = Array.isArray(site.inspiration_image_urls)
+    ? site.inspiration_image_urls
+    : [];
+  if (inspirationUrls.length > 0) {
+    const paths = inspirationUrls
+      .map((url) => {
+        const marker = "/uploads/";
+        const idx = url.indexOf(marker);
+        return idx >= 0 ? url.slice(idx + marker.length) : null;
+      })
+      .filter((p): p is string => !!p);
+    if (paths.length > 0) {
+      const { error: removeError } = await supabase.storage.from("uploads").remove(paths);
+      if (removeError) {
+        console.error("generate: kunde inte radera inspirationsbilder", {
+          siteId: site.id,
+          error: removeError,
+        });
+      }
+    }
+  }
+
   const { error: saveError } = await supabase
     .from("sites")
-    .update({ content: finalContent, status: "draft" })
+    .update({ content: finalContent, status: "draft", inspiration_image_urls: [] })
     .eq("id", site.id);
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });

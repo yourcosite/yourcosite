@@ -127,7 +127,7 @@ export default function SuggestionsPage() {
           )}
 
           {content && (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5.5">
+            <div className="grid sm:grid-cols-2 gap-5.5">
               {THEME_VARIANTS.map((v) => (
                 <div
                   key={v.id}
@@ -143,7 +143,11 @@ export default function SuggestionsPage() {
                       REKOMMENDERAS
                     </div>
                   )}
-                  <div className="h-[220px] overflow-hidden relative border-b border-line">
+                  {/* Bredare kort (2 per rad istället för 3) + lite mer höjd gör
+                      att förhandsvisningen både blir mer "liggande"/bred som en
+                      riktig webbläsarruta, och hinner visa mer av sidan (inte
+                      bara hero-blocket) innan den beskärs. */}
+                  <div className="h-[260px] overflow-hidden relative border-b border-line">
                     <div
                       className="absolute top-0 left-0 w-[400%] origin-top-left"
                       style={{ transform: "scale(0.25)" }}

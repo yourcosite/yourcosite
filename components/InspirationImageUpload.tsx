@@ -138,6 +138,11 @@ export default function InspirationImageUpload({
         <div className="text-[12.5px] text-ink-dim mt-1">
           PNG/JPG/WEBP, max 5 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.
         </div>
+        <div className="text-[12.5px] text-ink-dim mt-2.5 max-w-[420px] mx-auto">
+          Används bara som inspiration för känsla och layout — hamnar aldrig
+          på din sajt eller någon annans, och sparas inte kvar hos oss efter
+          att din sajt byggts.
+        </div>
         <input
           ref={inputRef}
           type="file"
