@@ -71,7 +71,10 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
-    if (path.startsWith("/admin/ekonomi") && role === "support") {
+    if (
+      (path.startsWith("/admin/ekonomi") || path.startsWith("/admin/aktivitet")) &&
+      role === "support"
+    ) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";
       return NextResponse.redirect(url);

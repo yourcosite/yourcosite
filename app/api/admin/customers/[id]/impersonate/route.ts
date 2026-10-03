@@ -3,10 +3,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
 
-// Skickar ett återställningsmail till kunden så de kan sätta ett nytt
-// lösenord själva (landar på /aterstall-losenord).
+// Genererar en engångslänk som loggar in webbläsaren som kunden.
+// Bara superadmin, eftersom det här är den känsligaste admin-åtgärden
+// som finns — den byter faktiskt ut vems session webbläsaren har.
 export async function POST(request: Request, { params }: { params: { id: string } }) {
-  const check = await requireRole(["admin", "superadmin"]);
+  const check = await requireRole(["superadmin"]);
   if (check.error) return check.error;
 
   const admin = createAdminClient();
@@ -21,8 +22,10 @@ export async function POST(request: Request, { params }: { params: { id: string 
   }
 
   const origin = new URL(request.url).origin;
-  const { error } = await admin.auth.resetPasswordForEmail(profile.email, {
-    redirectTo: `${origin}/aterstall-losenord`,
+  const { data, error } = await admin.auth.admin.generateLink({
+    type: "magiclink",
+    email: profile.email,
+    options: { redirectTo: `${origin}/dashboard` },
   });
 
   if (error) {
@@ -32,11 +35,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
   await logActivity(admin, {
     actorId: check.user.id,
     actorName: check.actorName,
-    action: "skickade återställningsmail till",
+    action: "loggade in som kunden",
     targetType: "customer",
     targetId: params.id,
     targetLabel: profile.full_name || profile.email,
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ actionLink: data.properties?.action_link });
 }

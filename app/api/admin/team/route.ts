@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole, StaffRole } from "@/lib/supabase/requireRole";
+import { logActivity } from "@/lib/supabase/activityLog";
 
 const INVITABLE_ROLES: StaffRole[] = ["support", "admin", "superadmin"];
 
@@ -56,6 +57,15 @@ export async function POST(request: Request) {
   if (roleError) {
     return NextResponse.json({ error: roleError.message }, { status: 500 });
   }
+
+  await logActivity(admin, {
+    actorId: check.user.id,
+    actorName: check.actorName,
+    action: `bjöd in ${fullName} som ${role}`,
+    targetType: "staff",
+    targetId: created.user.id,
+    targetLabel: fullName || email,
+  });
 
   return NextResponse.json({
     admin: { id: created.user.id, email, fullName, role },

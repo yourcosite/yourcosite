@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
+import { logActivity } from "@/lib/supabase/activityLog";
 
 export async function PATCH(
   request: Request,
@@ -45,6 +46,16 @@ export async function PATCH(
     .eq("id", params.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logActivity(admin, {
+    actorId: check.user.id,
+    actorName: check.actorName,
+    action: "redigerade kunden",
+    targetType: "customer",
+    targetId: params.id,
+    targetLabel: fullName || email || params.id,
+  });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -56,8 +67,23 @@ export async function DELETE(
   if (check.error) return check.error;
 
   const admin = createAdminClient();
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("full_name, email")
+    .eq("id", params.id)
+    .single();
+
   const { error } = await admin.auth.admin.deleteUser(params.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  await logActivity(admin, {
+    actorId: check.user.id,
+    actorName: check.actorName,
+    action: "tog bort kunden",
+    targetType: "customer",
+    targetLabel: profile?.full_name || profile?.email || params.id,
+  });
+
   return NextResponse.json({ ok: true });
 }

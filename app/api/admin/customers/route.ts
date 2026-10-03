@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
+import { logActivity } from "@/lib/supabase/activityLog";
 
 export async function GET() {
   const check = await requireRole(["support", "admin", "superadmin"]);
@@ -62,6 +63,15 @@ export async function POST(request: Request) {
       billing_email: billingEmail,
     })
     .eq("id", created.user.id);
+
+  await logActivity(admin, {
+    actorId: check.user.id,
+    actorName: check.actorName,
+    action: "skapade kunden",
+    targetType: "customer",
+    targetId: created.user.id,
+    targetLabel: fullName || email,
+  });
 
   return NextResponse.json({
     customer: { id: created.user.id, email, fullName },

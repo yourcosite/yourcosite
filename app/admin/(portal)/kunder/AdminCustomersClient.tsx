@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 type Site = {
   id: string;
@@ -304,7 +305,11 @@ export default function AdminCustomersClient({
                   : "bg-line text-ink-dim";
               return (
                 <tr key={c.id} className="text-[13.5px] border-t border-line">
-                  <td className="py-3.5 px-5 font-semibold whitespace-nowrap">{c.full_name || "—"}</td>
+                  <td className="py-3.5 px-5 font-semibold whitespace-nowrap">
+                    <Link href={`/admin/kunder/${c.id}`} className="hover:underline">
+                      {c.full_name || "—"}
+                    </Link>
+                  </td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.company_name || "—"}</td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.email}</td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{site?.domain || site?.name || "—"}</td>

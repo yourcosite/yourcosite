@@ -22,7 +22,7 @@ export async function requireRole(allowed: StaffRole[]) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, full_name")
     .eq("id", user.id)
     .single();
 
@@ -37,5 +37,5 @@ export async function requireRole(allowed: StaffRole[]) {
     };
   }
 
-  return { user, role: role as StaffRole };
+  return { user, role: role as StaffRole, actorName: profile?.full_name || user.email || "Okänd" };
 }
