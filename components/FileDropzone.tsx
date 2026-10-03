@@ -28,7 +28,17 @@ const ALLOWED_TYPES = [
 // den färdiga URL:en till vår server för att spara en rad i databasen.
 // Bilderna som laddas upp används sedan automatiskt i AI-genereringen (se
 // lib/assignUploadedImages.ts) — i hero och i bildrutorna.
-export default function FileDropzone() {
+export default function FileDropzone({
+  onUploadingChange,
+}: {
+  // Låter föräldrakomponenten (onboarding steg 3) veta när en uppladdning
+  // pågår, så den kan spärra "Nästa →" tills den är klar. Utan det här gick
+  // det att klicka vidare medan foton fortfarande laddades upp i
+  // bakgrunden — sajten byggdes då utan dem, trots att kunden redan sett
+  // en bild "laddas upp". Det var den verkliga orsaken till flera
+  // buggrapporter om saknade hero-bilder.
+  onUploadingChange?: (uploading: boolean) => void;
+} = {}) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -46,6 +56,7 @@ export default function FileDropzone() {
     const list = Array.from(files);
     if (list.length === 0) return;
     setUploading(true);
+    onUploadingChange?.(true);
     setError("");
 
     const supabase = createClient();
@@ -53,6 +64,7 @@ export default function FileDropzone() {
     if (!user) {
       setError("Du är inte inloggad längre — ladda om sidan.");
       setUploading(false);
+      onUploadingChange?.(false);
       return;
     }
 
@@ -102,6 +114,7 @@ export default function FileDropzone() {
     setAssets((a) => [...a, ...newAssets]);
     if (skipped.length) setError(`Hoppade över: ${skipped.join(", ")}`);
     setUploading(false);
+    onUploadingChange?.(false);
   };
 
   const remove = async (id: string) => {

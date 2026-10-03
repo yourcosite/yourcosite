@@ -47,6 +47,7 @@ export default function OnboardingStep3() {
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
   const [allowAiTextFill, setAllowAiTextFill] = useState(true);
   const [socialLinks, setSocialLinks] = useState<SocialLinksValue>({});
+  const [photosUploading, setPhotosUploading] = useState(false);
 
   useEffect(() => {
     fetch("/api/onboarding/current")
@@ -94,6 +95,13 @@ export default function OnboardingStep3() {
     const included = pages.filter((p) => p.included);
     if (included.length === 0) {
       setError("Välj minst en sida.");
+      return;
+    }
+    // Annars gick det att klicka vidare medan foton fortfarande laddades
+    // upp i bakgrunden — sajten byggdes då utan dem, trots att det såg ut
+    // som att uppladdningen redan var klar.
+    if (photosUploading) {
+      setError("Vänta tills dina bilder är klara att ladda upp innan du går vidare.");
       return;
     }
     setSaving(true);
@@ -260,7 +268,7 @@ export default function OnboardingStep3() {
           <LogoUpload initialUrl={logoUrl} onChange={(url) => setLogoUrl(url || undefined)} />
         </div>
 
-        <FileDropzone />
+        <FileDropzone onUploadingChange={setPhotosUploading} />
 
         <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mb-9">
           <span className="text-[13.5px] text-ink leading-relaxed">
@@ -291,10 +299,10 @@ export default function OnboardingStep3() {
           <button
             type="button"
             onClick={next}
-            disabled={saving}
+            disabled={saving || photosUploading}
             className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? "Sparar …" : "Nästa →"}
+            {saving ? "Sparar …" : photosUploading ? "Väntar på bilder …" : "Nästa →"}
           </button>
         </div>
       </div>
