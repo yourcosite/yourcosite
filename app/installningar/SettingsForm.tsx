@@ -13,13 +13,31 @@ export default function SettingsForm({
   fullName,
   email,
   phone,
+  companyName,
+  orgNumber,
+  addressStreet,
+  addressPostalCode,
+  addressCity,
+  billingEmail,
 }: {
   fullName: string;
   email: string;
   phone: string;
+  companyName: string;
+  orgNumber: string;
+  addressStreet: string;
+  addressPostalCode: string;
+  addressCity: string;
+  billingEmail: string;
 }) {
   const [name, setName] = useState(fullName);
   const [phoneValue, setPhoneValue] = useState(phone);
+  const [companyNameValue, setCompanyNameValue] = useState(companyName);
+  const [orgNumberValue, setOrgNumberValue] = useState(orgNumber);
+  const [addressStreetValue, setAddressStreetValue] = useState(addressStreet);
+  const [addressPostalCodeValue, setAddressPostalCodeValue] = useState(addressPostalCode);
+  const [addressCityValue, setAddressCityValue] = useState(addressCity);
+  const [billingEmailValue, setBillingEmailValue] = useState(billingEmail);
   const [toggles, setToggles] = useState(initialToggles);
   const [lang, setLang] = useState<"sv" | "en">("sv");
   const [saving, setSaving] = useState(false);
@@ -44,7 +62,16 @@ export default function SettingsForm({
 
     const { error: updateError } = await supabase
       .from("profiles")
-      .update({ full_name: name, phone: phoneValue })
+      .update({
+        full_name: name,
+        phone: phoneValue,
+        company_name: companyNameValue,
+        org_number: orgNumberValue,
+        address_street: addressStreetValue,
+        address_postal_code: addressPostalCodeValue,
+        address_city: addressCityValue,
+        billing_email: billingEmailValue,
+      })
       .eq("id", user.id);
 
     setSaving(false);
@@ -85,6 +112,65 @@ export default function SettingsForm({
             value={phoneValue}
             onChange={(e) => setPhoneValue(e.target.value)}
             placeholder="07X – XXX XX XX"
+            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+          />
+        </div>
+      </div>
+
+      <div className="bg-surface border border-line rounded-2xl p-6 mb-5">
+        <div className="font-semibold text-[15px] mb-4">Företag och fakturering</div>
+        <div className="mb-4">
+          <label className="block text-[13px] font-semibold mb-1.5">Företagsnamn</label>
+          <input
+            value={companyNameValue}
+            onChange={(e) => setCompanyNameValue(e.target.value)}
+            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-[13px] font-semibold mb-1.5">Organisationsnummer</label>
+          <input
+            value={orgNumberValue}
+            onChange={(e) => setOrgNumberValue(e.target.value)}
+            placeholder="XXXXXX-XXXX"
+            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+          />
+        </div>
+        <div className="mb-4">
+          <label className="block text-[13px] font-semibold mb-1.5">Adress</label>
+          <input
+            value={addressStreetValue}
+            onChange={(e) => setAddressStreetValue(e.target.value)}
+            placeholder="Gatuadress"
+            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+          />
+        </div>
+        <div className="flex gap-3 mb-4">
+          <div className="w-[120px] flex-shrink-0">
+            <label className="block text-[13px] font-semibold mb-1.5">Postnr</label>
+            <input
+              value={addressPostalCodeValue}
+              onChange={(e) => setAddressPostalCodeValue(e.target.value)}
+              placeholder="XXX XX"
+              className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-[13px] font-semibold mb-1.5">Ort</label>
+            <input
+              value={addressCityValue}
+              onChange={(e) => setAddressCityValue(e.target.value)}
+              className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-[13px] font-semibold mb-1.5">Fakturerings-e-post</label>
+          <input
+            type="email"
+            value={billingEmailValue}
+            onChange={(e) => setBillingEmailValue(e.target.value)}
+            placeholder="Lämna tomt för att använda kontots e-post"
             className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
           />
         </div>

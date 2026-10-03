@@ -15,10 +15,54 @@ type Customer = {
   email: string;
   full_name: string | null;
   phone: string | null;
+  company_name?: string | null;
+  org_number?: string | null;
+  address_street?: string | null;
+  address_postal_code?: string | null;
+  address_city?: string | null;
+  billing_email?: string | null;
   role: string;
   created_at: string;
   sites?: Site[];
 };
+
+type FormState = {
+  name: string;
+  email: string;
+  phone: string;
+  companyName: string;
+  orgNumber: string;
+  addressStreet: string;
+  addressPostalCode: string;
+  addressCity: string;
+  billingEmail: string;
+};
+
+const EMPTY_FORM: FormState = {
+  name: "",
+  email: "",
+  phone: "",
+  companyName: "",
+  orgNumber: "",
+  addressStreet: "",
+  addressPostalCode: "",
+  addressCity: "",
+  billingEmail: "",
+};
+
+function customerToForm(c: Customer): FormState {
+  return {
+    name: c.full_name ?? "",
+    email: c.email,
+    phone: c.phone ?? "",
+    companyName: c.company_name ?? "",
+    orgNumber: c.org_number ?? "",
+    addressStreet: c.address_street ?? "",
+    addressPostalCode: c.address_postal_code ?? "",
+    addressCity: c.address_city ?? "",
+    billingEmail: c.billing_email ?? "",
+  };
+}
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("sv-SE", {
@@ -38,34 +82,32 @@ export default function AdminCustomersClient({
   const [showAdd, setShowAdd] = useState(false);
   const [editing, setEditing] = useState<Customer | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<Customer | null>(null);
-  const [formName, setFormName] = useState("");
-  const [formEmail, setFormEmail] = useState("");
-  const [formPhone, setFormPhone] = useState("");
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
+
+  const updateField = (field: keyof FormState) => (value: string) =>
+    setForm((f) => ({ ...f, [field]: value }));
 
   const filtered = customers.filter((c) => {
     const q = search.toLowerCase();
     return (
       !q ||
       (c.full_name ?? "").toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q)
+      c.email.toLowerCase().includes(q) ||
+      (c.company_name ?? "").toLowerCase().includes(q)
     );
   });
 
   const openAdd = () => {
-    setFormName("");
-    setFormEmail("");
-    setFormPhone("");
+    setForm(EMPTY_FORM);
     setError(null);
     setShowAdd(true);
   };
 
   const openEdit = (c: Customer) => {
-    setFormName(c.full_name ?? "");
-    setFormEmail(c.email);
-    setFormPhone(c.phone ?? "");
+    setForm(customerToForm(c));
     setError(null);
     setEditing(c);
   };
@@ -77,13 +119,25 @@ export default function AdminCustomersClient({
     setNewPassword(null);
   };
 
+  const formPayload = () => ({
+    fullName: form.name,
+    email: form.email,
+    phone: form.phone,
+    companyName: form.companyName,
+    orgNumber: form.orgNumber,
+    addressStreet: form.addressStreet,
+    addressPostalCode: form.addressPostalCode,
+    addressCity: form.addressCity,
+    billingEmail: form.billingEmail,
+  });
+
   const handleCreate = async () => {
     setSaving(true);
     setError(null);
     const res = await fetch("/api/admin/customers", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: formName, email: formEmail, phone: formPhone }),
+      body: JSON.stringify(formPayload()),
     });
     const data = await res.json();
     setSaving(false);
@@ -96,9 +150,15 @@ export default function AdminCustomersClient({
     setCustomers((cs) => [
       {
         id: data.customer.id,
-        email: formEmail,
-        full_name: formName,
-        phone: formPhone,
+        email: form.email,
+        full_name: form.name,
+        phone: form.phone,
+        company_name: form.companyName,
+        org_number: form.orgNumber,
+        address_street: form.addressStreet,
+        address_postal_code: form.addressPostalCode,
+        address_city: form.addressCity,
+        billing_email: form.billingEmail,
         role: "customer",
         created_at: new Date().toISOString(),
       },
@@ -115,7 +175,7 @@ export default function AdminCustomersClient({
     const res = await fetch(`/api/admin/customers/${editing.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: formName, email: formEmail, phone: formPhone }),
+      body: JSON.stringify(formPayload()),
     });
     const data = await res.json();
     setSaving(false);
@@ -128,7 +188,18 @@ export default function AdminCustomersClient({
     setCustomers((cs) =>
       cs.map((c) =>
         c.id === editing.id
-          ? { ...c, full_name: formName, email: formEmail, phone: formPhone }
+          ? {
+              ...c,
+              full_name: form.name,
+              email: form.email,
+              phone: form.phone,
+              company_name: form.companyName,
+              org_number: form.orgNumber,
+              address_street: form.addressStreet,
+              address_postal_code: form.addressPostalCode,
+              address_city: form.addressCity,
+              billing_email: form.billingEmail,
+            }
           : c
       )
     );
@@ -179,16 +250,17 @@ export default function AdminCustomersClient({
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Sök namn eller e-post"
+          placeholder="Sök namn, företag eller e-post"
           className="border-none outline-none text-[13.5px] flex-1 bg-transparent"
         />
       </div>
 
-      <div className="bg-surface border border-line rounded-2xl overflow-hidden">
+      <div className="bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
         <table className="w-full border-collapse">
           <thead>
             <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
               <th className="py-3 px-5 font-semibold">Namn</th>
+              <th className="py-3 px-5 font-semibold">Företag</th>
               <th className="py-3 px-5 font-semibold">E-post</th>
               <th className="py-3 px-5 font-semibold">Sajt</th>
               <th className="py-3 px-5 font-semibold">Status</th>
@@ -207,36 +279,37 @@ export default function AdminCustomersClient({
                   ? "bg-[#FDE68A] text-[#7C4A03]"
                   : "bg-line text-ink-dim";
               return (
-              <tr key={c.id} className="text-[13.5px] border-t border-line">
-                <td className="py-3.5 px-5 font-semibold">{c.full_name || "—"}</td>
-                <td className="py-3.5 px-5 text-ink-dim">{c.email}</td>
-                <td className="py-3.5 px-5 text-ink-dim">{site?.domain || site?.name || "—"}</td>
-                <td className="py-3.5 px-5">
-                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>
-                    {statusLabel}
-                  </span>
-                </td>
-                <td className="py-3.5 px-5 text-ink-dim">{formatDate(c.created_at)}</td>
-                <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                  <button
-                    onClick={() => openEdit(c)}
-                    className="text-[12.5px] font-semibold text-ink mr-4"
-                  >
-                    Redigera
-                  </button>
-                  <button
-                    onClick={() => setConfirmDelete(c)}
-                    className="text-[12.5px] font-semibold text-warm"
-                  >
-                    Ta bort
-                  </button>
-                </td>
-              </tr>
+                <tr key={c.id} className="text-[13.5px] border-t border-line">
+                  <td className="py-3.5 px-5 font-semibold whitespace-nowrap">{c.full_name || "—"}</td>
+                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.company_name || "—"}</td>
+                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.email}</td>
+                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{site?.domain || site?.name || "—"}</td>
+                  <td className="py-3.5 px-5 whitespace-nowrap">
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>
+                      {statusLabel}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{formatDate(c.created_at)}</td>
+                  <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                    <button
+                      onClick={() => openEdit(c)}
+                      className="text-[12.5px] font-semibold text-ink mr-4"
+                    >
+                      Redigera
+                    </button>
+                    <button
+                      onClick={() => setConfirmDelete(c)}
+                      className="text-[12.5px] font-semibold text-warm"
+                    >
+                      Ta bort
+                    </button>
+                  </td>
+                </tr>
               );
             })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-8 px-5 text-center text-ink-dim text-[13.5px]">
+                <td colSpan={7} className="py-8 px-5 text-center text-ink-dim text-[13.5px]">
                   Inga kunder hittades.
                 </td>
               </tr>
@@ -248,15 +321,7 @@ export default function AdminCustomersClient({
       {/* Lägg till-modal */}
       {showAdd && (
         <Modal onClose={closeModals} title="Lägg till kund">
-          <CustomerForm
-            name={formName}
-            email={formEmail}
-            phone={formPhone}
-            onNameChange={setFormName}
-            onEmailChange={setFormEmail}
-            onPhoneChange={setFormPhone}
-            emailDisabled={false}
-          />
+          <CustomerForm form={form} onChange={updateField} emailDisabled={false} />
           {error && <div className="text-[13px] text-warm font-medium mt-2">{error}</div>}
           <div className="flex justify-end gap-2.5 mt-5">
             <button onClick={closeModals} className="text-[13.5px] font-semibold text-ink-dim px-4 py-2.5">
@@ -264,7 +329,7 @@ export default function AdminCustomersClient({
             </button>
             <button
               onClick={handleCreate}
-              disabled={saving || !formName || !formEmail}
+              disabled={saving || !form.name || !form.email}
               className="bg-accent text-accent-ink font-semibold text-[13.5px] px-5 py-2.5 rounded-lg disabled:opacity-60"
             >
               {saving ? "Skapar …" : "Skapa kund"}
@@ -276,15 +341,7 @@ export default function AdminCustomersClient({
       {/* Redigera-modal */}
       {editing && (
         <Modal onClose={closeModals} title="Redigera kund">
-          <CustomerForm
-            name={formName}
-            email={formEmail}
-            phone={formPhone}
-            onNameChange={setFormName}
-            onEmailChange={setFormEmail}
-            onPhoneChange={setFormPhone}
-            emailDisabled={false}
-          />
+          <CustomerForm form={form} onChange={updateField} emailDisabled={false} />
           {error && <div className="text-[13px] text-warm font-medium mt-2">{error}</div>}
           <div className="flex justify-end gap-2.5 mt-5">
             <button onClick={closeModals} className="text-[13.5px] font-semibold text-ink-dim px-4 py-2.5">
@@ -292,7 +349,7 @@ export default function AdminCustomersClient({
             </button>
             <button
               onClick={handleUpdate}
-              disabled={saving || !formName || !formEmail}
+              disabled={saving || !form.name || !form.email}
               className="bg-accent text-accent-ink font-semibold text-[13.5px] px-5 py-2.5 rounded-lg disabled:opacity-60"
             >
               {saving ? "Sparar …" : "Spara ändringar"}
@@ -358,8 +415,8 @@ function Modal({
   children: React.ReactNode;
 }) {
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-30 px-4">
-      <div className="bg-surface rounded-2xl p-6 w-full max-w-[420px]">
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-30 px-4 py-8 overflow-y-auto">
+      <div className="bg-surface rounded-2xl p-6 w-full max-w-[480px] max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[18px] font-semibold">{title}</h2>
           <button onClick={onClose} aria-label="Stäng" className="text-ink-dim">
@@ -376,20 +433,12 @@ function Modal({
 }
 
 function CustomerForm({
-  name,
-  email,
-  phone,
-  onNameChange,
-  onEmailChange,
-  onPhoneChange,
+  form,
+  onChange,
   emailDisabled,
 }: {
-  name: string;
-  email: string;
-  phone: string;
-  onNameChange: (v: string) => void;
-  onEmailChange: (v: string) => void;
-  onPhoneChange: (v: string) => void;
+  form: FormState;
+  onChange: (field: keyof FormState) => (value: string) => void;
   emailDisabled: boolean;
 }) {
   return (
@@ -397,8 +446,8 @@ function CustomerForm({
       <div>
         <label className="block text-[13px] font-semibold mb-1.5">Namn</label>
         <input
-          value={name}
-          onChange={(e) => onNameChange(e.target.value)}
+          value={form.name}
+          onChange={(e) => onChange("name")(e.target.value)}
           className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
         />
       </div>
@@ -406,18 +455,78 @@ function CustomerForm({
         <label className="block text-[13px] font-semibold mb-1.5">E-post</label>
         <input
           type="email"
-          value={email}
+          value={form.email}
           disabled={emailDisabled}
-          onChange={(e) => onEmailChange(e.target.value)}
+          onChange={(e) => onChange("email")(e.target.value)}
           className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px] disabled:bg-bg disabled:text-ink-dim"
         />
       </div>
       <div>
         <label className="block text-[13px] font-semibold mb-1.5">Telefon</label>
         <input
-          value={phone}
-          onChange={(e) => onPhoneChange(e.target.value)}
+          value={form.phone}
+          onChange={(e) => onChange("phone")(e.target.value)}
           placeholder="07X – XXX XX XX"
+          className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+        />
+      </div>
+
+      <div className="border-t border-line pt-3.5 mt-0.5">
+        <div className="text-[12.5px] font-semibold text-ink-dim mb-3">Företag och fakturering</div>
+      </div>
+
+      <div>
+        <label className="block text-[13px] font-semibold mb-1.5">Företagsnamn</label>
+        <input
+          value={form.companyName}
+          onChange={(e) => onChange("companyName")(e.target.value)}
+          className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+        />
+      </div>
+      <div>
+        <label className="block text-[13px] font-semibold mb-1.5">Organisationsnummer</label>
+        <input
+          value={form.orgNumber}
+          onChange={(e) => onChange("orgNumber")(e.target.value)}
+          placeholder="XXXXXX-XXXX"
+          className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+        />
+      </div>
+      <div>
+        <label className="block text-[13px] font-semibold mb-1.5">Adress</label>
+        <input
+          value={form.addressStreet}
+          onChange={(e) => onChange("addressStreet")(e.target.value)}
+          placeholder="Gatuadress"
+          className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+        />
+      </div>
+      <div className="flex gap-3">
+        <div className="w-[110px] flex-shrink-0">
+          <label className="block text-[13px] font-semibold mb-1.5">Postnr</label>
+          <input
+            value={form.addressPostalCode}
+            onChange={(e) => onChange("addressPostalCode")(e.target.value)}
+            placeholder="XXX XX"
+            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+          />
+        </div>
+        <div className="flex-1">
+          <label className="block text-[13px] font-semibold mb-1.5">Ort</label>
+          <input
+            value={form.addressCity}
+            onChange={(e) => onChange("addressCity")(e.target.value)}
+            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+          />
+        </div>
+      </div>
+      <div>
+        <label className="block text-[13px] font-semibold mb-1.5">Fakturerings-e-post</label>
+        <input
+          type="email"
+          value={form.billingEmail}
+          onChange={(e) => onChange("billingEmail")(e.target.value)}
+          placeholder="Lämna tomt för att använda kontots e-post"
           className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
         />
       </div>

@@ -41,6 +41,12 @@ export async function POST(request: Request) {
   const email = (body.email ?? "").trim();
   const fullName = (body.fullName ?? "").trim();
   const phone = (body.phone ?? "").trim();
+  const companyName = (body.companyName ?? "").trim();
+  const orgNumber = (body.orgNumber ?? "").trim();
+  const addressStreet = (body.addressStreet ?? "").trim();
+  const addressPostalCode = (body.addressPostalCode ?? "").trim();
+  const addressCity = (body.addressCity ?? "").trim();
+  const billingEmail = (body.billingEmail ?? "").trim();
 
   if (!email || !fullName) {
     return NextResponse.json({ error: "Namn och e-post krävs." }, { status: 400 });
@@ -60,9 +66,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: createError.message }, { status: 400 });
   }
 
-  if (phone) {
-    await admin.from("profiles").update({ phone }).eq("id", created.user.id);
-  }
+  await admin
+    .from("profiles")
+    .update({
+      phone,
+      company_name: companyName,
+      org_number: orgNumber,
+      address_street: addressStreet,
+      address_postal_code: addressPostalCode,
+      address_city: addressCity,
+      billing_email: billingEmail,
+    })
+    .eq("id", created.user.id);
 
   return NextResponse.json({
     customer: { id: created.user.id, email, fullName },

@@ -6,7 +6,9 @@ export default async function AdminCustomersPage() {
 
   const { data: customers } = await supabase
     .from("profiles")
-    .select("id, email, full_name, phone, role, created_at, sites(id, name, domain, status, plan)")
+    .select(
+      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, role, created_at, sites(id, name, domain, status, plan)"
+    )
     .order("created_at", { ascending: false });
 
   return (

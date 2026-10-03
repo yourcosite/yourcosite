@@ -11,6 +11,12 @@ create table if not exists profiles (
   email text not null,
   full_name text,
   phone text,
+  company_name text,
+  org_number text,
+  address_street text,
+  address_postal_code text,
+  address_city text,
+  billing_email text,
   role text not null default 'customer' check (role in ('customer', 'admin')),
   created_at timestamptz not null default now()
 );
@@ -107,8 +113,21 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email, full_name)
-  values (new.id, new.email, new.raw_user_meta_data->>'full_name');
+  insert into public.profiles (
+    id, email, full_name, phone, company_name, org_number,
+    address_street, address_postal_code, address_city, billing_email
+  )
+  values (
+    new.id, new.email,
+    new.raw_user_meta_data->>'full_name',
+    new.raw_user_meta_data->>'phone',
+    new.raw_user_meta_data->>'company_name',
+    new.raw_user_meta_data->>'org_number',
+    new.raw_user_meta_data->>'address_street',
+    new.raw_user_meta_data->>'address_postal_code',
+    new.raw_user_meta_data->>'address_city',
+    new.raw_user_meta_data->>'billing_email'
+  );
   return new;
 end;
 $$;

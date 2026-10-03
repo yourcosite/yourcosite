@@ -12,6 +12,13 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [password2, setPassword2] = useState("");
+  const [phone, setPhone] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [orgNumber, setOrgNumber] = useState("");
+  const [addressStreet, setAddressStreet] = useState("");
+  const [addressPostalCode, setAddressPostalCode] = useState("");
+  const [addressCity, setAddressCity] = useState("");
+  const [billingEmail, setBillingEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -33,7 +40,18 @@ export default function SignupPage() {
     const { error: signUpError } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: name } },
+      options: {
+        data: {
+          full_name: name,
+          phone,
+          company_name: companyName,
+          org_number: orgNumber,
+          address_street: addressStreet,
+          address_postal_code: addressPostalCode,
+          address_city: addressCity,
+          billing_email: billingEmail,
+        },
+      },
     });
     setLoading(false);
 
@@ -74,7 +92,7 @@ export default function SignupPage() {
       </div>
 
       <div className="flex-1 flex items-center justify-center bg-surface px-6 py-16 overflow-y-auto">
-        <div className="w-full max-w-[380px]">
+        <div className="w-full max-w-[440px]">
           <h2 className="text-[28px] font-medium mb-2">Skapa ditt konto</h2>
           <p className="text-[15px] text-ink-dim mb-7">
             Tar under en minut. Nästa steg är att berätta om er
@@ -135,6 +153,104 @@ export default function SignupPage() {
                 value={password2}
                 onChange={(e) => setPassword2(e.target.value)}
                 placeholder="••••••••"
+                className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+              />
+            </div>
+
+            <div className="border-t border-line pt-4 mt-1">
+              <div className="text-[13px] font-semibold text-ink-dim mb-3.5">
+                Företag och fakturering (valfritt, går bra att fylla i senare)
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="phone" className="block text-[13.5px] font-semibold mb-1.5">
+                Telefon
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="07X – XXX XX XX"
+                className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+              />
+            </div>
+            <div>
+              <label htmlFor="companyName" className="block text-[13.5px] font-semibold mb-1.5">
+                Företagsnamn
+              </label>
+              <input
+                id="companyName"
+                type="text"
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+              />
+            </div>
+            <div>
+              <label htmlFor="orgNumber" className="block text-[13.5px] font-semibold mb-1.5">
+                Organisationsnummer
+              </label>
+              <input
+                id="orgNumber"
+                type="text"
+                value={orgNumber}
+                onChange={(e) => setOrgNumber(e.target.value)}
+                placeholder="XXXXXX-XXXX"
+                className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+              />
+            </div>
+            <div>
+              <label htmlFor="addressStreet" className="block text-[13.5px] font-semibold mb-1.5">
+                Adress
+              </label>
+              <input
+                id="addressStreet"
+                type="text"
+                value={addressStreet}
+                onChange={(e) => setAddressStreet(e.target.value)}
+                placeholder="Gatuadress"
+                className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+              />
+            </div>
+            <div className="flex gap-3">
+              <div className="w-[120px] flex-shrink-0">
+                <label htmlFor="postal" className="block text-[13.5px] font-semibold mb-1.5">
+                  Postnummer
+                </label>
+                <input
+                  id="postal"
+                  type="text"
+                  value={addressPostalCode}
+                  onChange={(e) => setAddressPostalCode(e.target.value)}
+                  placeholder="XXX XX"
+                  className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+                />
+              </div>
+              <div className="flex-1">
+                <label htmlFor="city" className="block text-[13.5px] font-semibold mb-1.5">
+                  Ort
+                </label>
+                <input
+                  id="city"
+                  type="text"
+                  value={addressCity}
+                  onChange={(e) => setAddressCity(e.target.value)}
+                  className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+                />
+              </div>
+            </div>
+            <div>
+              <label htmlFor="billingEmail" className="block text-[13.5px] font-semibold mb-1.5">
+                Fakturerings-e-post
+              </label>
+              <input
+                id="billingEmail"
+                type="email"
+                value={billingEmail}
+                onChange={(e) => setBillingEmail(e.target.value)}
+                placeholder="Lämna tomt för att använda kontots e-post"
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>

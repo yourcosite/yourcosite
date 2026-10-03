@@ -30,6 +30,12 @@ export async function PATCH(
   const fullName = (body.fullName ?? "").trim();
   const phone = (body.phone ?? "").trim();
   const email = (body.email ?? "").trim();
+  const companyName = (body.companyName ?? "").trim();
+  const orgNumber = (body.orgNumber ?? "").trim();
+  const addressStreet = (body.addressStreet ?? "").trim();
+  const addressPostalCode = (body.addressPostalCode ?? "").trim();
+  const addressCity = (body.addressCity ?? "").trim();
+  const billingEmail = (body.billingEmail ?? "").trim();
 
   const admin = createAdminClient();
 
@@ -45,6 +51,12 @@ export async function PATCH(
     .update({
       full_name: fullName,
       phone,
+      company_name: companyName,
+      org_number: orgNumber,
+      address_street: addressStreet,
+      address_postal_code: addressPostalCode,
+      address_city: addressCity,
+      billing_email: billingEmail,
       ...(email ? { email } : {}),
     })
     .eq("id", params.id);
