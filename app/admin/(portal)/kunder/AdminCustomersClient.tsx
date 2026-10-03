@@ -86,6 +86,22 @@ export default function AdminCustomersClient({
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
+  const [resetSentFor, setResetSentFor] = useState<string | null>(null);
+  const [resetSendingFor, setResetSendingFor] = useState<string | null>(null);
+
+  const handleSendReset = async (c: Customer) => {
+    setResetSendingFor(c.id);
+    setResetSentFor(null);
+    const res = await fetch(`/api/admin/customers/${c.id}/reset-password`, { method: "POST" });
+    setResetSendingFor(null);
+    if (res.ok) {
+      setResetSentFor(c.id);
+      setTimeout(() => setResetSentFor((id) => (id === c.id ? null : id)), 4000);
+    } else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Kunde inte skicka återställningsmail.");
+    }
+  };
 
   const updateField = (field: keyof FormState) => (value: string) =>
     setForm((f) => ({ ...f, [field]: value }));
@@ -242,6 +258,10 @@ export default function AdminCustomersClient({
         </button>
       </div>
 
+      {error && !showAdd && !editing && !confirmDelete && (
+        <div className="text-[13.5px] text-warm font-medium mb-4">{error}</div>
+      )}
+
       <div className="flex items-center gap-2 bg-surface border border-line rounded-[10px] px-3.5 py-2 w-[280px] mb-5">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6B6A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
@@ -291,6 +311,19 @@ export default function AdminCustomersClient({
                   </td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{formatDate(c.created_at)}</td>
                   <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                    {resetSentFor === c.id ? (
+                      <span className="text-[12.5px] font-semibold text-[#166534] mr-4">
+                        Mail skickat ✓
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleSendReset(c)}
+                        disabled={resetSendingFor === c.id}
+                        className="text-[12.5px] font-semibold text-ink-dim mr-4 disabled:opacity-60"
+                      >
+                        {resetSendingFor === c.id ? "Skickar …" : "Återställ lösenord"}
+                      </button>
+                    )}
                     <button
                       onClick={() => openEdit(c)}
                       className="text-[12.5px] font-semibold text-ink mr-4"
