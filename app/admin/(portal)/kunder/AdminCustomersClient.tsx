@@ -22,6 +22,8 @@ type Customer = {
   address_postal_code?: string | null;
   address_city?: string | null;
   billing_email?: string | null;
+  chosen_plan?: string | null;
+  billing_setup_complete?: boolean;
   role: string;
   created_at: string;
   sites?: Site[];
@@ -317,6 +319,14 @@ export default function AdminCustomersClient({
                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>
                       {statusLabel}
                     </span>
+                    {!c.billing_setup_complete && (
+                      <span
+                        className="ml-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FDE68A] text-[#7C4A03]"
+                        title="Kunden har inte kopplat ett betalkort än"
+                      >
+                        BETALNING EJ KLAR
+                      </span>
+                    )}
                   </td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{formatDate(c.created_at)}</td>
                   <td className="py-3.5 px-5 text-right whitespace-nowrap">

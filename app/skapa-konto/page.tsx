@@ -70,7 +70,7 @@ export default function SignupPage() {
       return;
     }
 
-    router.push("/onboarding/1");
+    router.push("/skapa-konto/paket");
     router.refresh();
   };
 
@@ -101,8 +101,8 @@ export default function SignupPage() {
         <div className="w-full max-w-[440px]">
           <h2 className="text-[28px] font-medium mb-2">Skapa ditt konto</h2>
           <p className="text-[15px] text-ink-dim mb-7">
-            Tar under en minut. Nästa steg är att berätta om er
-            verksamhet.
+            Tar under en minut. Nästa steg är att välja paket — sen är ni
+            inne i kundportalen.
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">

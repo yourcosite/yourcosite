@@ -25,6 +25,8 @@ type Customer = {
   address_postal_code: string | null;
   address_city: string | null;
   billing_email: string | null;
+  chosen_plan: string | null;
+  billing_setup_complete: boolean;
   created_at: string;
   sites: Site[];
 };
@@ -210,9 +212,24 @@ export default function CustomerDetailClient({
                 {PLAN_LABELS[site.plan] ?? site.plan} — {formatKr(planPrice(site.plan))}/mån
               </>
             )}
+            {!site && customer.chosen_plan && (
+              <>
+                {" · "}Valde {PLAN_LABELS[customer.chosen_plan] ?? customer.chosen_plan} vid registrering
+              </>
+            )}
           </p>
         </div>
-        <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${statusBadge}`}>{statusLabel}</span>
+        <div className="flex items-center gap-2">
+          {!customer.billing_setup_complete && (
+            <span
+              className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-[#FDE68A] text-[#7C4A03]"
+              title="Kunden har inte kopplat ett betalkort än (korthantering är inte byggt än)"
+            >
+              BETALNING EJ KLAR
+            </span>
+          )}
+          <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${statusBadge}`}>{statusLabel}</span>
+        </div>
       </div>
 
       {canEdit && (

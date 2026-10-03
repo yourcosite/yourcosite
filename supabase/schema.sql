@@ -21,6 +21,18 @@ create table if not exists profiles (
   address_postal_code text,
   address_city text,
   billing_email text,
+  -- Paketet kunden valde i registreringens betalsteg (app/skapa-konto/paket)
+  -- — null tills de väljer ett (det steget går att hoppa över helt för nu,
+  -- se billing_setup_complete). Separat från sites.plan: det här är vad
+  -- kunden SA att de ville ha, sites.plan är vad en given sajt faktiskt
+  -- körs på — de sätts lika när första sajten skapas, men kan gå isär om
+  -- kunden byter plan på en specifik sajt senare.
+  chosen_plan text check (chosen_plan in ('bas', 'standard', 'premium')),
+  -- true bara när kundens betalkort faktiskt är kopplat (riktig
+  -- betalintegration finns inte än — se app/skapa-konto/paket/page.tsx,
+  -- som alltid lämnar den här false). Låter staff se i adminportalen vilka
+  -- kunder som hoppade över kortuppgifterna och behöver kontaktas.
+  billing_setup_complete boolean not null default false,
   role text not null default 'customer'
     check (role in ('customer', 'support', 'admin', 'superadmin')),
   created_at timestamptz not null default now()

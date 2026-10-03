@@ -15,7 +15,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const { data: customer } = await supabase
     .from("profiles")
     .select(
-      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, created_at, sites(id, name, domain, status, plan, created_at)"
+      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, chosen_plan, billing_setup_complete, created_at, sites(id, name, domain, status, plan, created_at)"
     )
     .eq("id", params.id)
     .eq("role", "customer")
