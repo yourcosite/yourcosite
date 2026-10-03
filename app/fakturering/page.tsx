@@ -1,5 +1,6 @@
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
+import { createClient } from "@/lib/supabase/server";
 
 const invoices = [
   { date: "1 oktober 2026", amount: "249 kr", status: "Betald" },
@@ -8,10 +9,23 @@ const invoices = [
   { date: "1 juli 2026", amount: "249 kr", status: "Betald" },
 ];
 
-export default function BillingPage() {
+export default async function BillingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let userName = "Ditt konto";
+  const userEmail = user?.email ?? "";
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .single();
+    userName = profile?.full_name || userEmail;
+  }
+
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col">
-      <AccountHeader active="/fakturering" />
+      <AccountHeader active="/fakturering" userName={userName} userEmail={userEmail} />
 
       <div className="flex-1 px-6 md:px-12 py-10">
         <h1 className="text-[30px] font-medium mb-7">Fakturering</h1>

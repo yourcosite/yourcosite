@@ -1,12 +1,43 @@
-import Link from "next/link";
-import type { Metadata } from "next";
-import Logo from "@/components/Logo";
+"use client";
 
-export const metadata: Metadata = {
-  title: "Logga in",
-};
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import Logo from "@/components/Logo";
+import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (signInError) {
+      setError(
+        signInError.message === "Invalid login credentials"
+          ? "Fel e-post eller lösenord."
+          : signInError.message
+      );
+      return;
+    }
+
+    router.push("/dashboard");
+    router.refresh();
+  };
+
   return (
     <div className="flex min-h-screen font-sans">
       <div className="hidden md:flex w-[46%] bg-ink text-[#F4F3F0] p-14 flex-col justify-between">
@@ -37,7 +68,7 @@ export default function LoginPage() {
             Logga in för att fortsätta jobba på era sajter.
           </p>
 
-          <form className="flex flex-col gap-4">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label htmlFor="email" className="block text-[13.5px] font-semibold mb-1.5">
                 E-post
@@ -45,6 +76,9 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="du@företag.se"
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
@@ -56,6 +90,9 @@ export default function LoginPage() {
               <input
                 id="pw"
                 type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
@@ -65,12 +102,18 @@ export default function LoginPage() {
                 Glömt lösenord?
               </a>
             </div>
-            <Link
-              href="/dashboard"
-              className="block text-center bg-accent text-accent-ink font-semibold text-[15.5px] py-3.5 rounded-[10px] mt-1"
+
+            {error && (
+              <div className="text-[13.5px] text-warm font-medium -mt-1">{error}</div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="block text-center bg-accent text-accent-ink font-semibold text-[15.5px] py-3.5 rounded-[10px] mt-1 disabled:opacity-60"
             >
-              Logga in
-            </Link>
+              {loading ? "Loggar in …" : "Logga in"}
+            </button>
           </form>
 
           <div className="flex items-center gap-3 my-7">
