@@ -4,9 +4,33 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import SitePreview from "@/components/SitePreview";
+import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 
-type ChatMessage = { from: "user" | "bot"; text: string };
+type ChatMessage = { from: "user" | "bot"; text: string; attachmentName?: string };
+
+// Bilagor i chatten: bilder skickas till Claude som en riktig bild (den kan
+// t.ex. föreslå var den passar, eller — ber kunden om det uttryckligen —
+// sättas som en sektions imageUrl, se attachmentNote i /api/sites/edit).
+// Textdokument (.txt/.md läses direkt i webbläsaren, .pdf/.docx via
+// /api/sites/attachments/extract eftersom de kräver serverkod) skickas som
+// ren text — aldrig som rå fil till AI:n.
+type Attachment = {
+  kind: "image" | "document";
+  url: string;
+  name: string;
+  mimeType: string;
+  text?: string;
+};
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_DOC_BYTES = 10 * 1024 * 1024;
+const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const PLAIN_TEXT_TYPES = ["text/plain", "text/markdown"];
+const EXTRACTABLE_DOC_TYPES = [
+  "application/pdf",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
 type SiteMeta = {
   id: string;
@@ -41,6 +65,11 @@ export default function EditorPage() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  const [attaching, setAttaching] = useState(false);
+  const [attachError, setAttachError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   useEffect(() => {
     fetch("/api/sites/mine")
       .then((r) => r.json())
@@ -60,18 +89,84 @@ export default function EditorPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  const handleFile = async (file: File) => {
+    setAttachError("");
+    const isImage = IMAGE_TYPES.includes(file.type);
+    const isPlainText = PLAIN_TEXT_TYPES.includes(file.type) || /\.(txt|md)$/i.test(file.name);
+    const isExtractableDoc = EXTRACTABLE_DOC_TYPES.includes(file.type);
+
+    if (!isImage && !isPlainText && !isExtractableDoc) {
+      setAttachError("Filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.");
+      return;
+    }
+    const maxBytes = isImage ? MAX_IMAGE_BYTES : MAX_DOC_BYTES;
+    if (file.size > maxBytes) {
+      setAttachError(`Filen är större än ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+      return;
+    }
+
+    setAttaching(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${user.id}/chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("uploads")
+        .upload(path, file, { contentType: file.type || undefined });
+      if (uploadError) throw new Error(`Gick inte att ladda upp: ${uploadError.message}`);
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+
+      if (isImage) {
+        setAttachment({ kind: "image", url: pub.publicUrl, name: file.name, mimeType: file.type });
+        return;
+      }
+
+      if (isPlainText) {
+        const text = await file.text();
+        setAttachment({ kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type || "text/plain", text });
+        return;
+      }
+
+      // PDF/Word kräver serverkod för att läsa ut texten.
+      const res = await fetch("/api/sites/attachments/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileUrl: pub.publicUrl, mimeType: file.type }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Kunde inte läsa filen.");
+      setAttachment({ kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type, text: data.text });
+    } catch (e: any) {
+      setAttachError(e.message);
+    } finally {
+      setAttaching(false);
+    }
+  };
+
   const send = async () => {
     const text = draft.trim();
-    if (!text || sending) return;
+    if ((!text && !attachment) || sending || attaching) return;
     const history = messages;
-    setMessages((m) => [...m, { from: "user", text }]);
+    const currentAttachment = attachment;
+    setMessages((m) => [
+      ...m,
+      { from: "user", text: text || "(bifogad fil)", attachmentName: currentAttachment?.name },
+    ]);
     setDraft("");
+    setAttachment(null);
     setSending(true);
     try {
       const res = await fetch("/api/sites/edit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, history }),
+        body: JSON.stringify({
+          message: text || `Se bifogad fil: ${currentAttachment?.name}`,
+          history,
+          attachment: currentAttachment,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
@@ -186,6 +281,11 @@ export default function EditorPage() {
                     : "self-start bg-bg rounded-[14px_14px_14px_4px]"
                 }`}
               >
+                {m.attachmentName && (
+                  <div className={`text-[12px] mb-1 flex items-center gap-1 ${m.from === "user" ? "text-accent-ink/70" : "text-ink-dim"}`}>
+                    📎 {m.attachmentName}
+                  </div>
+                )}
                 {m.text}
               </div>
             ))}
@@ -197,7 +297,53 @@ export default function EditorPage() {
           </div>
 
           <div className="px-5 py-4 border-t border-line">
-            <div className="flex items-center gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-4 pr-1.5">
+            {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
+            {attachment && (
+              <div className="flex items-center gap-2 bg-bg border border-line rounded-lg px-3 py-2 mb-2">
+                {attachment.kind === "image" ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={attachment.url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                ) : (
+                  <span className="text-[14px] flex-shrink-0">📄</span>
+                )}
+                <span className="text-[12.5px] truncate flex-1">{attachment.name}</span>
+                <button
+                  type="button"
+                  onClick={() => setAttachment(null)}
+                  aria-label="Ta bort bilagan"
+                  className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+            <div className="flex items-center gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-2 pr-1.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,text/plain,text/markdown,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files?.[0]) handleFile(e.target.files[0]);
+                  e.target.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={sending || attaching || !content}
+                aria-label="Bifoga fil"
+                title="Bifoga en bild eller ett textdokument"
+                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60"
+              >
+                {attaching ? (
+                  <span className="text-[11px]">…</span>
+                ) : (
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                  </svg>
+                )}
+              </button>
               <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -208,7 +354,7 @@ export default function EditorPage() {
               />
               <button
                 onClick={send}
-                disabled={sending || !content}
+                disabled={sending || attaching || !content || (!draft.trim() && !attachment)}
                 aria-label="Skicka"
                 className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60"
               >
