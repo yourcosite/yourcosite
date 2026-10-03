@@ -229,9 +229,29 @@ function SocialIcons({ socialLinks, palette }: { socialLinks: SocialLink[]; pale
   );
 }
 
-function ImageOrArt({ imageUrl, art, className, dark }: { imageUrl?: string; art: string; className?: string; dark?: boolean }) {
+// "fill" = true när boxen själv ska vara absolut positionerad och fylla sin
+// förälder (t.ex. startsidans fullbreda "overlay-bottom"-hero), istället för
+// att ha en egen explicit höjd. VIKTIGT: måste vara en egen prop, inte bara
+// skickas in via className som "absolute inset-0" — Tailwind låter annars
+// klassen "relative" (som boxen alltid har som grundklass) vinna över
+// "absolute" oavsett vilken ordning klasserna står i, så boxen (och bilden i
+// den) kollapsade till 0 pixlars höjd och blev osynlig. Det var den faktiska
+// orsaken till att startsidans hero-bild aldrig syntes.
+function ImageOrArt({
+  imageUrl,
+  art,
+  className,
+  dark,
+  fill,
+}: {
+  imageUrl?: string;
+  art: string;
+  className?: string;
+  dark?: boolean;
+  fill?: boolean;
+}) {
   return (
-    <div className={`relative overflow-hidden ${className || ""}`} style={{ background: art }}>
+    <div className={`${fill ? "absolute inset-0" : "relative"} overflow-hidden ${className || ""}`} style={{ background: art }}>
       {imageUrl && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -324,7 +344,7 @@ function SectionBlock({
       if (layout === "overlay-bottom") {
         return (
           <div className={`relative ${heroEmphasis ? "h-[560px] md:h-[720px]" : "h-[460px] md:h-[560px]"}`}>
-            <ImageOrArt imageUrl={section.imageUrl} art={art} className="absolute inset-0" dark />
+            <ImageOrArt imageUrl={section.imageUrl} art={art} fill dark />
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.05) 75%)" }}
