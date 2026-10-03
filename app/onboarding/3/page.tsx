@@ -284,8 +284,8 @@ export default function OnboardingStep3() {
           <span className="text-[13.5px] text-ink leading-relaxed">
             YourCoSite kan inte generera egna bilder åt dig — av
             upphovsrättsskäl skapar vi aldrig nya foton eller
-            illustrationer. Ladda upp dina egna bilder ovan, eller välj
-            bland royaltyfria bilder längre fram i processen.
+            illustrationer. Ladda upp dina bilder här ovan — du kan alltid
+            be oss lägga till fler bilder senare.
           </span>
         </div>
 

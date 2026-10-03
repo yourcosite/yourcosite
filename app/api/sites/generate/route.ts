@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
+import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
-import { summarizeInspirationLinks } from "@/lib/inspiration";
+import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspiration";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
 import { ensureImageSlots } from "@/lib/ensureImageSlots";
 import { getCurrentDraftSite } from "@/lib/supabase/onboardingSite";
@@ -168,7 +169,8 @@ const LAYOUT_TENDENCY_POOL = [
 function buildPrompt(
   site: any,
   pages: any[],
-  inspiration: { promptText: string; heroImageSignal: "yes" | "no" | "unknown" }
+  inspiration: { promptText: string; heroImageSignal: "yes" | "no" | "unknown" },
+  inspirationImageCount: number
 ) {
   const pagesDesc = pages
     .map(
@@ -178,19 +180,22 @@ function buildPrompt(
     .join("\n");
   const inspirationText = inspiration.promptText;
 
-  // Kundens egna referenslänkar är den STARKASTE signalen vi har för
-  // startsidans hero-layout — har de visat sajter med en stor bild högst
-  // upp ska deras egen sajt också få det, och tvärtom. Bara när vi inte har
-  // någon sådan signal (inga länkar, eller inga som gick att läsa) faller vi
-  // tillbaka på en slumpad knuff i kod, så att kunder utan referenser ändå
-  // inte alla konvergerar mot exakt samma val (språkmodeller har annars en
-  // stark tendens att välja "det säkra" om och om igen).
+  // Prioritetsordning för startsidans hero-layout: (1) uppladdade
+  // inspirationsbilder — de är riktig bilddata AI:n kan titta på direkt,
+  // starkare än att gissa utifrån HTML; (2) den HTML-baserade signalen från
+  // referenslänkarna (se lib/inspiration.ts); (3) bara när vi inte har
+  // NÅGON signal alls (inga länkar/bilder, eller inget som gick att läsa)
+  // faller vi tillbaka på en slumpad knuff i kod, så att kunder utan
+  // referenser ändå inte alla konvergerar mot exakt samma val (språkmodeller
+  // har annars en stark tendens att välja "det säkra" om och om igen).
   const heroLayoutInstruction =
-    inspiration.heroImageSignal === "yes"
+    inspirationImageCount > 0
+      ? `Kunden har bifogat ${inspirationImageCount} egna inspirationsbild${inspirationImageCount === 1 ? "" : "er"} i det här meddelandet (skärmdumpar/foton av sajter eller stilar de gillar) — det är din STARKASTE signal för layoutval, starkare än både ton/bransch och nedanstående riktlinjer. Titta noga på dem: har de en stor, framträdande bild/hero högst upp, välj layouten "overlay-bottom" (fullbred bild bakom menyn) för startsidans hero; känns de mer återhållsamma/textfokuserade, välj en lugnare layout som "centered" istället.`
+      : inspiration.heroImageSignal === "yes"
       ? `Kundens egna referenssajter har tydligt en stor, framträdande bild/hero högst upp på startsidan — gör likadant här: välj layouten "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter) för startsidans hero, om inget i kundens beskrivning starkt talar emot det.`
       : inspiration.heroImageSignal === "no"
       ? `Kundens egna referenssajter har INTE någon framträdande bild/hero högst upp — de är mer textfokuserade. Spegla det: välj en mer återhållsam layout för startsidans hero, t.ex. "centered", istället för en fullbred bilddominerad lösning, om inget i kundens beskrivning starkt talar emot det.`
-      : `Som utgångspunkt för DEN HÄR sajten (ingen tydlig signal från referenslänkar att utgå från): luta åt layouten "${pickRandom(HOME_HERO_LAYOUT_POOL)}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right" eller "centered" om något av dem passar tydligt bättre.`;
+      : `Som utgångspunkt för DEN HÄR sajten (ingen tydlig signal från referenser att utgå från): luta åt layouten "${pickRandom(HOME_HERO_LAYOUT_POOL)}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right" eller "centered" om något av dem passar tydligt bättre.`;
 
   const suggestedTendency = pickRandom(LAYOUT_TENDENCY_POOL);
 
@@ -207,7 +212,7 @@ Beskrivning från kunden: ${site.description || "ej angiven"}
 Önskad ton: ${site.tone || "Personlig"}
 Visuell stil: ${site.style_id || "warm"}
 ${inspirationText}
-
+${inspirationImageCount > 0 ? `\nKunden har också bifogat ${inspirationImageCount} egna inspirationsbild${inspirationImageCount === 1 ? "" : "er"} till det här meddelandet (skärmdumpar/foton av sajter eller stilar de gillar) — titta på dem för KÄNSLA, TON och STRUKTUR precis som referenslänkarna ovan, kopiera aldrig text eller exakta formuleringar.\n` : ""}
 Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
 
@@ -262,6 +267,20 @@ export async function POST() {
   }
 
   const inspiration = await summarizeInspirationLinks(site.inspiration_links || []);
+  const inspirationImages = await fetchInspirationImages(site.inspiration_image_urls || []);
+
+  // Bilderna läggs FÖRE textprompten i samma meddelande — Claude väger in
+  // bilder bättre när de kommer innan texten som refererar till dem, enligt
+  // Anthropics egna rekommendationer för multimodala anrop.
+  const promptContent: Anthropic.MessageParam["content"] = [
+    ...inspirationImages.map(
+      (img): Anthropic.ImageBlockParam => ({
+        type: "image",
+        source: { type: "base64", media_type: img.mediaType as any, data: img.base64 },
+      })
+    ),
+    { type: "text", text: buildPrompt(site, pages, inspiration, inspirationImages.length) },
+  ];
 
   let message;
   try {
@@ -270,7 +289,7 @@ export async function POST() {
       max_tokens: 8000,
       tools: [GENERATE_TOOL],
       tool_choice: { type: "tool", name: "generate_site" },
-      messages: [{ role: "user", content: buildPrompt(site, pages, inspiration) }],
+      messages: [{ role: "user", content: promptContent }],
     });
   } catch (e: any) {
     return NextResponse.json(

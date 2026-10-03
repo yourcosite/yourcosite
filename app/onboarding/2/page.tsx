@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
+import InspirationImageUpload from "@/components/InspirationImageUpload";
 
 export default function OnboardingStep2() {
   const router = useRouter();
@@ -11,6 +12,11 @@ export default function OnboardingStep2() {
   const [u2, setU2] = useState("");
   const [u3, setU3] = useState("");
   const [saving, setSaving] = useState(false);
+  const [imagesUploading, setImagesUploading] = useState(false);
+  // Bara för att visa befintliga bilder igen om kunden går fram och
+  // tillbaka — själva sparandet sker direkt vid uppladdning/borttagning
+  // (se InspirationImageUpload), inte här i steg2-sparningen.
+  const [inspirationImageUrls, setInspirationImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/onboarding/current")
@@ -20,11 +26,16 @@ export default function OnboardingStep2() {
         setU1(links[0] || "");
         setU2(links[1] || "");
         setU3(links[2] || "");
+        setInspirationImageUrls(data.site?.inspiration_image_urls || []);
       })
       .catch(() => {});
   }, []);
 
   const next = async () => {
+    // Annars gick det att klicka vidare medan en bild fortfarande laddades
+    // upp i bakgrunden — exakt samma bugg som tidigare bet oss med de vanliga
+    // foton i steg 3 (se FileDropzone/onboarding/3).
+    if (imagesUploading) return;
     setSaving(true);
     try {
       await fetch("/api/onboarding/step2", {
@@ -95,6 +106,17 @@ export default function OnboardingStep2() {
             />
           </div>
 
+          <div className="mt-2">
+            <label className="block text-[13.5px] font-semibold mb-1.5">
+              Eller ladda upp bilder (valfritt)
+            </label>
+            <InspirationImageUpload
+              initialUrls={inspirationImageUrls}
+              onChange={setInspirationImageUrls}
+              onUploadingChange={setImagesUploading}
+            />
+          </div>
+
           <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mt-2">
             <span className="text-[13.5px] text-ink leading-relaxed">
               Har du ingen favorit? Hoppa över det här steget.
@@ -110,10 +132,10 @@ export default function OnboardingStep2() {
             </Link>
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || imagesUploading}
               className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
             >
-              {saving ? "Sparar …" : "Nästa →"}
+              {saving ? "Sparar …" : imagesUploading ? "Väntar på bilder …" : "Nästa →"}
             </button>
           </div>
         </form>

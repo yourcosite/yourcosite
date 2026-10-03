@@ -74,6 +74,14 @@ create table if not exists sites (
   tone text,
   style_id text,
   inspiration_links text[] default '{}',
+  -- Skärmdumpar/bilder kunden laddar upp som inspiration (onboarding steg
+  -- 2) — ett komplement till inspiration_links för referenser som inte går
+  -- att länka till (Pinterest-urklipp, ett foto av en skylt de gillar,
+  -- en sajt bakom inloggning, eller en modern sajt vars innehåll byggs med
+  -- JavaScript så att vår länk-hämtning inte ser något). Skickas som
+  -- bilder direkt till AI:n vid genereringen (se app/api/sites/generate),
+  -- aldrig använda som bilder I sajten.
+  inspiration_image_urls text[] default '{}',
   logo_url text,
   -- Kundens eget val av huvudbild (hero) i onboarding steg 3 — vinner
   -- alltid över startsidans hero i assignUploadedImages, istället för att

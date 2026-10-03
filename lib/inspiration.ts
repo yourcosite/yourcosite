@@ -69,6 +69,45 @@ export interface InspirationSummary {
   heroImageSignal: "yes" | "no" | "unknown";
 }
 
+// Max samma 5 MB som InspirationImageUpload redan begränsar uppladdningen
+// till (dubbelkollat här också eftersom gränsen annars bara gäller vid
+// uppladdningstillfället, inte vid själva genereringen).
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const SUPPORTED_IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+
+export interface FetchedInspirationImage {
+  mediaType: string;
+  base64: string;
+}
+
+// Hämtar kundens uppladdade inspirationsbilder (onboarding steg 2) och
+// base64-kodar dem så de kan skickas som riktig bilddata till Claude — en
+// betydligt starkare signal om layout/stämning än att bara läsa textutdrag
+// ur en länk (se detectHeroImage ovan, som är en ren HTML-gissning).
+// Hoppar tyst över en bild som inte går att hämta eller är för stor,
+// istället för att fela hela genereringen.
+export async function fetchInspirationImages(urls: string[]): Promise<FetchedInspirationImage[]> {
+  const results = await Promise.all(
+    urls.map(async (url) => {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (!res.ok) return null;
+        const contentType = (res.headers.get("content-type") || "").split(";")[0].trim();
+        if (!SUPPORTED_IMAGE_TYPES.includes(contentType)) return null;
+        const buf = Buffer.from(await res.arrayBuffer());
+        if (buf.byteLength > MAX_IMAGE_BYTES) return null;
+        return { mediaType: contentType, base64: buf.toString("base64") };
+      } catch {
+        return null;
+      }
+    })
+  );
+  return results.filter((r): r is FetchedInspirationImage => r !== null);
+}
+
 export async function summarizeInspirationLinks(links: string[]): Promise<InspirationSummary> {
   const valid = links.filter((l) => {
     try {
