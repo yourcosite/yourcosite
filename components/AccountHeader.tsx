@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "./Logo";
+import ContactSupportModal from "./ContactSupportModal";
 import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
@@ -30,6 +31,7 @@ export default function AccountHeader({
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   const router = useRouter();
 
   const handleLogout = async () => {
@@ -78,6 +80,15 @@ export default function AccountHeader({
             <Link href="/fakturering" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-ink">
               Fakturering
             </Link>
+            <button
+              onClick={() => {
+                setMenuOpen(false);
+                setContactOpen(true);
+              }}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-ink text-left"
+            >
+              Kontakta oss
+            </button>
             <div className="h-px bg-line my-1.5" />
             <button
               onClick={handleLogout}
@@ -89,6 +100,13 @@ export default function AccountHeader({
           </div>
         )}
       </div>
+
+      <ContactSupportModal
+        open={contactOpen}
+        onClose={() => setContactOpen(false)}
+        source="konto"
+        intro="Fråga oss något, eller skicka in ett önskemål om något du vill kunna göra eller ändra på din sajt."
+      />
     </div>
   );
 }

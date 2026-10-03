@@ -5,10 +5,22 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import Millie from "@/components/Millie";
 import SitePreview from "@/components/SitePreview";
+import ContactSupportModal from "@/components/ContactSupportModal";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 
-type ChatMessage = { from: "user" | "bot"; text: string; attachmentName?: string };
+type ChatMessage = {
+  from: "user" | "bot";
+  text: string;
+  attachmentName?: string;
+  // Satt på bot-svar när Claude flaggat "unsupported" (se
+  // /api/sites/edit) — innehållsmodellen stöder helt enkelt inte
+  // önskemålet (t.ex. bakgrundsfärg per enskild sida). requestText är
+  // kundens ursprungliga önskemål, sparat för att kunna förifylla
+  // "Skicka önskemål till oss"-rutan med rätt sammanhang.
+  unsupported?: boolean;
+  requestText?: string;
+};
 
 // Bilagor i chatten: bilder skickas till Claude som en riktig bild (den kan
 // t.ex. föreslå var den passar, eller — ber kunden om det uttryckligen —
@@ -94,6 +106,11 @@ export default function EditorPage() {
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // "Skicka önskemål till oss"-rutan som dyker upp när Millie stöter på
+  // ett önskemål innehållsmodellen inte stöder (se unsupported ovan).
+  const [supportOpen, setSupportOpen] = useState(false);
+  const [supportDraft, setSupportDraft] = useState({ message: "", context: "" });
 
   useEffect(() => {
     fetch("/api/sites/mine")
@@ -196,7 +213,15 @@ export default function EditorPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
       setContent(data.content);
-      setMessages((m) => [...m, { from: "bot", text: data.summary || "Klart!" }]);
+      setMessages((m) => [
+        ...m,
+        {
+          from: "bot",
+          text: data.summary || "Klart!",
+          unsupported: !!data.unsupported,
+          requestText: text || currentAttachment?.name,
+        },
+      ]);
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: `Det gick inte: ${e.message}` }]);
     } finally {
@@ -317,6 +342,21 @@ export default function EditorPage() {
                     </div>
                   )}
                   {m.text}
+                  {m.unsupported && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSupportDraft({
+                          message: m.requestText ? `Jag vill kunna: ${m.requestText}` : "",
+                          context: `Önskemål i chattredigeraren: "${m.requestText || ""}"\nMillies svar: "${m.text}"`,
+                        });
+                        setSupportOpen(true);
+                      }}
+                      className="mt-2.5 block text-[12.5px] font-semibold underline text-ink"
+                    >
+                      Skicka önskemålet till oss →
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -401,6 +441,17 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
+
+      <ContactSupportModal
+        open={supportOpen}
+        onClose={() => setSupportOpen(false)}
+        source="chattredigerare"
+        context={supportDraft.context}
+        defaultMessage={supportDraft.message}
+        siteId={site?.id}
+        title="Skicka önskemål till oss"
+        intro="Millie kan inte fixa det här själv än, men vi läser alla önskemål — skriv gärna lite mer om vad du vill kunna göra."
+      />
     </div>
   );
 }

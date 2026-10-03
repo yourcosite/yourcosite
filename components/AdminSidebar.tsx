@@ -40,6 +40,16 @@ const NAV_ITEMS: { href: string; label: string; roles: StaffRole[]; icon: (c: st
     ),
   },
   {
+    href: "/admin/meddelanden",
+    label: "Meddelanden",
+    roles: ["support", "admin", "superadmin"],
+    icon: (c: string) => (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/ekonomi",
     label: "Ekonomi",
     roles: ["admin", "superadmin"],
@@ -86,10 +96,12 @@ export default function AdminSidebar({
   adminName,
   adminEmail,
   role,
+  newMessageCount = 0,
 }: {
   adminName?: string;
   adminEmail?: string;
   role?: StaffRole;
+  newMessageCount?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -133,6 +145,11 @@ export default function AdminSidebar({
             >
               {item.icon(color)}
               {item.label}
+              {item.href === "/admin/meddelanden" && newMessageCount > 0 && (
+                <span className="ml-auto bg-accent text-accent-ink text-[10.5px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+                  {newMessageCount}
+                </span>
+              )}
             </Link>
           );
         })}

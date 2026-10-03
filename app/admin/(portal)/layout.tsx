@@ -12,6 +12,7 @@ export default async function AdminPortalLayout({
 
   let fullName = "";
   let role: "support" | "admin" | "superadmin" | undefined;
+  let newMessageCount = 0;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -20,11 +21,22 @@ export default async function AdminPortalLayout({
       .single();
     fullName = profile?.full_name ?? "";
     role = profile?.role as "support" | "admin" | "superadmin" | undefined;
+
+    const { count } = await supabase
+      .from("support_messages")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "ny");
+    newMessageCount = count ?? 0;
   }
 
   return (
     <div className="min-h-screen bg-bg font-sans flex">
-      <AdminSidebar adminName={fullName} adminEmail={user?.email ?? ""} role={role} />
+      <AdminSidebar
+        adminName={fullName}
+        adminEmail={user?.email ?? ""}
+        role={role}
+        newMessageCount={newMessageCount}
+      />
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="px-11 pt-5 flex-shrink-0">
           <AdminSearchBar />

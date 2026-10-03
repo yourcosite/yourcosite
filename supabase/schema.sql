@@ -246,6 +246,38 @@ create policy "Staff kan läsa aktivitetsloggen"
   on admin_activity_log for select using (public.is_staff());
 
 -- ============================================================
+-- SUPPORT_MESSAGES
+-- Meddelanden kunder skickar in direkt via kundportalen — antingen via
+-- "Kontakta oss" i kontomenyn, eller via knappen Millie visar i
+-- chattredigeraren när ett önskemål inte går att utföra inom
+-- innehållsmodellen (se "unsupported" i app/api/sites/edit/route.ts).
+-- Ersätter mejl hit och dit med en delad inkorg staff kan se i
+-- adminportalen (/admin/meddelanden). Skrivs alltid via admin-klienten i
+-- API-rutterna (service role), så det räcker med en läs-policy här, på
+-- samma sätt som customer_notes ovan.
+-- ============================================================
+create table if not exists support_messages (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles (id) on delete cascade,
+  site_id uuid references sites (id) on delete set null,
+  -- "konto" = Kontakta oss-knappen i kontomenyn. "chattredigerare" =
+  -- knappen Millie visar när hon inte kan utföra önskemålet. "ovrigt" =
+  -- reserverat för framtida källor.
+  source text not null default 'konto' check (source in ('konto', 'chattredigerare', 'ovrigt')),
+  -- Sammanhang vi fyller i automatiskt (t.ex. kundens ursprungliga prompt
+  -- och Millies förklaring) — staff ser det, men kunden skrev det inte.
+  context text,
+  message text not null,
+  status text not null default 'ny' check (status in ('ny', 'laser', 'klar')),
+  created_at timestamptz not null default now()
+);
+
+alter table support_messages enable row level security;
+
+create policy "Staff kan läsa meddelanden"
+  on support_messages for select using (public.is_staff());
+
+-- ============================================================
 -- Trigger: skapa automatiskt en profilrad när ett nytt konto registreras
 -- ============================================================
 create or replace function public.handle_new_user()

@@ -33,6 +33,11 @@ const EDIT_TOOL = {
         description:
           "En kort mening på svenska, riktad direkt till kunden (t.ex. \"Bytte rubriken och gjorde texten kortare.\"), som beskriver vad som ändrades — eller varför inget ändrades om önskemålet inte gick att utföra.",
       },
+      unsupported: {
+        type: "boolean",
+        description:
+          "Sätt till true ENDAST om önskemålet inte gick att utföra för att innehållsmodellen (lib/contentModel.ts) saknar stöd för det (t.ex. bakgrundsfärg per enskild sida, eller annat som skulle kräva att ändra själva sidmallen/designkoden, inte bara innehållet) — INTE om önskemålet bara var otydligt (be om förtydligande i summary istället då). Utelöses eller false annars.",
+      },
     },
     required: [...EDIT_PATCH_REQUIRED, "summary"],
   },
@@ -43,6 +48,7 @@ type EditPatch = {
   changedPages?: SitePageContent[];
   removedPagePaths?: string[];
   summary: string;
+  unsupported?: boolean;
 };
 
 type Attachment = {
@@ -75,7 +81,7 @@ VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kund
 
 Svara alltid via verktyget "edit_site", plus ett kort "summary" riktat direkt till kunden.
 
-Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (utelämna "changedPages" eller lämna den tom) och förklara kort varför i "summary".`;
+Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (utelämna "changedPages" eller lämna den tom) och förklara kort varför i "summary". Beror det specifikt på att innehållsmodellen saknar stöd (inte bara otydlighet), sätt även "unsupported" till true — det visar kunden en knapp för att skicka önskemålet vidare till oss.`;
 }
 
 function buildAttachmentNote(attachment: Attachment | undefined): string {
@@ -242,5 +248,9 @@ export async function POST(request: Request) {
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
 
-  return NextResponse.json({ content: updatedContent, summary: patch.summary });
+  return NextResponse.json({
+    content: updatedContent,
+    summary: patch.summary,
+    unsupported: patch.unsupported === true,
+  });
 }
