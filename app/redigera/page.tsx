@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import Millie from "@/components/Millie";
 import SitePreview from "@/components/SitePreview";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
@@ -32,6 +33,17 @@ const EXTRACTABLE_DOC_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
+// Millie, maskoten som "sköter" redigeringen — texterna växlar medan ett
+// svar väntas in så det känns som att hon faktiskt gör något, inte att
+// sidan bara hänger (se intervallet i EditorPage nedan).
+const THINKING_PHRASES = [
+  "Millie tänker…",
+  "Millie hjälper dig nu",
+  "Millie gör sin magi",
+  "Millie uppdaterar sidan",
+  "Millie finslipar detaljerna",
+];
+
 type SiteMeta = {
   id: string;
   name: string;
@@ -58,12 +70,25 @@ export default function EditorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       from: "bot",
-      text: "Hej! Skriv vad du vill ändra — t.ex. \"byt rubriken på startsidan\" eller \"lägg till en sektion om våra tjänster\". Jag uppdaterar sajten åt dig direkt.",
+      text: "Hej, jag heter Millie! 👋 Skriv vad du vill ändra — t.ex. \"byt rubriken på startsidan\" eller \"lägg till en sektion om våra tjänster\" — så fixar jag det åt dig direkt.",
     },
   ]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Växlar vilken av THINKING_PHRASES som visas medan Millie jobbar, så det
+  // inte känns som samma stillastående text hela vägen — se Millie röra sig
+  // i components/Millie.tsx (animate-millie-bounce/-hair, "active"-läget).
+  const [phraseIndex, setPhraseIndex] = useState(0);
+  useEffect(() => {
+    if (!sending) {
+      setPhraseIndex(0);
+      return;
+    }
+    const id = setInterval(() => setPhraseIndex((i) => (i + 1) % THINKING_PHRASES.length), 1600);
+    return () => clearInterval(id);
+  }, [sending]);
 
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attaching, setAttaching] = useState(false);
@@ -246,8 +271,9 @@ export default function EditorPage() {
               <div className="flex-1 overflow-y-auto relative">
                 {sending && (
                   <div className="absolute inset-0 bg-white/40 z-40 flex items-start justify-center pt-10 pointer-events-none">
-                    <div className="bg-ink text-white text-[12.5px] font-semibold px-4 py-2 rounded-full shadow-lg">
-                      Uppdaterar sajten …
+                    <div className="bg-ink text-white text-[12.5px] font-semibold pl-2 pr-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                      <Millie active size={26} />
+                      {THINKING_PHRASES[phraseIndex]}
                     </div>
                   </div>
                 )}
@@ -266,32 +292,40 @@ export default function EditorPage() {
         </div>
 
         <div className="w-[400px] border-l border-line bg-surface flex flex-col flex-shrink-0">
-          <div className="px-5 py-4 border-b border-line">
-            <div className="font-semibold text-[14.5px]">Be om ändringar</div>
-            <div className="text-[12px] text-ink-dim mt-0.5">Skriv precis som du skulle till en kollega.</div>
+          <div className="px-5 py-4 border-b border-line flex items-center gap-2.5">
+            <Millie size={28} />
+            <div>
+              <div className="font-semibold text-[14.5px]">Chatta med Millie</div>
+              <div className="text-[12px] text-ink-dim mt-0.5">Skriv precis som du skulle till en kollega.</div>
+            </div>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4.5 flex flex-col gap-4">
             {messages.map((m, i) => (
-              <div
-                key={i}
-                className={`max-w-[85%] text-[13.5px] leading-relaxed px-3.5 py-2.5 ${
-                  m.from === "user"
-                    ? "self-end bg-accent text-accent-ink rounded-[14px_14px_4px_14px]"
-                    : "self-start bg-bg rounded-[14px_14px_14px_4px]"
-                }`}
-              >
-                {m.attachmentName && (
-                  <div className={`text-[12px] mb-1 flex items-center gap-1 ${m.from === "user" ? "text-accent-ink/70" : "text-ink-dim"}`}>
-                    📎 {m.attachmentName}
-                  </div>
-                )}
-                {m.text}
+              <div key={i} className={`flex items-end gap-2 ${m.from === "user" ? "self-end flex-row-reverse" : "self-start"}`}>
+                {m.from === "bot" && <Millie size={22} />}
+                <div
+                  className={`max-w-[260px] text-[13.5px] leading-relaxed px-3.5 py-2.5 ${
+                    m.from === "user"
+                      ? "bg-accent text-accent-ink rounded-[14px_14px_4px_14px]"
+                      : "bg-bg rounded-[14px_14px_14px_4px]"
+                  }`}
+                >
+                  {m.attachmentName && (
+                    <div className={`text-[12px] mb-1 flex items-center gap-1 ${m.from === "user" ? "text-accent-ink/70" : "text-ink-dim"}`}>
+                      📎 {m.attachmentName}
+                    </div>
+                  )}
+                  {m.text}
+                </div>
               </div>
             ))}
             {sending && (
-              <div className="self-start bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5">
-                Tänker …
+              <div className="self-start flex items-end gap-2">
+                <Millie active size={22} />
+                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5">
+                  {THINKING_PHRASES[phraseIndex]}
+                </div>
               </div>
             )}
           </div>
@@ -348,7 +382,7 @@ export default function EditorPage() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
-                placeholder="Be om en ändring …"
+                placeholder="Skriv till Millie …"
                 disabled={sending || !content}
                 className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60"
               />
