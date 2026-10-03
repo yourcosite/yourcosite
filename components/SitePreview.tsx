@@ -148,6 +148,7 @@ export default function SitePreview({
       )}
       <Footer
         siteName={siteName}
+        logoUrl={content.logoUrl}
         palette={palette}
         socialLinks={content.socialLinks}
         basePath={basePath}
@@ -428,6 +429,7 @@ function Header({
 
 function Footer({
   siteName,
+  logoUrl,
   palette,
   socialLinks,
   basePath,
@@ -435,6 +437,7 @@ function Footer({
   privacyPolicyFileUrl,
 }: {
   siteName?: string;
+  logoUrl?: string;
   palette: Palette;
   socialLinks?: SocialLink[];
   basePath?: string;
@@ -458,7 +461,16 @@ function Footer({
       style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
     >
       <span className="flex items-center gap-4 flex-wrap justify-center">
-        <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+        <span className="flex items-center gap-2">
+          {/* Samma logga som headern, bara litet skalad ner — en liten,
+              diskret upprepning är det kunder faktiskt förväntar sig i en
+              sidfot, inte en kopia i headerstorlek. */}
+          {logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt={siteName || "Logga"} className="h-5 max-w-[90px] object-contain" />
+          )}
+          <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+        </span>
         {policyHref && (
           <a
             href={policyHref}
