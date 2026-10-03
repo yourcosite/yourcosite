@@ -75,7 +75,12 @@ export default function SitePreview({
     ? { path: PRIVACY_POLICY_PATH, label: "Integritetspolicy", sections: [] }
     : content.pages.find((p) => p.path === activePath) || content.pages[0];
   const font = fontOverride ?? content.theme.font;
-  const mode = backgroundModeOverride ?? content.theme.backgroundMode ?? "light";
+  // Prioritet: en uttrycklig förhandsvisnings-override (t.ex. /forslag, som
+  // tvingar fram ett läge oavsett innehåll) vinner alltid. Annars används
+  // sidans EGEN bakgrund om kunden bett om en annan bakgrund på just den
+  // här sidan (SitePageContent.backgroundMode, se lib/contentModel.ts) —
+  // annars sajtens vanliga tema, precis som innan det fältet fanns.
+  const mode = backgroundModeOverride ?? page.backgroundMode ?? content.theme.backgroundMode ?? "light";
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = content.theme.accentColor;
   const secondary = content.theme.secondaryColors || [];

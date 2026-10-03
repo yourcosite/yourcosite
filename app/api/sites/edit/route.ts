@@ -36,7 +36,7 @@ const EDIT_TOOL = {
       unsupported: {
         type: "boolean",
         description:
-          "Sätt till true ENDAST om önskemålet inte gick att utföra för att innehållsmodellen (lib/contentModel.ts) saknar stöd för det (t.ex. bakgrundsfärg per enskild sida, eller annat som skulle kräva att ändra själva sidmallen/designkoden, inte bara innehållet) — INTE om önskemålet bara var otydligt (be om förtydligande i summary istället då). Utelöses eller false annars.",
+          "Sätt till true ENDAST om önskemålet inte gick att utföra för att innehållsmodellen (lib/contentModel.ts) saknar stöd för det (t.ex. en helt ny sektionstyp, eller annat som skulle kräva att ändra själva sidmallen/designkoden, inte bara innehållet) — INTE om önskemålet bara var otydligt (be om förtydligande i summary istället då). Utelämnas eller false annars.",
       },
     },
     required: [...EDIT_PATCH_REQUIRED, "summary"],
@@ -79,6 +79,8 @@ VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort
 
 VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kunden att en knapp ska leda till en av sajtens sidor, sätt ctaLink till exakt den sidans "path" (se listan ovan) — hitta aldrig på en sökväg som inte finns där. Ber kunden om en extern länk, använd en fullständig URL (https://...). Vill kunden att knappen inte ska gå att klicka på, utelämna ctaLink helt.
 
+VIKTIGT — bakgrundsfärg på EN enskild sida (t.ex. "gör Om oss-sidan svart/mörk"): detta STÖDS, via "backgroundMode" på sidobjektet i "changedPages" — se verktygets fältbeskrivning. Välj det av de tre lägena (light/warm/dark) som bäst matchar vad kunden bad om, texten justeras automatiskt. Gäller önskemålet istället HELA sajtens färgtema (t.ex. "byt till svart genomgående" eller bara "byt accentfärg"), använd "theme" högst upp som vanligt, inte detta fält.
+
 Svara alltid via verktyget "edit_site", plus ett kort "summary" riktat direkt till kunden.
 
 Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (utelämna "changedPages" eller lämna den tom) och förklara kort varför i "summary". Beror det specifikt på att innehållsmodellen saknar stöd (inte bara otydlighet), sätt även "unsupported" till true — det visar kunden en knapp för att skicka önskemålet vidare till oss.`;
@@ -103,7 +105,16 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
   const pages: SitePageContent[] = [];
   for (const page of content.pages) {
     if (removed.has(page.path)) continue;
-    pages.push(changedByPath.get(page.path) || page);
+    const changed = changedByPath.get(page.path);
+    // changedPages skickar HELA sidobjektet tillbaka (se promptens
+    // instruktion), men Claude ombeds bara ange "backgroundMode" när just
+    // DEN ändras — en patch som rör sidans text av annan anledning saknar
+    // då fältet helt. Utan den här raden skulle det tolkas som "nollställ
+    // bakgrunden", och en tidigare satt sidbakgrund försvinna igen nästa
+    // gång kunden ber om en helt orelaterad ändring på samma sida.
+    pages.push(
+      changed ? { ...changed, backgroundMode: changed.backgroundMode ?? page.backgroundMode } : page
+    );
     changedByPath.delete(page.path);
   }
   // Det som blir kvar i changedByPath är helt nya sidor — läggs sist.

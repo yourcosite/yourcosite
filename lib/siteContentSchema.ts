@@ -105,6 +105,17 @@ export const SECTION_SCHEMA = {
   ],
 };
 
+// En enskild sidas EGEN bakgrund, skild från sajtens övergripande tema
+// (theme.backgroundMode ovan) — se SitePageContent.backgroundMode i
+// lib/contentModel.ts för varför det är ett av tre färdiga lägen, inte en
+// fri hex-färg.
+const PAGE_BACKGROUND_MODE_SCHEMA = {
+  type: "string",
+  enum: ["light", "warm", "dark"],
+  description:
+    "Utelämna HELA detta fält om den här sidan ska se ut som resten av sajten (vanligast, och alltid rätt om kunden inte bett om något annat). Sätt det bara om kunden uttryckligen vill ha en ANNAN bakgrund på JUST den här sidan än sajtens vanliga tema — \"light\" (ljus/vit), \"warm\" (varm/beige) eller \"dark\" (mörk/svart, det kunden oftast menar med \"svart bakgrund\"). Byter du läge görs HELA sidan om (header, sektioner och sidfot när besökaren är på den sidan) — text och kortfärger justeras automatiskt så allt syns, ingen egen textfärg behöver eller ska anges.",
+};
+
 // Egenskaperna för SJÄLVA innehållet (utan "summary" m.m. som bara
 // edit-routen behöver ovanpå det här) — delas rakt av mellan verktygens
 // input_schema.
@@ -126,6 +137,7 @@ export const SITE_CONTENT_PROPERTIES = {
         path: { type: "string" },
         label: { type: "string" },
         sections: { type: "array", items: SECTION_SCHEMA },
+        backgroundMode: PAGE_BACKGROUND_MODE_SCHEMA,
       },
       required: ["path", "label", "sections"],
     },
@@ -165,6 +177,7 @@ export const EDIT_PATCH_PROPERTIES = {
         path: { type: "string" },
         label: { type: "string" },
         sections: { type: "array", items: SECTION_SCHEMA },
+        backgroundMode: PAGE_BACKGROUND_MODE_SCHEMA,
       },
       required: ["path", "label", "sections"],
     },

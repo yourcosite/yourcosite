@@ -115,6 +115,15 @@ export interface SitePageContent {
   path: string;
   label: string;
   sections: Section[];
+  // Valfri överskrivning av sajtens färgtema (theme.backgroundMode) för just
+  // DEN HÄR sidan — t.ex. en enskild sida med mörk bakgrund medan resten av
+  // sajten är ljus. Saknas den används sajtens vanliga läge (se
+  // SitePreview.tsx). Återanvänder samma tre färdiga lägen som
+  // stilvalet i onboardingen (lib/themeVariants.ts) istället för en fri
+  // hex-färg, så att text/kontrast/kort osv. alltid blir rätt automatiskt —
+  // ingen risk att kunden (eller AI:n) råkar be om en bakgrund texten
+  // försvinner mot.
+  backgroundMode?: BackgroundMode;
 }
 
 export interface SocialLink {
@@ -167,11 +176,14 @@ const VALID_SECTION_TYPES = ["hero", "about", "grid", "testimonials", "cta", "co
 // TILLBAKA de sidor som faktiskt ändrades, inte hela sajten, för snabbhetens
 // skull) kan valideras sida för sida innan de klistras in i den befintliga
 // sajten.
+const VALID_BACKGROUND_MODES = ["light", "warm", "dark"];
+
 export function isValidSitePage(value: unknown): value is SitePageContent {
   if (!value || typeof value !== "object") return false;
   const page = value as any;
   if (typeof page.path !== "string" || typeof page.label !== "string") return false;
   if (!Array.isArray(page.sections)) return false;
+  if (page.backgroundMode !== undefined && !VALID_BACKGROUND_MODES.includes(page.backgroundMode)) return false;
   return page.sections.every(
     (s: any) => s && typeof s.id === "string" && VALID_SECTION_TYPES.includes(s.type)
   );
