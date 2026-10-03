@@ -41,6 +41,12 @@ export default function SignupPage() {
       email,
       password,
       options: {
+        // Utan den här pekar bekräftelsemejlets länk på Supabase-projektets
+        // "Site URL"-inställning istället — som ofta fortfarande står kvar
+        // på standardvärdet http://localhost:3000 om ingen ändrat den i
+        // Supabase-dashboarden. Sätter den explicit här så den alltid
+        // pekar på rätt domän oavsett den inställningen.
+        emailRedirectTo: `${window.location.origin}/logga-in`,
         data: {
           full_name: name,
           phone,
