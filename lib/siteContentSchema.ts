@@ -16,6 +16,11 @@ export const SECTION_SCHEMA = {
         headline: { type: "string" },
         body: { type: "string" },
         ctaLabel: { type: "string" },
+        ctaLink: {
+          type: "string",
+          description:
+            "Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/kontakt\"), eller en fullständig extern URL (https://...). Utelämna helt om knappen inte ska vara klickbar.",
+        },
         imageUrl: { type: "string" },
       },
       required: ["id", "type", "layout", "headline", "body"],
@@ -75,6 +80,11 @@ export const SECTION_SCHEMA = {
         heading: { type: "string" },
         body: { type: "string" },
         ctaLabel: { type: "string" },
+        ctaLink: {
+          type: "string",
+          description:
+            "Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/kontakt\"), eller en fullständig extern URL (https://...). Utelämna helt om knappen inte ska vara klickbar.",
+        },
       },
       required: ["id", "type", "layout", "heading", "body", "ctaLabel"],
     },

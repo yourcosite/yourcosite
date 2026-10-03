@@ -36,6 +36,11 @@ export interface HeroSection {
   headline: string;
   body: string;
   ctaLabel?: string;
+  // Vart knappen ska leda — antingen en av sajtens egna sidor (exakt som
+  // i SitePageContent.path, t.ex. "/kontakt") eller en fullständig extern
+  // URL ("https://..."). Saknas den är knappen bara dekorativ text, precis
+  // som innan det här fältet fanns.
+  ctaLink?: string;
   // Satt i kod (aldrig av AI:n) utifrån kundens egna uppladdade foton,
   // om några finns — se lib/assignUploadedImages.ts.
   imageUrl?: string;
@@ -83,6 +88,8 @@ export interface CtaSection {
   heading: string;
   body: string;
   ctaLabel: string;
+  // Se HeroSection.ctaLink ovan — samma princip.
+  ctaLink?: string;
 }
 
 export interface ContactSection {

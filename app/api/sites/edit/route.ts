@@ -43,6 +43,8 @@ Uppdatera ENDAST det som faktiskt behövs för att uppfylla önskemålet — bev
 
 VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort, byta ut eller hitta på ett nytt) om inte kunden uttryckligen bett om en bildändring du inte kan utföra på annat sätt — de sätts av vårt system utifrån kundens egna uppladdade foton, aldrig av dig. Flyttas en sektion följer dess imageUrl med. Lägger du till en helt ny sektion/sida som behöver en bild, UTELÄMNA "imageUrl" helt för den (ingen påhittad url, ingen tom sträng) — en snygg platshållare visas automatiskt istället.
 
+VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kunden att en knapp ska leda till en av sajtens sidor, sätt ctaLink till exakt den sidans "path" ur listan av sidor ovan (t.ex. "/kontakt") — hitta aldrig på en sökväg som inte finns där. Ber kunden om en extern länk, använd en fullständig URL (https://...). Vill kunden att knappen inte ska gå att klicka på, utelämna ctaLink helt.
+
 Svara alltid med HELA sajtens innehåll (alla sidor, inte bara den som ändrades) via verktyget "edit_site", plus ett kort "summary" riktat direkt till kunden.
 
 Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (returnera innehållet precis som det kom in) och förklara kort varför i "summary".`;

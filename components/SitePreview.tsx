@@ -120,6 +120,8 @@ export default function SitePreview({
             alt={false}
             socialLinks={content.socialLinks}
             heroEmphasis
+            basePath={basePath}
+            onNavigate={onNavigate}
           />
         )}
       </div>
@@ -139,6 +141,8 @@ export default function SitePreview({
             // Startsidans första sektion är besökarens allra första intryck —
             // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
             heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
+            basePath={basePath}
+            onNavigate={onNavigate}
           />
         ))
       )}
@@ -529,11 +533,67 @@ function ImageOrArt({
   );
 }
 
-function CtaPill({ accent, children }: { accent: string; children: React.ReactNode }) {
+// Gör en CTA-knapp/text klickbar om sektionen har en ctaLink, enligt samma
+// mönster som Header redan använder för menyn: onNavigate (chattredigeraren,
+// ingen sidladdning) går först, annars en riktig <a href> mot basePath (en
+// publicerad sida), annars en ren <span> — exakt som innan ctaLink fanns.
+function CtaLink({
+  link,
+  basePath,
+  onNavigate,
+  className,
+  style,
+  children,
+}: {
+  link?: string;
+  basePath?: string;
+  onNavigate?: (path: string) => void;
+  className: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (!link) {
+    return <span className={className} style={style}>{children}</span>;
+  }
+  const isExternal = /^https?:\/\//i.test(link);
+  if (onNavigate && !isExternal) {
+    return (
+      <button type="button" onClick={() => onNavigate(link)} className={className} style={style}>
+        {children}
+      </button>
+    );
+  }
+  const href = isExternal ? link : basePath ? `${basePath}${link === "/" ? "" : link}` : "#";
   return (
-    <span className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full" style={{ background: accent, color: "#17171A" }}>
+    <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined} className={className} style={style}>
       {children}
-    </span>
+    </a>
+  );
+}
+
+function CtaPill({
+  accent,
+  children,
+  link,
+  basePath,
+  onNavigate,
+}: {
+  accent: string;
+  children: React.ReactNode;
+  link?: string;
+  basePath?: string;
+  onNavigate?: (path: string) => void;
+}) {
+  return (
+    <CtaLink
+      link={link}
+      basePath={basePath}
+      onNavigate={onNavigate}
+      className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
+      style={{ background: accent, color: "#17171A" }}
+    >
+      {children}
+    </CtaLink>
   );
 }
 
@@ -546,6 +606,8 @@ function SectionBlock({
   alt,
   socialLinks,
   heroEmphasis,
+  basePath,
+  onNavigate,
 }: {
   section: Section;
   accent: string;
@@ -557,6 +619,10 @@ function SectionBlock({
   // true för startsidans första sektion — ger hero-layouterna en större,
   // mer dramatisk bild/rubrik oavsett vilken layout AI:n valt.
   heroEmphasis?: boolean;
+  // Vidarebefordras bara till CTA-knappen (se CtaLink) — samma
+  // basePath/onNavigate som Header redan använder för menyn.
+  basePath?: string;
+  onNavigate?: (path: string) => void;
 }) {
   const sectionBg = alt ? palette.bgAlt : undefined;
   const art = artBackground(mode, accent, secondary);
@@ -587,7 +653,11 @@ function SectionBlock({
             <p className={`leading-relaxed mb-6 max-w-[420px] ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`} style={{ color: palette.textDim }}>
               {section.body}
             </p>
-            {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
+            {section.ctaLabel && (
+              <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                {section.ctaLabel}
+              </CtaPill>
+            )}
           </div>
         );
         return (
@@ -625,7 +695,11 @@ function SectionBlock({
                 {section.headline}
               </h1>
               <p className={`leading-relaxed mb-6 opacity-85 ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}>{section.body}</p>
-              {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
+              {section.ctaLabel && (
+              <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                {section.ctaLabel}
+              </CtaPill>
+            )}
             </div>
           </div>
         );
@@ -661,7 +735,11 @@ function SectionBlock({
             <p className={`leading-relaxed mb-7 ${heroEmphasis ? "text-[16.5px]" : "text-[15.5px]"}`} style={{ color: palette.textDim }}>
               {section.body}
             </p>
-            {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
+            {section.ctaLabel && (
+              <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                {section.ctaLabel}
+              </CtaPill>
+            )}
           </div>
         </div>
       );
@@ -883,7 +961,14 @@ function SectionBlock({
               </p>
             </div>
             <div className="flex items-center justify-center px-10 py-14" style={{ background: accent }}>
-              <span className="font-semibold text-[15px] text-[#17171A] text-center">{section.ctaLabel}</span>
+              <CtaLink
+                link={section.ctaLink}
+                basePath={basePath}
+                onNavigate={onNavigate}
+                className="font-semibold text-[15px] text-[#17171A] text-center"
+              >
+                {section.ctaLabel}
+              </CtaLink>
             </div>
           </div>
         );
@@ -894,7 +979,9 @@ function SectionBlock({
         <div className="relative px-8 md:px-10 py-20 text-center text-white" style={{ background: darkArt }}>
           <h2 className="font-serif text-[29px] mb-4">{section.heading}</h2>
           <p className="text-[14.5px] mb-7 opacity-80 max-w-[480px] mx-auto">{section.body}</p>
-          <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>
+          <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+            {section.ctaLabel}
+          </CtaPill>
         </div>
       );
     }
