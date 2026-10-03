@@ -64,6 +64,9 @@ export default function CustomerDetailClient({
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [siteStatus, setSiteStatus] = useState(site?.status);
+  const [planValue, setPlanValue] = useState(site?.plan ?? "bas");
+  const [savingPlan, setSavingPlan] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const handleAddNote = async () => {
     if (!noteText.trim()) return;
@@ -138,6 +141,46 @@ export default function CustomerDetailClient({
     }
   };
 
+  const handleSavePlan = async () => {
+    setSavingPlan(true);
+    setError(null);
+    setMessage(null);
+    const res = await fetch(`/api/admin/customers/${customer.id}/plan`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ plan: planValue }),
+    });
+    const data = await res.json();
+    setSavingPlan(false);
+    if (res.ok) {
+      setMessage("Planen är uppdaterad.");
+    } else {
+      setError(data.error ?? "Kunde inte ändra plan.");
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    setError(null);
+    const res = await fetch(`/api/admin/customers/${customer.id}/export`);
+    if (!res.ok) {
+      setExporting(false);
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Kunde inte exportera data.");
+      return;
+    }
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `kunddata-${customer.id}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    setExporting(false);
+  };
+
   const statusLabel = siteStatus === "live" ? "LIVE" : siteStatus === "pausad" ? "PAUSAD" : site ? "UTKAST" : "INGEN SAJT";
   const statusBadge =
     statusLabel === "LIVE"
@@ -204,6 +247,13 @@ export default function CustomerDetailClient({
             </button>
           )}
           <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="bg-surface border border-line text-ink font-semibold text-[13px] px-4 py-2.5 rounded-lg disabled:opacity-60"
+          >
+            {exporting ? "Exporterar …" : "Exportera data (GDPR)"}
+          </button>
+          <button
             onClick={() => setConfirmDelete(true)}
             className="text-warm font-semibold text-[13px] px-4 py-2.5"
           >
@@ -235,12 +285,40 @@ export default function CustomerDetailClient({
           <div className="bg-surface border border-line rounded-2xl p-5.5">
             <div className="font-semibold text-[15.5px] mb-3.5">Aktuell sajt</div>
             {site ? (
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13.5px]">
-                <Field label="Namn" value={site.name} />
-                <Field label="Domän" value={site.domain} />
-                <Field label="Plan" value={PLAN_LABELS[site.plan] ?? site.plan} />
-                <Field label="Skapad" value={formatDate(site.created_at)} />
-              </dl>
+              <>
+                <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13.5px] mb-4">
+                  <Field label="Namn" value={site.name} />
+                  <Field label="Domän" value={site.domain} />
+                  <Field label="Skapad" value={formatDate(site.created_at)} />
+                </dl>
+                {canEdit ? (
+                  <div className="border-t border-line pt-3.5">
+                    <label className="block text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">
+                      Plan
+                    </label>
+                    <div className="flex items-center gap-2.5">
+                      <select
+                        value={planValue}
+                        onChange={(e) => setPlanValue(e.target.value)}
+                        className="border border-line rounded-[9px] px-3 py-2 text-[13.5px] bg-surface"
+                      >
+                        <option value="bas">Bas — {formatKr(planPrice("bas"))}/mån</option>
+                        <option value="standard">Standard — {formatKr(planPrice("standard"))}/mån</option>
+                        <option value="premium">Premium — {formatKr(planPrice("premium"))}/mån</option>
+                      </select>
+                      <button
+                        onClick={handleSavePlan}
+                        disabled={savingPlan || planValue === site.plan}
+                        className="bg-accent text-accent-ink font-semibold text-[13px] px-4 py-2 rounded-lg disabled:opacity-60"
+                      >
+                        {savingPlan ? "Sparar …" : "Spara plan"}
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <Field label="Plan" value={PLAN_LABELS[site.plan] ?? site.plan} />
+                )}
+              </>
             ) : (
               <p className="text-[13.5px] text-ink-dim">Har inte påbörjat onboardingen än.</p>
             )}
