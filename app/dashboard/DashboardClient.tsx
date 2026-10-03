@@ -23,11 +23,31 @@ const gradients = [
   "linear-gradient(135deg, #2F5D50, #1B3A31)",
 ];
 
-export default function DashboardClient({ sites }: { sites: SiteRow[] }) {
+export default function DashboardClient({ sites: initialSites }: { sites: SiteRow[] }) {
+  const [sites, setSites] = useState(initialSites);
   const [tab, setTab] = useState("alla");
   const [search, setSearch] = useState("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   const liveCount = sites.filter((s) => s.status === "live").length;
+
+  const deleteSite = async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/sites/${id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Kunde inte ta bort sajten.");
+      }
+      setSites((s) => s.filter((x) => x.id !== id));
+      setConfirmId(null);
+    } catch (e: any) {
+      alert(e.message);
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   const filtered = sites.filter((s) => {
     const statusMatch = tab === "alla" || (tab === "live" ? s.status === "live" : s.status === "draft");
@@ -85,6 +105,48 @@ export default function DashboardClient({ sites }: { sites: SiteRow[] }) {
             key={s.id}
             className="bg-surface border border-line rounded-2xl overflow-hidden relative"
           >
+            <button
+              type="button"
+              aria-label={`Ta bort ${s.name}`}
+              onClick={(e) => {
+                e.preventDefault();
+                setConfirmId(s.id);
+              }}
+              className="absolute top-3.5 right-3.5 z-10 w-8 h-8 rounded-full bg-black/40 hover:bg-black/60 flex items-center justify-center"
+            >
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="3 6 5 6 21 6" />
+                <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                <path d="M10 11v6M14 11v6" />
+              </svg>
+            </button>
+
+            {confirmId === s.id && (
+              <div className="absolute inset-0 z-20 bg-black/70 flex flex-col items-center justify-center text-center p-5 gap-3">
+                <p className="text-[13.5px] text-white leading-relaxed">
+                  Ta bort <span className="font-semibold">{s.name}</span>{" "}
+                  permanent? Det här kan inte ångras.
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmId(null)}
+                    className="text-[12.5px] font-semibold text-white border border-white/40 px-3.5 py-2 rounded-lg"
+                  >
+                    Avbryt
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => deleteSite(s.id)}
+                    disabled={deletingId === s.id}
+                    className="text-[12.5px] font-semibold bg-red-600 text-white px-3.5 py-2 rounded-lg disabled:opacity-60"
+                  >
+                    {deletingId === s.id ? "Tar bort …" : "Ta bort"}
+                  </button>
+                </div>
+              </div>
+            )}
+
             <Link href="/redigera" className="block">
               <div
                 className="h-[150px] relative flex items-end p-4"

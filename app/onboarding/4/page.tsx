@@ -31,28 +31,48 @@ function isValidHex(v: string) {
   return /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v);
 }
 
+function CheckMark({ dark = true }: { dark?: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="14"
+      height="14"
+      fill="none"
+      stroke={dark ? "#17171A" : "#fff"}
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ filter: "drop-shadow(0 0 1.5px rgba(0,0,0,0.5))" }}
+    >
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+
 function ColorCircle({
   value,
   onChange,
   size = 38,
-  ring = false,
+  selected = false,
 }: {
   value: string;
   onChange: (hex: string) => void;
   size?: number;
-  ring?: boolean;
+  selected?: boolean;
 }) {
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <div
-        className="rounded-full border border-line"
+        className="rounded-full border border-line flex items-center justify-center"
         style={{
           width: size,
           height: size,
           background: isValidHex(value) ? value : "#ffffff",
-          boxShadow: ring ? "0 0 0 3px #fff, 0 0 0 5px var(--tw-shadow-color, currentColor)" : undefined,
+          boxShadow: selected ? "0 0 0 2px #fff, 0 0 0 4px #17171A" : undefined,
         }}
-      />
+      >
+        {selected && <CheckMark dark={!isValidHex(value) || value.toLowerCase() === "#ffffff"} />}
+      </div>
       <input
         type="color"
         value={isValidHex(value) && value.length === 7 ? value : "#000000"}
@@ -184,37 +204,67 @@ export default function OnboardingStep4() {
         </div>
 
         {/* Huvudfärg */}
-        <div className="text-[13.5px] font-semibold mb-1">Huvudfärg</div>
+        <div className="flex items-center justify-between mb-1">
+          <div className="text-[13.5px] font-semibold">Huvudfärg</div>
+          <div className="flex items-center gap-1.5 bg-accent-soft rounded-full pl-1 pr-3 py-1">
+            <span
+              className="w-[18px] h-[18px] rounded-full border border-line flex-shrink-0"
+              style={{ background: isValidHex(mainColor) ? mainColor : "#fff" }}
+            />
+            <span className="text-[12px] font-mono font-semibold">{mainColor.toUpperCase()}</span>
+            <span className="text-[11px] text-ink-dim">vald</span>
+          </div>
+        </div>
         <p className="text-[12px] text-ink-dim mb-2.5">
-          Den färg som syns mest — knappar, länkar och accenter.
+          Den färg som syns mest — knappar, länkar och accenter. Klicka på
+          en färg för att välja den — bocken visar vilken som är vald.
         </p>
         <div className="flex items-center gap-2.5 mb-7 flex-wrap">
-          {swatches.map((hex) => (
-            <button
-              type="button"
-              key={hex}
-              aria-label={hex}
-              onClick={() => setMain(hex)}
-              className="w-[34px] h-[34px] rounded-full flex-shrink-0 border border-line"
-              style={{
-                background: hex,
-                boxShadow: mainColor === hex ? `0 0 0 3px #fff, 0 0 0 5px #17171A` : "none",
-              }}
-            />
-          ))}
+          {swatches.map((hex) => {
+            const selected = mainColor.toLowerCase() === hex.toLowerCase();
+            return (
+              <button
+                type="button"
+                key={hex}
+                aria-label={hex}
+                onClick={() => setMain(hex)}
+                className="w-[34px] h-[34px] rounded-full flex-shrink-0 border border-line flex items-center justify-center"
+                style={{
+                  background: hex,
+                  boxShadow: selected ? `0 0 0 2px #fff, 0 0 0 4px #17171A` : "none",
+                }}
+              >
+                {selected && <CheckMark dark={hex.toLowerCase() === "#ffffff"} />}
+              </button>
+            );
+          })}
           <div className="w-px h-6.5 bg-line mx-1 flex-shrink-0" />
           <div className="flex items-center gap-2">
-            <ColorCircle value={mainColor} onChange={setMain} />
+            <ColorCircle
+              value={mainColor}
+              onChange={(hex) => {
+                setMain(hex);
+              }}
+              selected={!swatches.some((s) => s.toLowerCase() === mainColor.toLowerCase())}
+            />
             <input
               value={mainHexDraft}
-              onChange={(e) => {
-                setMainHexDraft(e.target.value);
-                if (isValidHex(e.target.value)) setMainColor(e.target.value);
+              onChange={(e) => setMainHexDraft(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && isValidHex(mainHexDraft)) setMain(mainHexDraft);
               }}
               maxLength={7}
+              placeholder="#000000"
               className="w-[100px] box-border px-2.5 py-2 border border-line rounded-lg text-[13.5px] font-mono"
             />
-            <span className="text-[12px] text-ink-dim">Egen hexkod</span>
+            <button
+              type="button"
+              onClick={() => isValidHex(mainHexDraft) && setMain(mainHexDraft)}
+              disabled={!isValidHex(mainHexDraft)}
+              className="text-[12.5px] font-semibold px-3.5 py-2 rounded-lg border border-line disabled:opacity-40"
+            >
+              Använd
+            </button>
           </div>
         </div>
 
@@ -238,13 +288,15 @@ export default function OnboardingStep4() {
                   aria-label={hex}
                   disabled={disabled}
                   onClick={() => toggleExtra(hex)}
-                  className="w-[34px] h-[34px] rounded-full flex-shrink-0 border border-line"
+                  className="w-[34px] h-[34px] rounded-full flex-shrink-0 border border-line flex items-center justify-center"
                   style={{
                     background: hex,
                     opacity: disabled ? 0.35 : 1,
-                    boxShadow: selected ? `0 0 0 3px #fff, 0 0 0 5px #17171A` : "none",
+                    boxShadow: selected ? `0 0 0 2px #fff, 0 0 0 4px #17171A` : "none",
                   }}
-                />
+                >
+                  {selected && <CheckMark dark={hex.toLowerCase() === "#ffffff"} />}
+                </button>
               );
             })}
           <div className="w-px h-6.5 bg-line mx-1 flex-shrink-0" />
