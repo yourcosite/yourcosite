@@ -50,7 +50,7 @@ export default function WebsitePreviewFrame({
       <div
         className={
           device === "desktop"
-            ? "w-full max-w-[900px] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
+            ? "w-full max-w-[1560px] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
             : "w-[380px] max-w-full h-[720px] bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col border-[6px] border-ink"
         }
       >

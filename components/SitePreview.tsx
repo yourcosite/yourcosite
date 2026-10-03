@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
@@ -128,13 +131,24 @@ function Header({
   // efterfrågade, med menyn indragen i själva bilden.
   overlay?: boolean;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
   const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
   const linkColor = (active: boolean) =>
     overlay ? (active ? "#FFFFFF" : "rgba(255,255,255,0.8)") : active ? palette.text : palette.textDim;
+  const hamburgerColor = overlay ? "#FFFFFF" : palette.text;
 
   return (
     <div
-      className={`flex items-center justify-between px-8 md:px-12 py-4 ${overlay ? "absolute top-0 left-0 right-0 z-10" : ""}`}
+      // OBS: "relative"/"absolute" väljs som ETT ENDA uttryck, aldrig båda
+      // klasserna samtidigt — Tailwinds genererade CSS-ordning låter annars
+      // "relative" vinna över "absolute" oavsett klassordning i strängen,
+      // vilket en gång redan orsakade en osynlig hero-bild (se ImageOrArt).
+      // Mobilmenyns utfällbara panel positioneras "absolute" mot den här
+      // headern, så den behöver vara en positionerad förälder även i
+      // icke-overlay-läget.
+      className={`flex items-center justify-between px-8 md:px-12 py-4 ${
+        overlay ? "absolute top-0 left-0 right-0 z-10" : "relative"
+      }`}
       style={
         overlay
           ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
@@ -181,6 +195,56 @@ function Header({
           )
         )}
       </nav>
+
+      {/* Hamburgarmeny — tidigare fanns ingen mobilvariant av menyn alls
+          (bara "hidden md:flex" ovan), så sidorna gick inte att nå på en
+          smal skärm. Syns bara under md-brytpunkten, fäller ut en enkel
+          lista med sidorna. */}
+      <button
+        type="button"
+        onClick={() => setMenuOpen((v) => !v)}
+        aria-label={menuOpen ? "Stäng meny" : "Öppna meny"}
+        aria-expanded={menuOpen}
+        className="md:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0"
+      >
+        <span
+          className="block w-[18px] h-[2px] rounded-full transition-transform"
+          style={{ background: hamburgerColor, transform: menuOpen ? "translateY(3.5px) rotate(45deg)" : undefined }}
+        />
+        <span
+          className="block w-[18px] h-[2px] rounded-full transition-transform"
+          style={{ background: hamburgerColor, transform: menuOpen ? "translateY(-3.5px) rotate(-45deg)" : undefined }}
+        />
+      </button>
+
+      {menuOpen && (
+        <div
+          className="md:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
+          style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
+        >
+          {pages.slice(0, 5).map((p) =>
+            basePath ? (
+              <a
+                key={p.path}
+                href={homeHref(p.path)}
+                onClick={() => setMenuOpen(false)}
+                className="px-8 py-3 text-[14px] font-semibold"
+                style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+              >
+                {p.label}
+              </a>
+            ) : (
+              <span
+                key={p.path}
+                className="px-8 py-3 text-[14px] font-semibold"
+                style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+              >
+                {p.label}
+              </span>
+            )
+          )}
+        </div>
+      )}
     </div>
   );
 }

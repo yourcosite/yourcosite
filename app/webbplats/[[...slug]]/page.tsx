@@ -49,7 +49,7 @@ export default async function WebsitePreviewPage({
 
   return (
     <div className="min-h-screen bg-[#E5E3DD] flex flex-col items-center py-8 px-4">
-      <div className="w-full max-w-[900px] flex items-center justify-between mb-4 px-1">
+      <div className="w-full max-w-[1560px] flex items-center justify-between mb-4 px-1">
         <Link
           href="/forslag"
           className="text-[13px] font-semibold text-ink-dim flex-shrink-0"

@@ -87,8 +87,8 @@ export default function GeneratingPage() {
           {steps.map((label, i) => (
             <div key={label} className="flex items-center gap-3">
               {i < activeStep ? (
-                <div className="w-6 h-6 rounded-full bg-[#22C55E] flex items-center justify-center flex-shrink-0">
-                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#06280F" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                <div className="w-6 h-6 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#0C1004" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                     <polyline points="20 6 9 17 4 12" />
                   </svg>
                 </div>
