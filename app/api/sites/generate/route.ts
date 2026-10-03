@@ -266,12 +266,19 @@ export async function POST() {
 
   // Egna uppladdade foton (steg 3) placeras deterministiskt i layouten i
   // kod — AI:n har inte sett eller valt dem.
-  const { data: imageAssets } = await supabase
+  const { data: imageAssets, error: assetsError } = await supabase
     .from("site_assets")
     .select("file_url")
     .eq("site_id", site.id)
     .eq("kind", "image")
     .order("created_at", { ascending: true });
+
+  // Loggas (syns i Vercels funktionsloggar) istället för att tyst falla
+  // tillbaka på "inga bilder" — annars är ett riktigt databasfel omöjligt
+  // att skilja från att kunden faktiskt inte laddat upp några foton.
+  if (assetsError) {
+    console.error("generate: kunde inte hämta site_assets", { siteId: site.id, error: assetsError });
+  }
 
   const finalContent = assignUploadedImages(
     contentWithImageSlots,
