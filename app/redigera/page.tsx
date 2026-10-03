@@ -70,7 +70,7 @@ export default function EditorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       from: "bot",
-      text: "Hej, jag heter Millie! 👋 Skriv vad du vill ändra — t.ex. \"byt rubriken på startsidan\" eller \"lägg till en sektion om våra tjänster\" — så fixar jag det åt dig direkt.",
+      text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Jag uppdaterar sajten åt dig direkt.",
     },
   ]);
   const [draft, setDraft] = useState("");
@@ -296,7 +296,7 @@ export default function EditorPage() {
             <Millie size={28} />
             <div>
               <div className="font-semibold text-[14.5px]">Chatta med Millie</div>
-              <div className="text-[12px] text-ink-dim mt-0.5">Skriv precis som du skulle till en kollega.</div>
+              <div className="text-[12px] text-ink-dim mt-0.5">Säg vilken sida du menar, och vad du vill ändra eller lägga till.</div>
             </div>
           </div>
 
