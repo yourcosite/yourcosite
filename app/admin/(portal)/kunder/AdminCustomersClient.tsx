@@ -2,6 +2,14 @@
 
 import { useState } from "react";
 
+type Site = {
+  id: string;
+  name: string;
+  domain: string | null;
+  status: string;
+  plan: string;
+};
+
 type Customer = {
   id: string;
   email: string;
@@ -9,6 +17,7 @@ type Customer = {
   phone: string | null;
   role: string;
   created_at: string;
+  sites?: Site[];
 };
 
 function formatDate(iso: string) {
@@ -181,17 +190,32 @@ export default function AdminCustomersClient({
             <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
               <th className="py-3 px-5 font-semibold">Namn</th>
               <th className="py-3 px-5 font-semibold">E-post</th>
-              <th className="py-3 px-5 font-semibold">Telefon</th>
+              <th className="py-3 px-5 font-semibold">Sajt</th>
+              <th className="py-3 px-5 font-semibold">Status</th>
               <th className="py-3 px-5 font-semibold">Skapad</th>
               <th className="py-3 px-5 font-semibold" />
             </tr>
           </thead>
           <tbody>
-            {filtered.map((c) => (
+            {filtered.map((c) => {
+              const site = c.sites?.[0];
+              const statusLabel = site?.status === "live" ? "LIVE" : site ? "UTKAST" : "INGEN SAJT";
+              const badge =
+                statusLabel === "LIVE"
+                  ? "bg-[#DCFCE7] text-[#166534]"
+                  : statusLabel === "UTKAST"
+                  ? "bg-[#FDE68A] text-[#7C4A03]"
+                  : "bg-line text-ink-dim";
+              return (
               <tr key={c.id} className="text-[13.5px] border-t border-line">
                 <td className="py-3.5 px-5 font-semibold">{c.full_name || "—"}</td>
                 <td className="py-3.5 px-5 text-ink-dim">{c.email}</td>
-                <td className="py-3.5 px-5 text-ink-dim">{c.phone || "—"}</td>
+                <td className="py-3.5 px-5 text-ink-dim">{site?.domain || site?.name || "—"}</td>
+                <td className="py-3.5 px-5">
+                  <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>
+                    {statusLabel}
+                  </span>
+                </td>
                 <td className="py-3.5 px-5 text-ink-dim">{formatDate(c.created_at)}</td>
                 <td className="py-3.5 px-5 text-right whitespace-nowrap">
                   <button
@@ -208,10 +232,11 @@ export default function AdminCustomersClient({
                   </button>
                 </td>
               </tr>
-            ))}
+              );
+            })}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-8 px-5 text-center text-ink-dim text-[13.5px]">
+                <td colSpan={6} className="py-8 px-5 text-center text-ink-dim text-[13.5px]">
                   Inga kunder hittades.
                 </td>
               </tr>
