@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { SiteContent, Section, BackgroundMode, ThemeFont } from "@/lib/contentModel";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
@@ -30,13 +31,20 @@ export default function SitePreview({
   siteName,
   fontOverride,
   backgroundModeOverride,
+  activePath,
+  basePath,
 }: {
   content: SiteContent;
   siteName?: string;
   fontOverride?: ThemeFont;
   backgroundModeOverride?: BackgroundMode;
+  // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
+  activePath?: string;
+  // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
+  // (t.ex. i /forslag-miniatyrerna) är menyn bara text, inte länkar.
+  basePath?: string;
 }) {
-  const page = content.pages[0];
+  const page = content.pages.find((p) => p.path === activePath) || content.pages[0];
   const font = fontOverride ?? content.theme.font;
   const mode = backgroundModeOverride ?? content.theme.backgroundMode ?? "light";
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
@@ -46,7 +54,14 @@ export default function SitePreview({
 
   return (
     <div className={fontClass} style={{ background: palette.bg, color: palette.text }}>
-      <Header siteName={siteName} logoUrl={content.logoUrl} pages={content.pages} palette={palette} />
+      <Header
+        siteName={siteName}
+        logoUrl={content.logoUrl}
+        pages={content.pages}
+        palette={palette}
+        activePath={page.path}
+        basePath={basePath}
+      />
       {page.sections.map((section, i) => (
         <SectionBlock
           key={section.id}
@@ -68,12 +83,18 @@ function Header({
   logoUrl,
   pages,
   palette,
+  activePath,
+  basePath,
 }: {
   siteName?: string;
   logoUrl?: string;
   pages: SiteContent["pages"];
   palette: Palette;
+  activePath?: string;
+  basePath?: string;
 }) {
+  const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
+
   return (
     <div className="flex items-center justify-between px-8 md:px-12 py-5" style={{ borderBottom: `1px solid ${palette.cardBorder}` }}>
       <div className="flex items-center gap-2.5">
@@ -85,9 +106,19 @@ function Header({
         )}
       </div>
       <nav className="hidden md:flex items-center gap-7 text-[13px] font-semibold" style={{ color: palette.textDim }}>
-        {pages.slice(0, 5).map((p) => (
-          <span key={p.path}>{p.label}</span>
-        ))}
+        {pages.slice(0, 5).map((p) =>
+          basePath ? (
+            <Link
+              key={p.path}
+              href={homeHref(p.path)}
+              style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+            >
+              {p.label}
+            </Link>
+          ) : (
+            <span key={p.path}>{p.label}</span>
+          )
+        )}
       </nav>
     </div>
   );

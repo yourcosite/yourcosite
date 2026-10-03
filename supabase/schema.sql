@@ -148,6 +148,18 @@ create policy "Ägare kan hantera sina filer"
 create policy "Staff kan läsa alla filer"
   on site_assets for select using (public.is_staff());
 
+-- Kunden laddar upp direkt till Storage från webbläsaren (inte via vår
+-- egen server) — annars kör vi fast i Vercels gräns för hur stor en
+-- request-body får vara (~4.5 MB), vilket är exakt vad som hände när
+-- flera bilder skickades i samma anrop. Policyn släpper bara in filer i
+-- kundens EGEN mapp (uploads/<user-id>/...).
+create policy "Kunder kan ladda upp egna filer i uploads"
+  on storage.objects for insert
+  with check (bucket_id = 'uploads' and (storage.foldername(name))[1] = auth.uid()::text);
+create policy "Kunder kan ta bort egna filer i uploads"
+  on storage.objects for delete
+  using (bucket_id = 'uploads' and (storage.foldername(name))[1] = auth.uid()::text);
+
 -- ============================================================
 -- CUSTOMER_NOTES
 -- Interna anteckningar om en kund, synliga bara för staff. Skrivs

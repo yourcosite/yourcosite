@@ -40,7 +40,7 @@ export default function SuggestionsPage() {
         body: JSON.stringify({ font: variant.font, backgroundMode: variant.backgroundMode }),
       });
       if (!res.ok) throw new Error("Något gick fel.");
-      router.push("/redigera");
+      router.push("/webbplats");
     } catch (e: any) {
       alert(e.message);
       setChoosing(null);

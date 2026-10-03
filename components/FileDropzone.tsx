@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 
 type Asset = {
   id: string;
@@ -10,10 +11,23 @@ type Asset = {
   kind: "image" | "document";
 };
 
+const MAX_BYTES = 15 * 1024 * 1024; // 15 MB per fil
+const ALLOWED_TYPES = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+
 // Riktig uppladdning av egna foton/Word/PDF i onboardingens steg 3.
-// Bilderna som laddas upp här används sedan automatiskt i AI-genereringen
-// (se lib/assignUploadedImages.ts) — i hero och i bildrutorna i stället för
-// gradient-platshållare.
+// Filerna laddas upp DIREKT till Supabase Storage från webbläsaren — inte
+// via vår egen server — så flera filer samtidigt aldrig krockar med
+// Vercels gräns för hur stor en request-body får vara. Vi skickar bara
+// den färdiga URL:en till vår server för att spara en rad i databasen.
+// Bilderna som laddas upp används sedan automatiskt i AI-genereringen (se
+// lib/assignUploadedImages.ts) — i hero och i bildrutorna.
 export default function FileDropzone() {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -33,19 +47,61 @@ export default function FileDropzone() {
     if (list.length === 0) return;
     setUploading(true);
     setError("");
-    try {
-      const body = new FormData();
-      list.forEach((f) => body.append("files", f));
-      const res = await fetch("/api/onboarding/assets", { method: "POST", body });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
-      setAssets((a) => [...a, ...(data.assets || [])]);
-      if (data.skipped?.length) setError(`Hoppade över: ${data.skipped.join(", ")}`);
-    } catch (e: any) {
-      setError(e.message);
-    } finally {
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Du är inte inloggad längre — ladda om sidan.");
       setUploading(false);
+      return;
     }
+
+    const skipped: string[] = [];
+    const newAssets: Asset[] = [];
+
+    // En fil i taget (inte parallellt) — enklare felhantering och vi
+    // slipper överbelasta Supabase Storage med en stor bulk på en gång.
+    for (const file of list) {
+      if (!ALLOWED_TYPES.includes(file.type)) {
+        skipped.push(`${file.name} (filtyp stöds inte)`);
+        continue;
+      }
+      if (file.size > MAX_BYTES) {
+        skipped.push(`${file.name} (större än 15 MB)`);
+        continue;
+      }
+
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from("uploads")
+        .upload(path, file, { contentType: file.type });
+
+      if (uploadError) {
+        skipped.push(`${file.name} (gick inte att ladda upp: ${uploadError.message})`);
+        continue;
+      }
+
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+
+      try {
+        const res = await fetch("/api/onboarding/assets", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fileName: file.name, fileUrl: pub.publicUrl, mimeType: file.type }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        newAssets.push(data.asset);
+      } catch {
+        skipped.push(`${file.name} (gick inte att spara)`);
+      }
+    }
+
+    setAssets((a) => [...a, ...newAssets]);
+    if (skipped.length) setError(`Hoppade över: ${skipped.join(", ")}`);
+    setUploading(false);
   };
 
   const remove = async (id: string) => {
@@ -82,7 +138,7 @@ export default function FileDropzone() {
           {uploading ? "Laddar upp …" : "Släpp filer här, eller bläddra"}
         </div>
         <div className="text-[13px] text-ink-dim mt-1.5">
-          Egna foton (PNG/JPG/WEBP), Word eller PDF, max 10 MB per fil.
+          Egna foton (PNG/JPG/WEBP), Word eller PDF, max 15 MB per fil, flera åt gången går bra.
           (Logga? Ladda upp den separat ovanför istället.)
         </div>
         <input
