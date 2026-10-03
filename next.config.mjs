@@ -10,25 +10,6 @@ const nextConfig = {
     // sajtens senaste innehåll.
     staleTimes: { dynamic: 0, static: 0 },
   },
-  // @imgly/background-removal (frilägg-loggan-funktionen, körs bara i
-  // webbläsaren) drar in onnxruntime-web, som har en Node-specifik variant
-  // webpack annars försöker tolka under bygget och kraschar på. Den
-  // varianten används aldrig i webbläsaren, så vi stänger av den helt.
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      "onnxruntime-node": false,
-    };
-    // onnxruntime-web blandar CJS/ESM i sina .mjs-filer på ett sätt webpack
-    // annars kraschar på redan vid byggtidens statiska analys (även om
-    // koden bara körs i webbläsaren, bakom en dynamisk import).
-    config.module.rules.push({
-      test: /\.mjs$/,
-      include: /node_modules/,
-      type: "javascript/auto",
-    });
-    return config;
-  },
 };
 
 export default nextConfig;
