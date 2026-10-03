@@ -105,7 +105,12 @@ export default function SuggestionsPage() {
                       className="absolute top-0 left-0 w-[400%] origin-top-left"
                       style={{ transform: "scale(0.25)" }}
                     >
-                      <SitePreview content={content} fontOverride={v.font} backgroundModeOverride={v.backgroundMode} />
+                      <SitePreview
+                        content={content}
+                        siteName={siteName}
+                        fontOverride={v.font}
+                        backgroundModeOverride={v.backgroundMode}
+                      />
                     </div>
                   </div>
                   <div className="px-5 py-5 flex flex-col flex-1">

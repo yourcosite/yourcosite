@@ -95,6 +95,10 @@ export interface SitePageContent {
 export interface SiteContent {
   theme: SiteTheme;
   pages: SitePageContent[];
+  // Satt när kunden laddat upp en egen logga i onboardingen. Saknas den
+  // visar vi bara företagsnamnet i headern istället — aldrig en AI-skapad
+  // logga, det gör vi medvetet inte.
+  logoUrl?: string;
 }
 
 // Snäv typ-koll av vad Claude skickar tillbaka, så vi aldrig sparar skräp i

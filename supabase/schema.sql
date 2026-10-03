@@ -74,6 +74,7 @@ create table if not exists sites (
   tone text,
   style_id text,
   inspiration_links text[] default '{}',
+  logo_url text,
   -- Innehållsmodellen (se lib/contentModel.ts) för sajten, satt av AI:n när
   -- förstagenereringen är klar. null tills onboardingen har byggt sajten.
   content jsonb,

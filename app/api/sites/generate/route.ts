@@ -234,6 +234,7 @@ export async function POST() {
   content.theme.secondaryColors =
     site.secondary_colors?.length ? site.secondary_colors : content.theme.secondaryColors;
   content.theme.backgroundMode = "light";
+  if (site.logo_url) content.logoUrl = site.logo_url;
 
   const { error: saveError } = await supabase
     .from("sites")

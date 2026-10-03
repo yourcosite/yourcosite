@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
+import LogoUpload from "@/components/LogoUpload";
 
 type Page = {
   id: string;
@@ -41,11 +42,13 @@ export default function OnboardingStep3() {
   const [customCount, setCustomCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     fetch("/api/onboarding/current")
       .then((r) => r.json())
       .then((data) => {
+        if (data.site?.logo_url) setLogoUrl(data.site.logo_url);
         if (data.pages && data.pages.length > 0) {
           setPages(
             data.pages.map((p: any) => ({
@@ -207,10 +210,14 @@ export default function OnboardingStep3() {
         <h2 className="text-[27px] font-medium mb-2.5">
           Har du texter eller bilder?
         </h2>
-        <p className="text-[15.5px] text-ink-dim mb-7">
+        <p className="text-[15.5px] text-ink-dim mb-5">
           Lägg till det du redan har. Resten skriver och väljer YourCoSite
           åt dig — du godkänner allt innan sajten publiceras.
         </p>
+
+        <div className="mb-5">
+          <LogoUpload initialUrl={logoUrl} onChange={(url) => setLogoUrl(url || undefined)} />
+        </div>
 
         <div className="border-[1.5px] border-dashed border-line rounded-2xl px-10 py-10 text-center mb-5 bg-surface">
           <div className="w-[46px] h-[46px] rounded-full bg-accent-soft flex items-center justify-center mx-auto mb-3.5">
@@ -224,7 +231,8 @@ export default function OnboardingStep3() {
             Släpp filer här, eller bläddra
           </div>
           <div className="text-[13px] text-ink-dim mt-1.5">
-            Bilder, Word-dokument eller PDF — vi sorterar ut det som passar
+            Egna foton, Word-dokument eller PDF — vi sorterar ut det som
+            passar. (Logga? Ladda upp den separat ovanför istället.)
           </div>
         </div>
 
