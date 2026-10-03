@@ -285,7 +285,7 @@ export async function POST() {
   });
 
   const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
-  const finalContent = assignUploadedImages(contentWithImageSlots, imageUrls);
+  const finalContent = assignUploadedImages(contentWithImageSlots, imageUrls, site.hero_image_url);
 
   const { error: saveError } = await supabase
     .from("sites")

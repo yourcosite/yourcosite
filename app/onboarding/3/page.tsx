@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 import LogoUpload from "@/components/LogoUpload";
+import HeroImageUpload from "@/components/HeroImageUpload";
 import FileDropzone from "@/components/FileDropzone";
 import SocialLinksFields, { type SocialLinksValue } from "@/components/SocialLinksFields";
 
@@ -45,15 +46,19 @@ export default function OnboardingStep3() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
+  const [heroImageUrl, setHeroImageUrl] = useState<string | undefined>(undefined);
   const [allowAiTextFill, setAllowAiTextFill] = useState(true);
   const [socialLinks, setSocialLinks] = useState<SocialLinksValue>({});
   const [photosUploading, setPhotosUploading] = useState(false);
+  const [heroUploading, setHeroUploading] = useState(false);
+  const anyUploading = photosUploading || heroUploading;
 
   useEffect(() => {
     fetch("/api/onboarding/current")
       .then((r) => r.json())
       .then((data) => {
         if (data.site?.logo_url) setLogoUrl(data.site.logo_url);
+        if (data.site?.hero_image_url) setHeroImageUrl(data.site.hero_image_url);
         if (typeof data.site?.allow_ai_text_fill === "boolean") {
           setAllowAiTextFill(data.site.allow_ai_text_fill);
         }
@@ -100,7 +105,7 @@ export default function OnboardingStep3() {
     // Annars gick det att klicka vidare medan foton fortfarande laddades
     // upp i bakgrunden — sajten byggdes då utan dem, trots att det såg ut
     // som att uppladdningen redan var klar.
-    if (photosUploading) {
+    if (anyUploading) {
       setError("Vänta tills dina bilder är klara att ladda upp innan du går vidare.");
       return;
     }
@@ -266,6 +271,11 @@ export default function OnboardingStep3() {
 
         <div className="mb-5">
           <LogoUpload initialUrl={logoUrl} onChange={(url) => setLogoUrl(url || undefined)} />
+          <HeroImageUpload
+            initialUrl={heroImageUrl}
+            onChange={(url) => setHeroImageUrl(url || undefined)}
+            onUploadingChange={setHeroUploading}
+          />
         </div>
 
         <FileDropzone onUploadingChange={setPhotosUploading} />
@@ -299,10 +309,10 @@ export default function OnboardingStep3() {
           <button
             type="button"
             onClick={next}
-            disabled={saving || photosUploading}
+            disabled={saving || anyUploading}
             className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? "Sparar …" : photosUploading ? "Väntar på bilder …" : "Nästa →"}
+            {saving ? "Sparar …" : anyUploading ? "Väntar på bilder …" : "Nästa →"}
           </button>
         </div>
       </div>

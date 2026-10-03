@@ -7,20 +7,38 @@ import type { SiteContent } from "./contentModel";
 // Finns fler bildplatser än foton upprepas listan hellre än att lämna
 // tomt. Finns inga foton alls rör vi ingenting — då faller SitePreview
 // tillbaka på sin gradient-platshållare.
-export function assignUploadedImages(content: SiteContent, imageUrls: string[]): SiteContent {
-  if (imageUrls.length === 0) return content;
+//
+// heroImageUrl är kundens EGET val av huvudbild (steg 3:s dedikerade
+// "Huvudbild"-fält) — om satt vinner den alltid över startsidans hero,
+// oavsett vad round-robin-fördelningen annars skulle lagt där. Den räknas
+// bort ur den allmänna foto-poolen så den inte också dyker upp någon
+// annanstans och stör ordningen.
+export function assignUploadedImages(
+  content: SiteContent,
+  imageUrls: string[],
+  heroImageUrl?: string | null
+): SiteContent {
+  const generalUrls = heroImageUrl ? imageUrls.filter((u) => u !== heroImageUrl) : imageUrls;
 
-  let i = 0;
-  const next = () => imageUrls[i++ % imageUrls.length];
+  if (generalUrls.length > 0) {
+    let i = 0;
+    const next = () => generalUrls[i++ % generalUrls.length];
 
-  for (const page of content.pages) {
-    for (const section of page.sections) {
-      if (section.type === "hero") {
-        section.imageUrl = next();
-      } else if (section.type === "grid") {
-        section.items = section.items.map((item) => ({ ...item, imageUrl: next() }));
+    for (const page of content.pages) {
+      for (const section of page.sections) {
+        if (section.type === "hero") {
+          section.imageUrl = next();
+        } else if (section.type === "grid") {
+          section.items = section.items.map((item) => ({ ...item, imageUrl: next() }));
+        }
       }
     }
+  }
+
+  if (heroImageUrl) {
+    const home = content.pages.find((p) => p.path === "/");
+    const homeHero = home?.sections.find((s) => s.type === "hero");
+    if (homeHero) homeHero.imageUrl = heroImageUrl;
   }
 
   return content;

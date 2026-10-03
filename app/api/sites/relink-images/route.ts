@@ -17,7 +17,7 @@ export async function POST() {
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
-    .select("id, content")
+    .select("id, content, hero_image_url")
     .eq("owner_id", user.id)
     .not("content", "is", null)
     .order("created_at", { ascending: false })
@@ -40,7 +40,7 @@ export async function POST() {
   }
 
   const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
-  if (imageUrls.length === 0) {
+  if (imageUrls.length === 0 && !site.hero_image_url) {
     return NextResponse.json(
       { error: "Hittade inga uppladdade foton att koppla in." },
       { status: 400 }
@@ -48,7 +48,7 @@ export async function POST() {
   }
 
   const content = ensureImageSlots(site.content);
-  const finalContent = assignUploadedImages(content, imageUrls);
+  const finalContent = assignUploadedImages(content, imageUrls, site.hero_image_url);
 
   const { error: updateError } = await supabase
     .from("sites")

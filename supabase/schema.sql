@@ -75,6 +75,10 @@ create table if not exists sites (
   style_id text,
   inspiration_links text[] default '{}',
   logo_url text,
+  -- Kundens eget val av huvudbild (hero) i onboarding steg 3 — vinner
+  -- alltid över startsidans hero i assignUploadedImages, istället för att
+  -- bara bli "den som råkar lottas först" bland de allmänna fotona.
+  hero_image_url text,
   -- Kundens länkar till sina sociala medier (steg 2 i onboardingen), t.ex.
   -- [{"platform":"instagram","url":"https://instagram.com/..."}]. Läggs in
   -- deterministiskt i sajten (sidfot + kontaktsida) av kod, inte av AI:n.
