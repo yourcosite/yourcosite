@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateDraftSite } from "@/lib/supabase/onboardingSite";
+import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 type IncomingPage = {
   label: string;
@@ -23,7 +23,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Minst en sida krävs." }, { status: 400 });
   }
 
-  const draft = await getOrCreateDraftSite(supabase, user.id);
+  let draft;
+  try {
+    draft = await getOrCreateDraftSite(supabase, user.id);
+  } catch (e) {
+    const limitResponse = draftLimitResponse(e);
+    if (limitResponse) return limitResponse;
+    throw e;
+  }
 
   await supabase.from("site_pages").delete().eq("site_id", draft.id);
 

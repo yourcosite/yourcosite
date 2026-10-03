@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateDraftSite } from "@/lib/supabase/onboardingSite";
+import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 export async function POST(request: Request) {
   const supabase = await createClient();
@@ -12,7 +12,14 @@ export async function POST(request: Request) {
   const accentColor = body.accentColor || "#C6FF5E";
   const secondaryColors = Array.isArray(body.secondaryColors) ? body.secondaryColors : [];
 
-  const draft = await getOrCreateDraftSite(supabase, user.id);
+  let draft;
+  try {
+    draft = await getOrCreateDraftSite(supabase, user.id);
+  } catch (e) {
+    const limitResponse = draftLimitResponse(e);
+    if (limitResponse) return limitResponse;
+    throw e;
+  }
 
   const { data: site, error } = await supabase
     .from("sites")

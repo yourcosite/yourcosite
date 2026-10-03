@@ -99,6 +99,15 @@ create policy "Ägare kan ta bort sina sajter"
 create policy "Staff kan läsa alla sajter"
   on sites for select using (public.is_staff());
 
+-- Ett konto får bara ha EN publicerad (live) sajt samtidigt — oavsett
+-- vilken kod som försöker sätta status till 'live', stoppar databasen
+-- det om kontot redan har en. (Utkast är inte begränsade på samma sätt
+-- här — det styrs i applikationskoden, se MAX_SITES_PER_ACCOUNT i
+-- lib/supabase/onboardingSite.ts.)
+create unique index if not exists one_live_site_per_owner
+  on sites (owner_id)
+  where (status = 'live');
+
 -- ============================================================
 -- SITE_PAGES
 -- Sidorna som hör till en sajt (Startsida, Om oss, Kontakt, osv).

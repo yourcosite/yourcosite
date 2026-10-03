@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOrCreateDraftSite } from "@/lib/supabase/onboardingSite";
+import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const DOCUMENT_TYPES = [
@@ -14,7 +14,14 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const draft = await getOrCreateDraftSite(supabase, user.id);
+  let draft;
+  try {
+    draft = await getOrCreateDraftSite(supabase, user.id);
+  } catch (e) {
+    const limitResponse = draftLimitResponse(e);
+    if (limitResponse) return limitResponse;
+    throw e;
+  }
   const { data: assets } = await supabase
     .from("site_assets")
     .select("*")
@@ -53,7 +60,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ogiltig filsökväg." }, { status: 400 });
   }
 
-  const draft = await getOrCreateDraftSite(supabase, user.id);
+  let draft;
+  try {
+    draft = await getOrCreateDraftSite(supabase, user.id);
+  } catch (e) {
+    const limitResponse = draftLimitResponse(e);
+    if (limitResponse) return limitResponse;
+    throw e;
+  }
 
   const { data: row, error } = await supabase
     .from("site_assets")

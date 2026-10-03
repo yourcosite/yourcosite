@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { getOrCreateDraftSite } from "@/lib/supabase/onboardingSite";
+import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
@@ -29,7 +29,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Filen är större än 2 MB." }, { status: 400 });
   }
 
-  const draft = await getOrCreateDraftSite(supabase, user.id);
+  let draft;
+  try {
+    draft = await getOrCreateDraftSite(supabase, user.id);
+  } catch (e) {
+    const limitResponse = draftLimitResponse(e);
+    if (limitResponse) return limitResponse;
+    throw e;
+  }
 
   const ext = file.name.split(".").pop() || "png";
   const path = `${user.id}/logo-${Date.now()}.${ext}`;
@@ -63,7 +70,14 @@ export async function DELETE() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const draft = await getOrCreateDraftSite(supabase, user.id);
+  let draft;
+  try {
+    draft = await getOrCreateDraftSite(supabase, user.id);
+  } catch (e) {
+    const limitResponse = draftLimitResponse(e);
+    if (limitResponse) return limitResponse;
+    throw e;
+  }
   const { error } = await supabase.from("sites").update({ logo_url: null }).eq("id", draft.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 

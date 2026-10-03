@@ -1,10 +1,29 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { NextResponse } from "next/server";
+
+// Max antal sajter (utkast + publicerade, borttagna räknas inte) ett
+// kundkonto får ha samtidigt. Varje ny sajt som genereras kostar riktiga
+// pengar (ett Claude-API-anrop), så gränsen finns för att ingen av
+// misstag (eller med flit) ska kunna skapa obegränsat många. Kunden ser
+// felmeddelandet och kan ta bort en gammal sajt på /dashboard för att
+// frigöra en plats.
+export const MAX_SITES_PER_ACCOUNT = 5;
+
+export class DraftLimitError extends Error {
+  constructor() {
+    super(
+      `Du har redan ${MAX_SITES_PER_ACCOUNT} sajter på kontot. Ta bort en på dashboarden innan du skapar en ny.`
+    );
+    this.name = "DraftLimitError";
+  }
+}
 
 // Hämtar kundens pågående onboarding-utkast (en sajt som ännu inte har fått
 // sitt AI-genererade innehåll). Finns ingen, skapas en tom med rimliga
-// standardvärden. Varje onboarding-steg anropar den här för att slippa
-// skicka med ett sajt-id fram och tillbaka mellan sidorna — det finns bara
-// en aktiv onboarding åt gången per kund.
+// standardvärden — men bara om kontot inte redan ligger på gränsen.
+// Varje onboarding-steg anropar den här för att slippa skicka med ett
+// sajt-id fram och tillbaka mellan sidorna — det finns bara en aktiv
+// onboarding åt gången per kund.
 export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: string) {
   const { data: existing } = await supabase
     .from("sites")
@@ -17,6 +36,15 @@ export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: st
 
   if (existing) return existing;
 
+  const { count } = await supabase
+    .from("sites")
+    .select("id", { count: "exact", head: true })
+    .eq("owner_id", ownerId);
+
+  if ((count ?? 0) >= MAX_SITES_PER_ACCOUNT) {
+    throw new DraftLimitError();
+  }
+
   const { data: created, error } = await supabase
     .from("sites")
     .insert({ owner_id: ownerId, name: "Min sajt" })
@@ -25,4 +53,13 @@ export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: st
 
   if (error) throw error;
   return created;
+}
+
+// Liten hjälpare så varje route inte behöver upprepa samma try/catch för
+// att visa gränsfelet snyggt istället för en generisk 500:a.
+export function draftLimitResponse(e: unknown): NextResponse | null {
+  if (e instanceof DraftLimitError) {
+    return NextResponse.json({ error: e.message }, { status: 400 });
+  }
+  return null;
 }
