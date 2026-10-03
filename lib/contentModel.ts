@@ -27,6 +27,9 @@ export interface HeroSection {
   headline: string;
   body: string;
   ctaLabel?: string;
+  // Satt i kod (aldrig av AI:n) utifrån kundens egna uppladdade foton,
+  // om några finns — se lib/assignUploadedImages.ts.
+  imageUrl?: string;
 }
 
 export interface AboutSection {
@@ -39,6 +42,8 @@ export interface AboutSection {
 export interface GridItem {
   title: string;
   body: string;
+  // Samma princip som HeroSection.imageUrl — tilldelas i kod, inte av AI:n.
+  imageUrl?: string;
 }
 
 export interface GridSection {

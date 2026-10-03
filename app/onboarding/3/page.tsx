@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 import LogoUpload from "@/components/LogoUpload";
+import FileDropzone from "@/components/FileDropzone";
 
 type Page = {
   id: string;
@@ -219,22 +220,7 @@ export default function OnboardingStep3() {
           <LogoUpload initialUrl={logoUrl} onChange={(url) => setLogoUrl(url || undefined)} />
         </div>
 
-        <div className="border-[1.5px] border-dashed border-line rounded-2xl px-10 py-10 text-center mb-5 bg-surface">
-          <div className="w-[46px] h-[46px] rounded-full bg-accent-soft flex items-center justify-center mx-auto mb-3.5">
-            <svg viewBox="0 0 24 24" width="21" height="21" fill="none" stroke="#17171A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-              <polyline points="17 8 12 3 7 8" />
-              <line x1="12" y1="3" x2="12" y2="15" />
-            </svg>
-          </div>
-          <div className="font-semibold text-[15.5px]">
-            Släpp filer här, eller bläddra
-          </div>
-          <div className="text-[13px] text-ink-dim mt-1.5">
-            Egna foton, Word-dokument eller PDF — vi sorterar ut det som
-            passar. (Logga? Ladda upp den separat ovanför istället.)
-          </div>
-        </div>
+        <FileDropzone />
 
         <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mb-9">
           <span className="text-[13.5px] text-ink leading-relaxed">

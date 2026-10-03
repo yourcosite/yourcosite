@@ -125,6 +125,30 @@ create policy "Ägare kan hantera sina sidor"
   );
 
 -- ============================================================
+-- SITE_ASSETS
+-- Egna foton/dokument kunden laddar upp i onboardingens steg 3. "kind"
+-- styr var filen kan användas: bilder kan placeras i sajtens design,
+-- dokument (Word/PDF) är bara referensmaterial AI:n får läsa senare.
+-- ============================================================
+create table if not exists site_assets (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  owner_id uuid not null references profiles (id) on delete cascade,
+  file_name text not null,
+  file_url text not null,
+  mime_type text not null,
+  kind text not null check (kind in ('image', 'document')),
+  created_at timestamptz not null default now()
+);
+
+alter table site_assets enable row level security;
+
+create policy "Ägare kan hantera sina filer"
+  on site_assets for all using (owner_id = auth.uid());
+create policy "Staff kan läsa alla filer"
+  on site_assets for select using (public.is_staff());
+
+-- ============================================================
 -- CUSTOMER_NOTES
 -- Interna anteckningar om en kund, synliga bara för staff. Skrivs
 -- alltid via admin-klienten i API-rutterna (service role), så det

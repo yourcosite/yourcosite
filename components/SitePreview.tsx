@@ -128,7 +128,23 @@ function SectionBlock({
     case "hero":
       return (
         <div className="relative">
-          <div className="relative h-[380px] md:h-[460px]" style={{ background: art }} />
+          <div className="relative h-[380px] md:h-[460px] overflow-hidden" style={{ background: art }}>
+            {section.imageUrl && (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={section.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      mode === "dark"
+                        ? "linear-gradient(0deg, #17171A 0%, rgba(23,23,26,0.25) 55%, rgba(23,23,26,0.45) 100%)"
+                        : "linear-gradient(0deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 60%)",
+                  }}
+                />
+              </>
+            )}
+          </div>
           <div className="max-w-2xl mx-auto text-center px-6 -mt-24 md:-mt-28 relative pb-16">
             {section.eyebrow && (
               <div className="text-[12px] tracking-[0.12em] font-semibold mb-4" style={{ color: accent }}>
@@ -169,11 +185,14 @@ function SectionBlock({
               return (
                 <div key={i}>
                   <div
-                    className="h-[140px] rounded-2xl mb-4"
-                    style={{
-                      background: `linear-gradient(145deg, ${hue}55, ${hue}15)`,
-                    }}
-                  />
+                    className="h-[140px] rounded-2xl mb-4 overflow-hidden"
+                    style={{ background: `linear-gradient(145deg, ${hue}55, ${hue}15)` }}
+                  >
+                    {item.imageUrl && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+                    )}
+                  </div>
                   <div className="font-serif text-[17px] mb-2">{item.title}</div>
                   <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
                     {item.body}

@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks } from "@/lib/inspiration";
+import { assignUploadedImages } from "@/lib/assignUploadedImages";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -236,9 +237,23 @@ export async function POST() {
   content.theme.backgroundMode = "light";
   if (site.logo_url) content.logoUrl = site.logo_url;
 
+  // Egna uppladdade foton (steg 3) placeras deterministiskt i layouten i
+  // kod — AI:n har inte sett eller valt dem.
+  const { data: imageAssets } = await supabase
+    .from("site_assets")
+    .select("file_url")
+    .eq("site_id", site.id)
+    .eq("kind", "image")
+    .order("created_at", { ascending: true });
+
+  const finalContent = assignUploadedImages(
+    content,
+    (imageAssets ?? []).map((a) => a.file_url)
+  );
+
   const { error: saveError } = await supabase
     .from("sites")
-    .update({ content, status: "draft" })
+    .update({ content: finalContent, status: "draft" })
     .eq("id", site.id);
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
