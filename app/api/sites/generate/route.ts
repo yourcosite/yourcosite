@@ -165,15 +165,33 @@ const LAYOUT_TENDENCY_POOL = [
   "en jämn blandning, utan tydlig slagsida åt någotdera hållet",
 ];
 
-function buildPrompt(site: any, pages: any[], inspirationText: string) {
+function buildPrompt(
+  site: any,
+  pages: any[],
+  inspiration: { promptText: string; heroImageSignal: "yes" | "no" | "unknown" }
+) {
   const pagesDesc = pages
     .map(
       (p) =>
         `- "${p.label}" (path: ${p.path})${p.brief ? ` — kundens brief: ${p.brief}` : ""}`
     )
     .join("\n");
+  const inspirationText = inspiration.promptText;
 
-  const suggestedHomeHeroLayout = pickRandom(HOME_HERO_LAYOUT_POOL);
+  // Kundens egna referenslänkar är den STARKASTE signalen vi har för
+  // startsidans hero-layout — har de visat sajter med en stor bild högst
+  // upp ska deras egen sajt också få det, och tvärtom. Bara när vi inte har
+  // någon sådan signal (inga länkar, eller inga som gick att läsa) faller vi
+  // tillbaka på en slumpad knuff i kod, så att kunder utan referenser ändå
+  // inte alla konvergerar mot exakt samma val (språkmodeller har annars en
+  // stark tendens att välja "det säkra" om och om igen).
+  const heroLayoutInstruction =
+    inspiration.heroImageSignal === "yes"
+      ? `Kundens egna referenssajter har tydligt en stor, framträdande bild/hero högst upp på startsidan — gör likadant här: välj layouten "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter) för startsidans hero, om inget i kundens beskrivning starkt talar emot det.`
+      : inspiration.heroImageSignal === "no"
+      ? `Kundens egna referenssajter har INTE någon framträdande bild/hero högst upp — de är mer textfokuserade. Spegla det: välj en mer återhållsam layout för startsidans hero, t.ex. "centered", istället för en fullbred bilddominerad lösning, om inget i kundens beskrivning starkt talar emot det.`
+      : `Som utgångspunkt för DEN HÄR sajten (ingen tydlig signal från referenslänkar att utgå från): luta åt layouten "${pickRandom(HOME_HERO_LAYOUT_POOL)}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right" eller "centered" om något av dem passar tydligt bättre.`;
+
   const suggestedTendency = pickRandom(LAYOUT_TENDENCY_POOL);
 
   const textFillInstruction =
@@ -197,9 +215,9 @@ ${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehål
 
 VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (den är sidans enda garanterade bildplats tillsammans med "grid" — se till att minst en av dem finns på varje sida, annars blir sidan bildlös).
 
-VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. Som utgångspunkt för DEN HÄR sajten: luta åt layouten "${suggestedHomeHeroLayout}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right" eller "centered" om något av dem passar tydligt bättre. Olika kunder ska landa olika här, inte alltid på samma layout.
+VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. ${heroLayoutInstruction}
 
-VIKTIGT — variation mellan olika kunder: två sajter i samma bransch och ton ska ändå inte kunna förväxlas. Som en extra knuff åt det hållet för DEN HÄR sajten: luta generellt åt en ${suggestedTendency}, om inget i kundens egna ord talar tydligt emot det. Variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder — luta dig hårt på kundens egna ord, bransch-specifika detaljer och eventuell inspiration för att göra strukturella val, inte bara texten.
+VIKTIGT — variation mellan olika kunder, i den här prioritetsordningen: (1) kundens egen beskrivning och eventuella referenslänkar väger TYNGST — strukturen ovan och bransch-/tonval nedan ska i första hand komma från vad KUNDEN faktiskt visat och skrivit, inte hittas på; (2) saknas tydliga signaler där, luta generellt åt en ${suggestedTendency} för den här sajten. Två sajter i samma bransch och ton ska ändå inte kunna förväxlas — variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder.
 
 VIKTIGT — layout per sektion: varje sektion (utom "about") har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst.
 
@@ -243,7 +261,7 @@ export async function POST() {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  const inspirationText = await summarizeInspirationLinks(site.inspiration_links || []);
+  const inspiration = await summarizeInspirationLinks(site.inspiration_links || []);
 
   let message;
   try {
@@ -252,7 +270,7 @@ export async function POST() {
       max_tokens: 8000,
       tools: [GENERATE_TOOL],
       tool_choice: { type: "tool", name: "generate_site" },
-      messages: [{ role: "user", content: buildPrompt(site, pages, inspirationText) }],
+      messages: [{ role: "user", content: buildPrompt(site, pages, inspiration) }],
     });
   } catch (e: any) {
     return NextResponse.json(
