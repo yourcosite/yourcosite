@@ -1,9 +1,10 @@
 import type { SiteContent, Section, BackgroundMode, ThemeFont } from "@/lib/contentModel";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
-// för ett grått platshållarfält. Så fort kunden laddar upp egna foton (nästa
-// fas) är det här exakt de ytor som byts ut — vi lovar aldrig AI-genererade
-// bilder, men layouten ska se lika stor och proffsig ut även innan de finns.
+// för ett grått platshållarfält. Så fort kunden laddar upp egna foton är det
+// här exakt de ytor som byts ut (se lib/assignUploadedImages.ts) — vi lovar
+// aldrig AI-genererade bilder, men layouten ska se stor och proffsig ut
+// även innan fotona finns.
 function artBackground(mode: BackgroundMode, accent: string, secondary: string[]) {
   const c2 = secondary[0] || accent;
   const c3 = secondary[1] || accent;
@@ -16,10 +17,10 @@ function artBackground(mode: BackgroundMode, accent: string, secondary: string[]
   return `radial-gradient(circle at 10% 10%, ${accent}35, transparent 55%), radial-gradient(circle at 90% 85%, ${c2}28, transparent 55%), linear-gradient(160deg, #FFFFFF 0%, #F3F2EE 100%)`;
 }
 
-const PALETTES: Record<BackgroundMode, { bg: string; bgAlt: string; text: string; textDim: string; cardBg: string; cardBorder: string; overlayText: string }> = {
-  light: { bg: "#FFFFFF", bgAlt: "#F7F6F3", text: "#17171A", textDim: "#6E6C68", cardBg: "#FFFFFF", cardBorder: "#ECEAE6", overlayText: "#17171A" },
-  warm: { bg: "#FBF2EC", bgAlt: "#F3E6DA", text: "#3E2A1C", textDim: "#8A6F57", cardBg: "#FFFBF7", cardBorder: "#F0E3DA", overlayText: "#3E2A1C" },
-  dark: { bg: "#17171A", bgAlt: "#1F1F23", text: "#F5F4F1", textDim: "#9E9C97", cardBg: "#232327", cardBorder: "#2E2E33", overlayText: "#F5F4F1" },
+const PALETTES: Record<BackgroundMode, { bg: string; bgAlt: string; text: string; textDim: string; cardBg: string; cardBorder: string }> = {
+  light: { bg: "#FFFFFF", bgAlt: "#F7F6F3", text: "#17171A", textDim: "#6E6C68", cardBg: "#FFFFFF", cardBorder: "#ECEAE6" },
+  warm: { bg: "#FBF2EC", bgAlt: "#F3E6DA", text: "#3E2A1C", textDim: "#8A6F57", cardBg: "#FFFBF7", cardBorder: "#F0E3DA" },
+  dark: { bg: "#17171A", bgAlt: "#1F1F23", text: "#F5F4F1", textDim: "#9E9C97", cardBg: "#232327", cardBorder: "#2E2E33" },
 };
 
 type Palette = (typeof PALETTES)[BackgroundMode];
@@ -74,10 +75,7 @@ function Header({
   palette: Palette;
 }) {
   return (
-    <div
-      className="flex items-center justify-between px-8 md:px-12 py-5"
-      style={{ borderBottom: `1px solid ${palette.cardBorder}` }}
-    >
+    <div className="flex items-center justify-between px-8 md:px-12 py-5" style={{ borderBottom: `1px solid ${palette.cardBorder}` }}>
       <div className="flex items-center gap-2.5">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -97,12 +95,31 @@ function Header({
 
 function Footer({ siteName, palette }: { siteName?: string; palette: Palette }) {
   return (
-    <div
-      className="flex items-center justify-between px-8 md:px-12 py-5 text-[12px]"
-      style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
-    >
+    <div className="flex items-center justify-between px-8 md:px-12 py-5 text-[12px]" style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}>
       <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
     </div>
+  );
+}
+
+function ImageOrArt({ imageUrl, art, className, dark }: { imageUrl?: string; art: string; className?: string; dark?: boolean }) {
+  return (
+    <div className={`relative overflow-hidden ${className || ""}`} style={{ background: art }}>
+      {imageUrl && (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
+        </>
+      )}
+    </div>
+  );
+}
+
+function CtaPill({ accent, children }: { accent: string; children: React.ReactNode }) {
+  return (
+    <span className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full" style={{ background: accent, color: "#17171A" }}>
+      {children}
+    </span>
   );
 }
 
@@ -125,26 +142,69 @@ function SectionBlock({
   const art = artBackground(mode, accent, secondary);
 
   switch (section.type) {
-    case "hero":
-      return (
-        <div className="relative">
-          <div className="relative h-[380px] md:h-[460px] overflow-hidden" style={{ background: art }}>
-            {section.imageUrl && (
+    case "hero": {
+      const layout = section.layout || "centered";
+
+      if (layout === "split-left" || layout === "split-right") {
+        const imageFirst = layout === "split-left";
+        const imageCol = <ImageOrArt imageUrl={section.imageUrl} art={art} className="h-[320px] md:h-[440px]" />;
+        const textCol = (
+          <div className={`flex flex-col justify-center px-8 md:px-14 py-10 ${imageFirst ? "md:text-left" : "md:text-right md:items-end"}`}>
+            {section.eyebrow && (
+              <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
+                {section.eyebrow.toUpperCase()}
+              </div>
+            )}
+            <h1 className="font-serif text-[30px] md:text-[36px] leading-[1.15] mb-4">{section.headline}</h1>
+            <p className="text-[15px] leading-relaxed mb-6 max-w-[420px]" style={{ color: palette.textDim }}>
+              {section.body}
+            </p>
+            {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
+          </div>
+        );
+        return (
+          <div className="grid md:grid-cols-2">
+            {imageFirst ? (
               <>
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={section.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      mode === "dark"
-                        ? "linear-gradient(0deg, #17171A 0%, rgba(23,23,26,0.25) 55%, rgba(23,23,26,0.45) 100%)"
-                        : "linear-gradient(0deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 60%)",
-                  }}
-                />
+                {imageCol}
+                {textCol}
+              </>
+            ) : (
+              <>
+                {textCol}
+                {imageCol}
               </>
             )}
           </div>
+        );
+      }
+
+      if (layout === "overlay-bottom") {
+        return (
+          <div className="relative h-[460px] md:h-[560px]">
+            <ImageOrArt imageUrl={section.imageUrl} art={art} className="absolute inset-0" dark />
+            <div
+              className="absolute inset-0"
+              style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%)" }}
+            />
+            <div className="absolute bottom-0 left-0 px-8 md:px-14 pb-10 md:pb-14 max-w-[560px] text-white">
+              {section.eyebrow && (
+                <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
+                  {section.eyebrow.toUpperCase()}
+                </div>
+              )}
+              <h1 className="font-serif text-[32px] md:text-[42px] leading-[1.12] mb-4">{section.headline}</h1>
+              <p className="text-[15px] leading-relaxed mb-6 opacity-85">{section.body}</p>
+              {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
+            </div>
+          </div>
+        );
+      }
+
+      // centered (default)
+      return (
+        <div className="relative">
+          <ImageOrArt imageUrl={section.imageUrl} art={art} className="h-[380px] md:h-[460px]" dark={mode === "dark"} />
           <div className="max-w-2xl mx-auto text-center px-6 -mt-24 md:-mt-28 relative pb-16">
             {section.eyebrow && (
               <div className="text-[12px] tracking-[0.12em] font-semibold mb-4" style={{ color: accent }}>
@@ -155,17 +215,12 @@ function SectionBlock({
             <p className="text-[15.5px] leading-relaxed mb-7" style={{ color: palette.textDim }}>
               {section.body}
             </p>
-            {section.ctaLabel && (
-              <span
-                className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
-                style={{ background: accent, color: "#17171A" }}
-              >
-                {section.ctaLabel}
-              </span>
-            )}
+            {section.ctaLabel && <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>}
           </div>
         </div>
       );
+    }
+
     case "about":
       return (
         <div className="px-10 py-14 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
@@ -175,7 +230,98 @@ function SectionBlock({
           </p>
         </div>
       );
-    case "grid":
+
+    case "grid": {
+      const layout = section.layout || "cards";
+
+      if (layout === "alternating-rows") {
+        return (
+          <div className="py-4" style={{ background: sectionBg }}>
+            <h2 className="font-serif text-[27px] mb-2 text-center pt-10">{section.heading}</h2>
+            {section.items.map((item, i) => {
+              const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+              const imageFirst = i % 2 === 0;
+              const imageCol = (
+                <ImageOrArt
+                  imageUrl={item.imageUrl}
+                  art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
+                  className="h-[220px] md:h-[300px]"
+                />
+              );
+              const textCol = (
+                <div className="flex flex-col justify-center px-8 md:px-14 py-8 max-w-[440px]">
+                  <div className="font-serif text-[20px] mb-2.5">{item.title}</div>
+                  <div className="text-[14px] leading-relaxed" style={{ color: palette.textDim }}>
+                    {item.body}
+                  </div>
+                </div>
+              );
+              return (
+                <div key={i} className="grid md:grid-cols-2">
+                  {imageFirst ? (
+                    <>
+                      {imageCol}
+                      {textCol}
+                    </>
+                  ) : (
+                    <>
+                      {textCol}
+                      {imageCol}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      }
+
+      if (layout === "list") {
+        return (
+          <div className="px-10 py-16 max-w-[640px] mx-auto" style={{ background: sectionBg }}>
+            <h2 className="font-serif text-[27px] mb-7">{section.heading}</h2>
+            <div className="flex flex-col gap-6">
+              {section.items.map((item, i) => (
+                <div key={i} className="flex gap-4 items-start">
+                  <div
+                    className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
+                    style={{ background: [accent, secondary[0], secondary[1]][i % 3] || accent }}
+                  />
+                  <div>
+                    <div className="font-semibold text-[15.5px] mb-1">{item.title}</div>
+                    <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                      {item.body}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "numbered") {
+        return (
+          <div className="px-10 py-16 max-w-[920px] mx-auto" style={{ background: sectionBg }}>
+            <h2 className="font-serif text-[27px] mb-9 text-center">{section.heading}</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              {section.items.map((item, i) => (
+                <div key={i} className="relative pt-2">
+                  <div className="text-[13px] font-bold tracking-[0.08em] mb-2" style={{ color: accent }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </div>
+                  <div className="font-serif text-[17px] mb-2">{item.title}</div>
+                  <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                    {item.body}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      // cards (default)
       return (
         <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
           <h2 className="font-serif text-[27px] mb-8 text-center">{section.heading}</h2>
@@ -184,15 +330,7 @@ function SectionBlock({
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               return (
                 <div key={i}>
-                  <div
-                    className="h-[140px] rounded-2xl mb-4 overflow-hidden"
-                    style={{ background: `linear-gradient(145deg, ${hue}55, ${hue}15)` }}
-                  >
-                    {item.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                    )}
-                  </div>
+                  <ImageOrArt imageUrl={item.imageUrl} art={`linear-gradient(145deg, ${hue}55, ${hue}15)`} className="h-[140px] rounded-2xl mb-4" />
                   <div className="font-serif text-[17px] mb-2">{item.title}</div>
                   <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
                     {item.body}
@@ -203,16 +341,70 @@ function SectionBlock({
           </div>
         </div>
       );
+    }
+
     case "testimonials": {
+      const layout = section.layout || "single-quote";
+
+      if (layout === "carousel-row") {
+        return (
+          <div className="px-10 py-16" style={{ background: sectionBg }}>
+            <h2 className="font-serif text-[27px] mb-8 text-center">{section.heading}</h2>
+            <div className="grid md:grid-cols-2 gap-5 max-w-[760px] mx-auto">
+              {section.items.map((t, i) => (
+                <div key={i} className="rounded-2xl p-5 border" style={{ background: palette.cardBg, borderColor: palette.cardBorder }}>
+                  <p className="text-[14px] italic mb-3">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="text-[12.5px] font-semibold" style={{ color: palette.textDim }}>
+                    {t.author}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "side-by-side") {
+        const [first, ...rest] = section.items;
+        return (
+          <div className="grid md:grid-cols-2" style={{ background: sectionBg }}>
+            <div className="flex flex-col justify-center px-10 py-14">
+              <h2 className="font-serif text-[27px] mb-2">{section.heading}</h2>
+              <div className="text-[13.5px]" style={{ color: palette.textDim }}>
+                Vad kunder säger om oss.
+              </div>
+            </div>
+            <div className="flex flex-col justify-center px-10 py-14" style={{ background: palette.bgAlt }}>
+              {first && (
+                <>
+                  <p className="font-serif italic text-[20px] leading-relaxed mb-3">&ldquo;{first.quote}&rdquo;</p>
+                  <div className="text-[13px] font-semibold" style={{ color: palette.textDim }}>
+                    — {first.author}
+                  </div>
+                </>
+              )}
+              {rest.length > 0 && (
+                <div className="flex flex-col gap-2 mt-5">
+                  {rest.map((t, i) => (
+                    <div key={i} className="text-[12.5px]" style={{ color: palette.textDim }}>
+                      &ldquo;{t.quote.slice(0, 70)}{t.quote.length > 70 ? "…" : ""}&rdquo; — {t.author}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // single-quote (default) — stort citat över en bild/konstbakgrund
       const [first, ...rest] = section.items;
       return (
         <div className="relative px-6 py-20 text-center" style={{ background: art }}>
           <h2 className="sr-only">{section.heading}</h2>
           {first && (
             <div className="max-w-xl mx-auto relative">
-              <p className="font-serif italic text-[24px] md:text-[27px] leading-relaxed mb-4">
-                &ldquo;{first.quote}&rdquo;
-              </p>
+              <p className="font-serif italic text-[24px] md:text-[27px] leading-relaxed mb-4">&ldquo;{first.quote}&rdquo;</p>
               <div className="text-[13.5px]" style={{ color: palette.textDim }}>
                 — {first.author}
               </div>
@@ -221,11 +413,7 @@ function SectionBlock({
           {rest.length > 0 && (
             <div className="flex flex-wrap justify-center gap-3 mt-8 max-w-2xl mx-auto">
               {rest.map((t, i) => (
-                <div
-                  key={i}
-                  className="text-[12.5px] px-4 py-2.5 rounded-xl border"
-                  style={{ background: palette.cardBg, borderColor: palette.cardBorder, color: palette.textDim }}
-                >
+                <div key={i} className="text-[12.5px] px-4 py-2.5 rounded-xl border" style={{ background: palette.cardBg, borderColor: palette.cardBorder, color: palette.textDim }}>
                   &ldquo;{t.quote.slice(0, 60)}{t.quote.length > 60 ? "…" : ""}&rdquo; — {t.author}
                 </div>
               ))}
@@ -234,20 +422,74 @@ function SectionBlock({
         </div>
       );
     }
-    case "cta":
+
+    case "cta": {
+      const layout = section.layout || "centered";
+      const darkArt = artBackground("dark", accent, secondary);
+
+      if (layout === "split") {
+        return (
+          <div className="grid md:grid-cols-2">
+            <div className="flex flex-col justify-center px-10 md:px-14 py-14" style={{ background: sectionBg }}>
+              <h2 className="font-serif text-[27px] mb-3">{section.heading}</h2>
+              <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                {section.body}
+              </p>
+            </div>
+            <div className="flex items-center justify-center px-10 py-14" style={{ background: accent }}>
+              <span className="font-semibold text-[15px] text-[#17171A] text-center">{section.ctaLabel}</span>
+            </div>
+          </div>
+        );
+      }
+
+      // centered (default)
       return (
-        <div className="relative px-6 py-20 text-center text-white" style={{ background: artBackground("dark", accent, secondary) }}>
+        <div className="relative px-6 py-20 text-center text-white" style={{ background: darkArt }}>
           <h2 className="font-serif text-[29px] mb-4">{section.heading}</h2>
           <p className="text-[14.5px] mb-7 opacity-80 max-w-[480px] mx-auto">{section.body}</p>
-          <span
-            className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
-            style={{ background: accent, color: "#17171A" }}
-          >
-            {section.ctaLabel}
-          </span>
+          <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>
         </div>
       );
-    case "contact":
+    }
+
+    case "contact": {
+      const layout = section.layout || "centered";
+
+      if (layout === "split-info") {
+        return (
+          <div className="grid md:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
+            <div>
+              <h2 className="font-serif text-[27px] mb-4">{section.heading}</h2>
+              <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                {section.body}
+              </p>
+            </div>
+            <div className="rounded-2xl border p-6 flex flex-col gap-3" style={{ background: palette.cardBg, borderColor: palette.cardBorder }}>
+              {section.email && (
+                <div className="text-[13.5px]">
+                  <span className="font-semibold">E-post: </span>
+                  <span style={{ color: palette.textDim }}>{section.email}</span>
+                </div>
+              )}
+              {section.phone && (
+                <div className="text-[13.5px]">
+                  <span className="font-semibold">Telefon: </span>
+                  <span style={{ color: palette.textDim }}>{section.phone}</span>
+                </div>
+              )}
+              {section.address && (
+                <div className="text-[13.5px]">
+                  <span className="font-semibold">Adress: </span>
+                  <span style={{ color: palette.textDim }}>{section.address}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // centered (default)
       return (
         <div className="px-10 py-16 max-w-[560px] mx-auto text-center" style={{ background: sectionBg }}>
           <h2 className="font-serif text-[27px] mb-4">{section.heading}</h2>
@@ -261,6 +503,8 @@ function SectionBlock({
           </div>
         </div>
       );
+    }
+
     default:
       return null;
   }

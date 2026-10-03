@@ -20,12 +20,13 @@ const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "hero" },
+        layout: { type: "string", enum: ["centered", "split-left", "split-right", "overlay-bottom"] },
         eyebrow: { type: "string" },
         headline: { type: "string" },
         body: { type: "string" },
         ctaLabel: { type: "string" },
       },
-      required: ["id", "type", "headline", "body"],
+      required: ["id", "type", "layout", "headline", "body"],
     },
     {
       type: "object",
@@ -42,6 +43,7 @@ const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "grid" },
+        layout: { type: "string", enum: ["cards", "alternating-rows", "list", "numbered"] },
         heading: { type: "string" },
         items: {
           type: "array",
@@ -52,13 +54,14 @@ const SECTION_SCHEMA = {
           },
         },
       },
-      required: ["id", "type", "heading", "items"],
+      required: ["id", "type", "layout", "heading", "items"],
     },
     {
       type: "object",
       properties: {
         id: { type: "string" },
         type: { const: "testimonials" },
+        layout: { type: "string", enum: ["single-quote", "carousel-row", "side-by-side"] },
         heading: { type: "string" },
         items: {
           type: "array",
@@ -69,31 +72,33 @@ const SECTION_SCHEMA = {
           },
         },
       },
-      required: ["id", "type", "heading", "items"],
+      required: ["id", "type", "layout", "heading", "items"],
     },
     {
       type: "object",
       properties: {
         id: { type: "string" },
         type: { const: "cta" },
+        layout: { type: "string", enum: ["centered", "split"] },
         heading: { type: "string" },
         body: { type: "string" },
         ctaLabel: { type: "string" },
       },
-      required: ["id", "type", "heading", "body", "ctaLabel"],
+      required: ["id", "type", "layout", "heading", "body", "ctaLabel"],
     },
     {
       type: "object",
       properties: {
         id: { type: "string" },
         type: { const: "contact" },
+        layout: { type: "string", enum: ["centered", "split-info"] },
         heading: { type: "string" },
         body: { type: "string" },
         email: { type: "string" },
         phone: { type: "string" },
         address: { type: "string" },
       },
-      required: ["id", "type", "heading", "body"],
+      required: ["id", "type", "layout", "heading", "body"],
     },
   ],
 };
@@ -151,6 +156,8 @@ Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
 
 Skriv genuint bra, konkret copy på svenska för varje sida — ingen platshållartext ("Lorem ipsum" eller liknande är förbjudet). Utgå från beskrivningen och branschen för att hitta rätt detaljer och ton. Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer.
+
+VIKTIGT — layout per sektion: varje sektion (utom "about") har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst.
 
 Anropa verktyget "generate_site" med hela resultatet.`;
 }

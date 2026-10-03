@@ -20,9 +20,18 @@ export interface SiteTheme {
   backgroundMode: BackgroundMode;
 }
 
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom";
+export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered";
+export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side";
+export type CtaLayout = "centered" | "split";
+export type ContactLayout = "centered" | "split-info";
+
 export interface HeroSection {
   id: string;
   type: "hero";
+  // AI:n väljer en av fyra uppbyggnader utifrån ton/bransch/referenser —
+  // se lib/themeVariants-oberoende layoutbibliotek i SitePreview.tsx.
+  layout: HeroLayout;
   eyebrow?: string;
   headline: string;
   body: string;
@@ -49,6 +58,7 @@ export interface GridItem {
 export interface GridSection {
   id: string;
   type: "grid";
+  layout: GridLayout;
   heading: string;
   items: GridItem[];
 }
@@ -61,6 +71,7 @@ export interface TestimonialItem {
 export interface TestimonialsSection {
   id: string;
   type: "testimonials";
+  layout: TestimonialsLayout;
   heading: string;
   items: TestimonialItem[];
 }
@@ -68,6 +79,7 @@ export interface TestimonialsSection {
 export interface CtaSection {
   id: string;
   type: "cta";
+  layout: CtaLayout;
   heading: string;
   body: string;
   ctaLabel: string;
@@ -76,6 +88,7 @@ export interface CtaSection {
 export interface ContactSection {
   id: string;
   type: "contact";
+  layout: ContactLayout;
   heading: string;
   body: string;
   email?: string;
