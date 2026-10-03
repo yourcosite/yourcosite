@@ -137,6 +137,34 @@ const GENERATE_TOOL = {
   },
 };
 
+// Ren instruktion ("variera!") räcker sällan ensam — språkmodeller har en
+// stark tendens att konvergera mot samma "säkra" val om och om igen även
+// när de uttryckligen ombeds variera, särskilt för kunder med liknande
+// bransch/ton. Därför slumpar vi fram en konkret riktning PER GENERERING i
+// kod och lägger in den som en knuff i prompten — det är det som faktiskt
+// sprider ut valen mellan kunder över tid, inte bara en vädjan om variation.
+function pickRandom<T>(pool: T[]): T {
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// Övervägande (inte uteslutande) "overlay-bottom" eftersom det är den mest
+// imponerande startsidelayouten — men inte så dominant att nästan alla
+// kunders startsidor ser likadana ut, vilket var läget innan.
+const HOME_HERO_LAYOUT_POOL = [
+  "overlay-bottom",
+  "overlay-bottom",
+  "overlay-bottom",
+  "split-left",
+  "split-right",
+  "centered",
+];
+
+const LAYOUT_TENDENCY_POOL = [
+  "renare och mer återhållsam — luta åt layouter som \"centered\", \"list\" och \"single-quote\" där det passar",
+  "dynamisk och bildtung — luta åt layouter som \"split-left\"/\"split-right\", \"alternating-rows\" och \"numbered\" där det passar",
+  "en jämn blandning, utan tydlig slagsida åt någotdera hållet",
+];
+
 function buildPrompt(site: any, pages: any[], inspirationText: string) {
   const pagesDesc = pages
     .map(
@@ -144,6 +172,9 @@ function buildPrompt(site: any, pages: any[], inspirationText: string) {
         `- "${p.label}" (path: ${p.path})${p.brief ? ` — kundens brief: ${p.brief}` : ""}`
     )
     .join("\n");
+
+  const suggestedHomeHeroLayout = pickRandom(HOME_HERO_LAYOUT_POOL);
+  const suggestedTendency = pickRandom(LAYOUT_TENDENCY_POOL);
 
   const textFillInstruction =
     site.allow_ai_text_fill === false
@@ -166,9 +197,9 @@ ${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehål
 
 VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (den är sidans enda garanterade bildplats tillsammans med "grid" — se till att minst en av dem finns på varje sida, annars blir sidan bildlös).
 
-VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. Föredra layouten "overlay-bottom" för startsidans hero — den gör bilden fullbred ända upp bakom menyn (som stora hotell-/spa-sajter brukar göra) och ger det mest imponerande förstaintrycket. Välj "split-left"/"split-right" istället bara om tonen/branschen tydligt passar bättre för det, och använd "centered" på startsidan bara om varken "overlay-bottom" eller split känns rätt.
+VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. Som utgångspunkt för DEN HÄR sajten: luta åt layouten "${suggestedHomeHeroLayout}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right" eller "centered" om något av dem passar tydligt bättre. Olika kunder ska landa olika här, inte alltid på samma layout.
 
-VIKTIGT — variation mellan olika kunder: två sajter i samma bransch och ton ska ändå inte kunna förväxlas. Variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder — luta dig hårt på kundens egna ord, bransch-specifika detaljer och eventuell inspiration för att göra strukturella val, inte bara texten.
+VIKTIGT — variation mellan olika kunder: två sajter i samma bransch och ton ska ändå inte kunna förväxlas. Som en extra knuff åt det hållet för DEN HÄR sajten: luta generellt åt en ${suggestedTendency}, om inget i kundens egna ord talar tydligt emot det. Variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder — luta dig hårt på kundens egna ord, bransch-specifika detaljer och eventuell inspiration för att göra strukturella val, inte bara texten.
 
 VIKTIGT — layout per sektion: varje sektion (utom "about") har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst.
 

@@ -89,8 +89,8 @@ export default function SuggestionsPage() {
               Här är {siteName ? `${siteName}s` : "din"} nya sajt
             </h1>
             <p className="text-[15.5px] text-ink-dim max-w-[560px] mx-auto">
-              Samma innehåll, tre olika utseenden. Välj den du gillar bäst
-              — du kan ändra precis allt efteråt.
+              Samma innehåll, {THEME_VARIANTS.length} olika utseenden. Välj
+              den du gillar bäst — du kan ändra precis allt efteråt.
             </p>
           </div>
 
@@ -127,7 +127,7 @@ export default function SuggestionsPage() {
           )}
 
           {content && (
-            <div className="grid md:grid-cols-3 gap-5.5">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5.5">
               {THEME_VARIANTS.map((v) => (
                 <div
                   key={v.id}
