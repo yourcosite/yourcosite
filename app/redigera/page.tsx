@@ -1,50 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import SitePreview from "@/components/SitePreview";
+import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 
-type Msg = { from: "user" | "bot"; text: string };
+type ChatMessage = { from: "user" | "bot"; text: string };
 
-const initialMessages: Msg[] = [
-  { from: "user", text: "Kan vi byta hero-bilden till en bild från gården istället för illustrationen?" },
-  { from: "bot", text: "Klart! Bytte till fotot av äppelträden vid ladan. Vill du att jag mörkar ner den lite så texten syns bättre?" },
-  { from: "user", text: "Ja gärna, och gör rubriken lite större" },
-  { from: "bot", text: "Fixat — mörkare bild och rubriken uppskalad. Kolla i förhandsvisningen till vänster." },
-];
+type SiteMeta = {
+  id: string;
+  name: string;
+  domain: string | null;
+  status: "draft" | "live" | "pausad";
+  privacy_policy_mode: "uploaded" | "generated" | null;
+  privacy_policy_file_url: string | null;
+  privacy_policy_text: string | null;
+};
 
+// Chattredigeraren — till skillnad från /webbplats (som bara VISAR sajten,
+// i en iframe) renderar den här kundens RIKTIGA SitePreview direkt i
+// sidan (ingen iframe), så ett AI-svar kan uppdatera "content"-state och
+// förhandsvisningen uppdateras ögonblickligen utan omladdning. Sidbyte i
+// menyn sker via onNavigate (se SitePreview/Header) istället för riktiga
+// länkar, av samma skäl — annars tappas hela chatt-historiken vid varje
+// klick.
 export default function EditorPage() {
-  const [messages, setMessages] = useState(initialMessages);
+  const [site, setSite] = useState<SiteMeta | null>(null);
+  const [content, setContent] = useState<SiteContent | null>(null);
+  const [activePath, setActivePath] = useState("/");
+  const [loadError, setLoadError] = useState("");
+
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      from: "bot",
+      text: "Hej! Skriv vad du vill ändra — t.ex. \"byt rubriken på startsidan\" eller \"lägg till en sektion om våra tjänster\". Jag uppdaterar sajten åt dig direkt.",
+    },
+  ]);
   const [draft, setDraft] = useState("");
-  const [texts, setTexts] = useState({
-    eyebrow: "SEDAN 1987 · ÖSTERGÖTLAND",
-    headline: "Must från våra egna äpplen",
-    body: "Handplockat, kallpressat och tappat på gården — precis som det alltid gjorts.",
-    cta: "Se vårt sortiment",
-  });
-  const [editingField, setEditingField] = useState<keyof typeof texts | null>(null);
-  const [draftField, setDraftField] = useState("");
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const send = () => {
-    if (!draft.trim()) return;
-    setMessages((m) => [
-      ...m,
-      { from: "user", text: draft },
-      {
-        from: "bot",
-        text: "Noterat! Den här demon visar bara hur chatten känns — riktig AI-koppling byggs i nästa steg av projektet.",
-      },
-    ]);
+  useEffect(() => {
+    fetch("/api/sites/mine")
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data.site) {
+          setLoadError("Hittade ingen genererad sajt ännu.");
+          return;
+        }
+        setSite(data.site);
+        if (isValidSiteContent(data.site.content)) setContent(data.site.content);
+        else setLoadError("Sajtens innehåll kunde inte läsas.");
+      })
+      .catch(() => setLoadError("Kunde inte hämta sajten."));
+  }, []);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
+
+  const send = async () => {
+    const text = draft.trim();
+    if (!text || sending) return;
+    const history = messages;
+    setMessages((m) => [...m, { from: "user", text }]);
     setDraft("");
-  };
-
-  const startEdit = (field: keyof typeof texts) => {
-    setDraftField(texts[field]);
-    setEditingField(field);
-  };
-  const saveEdit = () => {
-    if (editingField) setTexts((t) => ({ ...t, [editingField]: draftField }));
-    setEditingField(null);
+    setSending(true);
+    try {
+      const res = await fetch("/api/sites/edit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, history }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      setContent(data.content);
+      setMessages((m) => [...m, { from: "bot", text: data.summary || "Klart!" }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: `Det gick inte: ${e.message}` }]);
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -56,122 +93,90 @@ export default function EditorPage() {
           </Link>
           <div className="w-px h-5.5 bg-line" />
           <div>
-            <div className="text-[14px] font-semibold">Brunneby Musteri</div>
-            <div className="text-[11.5px] text-ink-dim">Utkast · ingen domän ännu</div>
+            <div className="text-[14px] font-semibold">{site?.name || "Din sajt"}</div>
+            <div className="text-[11.5px] text-ink-dim">
+              {site ? (site.status === "live" ? "Live" : "Utkast") : "…"}
+              {site?.domain ? ` · ${site.domain}` : " · ingen domän ännu"}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-3.5">
-          <div className="text-[12.5px] text-ink-dim bg-bg border border-line rounded-full px-3.5 py-1.5">
-            37 ändringar kvar denna månad
-          </div>
-          <Link href="/nyheter" className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            Nyheter
-          </Link>
           <Link href="/sidor" className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             Sidor
           </Link>
-          <button className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg">
+          <Link
+            href="/webbplats"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
+          >
             Förhandsgranska
-          </button>
-          <button className="text-[13.5px] font-semibold text-accent-ink bg-accent px-4.5 py-2.5 rounded-lg">
-            Publicera
+          </Link>
+          <button
+            type="button"
+            disabled
+            title="Publicering till en riktig domän byggs i ett senare steg"
+            className="text-[13.5px] font-semibold text-ink-dim bg-bg border border-line px-4.5 py-2.5 rounded-lg cursor-not-allowed opacity-70"
+          >
+            Publicera (kommer snart)
           </button>
         </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 bg-[#E5E3DD] flex items-center justify-center p-7">
-          <div className="w-full max-w-[820px] h-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col">
-            <div className="h-[38px] bg-[#F1EFE9] flex items-center gap-1.5 px-3.5 flex-shrink-0">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
-              <div className="flex-1 text-center text-[11.5px] text-ink-dim">brunneby.se</div>
+        <div className="flex-1 bg-[#E5E3DD] flex items-center justify-center p-7 overflow-hidden">
+          {loadError && (
+            <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px] max-w-[420px]">
+              {loadError}{" "}
+              <Link href="/onboarding/1" className="font-semibold underline">
+                Gå till onboardingen
+              </Link>
             </div>
+          )}
 
-            <div
-              className="flex-1 flex flex-col relative overflow-hidden"
-              style={{ background: "linear-gradient(160deg, #3E2A1C 0%, #6B3F22 100%)" }}
-            >
-              <div className="flex items-center justify-between px-8 py-5.5">
-                <span className="font-serif italic text-[19px]" style={{ color: "#F4D9A8" }}>
-                  Brunneby Musteri
-                </span>
-                <div className="flex gap-5.5 text-[12.5px]" style={{ color: "#E9D9C4" }}>
-                  <span>Produkter</span>
-                  <span>Gården</span>
-                  <span>Kontakt</span>
+          {!loadError && !content && (
+            <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">Hämtar din sajt …</div>
+          )}
+
+          {content && (
+            <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col">
+              <div className="h-[38px] bg-[#F1EFE9] flex items-center gap-1.5 px-3.5 flex-shrink-0">
+                <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
+                <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
+                <div className="flex-1 text-center text-[11.5px] text-ink-dim truncate px-2">
+                  {site?.name?.toLowerCase().replace(/\s+/g, "")}.yourcosite.com{activePath !== "/" ? activePath : ""}
                 </div>
               </div>
-
-              <div className="flex-1 flex flex-col items-center justify-center text-center px-14 gap-0.5">
-                <EditableLine
-                  value={texts.eyebrow}
-                  editing={editingField === "eyebrow"}
-                  draftValue={draftField}
-                  onDraftChange={setDraftField}
-                  onStart={() => startEdit("eyebrow")}
-                  onCancel={() => setEditingField(null)}
-                  onSave={saveEdit}
-                  className="text-[12px] tracking-[0.12em] mb-3.5"
-                  style={{ color: "#E8A15C" }}
-                />
-                <EditableLine
-                  value={texts.headline}
-                  editing={editingField === "headline"}
-                  draftValue={draftField}
-                  onDraftChange={setDraftField}
-                  onStart={() => startEdit("headline")}
-                  onCancel={() => setEditingField(null)}
-                  onSave={saveEdit}
-                  className="font-serif italic text-[40px] leading-[1.1] mb-4"
-                  style={{ color: "#FBF1E2" }}
-                  as="h1"
-                />
-                <EditableLine
-                  value={texts.body}
-                  editing={editingField === "body"}
-                  draftValue={draftField}
-                  onDraftChange={setDraftField}
-                  onStart={() => startEdit("body")}
-                  onCancel={() => setEditingField(null)}
-                  onSave={saveEdit}
-                  className="text-[14.5px] max-w-[440px] mb-6"
-                  style={{ color: "#E9D9C4" }}
-                />
-                <EditableLine
-                  value={texts.cta}
-                  editing={editingField === "cta"}
-                  draftValue={draftField}
-                  onDraftChange={setDraftField}
-                  onStart={() => startEdit("cta")}
-                  onCancel={() => setEditingField(null)}
-                  onSave={saveEdit}
-                  className="inline-block font-bold text-[13.5px] px-6.5 py-3 rounded-full"
-                  style={{ background: "#E8A15C", color: "#3E2A1C" }}
-                  pill
+              <div className="flex-1 overflow-y-auto relative">
+                {sending && (
+                  <div className="absolute inset-0 bg-white/40 z-40 flex items-start justify-center pt-10 pointer-events-none">
+                    <div className="bg-ink text-white text-[12.5px] font-semibold px-4 py-2 rounded-full shadow-lg">
+                      Uppdaterar sajten …
+                    </div>
+                  </div>
+                )}
+                <SitePreview
+                  content={content}
+                  siteName={site?.name}
+                  activePath={activePath}
+                  onNavigate={setActivePath}
+                  privacyPolicyMode={site?.privacy_policy_mode}
+                  privacyPolicyFileUrl={site?.privacy_policy_file_url}
+                  privacyPolicyText={site?.privacy_policy_text}
                 />
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <div className="w-[400px] border-l border-line bg-surface flex flex-col flex-shrink-0">
           <div className="px-5 py-4 border-b border-line">
             <div className="font-semibold text-[14.5px]">Be om ändringar</div>
-            <div className="text-[12px] text-ink-dim mt-0.5">
-              Skriv precis som du skulle till en kollega.
-            </div>
+            <div className="text-[12px] text-ink-dim mt-0.5">Skriv precis som du skulle till en kollega.</div>
           </div>
 
-          <div className="flex items-start gap-2.5 bg-accent-soft px-5 py-3 border-b border-line">
-            <span className="text-[12px] text-ink leading-relaxed">
-              Klicka på pennan direkt på sidan för snabba textändringar.
-              Bilder, layout och allt annat ber du om här i chatten.
-            </span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto px-5 py-4.5 flex flex-col gap-4">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4.5 flex flex-col gap-4">
             {messages.map((m, i) => (
               <div
                 key={i}
@@ -184,10 +189,11 @@ export default function EditorPage() {
                 {m.text}
               </div>
             ))}
-            <div className="self-center text-[11.5px] text-ink-dim mt-1">
-              {messages.filter((m) => m.from === "user").length} ändringar
-              denna session
-            </div>
+            {sending && (
+              <div className="self-start bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5">
+                Tänker …
+              </div>
+            )}
           </div>
 
           <div className="px-5 py-4 border-t border-line">
@@ -197,14 +203,16 @@ export default function EditorPage() {
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
                 placeholder="Be om en ändring …"
-                className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim"
+                disabled={sending || !content}
+                className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60"
               />
               <button
                 onClick={send}
+                disabled={sending || !content}
                 aria-label="Skicka"
-                className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0"
+                className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60"
               >
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0C1004" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="19" x2="12" y2="5" />
                   <polyline points="5 12 12 5 19 12" />
                 </svg>
@@ -213,70 +221,6 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function EditableLine({
-  value,
-  editing,
-  draftValue,
-  onDraftChange,
-  onStart,
-  onCancel,
-  onSave,
-  className,
-  style,
-  as = "div",
-  pill = false,
-}: {
-  value: string;
-  editing: boolean;
-  draftValue: string;
-  onDraftChange: (v: string) => void;
-  onStart: () => void;
-  onCancel: () => void;
-  onSave: () => void;
-  className?: string;
-  style?: React.CSSProperties;
-  as?: "div" | "h1";
-  pill?: boolean;
-}) {
-  const Tag = as;
-  return (
-    <div className="relative inline-block">
-      {editing && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-full w-[260px] bg-white rounded-xl p-3 shadow-[0_16px_34px_rgba(0,0,0,0.3)] z-20">
-          <textarea
-            value={draftValue}
-            onChange={(e) => onDraftChange(e.target.value)}
-            className="w-full box-border border border-line rounded-lg p-2 text-[12.5px] text-ink resize-none h-11"
-          />
-          <div className="flex gap-1.5 justify-end mt-2">
-            <button onClick={onCancel} className="text-[12px] font-semibold text-ink-dim px-2.5 py-1.5">
-              Avbryt
-            </button>
-            <button onClick={onSave} className="text-[12px] font-semibold text-accent-ink bg-accent px-3.5 py-1.5 rounded-md">
-              Spara
-            </button>
-          </div>
-        </div>
-      )}
-      <Tag className={className} style={style}>
-        {value}
-      </Tag>
-      <button
-        onClick={onStart}
-        aria-label="Redigera text"
-        className={`absolute w-[22px] h-[22px] rounded-full bg-white/20 flex items-center justify-center ${
-          pill ? "-top-2 -right-7" : "-top-1 -right-7"
-        }`}
-      >
-        <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z" />
-        </svg>
-      </button>
     </div>
   );
 }

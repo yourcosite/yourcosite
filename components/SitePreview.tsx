@@ -43,6 +43,7 @@ export default function SitePreview({
   backgroundModeOverride,
   activePath,
   basePath,
+  onNavigate,
   privacyPolicyMode,
   privacyPolicyFileUrl,
   privacyPolicyText,
@@ -57,6 +58,10 @@ export default function SitePreview({
   // (t.ex. i /forslag-miniatyrerna) är menyn bara text, inte länkar, och
   // cookiebannern visas inte (se nedan).
   basePath?: string;
+  // Satt av chattredigeraren (/redigera) för sidbyte UTAN full
+  // sidladdning (annars tappas chatt-historiken vid varje klick i menyn)
+  // — se Header nedan.
+  onNavigate?: (path: string) => void;
   // Kundens egen integritetspolicy, satt i onboarding steg 5. "uploaded"
   // länkar sidfoten direkt till filen (ny flik); "generated" renderas som
   // en egen sida på PRIVACY_POLICY_PATH utifrån den sparade texten.
@@ -102,6 +107,7 @@ export default function SitePreview({
           palette={palette}
           activePath={page.path}
           basePath={basePath}
+          onNavigate={onNavigate}
           overlay={overlayHeader}
         />
         {overlayHeader && firstSection && (
@@ -256,6 +262,7 @@ function Header({
   palette,
   activePath,
   basePath,
+  onNavigate,
   overlay,
 }: {
   siteName?: string;
@@ -264,6 +271,11 @@ function Header({
   palette: Palette;
   activePath?: string;
   basePath?: string;
+  // Satt av chattredigeraren (/redigera) istället för basePath — sidbyte
+  // ska där ske utan en full sidladdning (annars tappas chatt-historiken),
+  // så menyn blir klickbara knappar som uppdaterar activePath i
+  // förälderns state istället för en vanlig länk.
+  onNavigate?: (path: string) => void;
   // true när headern "flyter" transparent ovanpå startsidans fullbreda
   // hero-bild (se overlay-bottom-layouten i SitePreview) istället för att
   // vara en egen solid stapel ovanför — det där "wow"-intrycket kunden
@@ -316,7 +328,16 @@ function Header({
       </div>
       <nav className="hidden md:flex items-center gap-7 text-[13px] font-semibold">
         {pages.slice(0, 5).map((p) =>
-          basePath ? (
+          onNavigate ? (
+            <button
+              key={p.path}
+              type="button"
+              onClick={() => onNavigate(p.path)}
+              style={{ color: linkColor(p.path === activePath) }}
+            >
+              {p.label}
+            </button>
+          ) : basePath ? (
             // Vanlig <a> istället för next/link — denna förhandsvisning är
             // bara en lekstuga-webbläsare, ingen riktig SPA, och ett klick
             // ska alltid ge en helt färsk sidladdning. next/link kunde i
@@ -362,7 +383,20 @@ function Header({
           style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
         >
           {pages.slice(0, 5).map((p) =>
-            basePath ? (
+            onNavigate ? (
+              <button
+                key={p.path}
+                type="button"
+                onClick={() => {
+                  onNavigate(p.path);
+                  setMenuOpen(false);
+                }}
+                className="px-8 py-3 text-[14px] font-semibold text-left"
+                style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+              >
+                {p.label}
+              </button>
+            ) : basePath ? (
               <a
                 key={p.path}
                 href={homeHref(p.path)}

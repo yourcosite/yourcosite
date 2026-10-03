@@ -7,134 +7,24 @@ import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspira
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
 import { ensureImageSlots } from "@/lib/ensureImageSlots";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
+import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteContentSchema";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
 export const maxDuration = 60;
 
-// JSON-schemat för verktyget vi tvingar Claude att svara med. Genom att
-// låta AI:n "ringa" ett verktyg istället för att bara skriva fritext får vi
+// JSON-schemat för verktyget vi tvingar Claude att svara med (delat med
+// /api/sites/edit — se lib/siteContentSchema.ts). Genom att låta AI:n
+// "ringa" ett verktyg istället för att bara skriva fritext får vi
 // garanterat giltig, strukturerad JSON tillbaka — aldrig rå HTML och aldrig
 // fält utanför vår innehållsmodell (se lib/contentModel.ts).
-const SECTION_SCHEMA = {
-  anyOf: [
-    {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        type: { const: "hero" },
-        layout: { type: "string", enum: ["centered", "split-left", "split-right", "overlay-bottom"] },
-        eyebrow: { type: "string" },
-        headline: { type: "string" },
-        body: { type: "string" },
-        ctaLabel: { type: "string" },
-      },
-      required: ["id", "type", "layout", "headline", "body"],
-    },
-    {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        type: { const: "about" },
-        heading: { type: "string" },
-        body: { type: "string" },
-      },
-      required: ["id", "type", "heading", "body"],
-    },
-    {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        type: { const: "grid" },
-        layout: { type: "string", enum: ["cards", "alternating-rows", "list", "numbered"] },
-        heading: { type: "string" },
-        items: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: { title: { type: "string" }, body: { type: "string" } },
-            required: ["title", "body"],
-          },
-        },
-      },
-      required: ["id", "type", "layout", "heading", "items"],
-    },
-    {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        type: { const: "testimonials" },
-        layout: { type: "string", enum: ["single-quote", "carousel-row", "side-by-side"] },
-        heading: { type: "string" },
-        items: {
-          type: "array",
-          items: {
-            type: "object",
-            properties: { quote: { type: "string" }, author: { type: "string" } },
-            required: ["quote", "author"],
-          },
-        },
-      },
-      required: ["id", "type", "layout", "heading", "items"],
-    },
-    {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        type: { const: "cta" },
-        layout: { type: "string", enum: ["centered", "split"] },
-        heading: { type: "string" },
-        body: { type: "string" },
-        ctaLabel: { type: "string" },
-      },
-      required: ["id", "type", "layout", "heading", "body", "ctaLabel"],
-    },
-    {
-      type: "object",
-      properties: {
-        id: { type: "string" },
-        type: { const: "contact" },
-        layout: { type: "string", enum: ["centered", "split-info"] },
-        heading: { type: "string" },
-        body: { type: "string" },
-        email: { type: "string" },
-        phone: { type: "string" },
-        address: { type: "string" },
-      },
-      required: ["id", "type", "layout", "heading", "body"],
-    },
-  ],
-};
-
 const GENERATE_TOOL = {
   name: "generate_site",
   description: "Skapar det strukturerade innehållet för en helt ny kundsajt.",
   input_schema: {
     type: "object" as const,
-    properties: {
-      theme: {
-        type: "object",
-        properties: {
-          accentColor: { type: "string" },
-          secondaryColors: { type: "array", items: { type: "string" } },
-          font: { type: "string", enum: ["serif", "sans"] },
-        },
-        required: ["accentColor", "secondaryColors", "font"],
-      },
-      pages: {
-        type: "array",
-        items: {
-          type: "object",
-          properties: {
-            path: { type: "string" },
-            label: { type: "string" },
-            sections: { type: "array", items: SECTION_SCHEMA },
-          },
-          required: ["path", "label", "sections"],
-        },
-      },
-    },
-    required: ["theme", "pages"],
+    properties: SITE_CONTENT_PROPERTIES,
+    required: SITE_CONTENT_REQUIRED,
   },
 };
 
