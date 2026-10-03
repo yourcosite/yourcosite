@@ -5,6 +5,7 @@ import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks } from "@/lib/inspiration";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
 import { ensureImageSlots } from "@/lib/ensureImageSlots";
+import { getCurrentDraftSite } from "@/lib/supabase/onboardingSite";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -179,16 +180,12 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const { data: site, error: siteError } = await supabase
-    .from("sites")
-    .select("*")
-    .eq("owner_id", user.id)
-    .is("content", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Samma utkast kunden faktiskt fyllde i (sidor, foton, logga m.m.) i
+  // onboardingen — inte bara "senaste utkastet utan innehåll" rakt av, som
+  // kunde peka fel om kontot hade fler halvfärdiga utkast samtidigt.
+  const site = await getCurrentDraftSite(supabase, user.id);
 
-  if (siteError || !site) {
+  if (!site) {
     return NextResponse.json(
       { error: "Hittade inget onboarding-utkast att bygga sajt från." },
       { status: 400 }

@@ -1,5 +1,14 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
+
+// Pinnar kunden till SAMMA utkast genom hela onboardingen, istället för att
+// varje steg gissa "senaste sajten utan innehåll" på nytt. Utan det här kan
+// ett konto med flera halvfärdiga eller tidigare övergivna utkast (vanligt
+// vid upprepad testning) råka koppla t.ex. steg 3:s bilduppladdning till EN
+// sajt, medan /forslag och /webbplats sedan visar en ANNAN — precis det som
+// orsakade "jag laddade upp 10 bilder men hero-bilden saknas ändå".
+const DRAFT_COOKIE = "yc_draft_id";
 
 // Max antal sajter (utkast + publicerade, borttagna räknas inte) ett
 // kundkonto får ha samtidigt. Varje ny sajt som genereras kostar riktiga
@@ -25,6 +34,25 @@ export class DraftLimitError extends Error {
 // sajt-id fram och tillbaka mellan sidorna — det finns bara en aktiv
 // onboarding åt gången per kund.
 export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: string) {
+  const cookieStore = cookies();
+  const pinnedId = cookieStore.get(DRAFT_COOKIE)?.value;
+
+  // Försök först med den sajt kunden redan är pinnad till. Om den sajten
+  // under tiden fått sitt innehåll byggt (content inte längre null) eller
+  // tillhör ett annat konto matchar frågan inte längre — då faller vi
+  // tillbaka på heuristiken nedan precis som innan, så en gammal/ogiltig
+  // cookie aldrig kan blockera något.
+  if (pinnedId) {
+    const { data: pinned } = await supabase
+      .from("sites")
+      .select("*")
+      .eq("id", pinnedId)
+      .eq("owner_id", ownerId)
+      .is("content", null)
+      .maybeSingle();
+    if (pinned) return pinned;
+  }
+
   const { data: existing } = await supabase
     .from("sites")
     .select("*")
@@ -34,7 +62,15 @@ export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: st
     .limit(1)
     .maybeSingle();
 
-  if (existing) return existing;
+  if (existing) {
+    cookieStore.set(DRAFT_COOKIE, existing.id, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7,
+    });
+    return existing;
+  }
 
   const { count } = await supabase
     .from("sites")
@@ -52,7 +88,46 @@ export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: st
     .single();
 
   if (error) throw error;
+
+  cookieStore.set(DRAFT_COOKIE, created.id, {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
+
   return created;
+}
+
+// Samma princip som ovan men utan att skapa något — används av platser som
+// bara ska LÄSA det aktuella utkastet: dels onboardingens "fyll i det jag
+// redan skrivit igen"-hämtning, dels själva sajtgenereringen (som måste
+// bygga EXAKT den sajt kunden precis fyllde i, inte bara "senaste utkastet"
+// om kontot råkar ha fler halvfärdiga utkast liggande samtidigt).
+export async function getCurrentDraftSite(supabase: SupabaseClient, ownerId: string) {
+  const pinnedId = cookies().get(DRAFT_COOKIE)?.value;
+
+  if (pinnedId) {
+    const { data: pinned } = await supabase
+      .from("sites")
+      .select("*")
+      .eq("id", pinnedId)
+      .eq("owner_id", ownerId)
+      .is("content", null)
+      .maybeSingle();
+    if (pinned) return pinned;
+  }
+
+  const { data: existing } = await supabase
+    .from("sites")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .is("content", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return existing ?? null;
 }
 
 // Liten hjälpare så varje route inte behöver upprepa samma try/catch för
