@@ -15,7 +15,10 @@ export default function GeneratingPage() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [error, setError] = useState("");
-  const [siteName, setSiteName] = useState("din");
+  // Ingen fallback-text som "din" — hellre visa rubriken en stund senare
+  // än att blinka till en felaktig/konstig text innan det riktiga namnet
+  // hämtats.
+  const [siteName, setSiteName] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -69,10 +72,14 @@ export default function GeneratingPage() {
       )}
 
       <h1 className="text-[28px] md:text-[30px] font-medium mb-2.5 text-center">
-        {error ? "Något gick fel" : `Bygger ${siteName}s nya sajt`}
+        {error
+          ? "Något gick fel"
+          : siteName
+          ? `Bygger ${siteName}s nya sajt`
+          : " "}
       </h1>
       <p className="text-[15px] text-[#9E9C97] mb-11">
-        {error ? error : "Det här brukar ta under en minut."}
+        {error ? error : siteName ? "Det här brukar ta under en minut." : " "}
       </p>
 
       {!error && (

@@ -1,13 +1,14 @@
 "use client";
 
 import { SOCIAL_PLATFORMS, socialPlatformColor } from "@/lib/socialPlatforms";
+import { SocialGlyph } from "@/lib/socialIcons";
 
 export type SocialLinksValue = Record<string, string>;
 
 // Alla vanliga plattformar visas direkt som egna fält — ingen "lägg till
 // konto"-knapp behövs. Kunden fyller bara i de hon faktiskt har; tomma
-// fält sparas inte. Varje rad har en färgad rund badge (igenkänningsfärg,
-// inte den riktiga logotypen) så raden är lätt att skumma.
+// fält sparas inte. Varje rad har en rund badge i plattformens egen färg
+// med en igenkännbar logotyp-glyf, så raden är lätt att skumma.
 export default function SocialLinksFields({
   value,
   onChange,
@@ -20,11 +21,11 @@ export default function SocialLinksFields({
       {SOCIAL_PLATFORMS.map((p) => (
         <div key={p.id} className="flex items-center gap-3">
           <div
-            className="w-9 h-9 rounded-full flex items-center justify-center text-white text-[13px] font-bold flex-shrink-0"
+            className="w-9 h-9 rounded-full flex items-center justify-center text-white flex-shrink-0"
             style={{ background: socialPlatformColor(p.id) }}
             aria-hidden="true"
           >
-            {p.label[0]}
+            <SocialGlyph id={p.id} size={17} />
           </div>
           <label htmlFor={`social-${p.id}`} className="w-[90px] flex-shrink-0 text-[13.5px] font-semibold">
             {p.label}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
-import { socialPlatformLabel } from "@/lib/socialPlatforms";
+import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
+import { SocialGlyph } from "@/lib/socialIcons";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
 // för ett grått platshållarfält. Så fort kunden laddar upp egna foton är det
@@ -153,8 +154,8 @@ function Footer({
 }
 
 // Kundens egna sociala medier-länkar (satta i kod från onboarding steg 2,
-// aldrig valda av AI:n). Enkla bokstavsmärken istället för exakta
-// varumärkeslogotyper — fungerar för vilken plattform vi lägger till sen.
+// aldrig valda av AI:n). Rund badge i plattformens egen färg med en
+// igenkännbar logotyp-glyf för varje plattform.
 function SocialIcons({ socialLinks, palette }: { socialLinks: SocialLink[]; palette: Palette }) {
   return (
     <div className="flex items-center gap-2">
@@ -166,10 +167,10 @@ function SocialIcons({ socialLinks, palette }: { socialLinks: SocialLink[]; pale
           rel="noopener noreferrer"
           title={socialPlatformLabel(s.platform)}
           aria-label={socialPlatformLabel(s.platform)}
-          className="w-8 h-8 rounded-full border flex items-center justify-center text-[11px] font-semibold flex-shrink-0"
-          style={{ borderColor: palette.cardBorder, color: palette.textDim }}
+          className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0"
+          style={{ background: socialPlatformColor(s.platform) }}
         >
-          {socialPlatformLabel(s.platform)[0]}
+          <SocialGlyph id={s.platform} size={15} />
         </a>
       ))}
     </div>
