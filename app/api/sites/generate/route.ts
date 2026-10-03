@@ -4,6 +4,7 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks } from "@/lib/inspiration";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
+import { ensureImageSlots } from "@/lib/ensureImageSlots";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -143,6 +144,11 @@ function buildPrompt(site: any, pages: any[], inspirationText: string) {
     )
     .join("\n");
 
+  const textFillInstruction =
+    site.allow_ai_text_fill === false
+      ? `VIKTIGT — texten ska hålla sig nära det kunden faktiskt skrivit: kunden har INTE godkänt att du fyller ut saknad information med egna påhittade detaljer. Utgå bara från briefen, beskrivningen och branschen ovan. Hitta inte på konkreta erbjudanden, siffror, historia eller funktioner kunden inte nämnt. Där en sida eller sektion saknar underlag — håll texten kort, allmän och varumärkesneutral hellre än att fylla ut med påhittat innehåll.`
+      : `Skriv genuint bra, konkret copy på svenska för varje sida — ingen platshållartext ("Lorem ipsum" eller liknande är förbjudet). Utgå från beskrivningen och branschen för att hitta rätt detaljer och ton, och fyll gärna i rimliga, generiska detaljer där kundens egen brief är sparsam.`;
+
   return `Du ska skriva innehållet till en helt ny webbplats, åt en kund hos YourCoSite (en AI-driven hemsidesbyggare för svenska småföretag).
 
 Företag: ${site.name}
@@ -155,7 +161,9 @@ ${inspirationText}
 Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
 
-Skriv genuint bra, konkret copy på svenska för varje sida — ingen platshållartext ("Lorem ipsum" eller liknande är förbjudet). Utgå från beskrivningen och branschen för att hitta rätt detaljer och ton. Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer.
+${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer.
+
+VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (den är sidans enda garanterade bildplats tillsammans med "grid" — se till att minst en av dem finns på varje sida, annars blir sidan bildlös).
 
 VIKTIGT — layout per sektion: varje sektion (utom "about") har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst.
 
@@ -243,6 +251,14 @@ export async function POST() {
     site.secondary_colors?.length ? site.secondary_colors : content.theme.secondaryColors;
   content.theme.backgroundMode = "light";
   if (site.logo_url) content.logoUrl = site.logo_url;
+  if (Array.isArray(site.social_links) && site.social_links.length > 0) {
+    content.socialLinks = site.social_links;
+  }
+
+  // Säkerställer att varje sida har minst en bildbärande sektion (hero
+  // eller grid) innan vi delar ut kundens foton — annars kan en sida som
+  // bara fick t.ex. about+contact hamna helt utan bild.
+  const contentWithImageSlots = ensureImageSlots(content);
 
   // Egna uppladdade foton (steg 3) placeras deterministiskt i layouten i
   // kod — AI:n har inte sett eller valt dem.
@@ -254,7 +270,7 @@ export async function POST() {
     .order("created_at", { ascending: true });
 
   const finalContent = assignUploadedImages(
-    content,
+    contentWithImageSlots,
     (imageAssets ?? []).map((a) => a.file_url)
   );
 

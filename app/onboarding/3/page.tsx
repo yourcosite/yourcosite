@@ -44,12 +44,16 @@ export default function OnboardingStep3() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
+  const [allowAiTextFill, setAllowAiTextFill] = useState(true);
 
   useEffect(() => {
     fetch("/api/onboarding/current")
       .then((r) => r.json())
       .then((data) => {
         if (data.site?.logo_url) setLogoUrl(data.site.logo_url);
+        if (typeof data.site?.allow_ai_text_fill === "boolean") {
+          setAllowAiTextFill(data.site.allow_ai_text_fill);
+        }
         if (data.pages && data.pages.length > 0) {
           setPages(
             data.pages.map((p: any) => ({
@@ -95,6 +99,7 @@ export default function OnboardingStep3() {
           path: p.id === "start" ? "/" : "/" + slugify(p.menuName || p.label),
           brief: p.brief,
         })),
+        allowAiTextFill,
       };
       const res = await fetch("/api/onboarding/step3", {
         method: "POST",
@@ -205,6 +210,34 @@ export default function OnboardingStep3() {
           </svg>
           Lägg till egen sida
         </button>
+
+        <div className="flex items-start gap-3 rounded-xl px-4 py-3.5 mb-7 border border-line bg-surface">
+          <button
+            type="button"
+            onClick={() => setAllowAiTextFill((v) => !v)}
+            aria-pressed={allowAiTextFill}
+            aria-label="Låt AI:n fylla i text där briefen saknas"
+            className={`relative flex-shrink-0 w-[42px] h-[24px] rounded-full transition-colors mt-0.5 ${
+              allowAiTextFill ? "bg-accent" : "bg-line"
+            }`}
+          >
+            <span
+              className={`absolute top-[3px] left-[3px] w-[18px] h-[18px] rounded-full bg-white shadow transition-transform ${
+                allowAiTextFill ? "translate-x-[18px]" : "translate-x-0"
+              }`}
+            />
+          </button>
+          <div>
+            <div className="font-semibold text-[14.5px] mb-1">
+              Låt AI:n skriva text där jag inte fyllt i något
+            </div>
+            <p className="text-[13.5px] text-ink-dim leading-relaxed">
+              {allowAiTextFill
+                ? "På: saknar en sida brief skriver AI:n ändå genuin, relevant copy utifrån bransch och beskrivning."
+                : "Av: AI:n håller sig nära det du faktiskt skrivit och hittar inte på egna detaljer, erbjudanden eller siffror — sidor med tom brief blir kortare och mer allmänt hållna."}
+            </p>
+          </div>
+        </div>
 
         <div className="h-px bg-line my-1.5 mb-6" />
 

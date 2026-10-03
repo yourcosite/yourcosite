@@ -4,12 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
+import { SOCIAL_PLATFORMS } from "@/lib/socialPlatforms";
+
+type SocialRow = { platform: string; url: string };
 
 export default function OnboardingStep2() {
   const router = useRouter();
   const [u1, setU1] = useState("");
   const [u2, setU2] = useState("");
   const [u3, setU3] = useState("");
+  const [socialLinks, setSocialLinks] = useState<SocialRow[]>([{ platform: "instagram", url: "" }]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -20,9 +24,18 @@ export default function OnboardingStep2() {
         setU1(links[0] || "");
         setU2(links[1] || "");
         setU3(links[2] || "");
+        const existingSocial: SocialRow[] = data.site?.social_links || [];
+        if (existingSocial.length > 0) setSocialLinks(existingSocial);
       })
       .catch(() => {});
   }, []);
+
+  const updateSocialRow = (i: number, field: "platform" | "url", value: string) =>
+    setSocialLinks((rows) => rows.map((r, idx) => (idx === i ? { ...r, [field]: value } : r)));
+  const addSocialRow = () =>
+    setSocialLinks((rows) => [...rows, { platform: "facebook", url: "" }]);
+  const removeSocialRow = (i: number) =>
+    setSocialLinks((rows) => rows.filter((_, idx) => idx !== i));
 
   const next = async () => {
     setSaving(true);
@@ -30,7 +43,10 @@ export default function OnboardingStep2() {
       await fetch("/api/onboarding/step2", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ links: [u1, u2, u3] }),
+        body: JSON.stringify({
+          links: [u1, u2, u3],
+          socialLinks: socialLinks.filter((s) => s.url.trim() !== ""),
+        }),
       });
       router.push("/onboarding/3");
     } finally {
@@ -99,6 +115,66 @@ export default function OnboardingStep2() {
             <span className="text-[13.5px] text-ink leading-relaxed">
               Har du ingen favorit? Hoppa över det här steget.
             </span>
+          </div>
+
+          <div className="h-px bg-line my-2" />
+
+          <div>
+            <h2 className="text-[20px] font-medium mb-1.5">Sociala medier</h2>
+            <p className="text-[14px] text-ink-dim mb-4">
+              Lägg till dina konton — vi länkar dit från sidfoten och
+              kontaktsidan. Helt valfritt.
+            </p>
+
+            <div className="flex flex-col gap-2.5 mb-3">
+              {socialLinks.map((row, i) => (
+                <div key={i} className="flex gap-2.5 items-center">
+                  <select
+                    value={row.platform}
+                    onChange={(e) => updateSocialRow(i, "platform", e.target.value)}
+                    className="box-border px-2.5 py-3 border border-line rounded-[10px] text-[14px] bg-surface w-[150px] flex-shrink-0"
+                  >
+                    {SOCIAL_PLATFORMS.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {p.label}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="url"
+                    value={row.url}
+                    onChange={(e) => updateSocialRow(i, "url", e.target.value)}
+                    placeholder="https://"
+                    className="flex-1 box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeSocialRow(i)}
+                    aria-label="Ta bort rad"
+                    className="w-9 h-9 flex-shrink-0 rounded-lg flex items-center justify-center text-ink-dim"
+                  >
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {socialLinks.length < 8 && (
+              <button
+                type="button"
+                onClick={addSocialRow}
+                className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5 mb-2"
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+                Lägg till ett till konto
+              </button>
+            )}
           </div>
 
           <div className="flex justify-between mt-4">

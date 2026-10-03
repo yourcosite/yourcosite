@@ -75,6 +75,15 @@ create table if not exists sites (
   style_id text,
   inspiration_links text[] default '{}',
   logo_url text,
+  -- Kundens länkar till sina sociala medier (steg 2 i onboardingen), t.ex.
+  -- [{"platform":"instagram","url":"https://instagram.com/..."}]. Läggs in
+  -- deterministiskt i sajten (sidfot + kontaktsida) av kod, inte av AI:n.
+  social_links jsonb not null default '[]',
+  -- Styr hur fri AI:n är att skriva text där kunden inte angett något i sin
+  -- brief. true (förval) = AI:n skriver genuin copy ändå. false = AI:n ska
+  -- hålla sig nära det kunden faktiskt skrivit och undvika att hitta på
+  -- egna konkreta påståenden/detaljer. Se app/api/sites/generate/route.ts.
+  allow_ai_text_fill boolean not null default true,
   -- Innehållsmodellen (se lib/contentModel.ts) för sajten, satt av AI:n när
   -- förstagenereringen är klar. null tills onboardingen har byggt sajten.
   content jsonb,

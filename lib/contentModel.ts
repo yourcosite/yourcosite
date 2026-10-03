@@ -110,6 +110,11 @@ export interface SitePageContent {
   sections: Section[];
 }
 
+export interface SocialLink {
+  platform: string;
+  url: string;
+}
+
 export interface SiteContent {
   theme: SiteTheme;
   pages: SitePageContent[];
@@ -117,6 +122,10 @@ export interface SiteContent {
   // visar vi bara företagsnamnet i headern istället — aldrig en AI-skapad
   // logga, det gör vi medvetet inte.
   logoUrl?: string;
+  // Kundens sociala medier-länkar från onboarding steg 2 — satta i kod,
+  // aldrig valda eller hittade på av AI:n. Visas i sidfoten och på
+  // kontaktsidan.
+  socialLinks?: SocialLink[];
 }
 
 // Snäv typ-koll av vad Claude skickar tillbaka, så vi aldrig sparar skräp i

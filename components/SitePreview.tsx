@@ -1,5 +1,6 @@
 import Link from "next/link";
-import type { SiteContent, Section, BackgroundMode, ThemeFont } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
+import { socialPlatformLabel } from "@/lib/socialPlatforms";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
 // för ett grått platshållarfält. Så fort kunden laddar upp egna foton är det
@@ -71,9 +72,10 @@ export default function SitePreview({
           mode={mode}
           palette={palette}
           alt={i % 2 === 1}
+          socialLinks={content.socialLinks}
         />
       ))}
-      <Footer siteName={siteName} palette={palette} />
+      <Footer siteName={siteName} palette={palette} socialLinks={content.socialLinks} />
     </div>
   );
 }
@@ -96,11 +98,13 @@ function Header({
   const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
 
   return (
-    <div className="flex items-center justify-between px-8 md:px-12 py-5" style={{ borderBottom: `1px solid ${palette.cardBorder}` }}>
+    <div className="flex items-center justify-between px-8 md:px-12 py-4" style={{ borderBottom: `1px solid ${palette.cardBorder}` }}>
       <div className="flex items-center gap-2.5">
         {logoUrl ? (
+          // Loggan är kundens egen bild — ska vara ett tydligt kännetecken i
+          // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt={siteName || "Logga"} className="h-8 max-w-[140px] object-contain" />
+          <img src={logoUrl} alt={siteName || "Logga"} className="h-16 md:h-24 max-w-[320px] object-contain" />
         ) : (
           <span className="font-serif italic text-[19px]">{siteName || "Ditt företag"}</span>
         )}
@@ -124,10 +128,46 @@ function Header({
   );
 }
 
-function Footer({ siteName, palette }: { siteName?: string; palette: Palette }) {
+function Footer({
+  siteName,
+  palette,
+  socialLinks,
+}: {
+  siteName?: string;
+  palette: Palette;
+  socialLinks?: SocialLink[];
+}) {
   return (
-    <div className="flex items-center justify-between px-8 md:px-12 py-5 text-[12px]" style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}>
+    <div
+      className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 md:px-12 py-6 text-[12px]"
+      style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
+    >
       <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+      {socialLinks && socialLinks.length > 0 && <SocialIcons socialLinks={socialLinks} palette={palette} />}
+    </div>
+  );
+}
+
+// Kundens egna sociala medier-länkar (satta i kod från onboarding steg 2,
+// aldrig valda av AI:n). Enkla bokstavsmärken istället för exakta
+// varumärkeslogotyper — fungerar för vilken plattform vi lägger till sen.
+function SocialIcons({ socialLinks, palette }: { socialLinks: SocialLink[]; palette: Palette }) {
+  return (
+    <div className="flex items-center gap-2">
+      {socialLinks.map((s, i) => (
+        <a
+          key={i}
+          href={s.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title={socialPlatformLabel(s.platform)}
+          aria-label={socialPlatformLabel(s.platform)}
+          className="w-8 h-8 rounded-full border flex items-center justify-center text-[11px] font-semibold flex-shrink-0"
+          style={{ borderColor: palette.cardBorder, color: palette.textDim }}
+        >
+          {socialPlatformLabel(s.platform)[0]}
+        </a>
+      ))}
     </div>
   );
 }
@@ -161,6 +201,7 @@ function SectionBlock({
   mode,
   palette,
   alt,
+  socialLinks,
 }: {
   section: Section;
   accent: string;
@@ -168,6 +209,7 @@ function SectionBlock({
   mode: BackgroundMode;
   palette: Palette;
   alt: boolean;
+  socialLinks?: SocialLink[];
 }) {
   const sectionBg = alt ? palette.bgAlt : undefined;
   const art = artBackground(mode, accent, secondary);
@@ -216,9 +258,9 @@ function SectionBlock({
             <ImageOrArt imageUrl={section.imageUrl} art={art} className="absolute inset-0" dark />
             <div
               className="absolute inset-0"
-              style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.05) 55%)" }}
+              style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.05) 75%)" }}
             />
-            <div className="absolute bottom-0 left-0 px-8 md:px-14 pb-10 md:pb-14 max-w-[560px] text-white">
+            <div className="absolute bottom-0 left-0 right-0 px-8 md:px-14 pb-10 md:pb-14 max-w-[560px] text-white">
               {section.eyebrow && (
                 <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
                   {section.eyebrow.toUpperCase()}
@@ -232,17 +274,24 @@ function SectionBlock({
         );
       }
 
-      // centered (default)
+      // centered (default) — texten ligger i ett eget kort med egen
+      // bakgrund som bara pekar upp i bilden en bit, istället för att
+      // "sväva fritt" ovanpå den. Oavsett hur mycket text som kommer in
+      // (kort eller lång rubrik/body) hamnar den alltid INUTI kortets
+      // färgade yta, och aldrig utanför eller in i bilden ovanför.
       return (
-        <div className="relative">
-          <ImageOrArt imageUrl={section.imageUrl} art={art} className="h-[380px] md:h-[460px]" dark={mode === "dark"} />
-          <div className="max-w-2xl mx-auto text-center px-6 -mt-24 md:-mt-28 relative pb-16">
+        <div className="relative pb-6">
+          <ImageOrArt imageUrl={section.imageUrl} art={art} className="h-[300px] md:h-[380px]" dark={mode === "dark"} />
+          <div
+            className="max-w-2xl mx-auto text-center px-8 md:px-12 py-10 md:py-12 -mt-14 md:-mt-16 relative rounded-2xl"
+            style={{ background: palette.cardBg, boxShadow: "0 16px 40px rgba(0,0,0,0.10)" }}
+          >
             {section.eyebrow && (
               <div className="text-[12px] tracking-[0.12em] font-semibold mb-4" style={{ color: accent }}>
                 {section.eyebrow.toUpperCase()}
               </div>
             )}
-            <h1 className="font-serif text-[34px] md:text-[42px] leading-[1.12] mb-5">{section.headline}</h1>
+            <h1 className="font-serif text-[32px] md:text-[40px] leading-[1.15] mb-5">{section.headline}</h1>
             <p className="text-[15.5px] leading-relaxed mb-7" style={{ color: palette.textDim }}>
               {section.body}
             </p>
@@ -431,7 +480,7 @@ function SectionBlock({
       // single-quote (default) — stort citat över en bild/konstbakgrund
       const [first, ...rest] = section.items;
       return (
-        <div className="relative px-6 py-20 text-center" style={{ background: art }}>
+        <div className="relative px-8 md:px-10 py-20 text-center" style={{ background: art }}>
           <h2 className="sr-only">{section.heading}</h2>
           {first && (
             <div className="max-w-xl mx-auto relative">
@@ -476,7 +525,7 @@ function SectionBlock({
 
       // centered (default)
       return (
-        <div className="relative px-6 py-20 text-center text-white" style={{ background: darkArt }}>
+        <div className="relative px-8 md:px-10 py-20 text-center text-white" style={{ background: darkArt }}>
           <h2 className="font-serif text-[29px] mb-4">{section.heading}</h2>
           <p className="text-[14.5px] mb-7 opacity-80 max-w-[480px] mx-auto">{section.body}</p>
           <CtaPill accent={accent}>{section.ctaLabel}</CtaPill>
@@ -515,6 +564,11 @@ function SectionBlock({
                   <span style={{ color: palette.textDim }}>{section.address}</span>
                 </div>
               )}
+              {socialLinks && socialLinks.length > 0 && (
+                <div className="pt-2">
+                  <SocialIcons socialLinks={socialLinks} palette={palette} />
+                </div>
+              )}
             </div>
           </div>
         );
@@ -527,11 +581,16 @@ function SectionBlock({
           <p className="text-[14.5px] mb-5" style={{ color: palette.textDim }}>
             {section.body}
           </p>
-          <div className="text-[13.5px] flex flex-col gap-1" style={{ color: palette.textDim }}>
+          <div className="text-[13.5px] flex flex-col gap-1 mb-4" style={{ color: palette.textDim }}>
             {section.email && <span>{section.email}</span>}
             {section.phone && <span>{section.phone}</span>}
             {section.address && <span>{section.address}</span>}
           </div>
+          {socialLinks && socialLinks.length > 0 && (
+            <div className="flex justify-center">
+              <SocialIcons socialLinks={socialLinks} palette={palette} />
+            </div>
+          )}
         </div>
       );
     }
