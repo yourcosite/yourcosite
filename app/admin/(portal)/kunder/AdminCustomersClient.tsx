@@ -74,8 +74,10 @@ function formatDate(iso: string) {
 
 export default function AdminCustomersClient({
   initialCustomers,
+  canEdit,
 }: {
   initialCustomers: Customer[];
+  canEdit: boolean;
 }) {
   const [customers, setCustomers] = useState(initialCustomers);
   const [search, setSearch] = useState("");
@@ -250,12 +252,14 @@ export default function AdminCustomersClient({
             {customers.length} {customers.length === 1 ? "kund" : "kunder"} totalt.
           </p>
         </div>
-        <button
-          onClick={openAdd}
-          className="bg-accent text-accent-ink font-semibold text-[14px] px-5 py-2.5 rounded-lg"
-        >
-          + Lägg till kund
-        </button>
+        {canEdit && (
+          <button
+            onClick={openAdd}
+            className="bg-accent text-accent-ink font-semibold text-[14px] px-5 py-2.5 rounded-lg"
+          >
+            + Lägg till kund
+          </button>
+        )}
       </div>
 
       {error && !showAdd && !editing && !confirmDelete && (
@@ -311,31 +315,37 @@ export default function AdminCustomersClient({
                   </td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{formatDate(c.created_at)}</td>
                   <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                    {resetSentFor === c.id ? (
-                      <span className="text-[12.5px] font-semibold text-[#166534] mr-4">
-                        Mail skickat ✓
-                      </span>
+                    {canEdit ? (
+                      <>
+                        {resetSentFor === c.id ? (
+                          <span className="text-[12.5px] font-semibold text-[#166534] mr-4">
+                            Mail skickat ✓
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => handleSendReset(c)}
+                            disabled={resetSendingFor === c.id}
+                            className="text-[12.5px] font-semibold text-ink-dim mr-4 disabled:opacity-60"
+                          >
+                            {resetSendingFor === c.id ? "Skickar …" : "Återställ lösenord"}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => openEdit(c)}
+                          className="text-[12.5px] font-semibold text-ink mr-4"
+                        >
+                          Redigera
+                        </button>
+                        <button
+                          onClick={() => setConfirmDelete(c)}
+                          className="text-[12.5px] font-semibold text-warm"
+                        >
+                          Ta bort
+                        </button>
+                      </>
                     ) : (
-                      <button
-                        onClick={() => handleSendReset(c)}
-                        disabled={resetSendingFor === c.id}
-                        className="text-[12.5px] font-semibold text-ink-dim mr-4 disabled:opacity-60"
-                      >
-                        {resetSendingFor === c.id ? "Skickar …" : "Återställ lösenord"}
-                      </button>
+                      <span className="text-[12.5px] text-ink-dim">Visningsläge</span>
                     )}
-                    <button
-                      onClick={() => openEdit(c)}
-                      className="text-[12.5px] font-semibold text-ink mr-4"
-                    >
-                      Redigera
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(c)}
-                      className="text-[12.5px] font-semibold text-warm"
-                    >
-                      Ta bort
-                    </button>
                   </td>
                 </tr>
               );

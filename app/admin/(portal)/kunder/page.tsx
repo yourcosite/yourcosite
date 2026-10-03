@@ -3,6 +3,13 @@ import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminCustomersPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  let canEdit = false;
+  if (user) {
+    const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+    canEdit = me?.role === "admin" || me?.role === "superadmin";
+  }
 
   const { data: customers } = await supabase
     .from("profiles")
@@ -13,7 +20,10 @@ export default async function AdminCustomersPage() {
 
   return (
     <AdminCustomersClient
-      initialCustomers={(customers ?? []).filter((c) => c.role !== "admin") as any}
+      initialCustomers={
+        (customers ?? []).filter((c) => !["support", "admin", "superadmin"].includes(c.role)) as any
+      }
+      canEdit={canEdit}
     />
   );
 }

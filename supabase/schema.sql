@@ -4,7 +4,11 @@
 -- ============================================================
 -- PROFILES
 -- En rad per inloggad användare. Skapas automatiskt vid registrering
--- via triggern längst ner. role avgör om man är vanlig kund eller admin.
+-- via triggern längst ner. role avgör behörighet:
+--   customer   — vanlig kund
+--   support    — kan se kunder, ingen ekonomi/team
+--   admin      — hanterar kunder, ser ekonomi, ingen team-hantering
+--   superadmin — allt, inklusive att bjuda in/ta bort andra admins
 -- ============================================================
 create table if not exists profiles (
   id uuid primary key references auth.users (id) on delete cascade,
@@ -17,23 +21,28 @@ create table if not exists profiles (
   address_postal_code text,
   address_city text,
   billing_email text,
-  role text not null default 'customer' check (role in ('customer', 'admin')),
+  role text not null default 'customer'
+    check (role in ('customer', 'support', 'admin', 'superadmin')),
   created_at timestamptz not null default now()
 );
 
 alter table profiles enable row level security;
 
--- Hjälpfunktion för att kolla om den inloggade användaren är admin.
+-- Hjälpfunktion för att kolla om den inloggade användaren är "staff"
+-- (support/admin/superadmin), dvs. får läsa alla kunders profiler/sajter.
 -- security definer gör att funktionen kringgår RLS internt, så att
--- admin-policyn nedan inte triggar sig själv i en oändlig loop.
-create or replace function public.is_admin()
+-- policyn nedan inte triggar sig själv i en oändlig loop. Finare
+-- behörighetsgränser (vem får ändra vad) hanteras i applikationskoden,
+-- inte här.
+create or replace function public.is_staff()
 returns boolean
 language sql
 security definer
 set search_path = public
 as $$
   select exists (
-    select 1 from profiles where id = auth.uid() and role = 'admin'
+    select 1 from profiles
+    where id = auth.uid() and role in ('support', 'admin', 'superadmin')
   );
 $$;
 
@@ -45,9 +54,9 @@ create policy "Användare kan uppdatera sin egen profil"
   on profiles for update
   using (auth.uid() = id);
 
-create policy "Admin kan läsa alla profiler"
+create policy "Staff kan läsa alla profiler"
   on profiles for select
-  using (public.is_admin());
+  using (public.is_staff());
 
 -- ============================================================
 -- SITES
@@ -79,8 +88,8 @@ create policy "Ägare kan uppdatera sina sajter"
   on sites for update using (auth.uid() = owner_id);
 create policy "Ägare kan ta bort sina sajter"
   on sites for delete using (auth.uid() = owner_id);
-create policy "Admin kan läsa alla sajter"
-  on sites for select using (public.is_admin());
+create policy "Staff kan läsa alla sajter"
+  on sites for select using (public.is_staff());
 
 -- ============================================================
 -- SITE_PAGES
@@ -138,8 +147,8 @@ create trigger on_auth_user_created
   for each row execute procedure public.handle_new_user();
 
 -- ============================================================
--- Gör dig själv till admin (kör detta EN gång, efter att du registrerat
--- ett konto på sajten med din egen e-post):
+-- Gör dig själv till superadmin (kör detta EN gång, efter att du
+-- registrerat ett konto på sajten med din egen e-post):
 --
---   update profiles set role = 'admin' where email = 'hej@cskb.se';
+--   update profiles set role = 'superadmin' where email = 'hej@cskb.se';
 -- ============================================================

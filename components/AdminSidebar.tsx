@@ -4,10 +4,19 @@ import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 
-const NAV_ITEMS = [
+type StaffRole = "support" | "admin" | "superadmin";
+
+const ROLE_BADGE: Record<StaffRole, string> = {
+  support: "Support",
+  admin: "Admin",
+  superadmin: "Superadmin",
+};
+
+const NAV_ITEMS: { href: string; label: string; roles: StaffRole[]; icon: (c: string) => React.ReactNode }[] = [
   {
     href: "/admin",
     label: "Översikt",
+    roles: ["support", "admin", "superadmin"],
     icon: (c: string) => (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <rect x="3" y="3" width="7" height="7" />
@@ -20,6 +29,7 @@ const NAV_ITEMS = [
   {
     href: "/admin/kunder",
     label: "Kunder",
+    roles: ["support", "admin", "superadmin"],
     icon: (c: string) => (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -32,6 +42,7 @@ const NAV_ITEMS = [
   {
     href: "/admin/ekonomi",
     label: "Ekonomi",
+    roles: ["admin", "superadmin"],
     icon: (c: string) => (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="9" />
@@ -42,6 +53,7 @@ const NAV_ITEMS = [
   {
     href: "/admin/team",
     label: "Team",
+    roles: ["superadmin"],
     icon: (c: string) => (
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -63,9 +75,11 @@ function initialsOf(name: string, email: string) {
 export default function AdminSidebar({
   adminName,
   adminEmail,
+  role,
 }: {
   adminName?: string;
   adminEmail?: string;
+  role?: StaffRole;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -96,7 +110,7 @@ export default function AdminSidebar({
       </div>
 
       <nav className="px-3 flex-1">
-        {NAV_ITEMS.map((item) => {
+        {NAV_ITEMS.filter((item) => !role || item.roles.includes(role)).map((item) => {
           const active = item.href === "/admin" ? pathname === "/admin" : pathname.startsWith(item.href);
           const color = active ? "#C6FF5E" : "#8C8A93";
           return (
@@ -137,7 +151,9 @@ export default function AdminSidebar({
             <div className="text-[13px] font-semibold text-white truncate">
               {adminName || "Admin"}
             </div>
-            <div className="text-[11px] text-[#8C8A86] truncate">{adminEmail}</div>
+            <div className="text-[11px] text-[#8C8A86] truncate">
+              {role ? ROLE_BADGE[role] : adminEmail}
+            </div>
           </div>
         </div>
       </div>

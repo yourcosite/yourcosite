@@ -10,18 +10,20 @@ export default async function AdminPortalLayout({
   const { data: { user } } = await supabase.auth.getUser();
 
   let fullName = "";
+  let role: "support" | "admin" | "superadmin" | undefined;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("full_name")
+      .select("full_name, role")
       .eq("id", user.id)
       .single();
     fullName = profile?.full_name ?? "";
+    role = profile?.role as "support" | "admin" | "superadmin" | undefined;
   }
 
   return (
     <div className="min-h-screen bg-bg font-sans flex">
-      <AdminSidebar adminName={fullName} adminEmail={user?.email ?? ""} />
+      <AdminSidebar adminName={fullName} adminEmail={user?.email ?? ""} role={role} />
       <main className="flex-1 min-w-0">{children}</main>
     </div>
   );

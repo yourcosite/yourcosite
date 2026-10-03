@@ -2,10 +2,25 @@
 
 import { useState } from "react";
 
+type StaffRole = "support" | "admin" | "superadmin";
+
+const ROLE_LABELS: Record<StaffRole, string> = {
+  support: "SUPPORT",
+  admin: "ADMIN",
+  superadmin: "SUPERADMIN",
+};
+
+const ROLE_BADGE: Record<StaffRole, string> = {
+  support: "bg-[#FEF9C3] text-[#854D0E]",
+  admin: "bg-[#DBEAFE] text-[#1D4ED8]",
+  superadmin: "bg-accent-soft text-[#4D7C0F]",
+};
+
 type Admin = {
   id: string;
   email: string;
   full_name: string | null;
+  role: StaffRole;
   created_at: string;
 };
 
@@ -36,6 +51,7 @@ export default function TeamClient({
   const [confirmRemove, setConfirmRemove] = useState<Admin | null>(null);
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
+  const [formRole, setFormRole] = useState<StaffRole>("admin");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newPassword, setNewPassword] = useState<string | null>(null);
@@ -43,6 +59,7 @@ export default function TeamClient({
   const openInvite = () => {
     setFormName("");
     setFormEmail("");
+    setFormRole("admin");
     setError(null);
     setShowInvite(true);
   };
@@ -59,7 +76,7 @@ export default function TeamClient({
     const res = await fetch("/api/admin/team", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName: formName, email: formEmail }),
+      body: JSON.stringify({ fullName: formName, email: formEmail, role: formRole }),
     });
     const data = await res.json();
     setSaving(false);
@@ -70,7 +87,13 @@ export default function TeamClient({
     }
 
     setAdmins((as) => [
-      { id: data.admin.id, email: formEmail, full_name: formName, created_at: new Date().toISOString() },
+      {
+        id: data.admin.id,
+        email: formEmail,
+        full_name: formName,
+        role: formRole,
+        created_at: new Date().toISOString(),
+      },
       ...as,
     ]);
     setNewPassword(data.tempPassword);
@@ -100,7 +123,7 @@ export default function TeamClient({
         <div>
           <h1 className="text-[28px] font-medium font-serif">Team</h1>
           <p className="text-[14.5px] text-ink-dim mt-1.5">
-            Vilka har tillgång till adminportalen.
+            Vilka har tillgång till adminportalen och vad de får göra.
           </p>
         </div>
         <button
@@ -111,55 +134,83 @@ export default function TeamClient({
         </button>
       </div>
 
-      <div className="bg-surface border border-line rounded-2xl overflow-hidden">
-        <table className="w-full border-collapse">
-          <thead>
-            <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
-              <th className="py-3 px-5 font-semibold">Namn</th>
-              <th className="py-3 px-5 font-semibold">E-post</th>
-              <th className="py-3 px-5 font-semibold">Admin sedan</th>
-              <th className="py-3 px-5 font-semibold" />
-            </tr>
-          </thead>
-          <tbody>
-            {admins.map((a) => (
-              <tr key={a.id} className="text-[13.5px] border-t border-line">
-                <td className="py-3.5 px-5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-[30px] h-[30px] rounded-full bg-accent-soft text-[#4D7C0F] flex items-center justify-center font-bold text-[11.5px] flex-shrink-0">
-                      {initialsOf(a.full_name ?? "", a.email)}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5.5">
+        <div className="bg-surface border border-line rounded-2xl overflow-hidden h-fit">
+          <table className="w-full border-collapse">
+            <thead>
+              <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
+                <th className="py-3 px-5 font-semibold">Namn</th>
+                <th className="py-3 px-5 font-semibold">Roll</th>
+                <th className="py-3 px-5 font-semibold">Sedan</th>
+                <th className="py-3 px-5 font-semibold" />
+              </tr>
+            </thead>
+            <tbody>
+              {admins.map((a) => (
+                <tr key={a.id} className="text-[13.5px] border-t border-line">
+                  <td className="py-3.5 px-5">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-[30px] h-[30px] rounded-full bg-accent-soft text-[#4D7C0F] flex items-center justify-center font-bold text-[11.5px] flex-shrink-0">
+                        {initialsOf(a.full_name ?? "", a.email)}
+                      </div>
+                      <div>
+                        <div className="font-semibold">
+                          {a.full_name || "—"}
+                          {a.id === currentUserId && (
+                            <span className="text-ink-dim font-normal"> (du)</span>
+                          )}
+                        </div>
+                        <div className="text-[12px] text-ink-dim">{a.email}</div>
+                      </div>
                     </div>
-                    <span className="font-semibold">
-                      {a.full_name || "—"}
-                      {a.id === currentUserId && (
-                        <span className="text-ink-dim font-normal"> (du)</span>
-                      )}
+                  </td>
+                  <td className="py-3.5 px-5">
+                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${ROLE_BADGE[a.role]}`}>
+                      {ROLE_LABELS[a.role]}
                     </span>
-                  </div>
-                </td>
-                <td className="py-3.5 px-5 text-ink-dim">{a.email}</td>
-                <td className="py-3.5 px-5 text-ink-dim">{formatDate(a.created_at)}</td>
-                <td className="py-3.5 px-5 text-right whitespace-nowrap">
-                  {a.id !== currentUserId && (
-                    <button
-                      onClick={() => setConfirmRemove(a)}
-                      className="text-[12.5px] font-semibold text-warm"
-                    >
-                      Ta bort adminbehörighet
-                    </button>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {admins.length === 0 && (
-              <tr>
-                <td colSpan={4} className="py-8 px-5 text-center text-ink-dim text-[13.5px]">
-                  Inga admins ännu.
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+                  </td>
+                  <td className="py-3.5 px-5 text-ink-dim">{formatDate(a.created_at)}</td>
+                  <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                    {a.id !== currentUserId && (
+                      <button
+                        onClick={() => setConfirmRemove(a)}
+                        className="text-[12.5px] font-semibold text-warm"
+                      >
+                        Ta bort adminbehörighet
+                      </button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {admins.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="py-8 px-5 text-center text-ink-dim text-[13.5px]">
+                    Inga admins ännu.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        <div className="flex flex-col gap-3.5">
+          <div className="font-semibold text-[15.5px]">Behörighetsnivåer</div>
+          <RoleCard
+            badge="SUPERADMIN"
+            badgeClass={ROLE_BADGE.superadmin}
+            text="Full åtkomst: kunder, ekonomi, fakturor, teamhantering och plattformsinställningar. Kan bjuda in och ta bort andra admins."
+          />
+          <RoleCard
+            badge="ADMIN"
+            badgeClass={ROLE_BADGE.admin}
+            text="Lägger till, redigerar och tar bort kunder, kan skicka återställningsmail. Ser ekonomiöversikten men kan inte bjuda in nya admins."
+          />
+          <RoleCard
+            badge="SUPPORT"
+            badgeClass={ROLE_BADGE.support}
+            text="Kan se kundlistan i visningsläge. Ingen åtkomst till ekonomi, fakturor eller teaminställningar."
+          />
+        </div>
       </div>
 
       {showInvite && (
@@ -181,6 +232,18 @@ export default function TeamClient({
                 onChange={(e) => setFormEmail(e.target.value)}
                 className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
               />
+            </div>
+            <div>
+              <label className="block text-[13px] font-semibold mb-1.5">Behörighetsnivå</label>
+              <select
+                value={formRole}
+                onChange={(e) => setFormRole(e.target.value as StaffRole)}
+                className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px] bg-surface"
+              >
+                <option value="support">Support</option>
+                <option value="admin">Admin</option>
+                <option value="superadmin">Superadmin</option>
+              </select>
             </div>
           </div>
           {error && <div className="text-[13px] text-warm font-medium mt-2">{error}</div>}
@@ -241,6 +304,15 @@ export default function TeamClient({
           </div>
         </Modal>
       )}
+    </div>
+  );
+}
+
+function RoleCard({ badge, badgeClass, text }: { badge: string; badgeClass: string; text: string }) {
+  return (
+    <div className="bg-surface border border-line rounded-[14px] p-4">
+      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badgeClass}`}>{badge}</span>
+      <div className="text-[12.5px] text-ink-dim leading-relaxed mt-2">{text}</div>
     </div>
   );
 }

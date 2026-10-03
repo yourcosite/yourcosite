@@ -7,8 +7,8 @@ export default async function AdminTeamPage() {
 
   const { data: admins } = await supabase
     .from("profiles")
-    .select("id, email, full_name, created_at")
-    .eq("role", "admin")
+    .select("id, email, full_name, role, created_at")
+    .in("role", ["support", "admin", "superadmin"])
     .order("created_at", { ascending: false });
 
   return <TeamClient initialAdmins={admins ?? []} currentUserId={user?.id ?? ""} />;

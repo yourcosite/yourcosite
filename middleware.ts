@@ -58,9 +58,22 @@ export async function middleware(request: NextRequest) {
       .select("role")
       .eq("id", user.id)
       .single();
-    if (profile?.role !== "admin") {
+    const role = profile?.role;
+    const isStaff = role === "support" || role === "admin" || role === "superadmin";
+
+    if (!isStaff) {
       const url = request.nextUrl.clone();
       url.pathname = "/";
+      return NextResponse.redirect(url);
+    }
+    if (path.startsWith("/admin/team") && role !== "superadmin") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
+      return NextResponse.redirect(url);
+    }
+    if (path.startsWith("/admin/ekonomi") && role === "support") {
+      const url = request.nextUrl.clone();
+      url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
   } else if (isProtectedPath && !user) {
