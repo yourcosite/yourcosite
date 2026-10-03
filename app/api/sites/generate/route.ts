@@ -6,7 +6,7 @@ import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspiration";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
 import { ensureImageSlots } from "@/lib/ensureImageSlots";
-import { getCurrentDraftSite } from "@/lib/supabase/onboardingSite";
+import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -234,10 +234,13 @@ export async function POST() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  // Samma utkast kunden faktiskt fyllde i (sidor, foton, logga m.m.) i
-  // onboardingen — inte bara "senaste utkastet utan innehåll" rakt av, som
-  // kunde peka fel om kontot hade fler halvfärdiga utkast samtidigt.
-  const site = await getCurrentDraftSite(supabase, user.id);
+  // Samma sajt kunden faktiskt fyllde i (sidor, foton, logga m.m.) i
+  // onboardingen — inte bara "senaste utkastet" rakt av, som kunde peka fel
+  // om kontot hade fler halvfärdiga utkast samtidigt. Till skillnad från
+  // onboardingens egna steg funkar det här ÄVEN när sajten redan har fått
+  // sitt innehåll satt av en tidigare generering (kunden ber YourCoSite
+  // skriva om alltihop från /forslag) — se getPinnedOrLatestSite.
+  const site = await getPinnedOrLatestSite(supabase, user.id);
 
   if (!site) {
     return NextResponse.json(

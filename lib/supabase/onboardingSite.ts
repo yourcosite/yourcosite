@@ -130,6 +130,40 @@ export async function getCurrentDraftSite(supabase: SupabaseClient, ownerId: str
   return existing ?? null;
 }
 
+// Hämtar EXAKT den sajt kunden håller på med just nu, oavsett om den redan
+// hunnit få sitt AI-genererade innehåll eller inte — till skillnad från
+// getCurrentDraftSite ovan (som bara hittar opublicerade utkast, content
+// IS NULL). Används av /api/sites/generate, som måste kunna bygga om en
+// sajt som redan har innehåll: klickar kunden "Be YourCoSite skriva om
+// alltihop" från /forslag pekar cookien fortfarande på rätt sajt, men den
+// har redan fått sitt innehåll satt av den FÖRSTA genereringen — då
+// missade getCurrentDraftSite den (content-filtret), vilket gjorde
+// omskrivningen trasig ("Hittade inget onboarding-utkast att bygga sajt
+// från.").
+export async function getPinnedOrLatestSite(supabase: SupabaseClient, ownerId: string) {
+  const pinnedId = cookies().get(DRAFT_COOKIE)?.value;
+
+  if (pinnedId) {
+    const { data: pinned } = await supabase
+      .from("sites")
+      .select("*")
+      .eq("id", pinnedId)
+      .eq("owner_id", ownerId)
+      .maybeSingle();
+    if (pinned) return pinned;
+  }
+
+  const { data: existing } = await supabase
+    .from("sites")
+    .select("*")
+    .eq("owner_id", ownerId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  return existing ?? null;
+}
+
 // Liten hjälpare så varje route inte behöver upprepa samma try/catch för
 // att visa gränsfelet snyggt istället för en generisk 500:a.
 export function draftLimitResponse(e: unknown): NextResponse | null {
