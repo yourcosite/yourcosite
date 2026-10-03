@@ -149,9 +149,12 @@ export default function SitePreview({
       <Footer
         siteName={siteName}
         logoUrl={content.logoUrl}
+        pages={content.pages}
+        activePath={page.path}
         palette={palette}
         socialLinks={content.socialLinks}
         basePath={basePath}
+        onNavigate={onNavigate}
         privacyPolicyMode={privacyPolicyMode}
         privacyPolicyFileUrl={privacyPolicyFileUrl}
       />
@@ -430,17 +433,26 @@ function Header({
 function Footer({
   siteName,
   logoUrl,
+  pages,
+  activePath,
   palette,
   socialLinks,
   basePath,
+  onNavigate,
   privacyPolicyMode,
   privacyPolicyFileUrl,
 }: {
   siteName?: string;
   logoUrl?: string;
+  // Hela sajtens sidlista — sidfotsmenyn visar samma sidor som
+  // huvudmenyn (se Header ovan), så besökaren alltid kan ta sig vidare
+  // härifrån också, inte bara via toppen av sidan.
+  pages: SiteContent["pages"];
+  activePath?: string;
   palette: Palette;
   socialLinks?: SocialLink[];
   basePath?: string;
+  onNavigate?: (path: string) => void;
   privacyPolicyMode?: "uploaded" | "generated" | null;
   privacyPolicyFileUrl?: string | null;
 }) {
@@ -454,35 +466,71 @@ function Footer({
       : privacyPolicyMode === "generated"
       ? `${basePath || ""}/integritetspolicy`
       : undefined;
+  const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
+  const linkClass = "text-[12.5px] font-semibold";
 
   return (
-    <div
-      className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 md:px-12 py-6 text-[12px]"
-      style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
-    >
-      <span className="flex items-center gap-4 flex-wrap justify-center">
-        <span className="flex items-center gap-2">
-          {/* Samma logga som headern, bara litet skalad ner — en liten,
-              diskret upprepning är det kunder faktiskt förväntar sig i en
-              sidfot, inte en kopia i headerstorlek. */}
-          {logoUrl && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={logoUrl} alt={siteName || "Logga"} className="h-5 max-w-[90px] object-contain" />
-          )}
-          <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
-        </span>
-        {policyHref && (
-          <a
-            href={policyHref}
-            target={privacyPolicyMode === "uploaded" ? "_blank" : undefined}
-            rel="noopener noreferrer"
-            className="underline"
-          >
-            Integritetspolicy
-          </a>
+    <div style={{ borderTop: `1px solid ${palette.cardBorder}` }}>
+      {/* Sidfotsmenyn — samma sidor, samma tre-vägs länklogik som
+          huvudmenyn (onNavigate i chattredigeraren, riktig <a href> på en
+          publicerad sida, annars bara text i /forslag-miniatyrerna). */}
+      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-8 md:px-12 py-5 text-[12.5px]">
+        {pages.slice(0, 8).map((p) =>
+          onNavigate ? (
+            <button
+              key={p.path}
+              type="button"
+              onClick={() => onNavigate(p.path)}
+              className={linkClass}
+              style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+            >
+              {p.label}
+            </button>
+          ) : basePath ? (
+            <a
+              key={p.path}
+              href={homeHref(p.path)}
+              className={linkClass}
+              style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+            >
+              {p.label}
+            </a>
+          ) : (
+            <span key={p.path} className={linkClass} style={{ color: p.path === activePath ? palette.text : palette.textDim }}>
+              {p.label}
+            </span>
+          )
         )}
-      </span>
-      {socialLinks && socialLinks.length > 0 && <SocialIcons socialLinks={socialLinks} palette={palette} />}
+      </nav>
+
+      <div
+        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 md:px-12 py-6 text-[12px]"
+        style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
+      >
+        <span className="flex items-center gap-4 flex-wrap justify-center">
+          <span className="flex items-center gap-2">
+            {/* Samma logga som headern, bara litet skalad ner — en liten,
+                diskret upprepning är det kunder faktiskt förväntar sig i en
+                sidfot, inte en kopia i headerstorlek. */}
+            {logoUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt={siteName || "Logga"} className="h-5 max-w-[90px] object-contain" />
+            )}
+            <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+          </span>
+          {policyHref && (
+            <a
+              href={policyHref}
+              target={privacyPolicyMode === "uploaded" ? "_blank" : undefined}
+              rel="noopener noreferrer"
+              className="underline"
+            >
+              Integritetspolicy
+            </a>
+          )}
+        </span>
+        {socialLinks && socialLinks.length > 0 && <SocialIcons socialLinks={socialLinks} palette={palette} />}
+      </div>
     </div>
   );
 }
