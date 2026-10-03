@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
@@ -54,17 +53,41 @@ export default function SitePreview({
   const secondary = content.theme.secondaryColors || [];
   const palette = PALETTES[mode];
 
+  // Startsidans "overlay-bottom"-hero är tänkt att vara en riktig, fullbred
+  // "wow"-ingång — då låter vi menyn FLYTA transparent ovanpå bilden
+  // (istället för en egen solid stapel ovanför) för ett intryck likt stora
+  // hotell-/spa-sajter, med headline och CTA liggande direkt i fotot.
+  const firstSection = page.sections[0];
+  const overlayHeader =
+    page.path === "/" && firstSection?.type === "hero" && (firstSection.layout || "centered") === "overlay-bottom";
+  const restSections = overlayHeader ? page.sections.slice(1) : page.sections;
+
   return (
     <div className={fontClass} style={{ background: palette.bg, color: palette.text }}>
-      <Header
-        siteName={siteName}
-        logoUrl={content.logoUrl}
-        pages={content.pages}
-        palette={palette}
-        activePath={page.path}
-        basePath={basePath}
-      />
-      {page.sections.map((section, i) => (
+      <div className={overlayHeader ? "relative" : undefined}>
+        <Header
+          siteName={siteName}
+          logoUrl={content.logoUrl}
+          pages={content.pages}
+          palette={palette}
+          activePath={page.path}
+          basePath={basePath}
+          overlay={overlayHeader}
+        />
+        {overlayHeader && firstSection && (
+          <SectionBlock
+            section={firstSection}
+            accent={accent}
+            secondary={secondary}
+            mode={mode}
+            palette={palette}
+            alt={false}
+            socialLinks={content.socialLinks}
+            heroEmphasis
+          />
+        )}
+      </div>
+      {restSections.map((section, i) => (
         <SectionBlock
           key={section.id}
           section={section}
@@ -72,11 +95,11 @@ export default function SitePreview({
           secondary={secondary}
           mode={mode}
           palette={palette}
-          alt={i % 2 === 1}
+          alt={(overlayHeader ? i + 1 : i) % 2 === 1}
           socialLinks={content.socialLinks}
           // Startsidans första sektion är besökarens allra första intryck —
           // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
-          heroEmphasis={page.path === "/" && i === 0}
+          heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
         />
       ))}
       <Footer siteName={siteName} palette={palette} socialLinks={content.socialLinks} />
@@ -91,6 +114,7 @@ function Header({
   palette,
   activePath,
   basePath,
+  overlay,
 }: {
   siteName?: string;
   logoUrl?: string;
@@ -98,34 +122,62 @@ function Header({
   palette: Palette;
   activePath?: string;
   basePath?: string;
+  // true när headern "flyter" transparent ovanpå startsidans fullbreda
+  // hero-bild (se overlay-bottom-layouten i SitePreview) istället för att
+  // vara en egen solid stapel ovanför — det där "wow"-intrycket kunden
+  // efterfrågade, med menyn indragen i själva bilden.
+  overlay?: boolean;
 }) {
   const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
+  const linkColor = (active: boolean) =>
+    overlay ? (active ? "#FFFFFF" : "rgba(255,255,255,0.8)") : active ? palette.text : palette.textDim;
 
   return (
-    <div className="flex items-center justify-between px-8 md:px-12 py-4" style={{ borderBottom: `1px solid ${palette.cardBorder}` }}>
+    <div
+      className={`flex items-center justify-between px-8 md:px-12 py-4 ${overlay ? "absolute top-0 left-0 right-0 z-10" : ""}`}
+      style={
+        overlay
+          ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
+          : { borderBottom: `1px solid ${palette.cardBorder}` }
+      }
+    >
       <div className="flex items-center gap-2.5">
         {logoUrl ? (
           // Loggan är kundens egen bild — ska vara ett tydligt kännetecken i
           // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt={siteName || "Logga"} className="h-16 md:h-24 max-w-[320px] object-contain" />
+          // Ovanpå en foto-hero får den en ljus platta bakom sig så den
+          // alltid syns oavsett hur ljus/mörk loggan själv är.
+          <div className={overlay ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={logoUrl}
+              alt={siteName || "Logga"}
+              className={overlay ? "h-12 md:h-16 max-w-[220px] object-contain" : "h-16 md:h-24 max-w-[320px] object-contain"}
+            />
+          </div>
         ) : (
-          <span className="font-serif italic text-[19px]">{siteName || "Ditt företag"}</span>
+          <span className={`font-serif italic text-[19px] ${overlay ? "text-white" : ""}`}>
+            {siteName || "Ditt företag"}
+          </span>
         )}
       </div>
-      <nav className="hidden md:flex items-center gap-7 text-[13px] font-semibold" style={{ color: palette.textDim }}>
+      <nav className="hidden md:flex items-center gap-7 text-[13px] font-semibold">
         {pages.slice(0, 5).map((p) =>
           basePath ? (
-            <Link
-              key={p.path}
-              href={homeHref(p.path)}
-              prefetch={false}
-              style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-            >
+            // Vanlig <a> istället för next/link — denna förhandsvisning är
+            // bara en lekstuga-webbläsare, ingen riktig SPA, och ett klick
+            // ska alltid ge en helt färsk sidladdning. next/link kunde i
+            // vissa fall återanvända en cachad klient-navigering även med
+            // staleTimes satt till 0 (känt Next.js-beteende), vilket var
+            // orsaken till att en del undersidors bilder bara syntes efter
+            // en manuell omladdning.
+            <a key={p.path} href={homeHref(p.path)} style={{ color: linkColor(p.path === activePath) }}>
               {p.label}
-            </Link>
+            </a>
           ) : (
-            <span key={p.path}>{p.label}</span>
+            <span key={p.path} style={{ color: linkColor(p.path === activePath) }}>
+              {p.label}
+            </span>
           )
         )}
       </nav>

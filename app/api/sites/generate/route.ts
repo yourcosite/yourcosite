@@ -166,7 +166,7 @@ ${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehål
 
 VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (den är sidans enda garanterade bildplats tillsammans med "grid" — se till att minst en av dem finns på varje sida, annars blir sidan bildlös).
 
-VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. Lägg inte startsidans tyngsta, mest avskalade layout här — "overlay-bottom" eller "split-left"/"split-right" ger oftast ett mer imponerande förstaintryck än "centered", men välj det som faktiskt passar bäst utifrån ton och bransch.
+VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. Föredra layouten "overlay-bottom" för startsidans hero — den gör bilden fullbred ända upp bakom menyn (som stora hotell-/spa-sajter brukar göra) och ger det mest imponerande förstaintrycket. Välj "split-left"/"split-right" istället bara om tonen/branschen tydligt passar bättre för det, och använd "centered" på startsidan bara om varken "overlay-bottom" eller split känns rätt.
 
 VIKTIGT — variation mellan olika kunder: två sajter i samma bransch och ton ska ändå inte kunna förväxlas. Variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder — luta dig hårt på kundens egna ord, bransch-specifika detaljer och eventuell inspiration för att göra strukturella val, inte bara texten.
 
