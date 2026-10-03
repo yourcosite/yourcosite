@@ -9,11 +9,15 @@
 // modell.
 
 export type ThemeFont = "serif" | "sans";
+export type BackgroundMode = "light" | "warm" | "dark";
 
 export interface SiteTheme {
   accentColor: string;
   secondaryColors: string[];
   font: ThemeFont;
+  // Vilken av de tre stilvarianterna (lib/themeVariants.ts) kunden valt på
+  // /forslag. "light" tills kunden har valt — satt av AI:n som startgissning.
+  backgroundMode: BackgroundMode;
 }
 
 export interface HeroSection {

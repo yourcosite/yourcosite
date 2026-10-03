@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
+import { summarizeInspirationLinks } from "@/lib/inspiration";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -128,18 +129,13 @@ const GENERATE_TOOL = {
   },
 };
 
-function buildPrompt(site: any, pages: any[]) {
+function buildPrompt(site: any, pages: any[], inspirationText: string) {
   const pagesDesc = pages
     .map(
       (p) =>
         `- "${p.label}" (path: ${p.path})${p.brief ? ` — kundens brief: ${p.brief}` : ""}`
     )
     .join("\n");
-
-  const links = (site.inspiration_links || []) as string[];
-  const linksDesc = links.length
-    ? `Kunden har visat dessa sajter som inspiration för känsla/ton/struktur (titta ALDRIG av på text eller bilder från dem, bara stämningen): ${links.join(", ")}`
-    : "";
 
   return `Du ska skriva innehållet till en helt ny webbplats, åt en kund hos YourCoSite (en AI-driven hemsidesbyggare för svenska småföretag).
 
@@ -148,7 +144,7 @@ Bransch: ${site.industry || "ej angiven"}
 Beskrivning från kunden: ${site.description || "ej angiven"}
 Önskad ton: ${site.tone || "Personlig"}
 Visuell stil: ${site.style_id || "warm"}
-${linksDesc}
+${inspirationText}
 
 Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
@@ -199,6 +195,8 @@ export async function POST() {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
+  const inspirationText = await summarizeInspirationLinks(site.inspiration_links || []);
+
   let message;
   try {
     message = await client.messages.create({
@@ -206,7 +204,7 @@ export async function POST() {
       max_tokens: 8000,
       tools: [GENERATE_TOOL],
       tool_choice: { type: "tool", name: "generate_site" },
-      messages: [{ role: "user", content: buildPrompt(site, pages) }],
+      messages: [{ role: "user", content: buildPrompt(site, pages, inspirationText) }],
     });
   } catch (e: any) {
     return NextResponse.json(
@@ -226,6 +224,16 @@ export async function POST() {
   if (!isValidSiteContent(content)) {
     return NextResponse.json({ error: "AI-svaret hade fel format." }, { status: 502 });
   }
+
+  // Kundens färgval från onboarding steg 4 är ett beslut kunden redan
+  // fattat — inte en gissning AI:n får skriva över. Tvingar därför alltid
+  // igenom de valda färgerna, oavsett vad modellen själv föreslog.
+  // backgroundMode sätts till ett förvalt startläge; kunden väljer sedan
+  // mellan tre stilvarianter (lib/themeVariants.ts) på /forslag.
+  content.theme.accentColor = site.accent_color || content.theme.accentColor;
+  content.theme.secondaryColors =
+    site.secondary_colors?.length ? site.secondary_colors : content.theme.secondaryColors;
+  content.theme.backgroundMode = "light";
 
   const { error: saveError } = await supabase
     .from("sites")
