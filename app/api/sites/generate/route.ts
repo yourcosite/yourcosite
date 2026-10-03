@@ -276,11 +276,16 @@ export async function POST() {
   if (assetsError) {
     console.error("generate: kunde inte hämta site_assets", { siteId: site.id, error: assetsError });
   }
+  // Loggas alltid (inte bara vid fel) så vi kan se i Vercels loggar exakt
+  // hur många bilder som faktiskt hittades för en given sajt, utan att
+  // behöva gissa om kunden la till foton eller inte.
+  console.log("generate: bilder hittade för sajt", {
+    siteId: site.id,
+    imagesFound: imageAssets?.length ?? 0,
+  });
 
-  const finalContent = assignUploadedImages(
-    contentWithImageSlots,
-    (imageAssets ?? []).map((a) => a.file_url)
-  );
+  const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
+  const finalContent = assignUploadedImages(contentWithImageSlots, imageUrls);
 
   const { error: saveError } = await supabase
     .from("sites")

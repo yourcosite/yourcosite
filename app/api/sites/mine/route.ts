@@ -18,5 +18,20 @@ export async function GET() {
     .maybeSingle();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ site });
+
+  // Hur många foton kunden faktiskt laddade upp för den här sajten — skickas
+  // med så att /forslag kan varna tydligt om inga av dem kom med i designen
+  // (annars omöjligt att skilja "laddade inget" från "laddade upp men
+  // kopplades fel", något som orsakat flera svårfelsökta buggrapporter).
+  let uploadedPhotoCount = 0;
+  if (site) {
+    const { count } = await supabase
+      .from("site_assets")
+      .select("id", { count: "exact", head: true })
+      .eq("site_id", site.id)
+      .eq("kind", "image");
+    uploadedPhotoCount = count ?? 0;
+  }
+
+  return NextResponse.json({ site, uploadedPhotoCount });
 }

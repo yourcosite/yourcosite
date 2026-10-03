@@ -128,6 +128,31 @@ export interface SiteContent {
   socialLinks?: SocialLink[];
 }
 
+// Räknar hur många av sajtens bildbärande platser (hero + grid-items) som
+// faktiskt fick ett foto av assignUploadedImages, mot hur många platser
+// som finns totalt. Används för att visa kunden en tydlig signal om inga
+// av hens uppladdade foton kom med i designen — annars är det omöjligt
+// att se skillnad på "inga foton uppladdade" och "foton uppladdade men
+// inte kopplade", vilket orsakat flera svårfelsökta buggrapporter.
+export function countImageSlots(content: SiteContent): { used: number; total: number } {
+  let used = 0;
+  let total = 0;
+  for (const page of content.pages) {
+    for (const section of page.sections) {
+      if (section.type === "hero") {
+        total += 1;
+        if (section.imageUrl) used += 1;
+      } else if (section.type === "grid") {
+        for (const item of section.items) {
+          total += 1;
+          if (item.imageUrl) used += 1;
+        }
+      }
+    }
+  }
+  return { used, total };
+}
+
 // Snäv typ-koll av vad Claude skickar tillbaka, så vi aldrig sparar skräp i
 // databasen. Inte en fullständig validator, men fångar de vanligaste felen
 // (fel typ, saknade obligatoriska fält).

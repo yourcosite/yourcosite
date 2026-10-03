@@ -6,7 +6,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import SitePreview from "@/components/SitePreview";
 import { THEME_VARIANTS } from "@/lib/themeVariants";
-import type { SiteContent } from "@/lib/contentModel";
+import { countImageSlots, type SiteContent } from "@/lib/contentModel";
 
 export default function SuggestionsPage() {
   const router = useRouter();
@@ -14,6 +14,9 @@ export default function SuggestionsPage() {
   const [siteName, setSiteName] = useState("");
   const [error, setError] = useState("");
   const [choosing, setChoosing] = useState<string | null>(null);
+  const [uploadedPhotoCount, setUploadedPhotoCount] = useState<number | null>(null);
+  const [relinking, setRelinking] = useState(false);
+  const [relinkError, setRelinkError] = useState("");
 
   useEffect(() => {
     fetch("/api/sites/mine")
@@ -25,9 +28,32 @@ export default function SuggestionsPage() {
         }
         setSiteName(data.site.name);
         setContent(data.site.content);
+        if (typeof data.uploadedPhotoCount === "number") {
+          setUploadedPhotoCount(data.uploadedPhotoCount);
+        }
       })
       .catch(() => setError("Kunde inte hämta sajten."));
   }, []);
+
+  const relinkImages = async () => {
+    setRelinking(true);
+    setRelinkError("");
+    try {
+      const res = await fetch("/api/sites/relink-images", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      // Hämta sajten på nytt så förhandsvisningarna uppdateras med bilderna.
+      const fresh = await fetch("/api/sites/mine").then((r) => r.json());
+      if (fresh.site) {
+        setContent(fresh.site.content);
+        setUploadedPhotoCount(fresh.uploadedPhotoCount ?? uploadedPhotoCount);
+      }
+    } catch (e: any) {
+      setRelinkError(e.message);
+    } finally {
+      setRelinking(false);
+    }
+  };
 
   const choose = async (variantId: string) => {
     const variant = THEME_VARIANTS.find((v) => v.id === variantId);
@@ -80,6 +106,23 @@ export default function SuggestionsPage() {
           {!error && !content && (
             <div className="bg-surface border border-line rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">
               Hämtar din sajt …
+            </div>
+          )}
+
+          {content && uploadedPhotoCount !== null && uploadedPhotoCount > 0 && countImageSlots(content).used === 0 && (
+            <div className="bg-[#FFF4E5] border border-[#F0D9B5] rounded-2xl px-5 py-4 mb-6 text-[13.5px] text-[#6B4A1A] leading-relaxed">
+              Du har {uploadedPhotoCount} uppladdade foto{uploadedPhotoCount === 1 ? "" : "n"}, men inget av dem kom
+              med i den här sajten — designen visar platshållare istället.{" "}
+              <button
+                type="button"
+                onClick={relinkImages}
+                disabled={relinking}
+                className="font-semibold underline disabled:opacity-60"
+              >
+                {relinking ? "Kopplar in bilder …" : "Koppla in bilderna nu"}
+              </button>{" "}
+              (ingen ny text skrivs, bara bilderna placeras in).
+              {relinkError && <div className="text-red-700 mt-1">{relinkError}</div>}
             </div>
           )}
 
