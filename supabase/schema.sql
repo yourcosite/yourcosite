@@ -17,6 +17,20 @@ create table if not exists profiles (
 
 alter table profiles enable row level security;
 
+-- Hjälpfunktion för att kolla om den inloggade användaren är admin.
+-- security definer gör att funktionen kringgår RLS internt, så att
+-- admin-policyn nedan inte triggar sig själv i en oändlig loop.
+create or replace function public.is_admin()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from profiles where id = auth.uid() and role = 'admin'
+  );
+$$;
+
 create policy "Användare kan läsa sin egen profil"
   on profiles for select
   using (auth.uid() = id);
@@ -27,9 +41,7 @@ create policy "Användare kan uppdatera sin egen profil"
 
 create policy "Admin kan läsa alla profiler"
   on profiles for select
-  using (
-    exists (select 1 from profiles p where p.id = auth.uid() and p.role = 'admin')
-  );
+  using (public.is_admin());
 
 -- ============================================================
 -- SITES
@@ -62,9 +74,7 @@ create policy "Ägare kan uppdatera sina sajter"
 create policy "Ägare kan ta bort sina sajter"
   on sites for delete using (auth.uid() = owner_id);
 create policy "Admin kan läsa alla sajter"
-  on sites for select using (
-    exists (select 1 from profiles p where p.id = auth.uid() and p.role = 'admin')
-  );
+  on sites for select using (public.is_admin());
 
 -- ============================================================
 -- SITE_PAGES
