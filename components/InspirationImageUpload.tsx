@@ -133,7 +133,7 @@ export default function InspirationImageUpload({
         className="border-[1.5px] border-dashed border-line rounded-2xl px-6 py-5 text-center bg-surface cursor-pointer mb-3"
       >
         <div className="font-semibold text-[14.5px]">
-          {uploading ? "Laddar upp …" : "Ladda upp skärmdumpar eller bilder du gillar"}
+          {uploading ? "Laddar upp …" : "Ladda upp skärmdumpar av andra hemsidor"}
         </div>
         <div className="text-[12.5px] text-ink-dim mt-1">
           PNG/JPG/WEBP, max 5 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.

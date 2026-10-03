@@ -1,17 +1,18 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import SitePreview from "@/components/SitePreview";
+import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { isValidSiteContent } from "@/lib/contentModel";
+import WebsitePreviewFrame from "@/components/WebsitePreviewFrame";
 
 // Alltid färskt innehåll — ingen cachning av det här utkastet, som annars
 // kan visas kort efter att sajten precis byggts om (se next.config.mjs).
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-// Riktig, klickbar förhandsvisning av kundens genererade sajt — man kan
-// surfa mellan sidorna precis som en besökare skulle, inte bara se
-// förstasidan. Chattredigeraren (/redigera) är fortfarande nästa fas och
-// inte kopplad till det här innehållet än.
+// Förhandsvisning av kundens genererade sajt, i en webbläsarram med
+// dator-/mobilläge (se WebsitePreviewFrame). Själva sidan renderas i en
+// iframe mot /webbplats-innehall, så man kan klicka runt bland sidorna
+// precis som en besökare skulle.
 export default async function WebsitePreviewPage({
   params,
 }: {
@@ -28,14 +29,7 @@ export default async function WebsitePreviewPage({
     );
   }
 
-  const { data: site } = await supabase
-    .from("sites")
-    .select("*")
-    .eq("owner_id", user.id)
-    .not("content", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const site = await getCurrentPublishedSite(supabase, user.id);
 
   if (!site || !isValidSiteContent(site.content)) {
     return (
@@ -51,14 +45,17 @@ export default async function WebsitePreviewPage({
   }
 
   const requestedPath = "/" + (params.slug?.join("/") || "");
-  const content = site.content;
+  const domainLabel = `${site.name?.toLowerCase().replace(/\s+/g, "")}.yourcosite.com`;
 
   return (
     <div className="min-h-screen bg-[#E5E3DD] flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-[900px] flex items-center justify-between mb-4 px-1">
-        <div className="text-[13px] text-ink-dim">
-          Förhandsvisning av <span className="font-semibold text-ink">{site.name}</span> — klicka runt i menyn för att se alla sidor.
-        </div>
+        <Link
+          href="/forslag"
+          className="text-[13px] font-semibold text-ink-dim flex-shrink-0"
+        >
+          ← Välj en annan variant
+        </Link>
         <Link
           href="/redigera"
           className="text-[13px] font-semibold bg-accent text-accent-ink px-4 py-2 rounded-lg flex-shrink-0"
@@ -67,17 +64,11 @@ export default async function WebsitePreviewPage({
         </Link>
       </div>
 
-      <div className="w-full max-w-[900px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden">
-        <div className="h-[38px] bg-[#F1EFE9] flex items-center gap-1.5 px-3.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
-          <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
-          <div className="flex-1 text-center text-[11.5px] text-ink-dim">
-            {site.name?.toLowerCase().replace(/\s+/g, "")}.yourcosite.com{requestedPath !== "/" ? requestedPath : ""}
-          </div>
-        </div>
-        <SitePreview content={content} siteName={site.name} activePath={requestedPath} basePath="/webbplats" />
-      </div>
+      <WebsitePreviewFrame
+        siteName={site.name}
+        domainLabel={domainLabel}
+        contentPath={`/webbplats-innehall${requestedPath}`}
+      />
     </div>
   );
 }
