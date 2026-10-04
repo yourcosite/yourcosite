@@ -49,7 +49,10 @@ export default async function WebsitePreviewPage({
 
   return (
     <div className="min-h-screen bg-[#E5E3DD] flex flex-col items-center py-8 px-4">
-      <div className="w-full max-w-[1560px] flex items-center justify-between mb-4 px-1">
+      {/* Samma bredd som WebsitePreviewFrame.tsx:s dator-ruta (se
+          kommentaren där) så raden med "Välj en annan variant"/"Fortsätt
+          till redigeraren" alltid linjerar med rutans kanter. */}
+      <div className="w-full max-w-[min(94vw,2000px)] flex items-center justify-between mb-4 px-1">
         <Link
           href="/forslag"
           className="text-[13px] font-semibold text-ink-dim flex-shrink-0"

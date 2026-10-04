@@ -6,13 +6,22 @@ import { useState } from "react";
 // Visar själva sajten i en <iframe> (mot /webbplats-innehall) istället för
 // att rendera den direkt i sidan som tidigare — det ger två saker på
 // samma gång:
-//  1) Ett fast 16:9-fönster (som de flesta skärmar), med skroll inuti
-//     fönstret för långa sidor — istället för att hela förhandsvisningen
-//     (och webbläsarramen runt den) blev hur hög som helst.
+//  1) Ett 16:9-fönster (som de flesta skärmar), med skroll inuti fönstret
+//     för långa sidor — istället för att hela förhandsvisningen (och
+//     webbläsarramen runt den) blev hur hög som helst.
 //  2) En riktig mobilförhandsvisning — iframens egen bredd avgör vilka
 //     "md:"-brytpunkter som slår till i sajtens kod, så "Mobil"-läget
 //     visar faktiskt den smala layouten, inte bara en nedskalad bild av
 //     den breda.
+//
+// Dator-rutans bredd var tidigare LÅST till max 1560px oavsett skärm. På en
+// bred/högupplöst skärm (1920px+) blev rutan då betydligt smalare än
+// besökarens riktiga fönster skulle vara — och eftersom hero-bilder har en
+// fast pixelhöjd (se SitePreview.tsx) blev de synligt hårdare beskurna i
+// sidled än på den faktiska, publicerade sajten. Bredden är nu
+// "min(94vw, 2000px)" istället — den växer med skärmens egen bredd (det
+// kundfrågan efterfrågade) och tar bara en liten marginal, men har ändå ett
+// tak så rutan inte blir orimligt stor på en jätteskärm.
 export default function WebsitePreviewFrame({
   siteName,
   domainLabel,
@@ -50,7 +59,7 @@ export default function WebsitePreviewFrame({
       <div
         className={
           device === "desktop"
-            ? "w-full max-w-[1560px] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
+            ? "w-full max-w-[min(94vw,2000px)] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
             : "w-[380px] max-w-full h-[720px] bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col border-[6px] border-ink"
         }
       >
