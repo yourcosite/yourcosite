@@ -1,6 +1,7 @@
 import AccountHeader from "@/components/AccountHeader";
-import DashboardClient from "./DashboardClient";
+import DashboardClient, { type SiteRow } from "./DashboardClient";
 import { createClient } from "@/lib/supabase/server";
+import { isValidSiteContent } from "@/lib/contentModel";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -8,7 +9,7 @@ export default async function DashboardPage() {
 
   let userName = "Ditt konto";
   let userEmail = "";
-  let sites: { id: string; name: string; domain: string | null; status: "draft" | "live" }[] = [];
+  let sites: SiteRow[] = [];
 
   if (user) {
     userEmail = user.email ?? "";
@@ -21,9 +22,18 @@ export default async function DashboardPage() {
 
     const { data: siteRows } = await supabase
       .from("sites")
-      .select("id, name, domain, status")
+      .select("id, name, domain, status, content")
       .order("created_at", { ascending: false });
-    sites = siteRows ?? [];
+    sites = (siteRows ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      domain: s.domain,
+      status: s.status,
+      // Bara sajter som hunnit till redigeringssteget har ett genererat
+      // content ifyllt — de som fortfarande går igenom onboardingen visar
+      // fortfarande sin platshållarfärg i kortet (se DashboardClient).
+      content: isValidSiteContent(s.content) ? s.content : null,
+    }));
   }
 
   return (

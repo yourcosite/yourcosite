@@ -2,12 +2,18 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import SitePreview from "@/components/SitePreview";
+import type { SiteContent } from "@/lib/contentModel";
 
 export type SiteRow = {
   id: string;
   name: string;
   domain: string | null;
   status: "draft" | "live";
+  // Satt bara för sajter som hunnit till redigeringssteget (se
+  // app/dashboard/page.tsx) — då visar kortet en riktig, levande
+  // förhandsvisning istället för gradient-platshållaren nedan.
+  content?: SiteContent | null;
 };
 
 const tabs = [
@@ -148,13 +154,24 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
             )}
 
             <Link href="/redigera" className="block">
-              <div
-                className="h-[150px] relative flex items-end p-4"
-                style={{ background: gradients[i % gradients.length] }}
-              >
-                <span className="font-serif italic text-[20px] text-white">
-                  {s.name.split(" ")[0]}
-                </span>
+              <div className="aspect-[4/3] relative overflow-hidden" style={!s.content ? { background: gradients[i % gradients.length] } : undefined}>
+                {s.content ? (
+                  // En riktig, levande miniatyr av startsidan — samma knep
+                  // som stilförslagen i /forslag: rendera hela sajten i full
+                  // storlek och skala ner den med CSS istället för att
+                  // generera och lagra en skärmdump någonstans.
+                  <div className="absolute inset-0 pointer-events-none">
+                    <div className="absolute top-0 left-0 w-[400%] origin-top-left" style={{ transform: "scale(0.25)" }}>
+                      <SitePreview content={s.content} siteName={s.name} />
+                    </div>
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 flex items-end p-4">
+                    <span className="font-serif italic text-[20px] text-white">
+                      {s.name.split(" ")[0]}
+                    </span>
+                  </div>
+                )}
                 <span
                   className="absolute top-3.5 left-3.5 text-[11px] font-bold px-2.5 py-1 rounded-full"
                   style={
