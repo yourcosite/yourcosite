@@ -97,4 +97,14 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     headerLayout: "left",
     heroLayout: "editorial",
   },
+  {
+    id: "aurora",
+    label: "Mörk och arkitektonisk",
+    desc: "Mörk bakgrund med mjukt tonade ytor (inte platta enfärgade), en sidledes mörk bild-gradient i heron och en centrerad meny — dramatisk och exklusiv.",
+    font: "serif",
+    backgroundMode: "dark",
+    buttonStyle: "pill",
+    headerLayout: "split",
+    heroLayout: "beam",
+  },
 ];

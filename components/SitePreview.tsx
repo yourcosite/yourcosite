@@ -24,6 +24,19 @@ function artBackground(mode: BackgroundMode, accent: string, secondary: string[]
   return `radial-gradient(circle at 10% 10%, ${accent}35, transparent 55%), radial-gradient(circle at 90% 85%, ${c2}28, transparent 55%), linear-gradient(160deg, #FFFFFF 0%, #F3F2EE 100%)`;
 }
 
+// Kundens "Aurora"-referenskod bad uttryckligen om "tonade bakgrunder,
+// allt behöver inte vara enfärgade" — en mjuk, riktad färgskiftning
+// (kundens accentfärg vid låg opacitet, i ett diagonalt lager ovanpå den
+// vanliga bas-färgen) istället för en helt platt palette.bg/bgAlt-yta.
+// Generell hjälpfunktion (inte bara för "aurora"-varianten) så fler
+// sektioner kan använda samma mjuka toning framöver utan att hitta på en
+// ny lösning varje gång. `strong` ger en något tydligare toning — använd
+// sparsamt, bara där referensen själv hade en synligt varmare/kallare yta
+// (t.ex. en mörk sektion som ska kännas "djupare" än ren svart/grå).
+function tonalBg(base: string, accent: string, strong = false) {
+  return `linear-gradient(135deg, ${accent}${strong ? "22" : "12"} 0%, transparent 60%), ${base}`;
+}
+
 const PALETTES: Record<BackgroundMode, { bg: string; bgAlt: string; text: string; textDim: string; cardBg: string; cardBorder: string }> = {
   light: { bg: "#FFFFFF", bgAlt: "#F7F6F3", text: "#17171A", textDim: "#6E6C68", cardBg: "#FFFFFF", cardBorder: "#ECEAE6" },
   warm: { bg: "#FBF2EC", bgAlt: "#F3E6DA", text: "#3E2A1C", textDim: "#8A6F57", cardBg: "#FFFBF7", cardBorder: "#F0E3DA" },
@@ -1975,6 +1988,94 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "beam") {
+        // Kundens "Aurora Arkitektur"-referenskod — till skillnad från
+        // "overlay-bottom" ovan (mörk gradient UNDERIFRÅN, text ligger
+        // nere i botten) är den här gradienten SIDLEDES (vänster->höger,
+        // mörkast vid vänsterkanten där texten ligger, snart heki
+        // genomskinlig mot höger där fotot får synas rent) och texten
+        // ligger vertikalt CENTRERAD i hela hero-höjden, inte pressad mot
+        // botten — ett lugnare, mer "arkitektkontor"-aktigt intryck än
+        // "overlay-bottom"s kompakta nedre textfält. Den dekorativa
+        // "Scrolla ner"-raden (en kort linje + text, helt utan funktion —
+        // samma princip som "01 — 03"-sidnumreringen i "editorial") sitter
+        // nere till vänster, som i referensen.
+        return (
+          <div className={`relative ${heroEmphasis ? "h-[620px] @3xl:h-[760px]" : "h-[480px] @3xl:h-[620px]"}`}>
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              fill
+              dark
+              selectable={editable}
+              selected={!!heroSelection && selectedImageKey === heroSelection.key}
+              onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+            />
+            {/* pointer-events-none — rent dekorativt toningslager, se
+                motsvarande kommentar vid "overlay-bottom" nedan. */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                background:
+                  "linear-gradient(90deg, rgba(7,14,22,0.86) 0%, rgba(7,14,22,0.6) 38%, rgba(7,14,22,0.18) 70%, rgba(7,14,22,0.02) 100%)",
+              }}
+            />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(0deg, rgba(6,12,18,0.4), transparent 35%)" }}
+            />
+            <div className={`absolute inset-0 flex items-center px-8 @3xl:px-14 text-white ${heroEmphasis ? "max-w-[680px]" : "max-w-[560px]"}`}>
+              <div>
+                {section.eyebrow && (
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[11px] tracking-[0.3em] font-semibold mb-5 opacity-70"
+                    selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                    onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                  >
+                    {section.eyebrow.toUpperCase()}
+                  </Field>
+                )}
+                <Field
+                  editable={editable}
+                  as="h1"
+                  className={`font-serif leading-[0.98] tracking-tight mb-6 ${heroEmphasis ? "text-[48px] @3xl:text-[76px]" : "text-[38px] @3xl:text-[56px]"}`}
+                  selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                  onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+                >
+                  {section.headline}
+                </Field>
+                <Field
+                  editable={editable}
+                  as="p"
+                  className={`leading-relaxed mb-7 opacity-75 ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}
+                  selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                  onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.body}
+                </Field>
+                {section.ctaLabel && (
+                  <FieldBadge
+                    editable={editable}
+                    selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                    onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                  >
+                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
+                      {section.ctaLabel}
+                    </CtaPill>
+                  </FieldBadge>
+                )}
+              </div>
+            </div>
+            <div className="absolute left-8 @3xl:left-14 bottom-7 @3xl:bottom-9 flex items-center gap-4 text-white opacity-60 text-[11px] tracking-[0.08em] pointer-events-none">
+              <span className="w-10 h-px bg-white" />
+              Scrolla ner
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "overlay-bottom") {
         return (
           <div className={`relative ${heroEmphasis ? "h-[560px] @3xl:h-[720px]" : "h-[460px] @3xl:h-[560px]"}`}>
@@ -2284,6 +2385,54 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "image-full") {
+        // Kundens "Aurora Arkitektur"-referenskod — en HEL bild till
+        // vänster som täcker hela sektionens höjd (inte en vanlig
+        // bildruta med marginal runt, som andra about-layouter), text
+        // till höger med en liten dekorativ pill-länk under brödtexten
+        // (ren dekoration — ingen riktig destination, samma princip som
+        // "01 — 03"-sidnumreringen i hero-layouten "editorial"). Textsidan
+        // får en mjuk tonad bakgrund (tonalBg) istället för en platt
+        // yta — kundens uttryckliga önskan om "tonade bakgrunder".
+        return (
+          <div className="grid @3xl:grid-cols-[1.15fr_0.85fr] @3xl:min-h-[500px]">
+            <div className="relative h-[280px] @3xl:h-auto">
+              <ImageOrArt imageUrl={section.imageUrl} art={art} fill selectable={false} />
+            </div>
+            <div
+              className="flex flex-col justify-center px-8 @3xl:px-16 py-14 @3xl:py-20"
+              style={{ background: tonalBg(sectionBg || palette.bg, accent) }}
+            >
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[30px] @3xl:text-[40px] leading-[1.05] mb-5"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed max-w-[460px]"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              <div
+                className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
+                style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
+              >
+                Läs mer →
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       // text-left (default) — vänsterställd, bredare text.
       return (
         <div className="px-10 py-14 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
@@ -2520,6 +2669,72 @@ function SectionBlockInner({
                   </Field>
                 </div>
               ))}
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "divided-columns") {
+        // Kundens "Aurora Arkitektur"-referenskod ("services"-sektionen)
+        // — tre kolumner med en tunn LODRÄT linje MELLAN rutorna (inte
+        // egna kort/bakgrunder som "cards", och inte en siffra ovanför
+        // som "numbered") plus en dekorativ "Läs mer →"-rad under varje
+        // text (ren dekoration, ingen riktig destination — samma princip
+        // som about-layouten "image-full" ovan). En liten geometrisk
+        // symbol ovanför varje rubrik istället för ett foto — referensens
+        // service-kort hade inga bilder, bara enkla Unicode-tecken.
+        // Sektionen får en mjukt tonad bakgrund (tonalBg) i stället för
+        // en platt yta, per kundens uttryckliga "tonade bakgrunder"-önskan.
+        const glyphs = ["⌂", "✦", "▣", "◇", "○", "△"];
+        return (
+          <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: tonalBg(sectionBg || palette.bg, accent) }}>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[32px] @3xl:text-[44px] leading-[1.05] mb-10 @3xl:mb-14 max-w-[600px]"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+            <div className="grid @3xl:grid-cols-3">
+              {section.items.map((item, i) => {
+                const isFirst = i === 0;
+                const isLast = i === section.items.length - 1;
+                return (
+                  <div
+                    key={i}
+                    className={`@3xl:px-10 ${isFirst ? "@3xl:pl-0" : ""} ${isLast ? "@3xl:pr-0" : ""} ${i > 0 ? "@3xl:border-l pt-8 @3xl:pt-0" : ""}`}
+                    style={{ borderColor: palette.cardBorder }}
+                  >
+                    <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
+                      {glyphs[i % glyphs.length]}
+                    </div>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="font-serif text-[21px] mb-2.5"
+                      selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.title}
+                    </Field>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[13px] leading-relaxed max-w-[260px]"
+                      style={{ color: palette.textDim }}
+                      selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.body}
+                    </Field>
+                    <div className="mt-4 text-[12px] font-medium" style={{ color: palette.text }}>
+                      Läs mer →
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );

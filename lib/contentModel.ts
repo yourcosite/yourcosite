@@ -50,9 +50,9 @@ export interface SiteTheme {
   heroLayout?: HeroLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial";
-export type AboutLayout = "text-left" | "centered" | "stats-split";
-export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial" | "beam";
+export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full";
+export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
 export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
 export type ContactLayout = "centered" | "split-info";
@@ -119,6 +119,10 @@ export interface AboutSection {
   // skrivit i sin brief, ALDRIG påhittade siffror. Saknas tydliga fakta,
   // utelämna fältet helt — sektionen renderas då bara utan nyckeltalsraden.
   stats?: { value: string; label: string }[];
+  // Bara använd av layout "image-full" — EN bild som täcker hela
+  // sektionens höjd (kundens "Aurora Arkitektur"-referenskod), satt i
+  // kod precis som HeroSection.imageUrl — se lib/assignUploadedImages.ts.
+  imageUrl?: string;
 }
 
 export interface GridItem {

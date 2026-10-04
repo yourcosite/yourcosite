@@ -13,9 +13,9 @@ export const SECTION_SCHEMA = {
         type: { const: "hero" },
         layout: {
           type: "string",
-          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage", "quad", "editorial"],
+          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage", "quad", "editorial", "beam"],
           description:
-            "\"fade-bottom\": bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\". \"collage\": ett redaktionellt, bildrikt intryck — flera bilder i en överlappande komposition bredvid texten, med plats för headlineEmphasis (en kursiv fortsättning på rubriken) och stats (en kort nyckeltalsrad under knappen). Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan. \"quad\": en delad hero — text till vänster (rubrik + en headlineEmphasis-rad på egen rad, INTE kursiv) och EN bild till höger som täcker hela höjden, med ett litet flytande \"AI-verktyg\"-kort (ren dekoration) nere på bilden samt en kort bock-rad (stats, bara label visas) under knappen. Används bara när stilvarianten faktiskt är \"Ren och strukturerad\". \"editorial\" (ny): text till vänster (rubrik + en kursiv headlineEmphasis-rad) och en stor stående bild till höger, med ett mindre andra foto (collageImageUrls) lager-på-lager nere i bildens vänstra hörn och en liten dekorativ sidnumrering i hörnet. Används bara när stilvarianten faktiskt är \"Redaktionell helbild\".",
+            "\"fade-bottom\": bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\". \"collage\": ett redaktionellt, bildrikt intryck — flera bilder i en överlappande komposition bredvid texten, med plats för headlineEmphasis (en kursiv fortsättning på rubriken) och stats (en kort nyckeltalsrad under knappen). Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan. \"quad\": en delad hero — text till vänster (rubrik + en headlineEmphasis-rad på egen rad, INTE kursiv) och EN bild till höger som täcker hela höjden, med ett litet flytande \"AI-verktyg\"-kort (ren dekoration) nere på bilden samt en kort bock-rad (stats, bara label visas) under knappen. Används bara när stilvarianten faktiskt är \"Ren och strukturerad\". \"editorial\" (ny): text till vänster (rubrik + en kursiv headlineEmphasis-rad) och en stor stående bild till höger, med ett mindre andra foto (collageImageUrls) lager-på-lager nere i bildens vänstra hörn och en liten dekorativ sidnumrering i hörnet. Används bara när stilvarianten faktiskt är \"Redaktionell helbild\". \"beam\" (ny): en mörk, dramatisk hero — en fullbred bild bakom en SIDLEDES mörk gradient (mörkast vänster, där texten ligger CENTRERAD i hela höjden, genomskinlig mot höger där bilden syns rent), med en liten dekorativ \"Scrolla ner\"-rad nere till vänster. Används bara när stilvarianten faktiskt är den mörka \"arkitektur\"-känslan.",
         },
         eyebrow: { type: "string" },
         headline: { type: "string" },
@@ -55,12 +55,13 @@ export const SECTION_SCHEMA = {
         type: { const: "about" },
         layout: {
           type: "string",
-          enum: ["text-left", "centered", "stats-split"],
+          enum: ["text-left", "centered", "stats-split", "image-full"],
           description:
-            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout.",
+            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout. \"image-full\" (ny): EN bild som täcker hela sektionens höjd till vänster, rubrik/text till höger med en dekorativ länkrad under — ett rent, redaktionellt avbrott utan nyckeltal.",
         },
         heading: { type: "string" },
         body: { type: "string" },
+        imageUrl: { type: "string" },
         // Bara meningsfullt tillsammans med layout "stats-split" — se
         // beskrivningen i lib/contentModel.ts. Utelämna för andra layouter.
         stats: {
@@ -83,9 +84,9 @@ export const SECTION_SCHEMA = {
         type: { const: "grid" },
         layout: {
           type: "string",
-          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row"],
+          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns"],
           description:
-            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll.",
+            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll. \"divided-columns\" (ny): tre kolumner MED en tunn lodrät linje mellan varje (ingen egen kortbakgrund), en liten geometrisk symbol ovanför varje rubrik och en dekorativ \"Läs mer\"-rad under texten — passar 3 items bäst (en tjänste-/expertis-sektion).",
         },
         heading: { type: "string" },
         items: {

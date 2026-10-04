@@ -73,12 +73,12 @@ const LAYOUT_TENDENCY_POOL = [
 // varje pool slumpas fram PER GENERERING och vävs in som en knuff i
 // prompten nedan — fortfarande "luta åt", aldrig en regel som trumfar vad
 // kunden faktiskt skrivit.
-const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row"];
+const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns"];
 const TESTIMONIALS_LAYOUT_POOL = ["single-quote", "carousel-row", "side-by-side", "full-bleed", "carousel-arrows"];
 const CTA_LAYOUT_POOL = ["centered", "split", "image-bleed", "dark-split"];
 const CONTACT_LAYOUT_POOL = ["centered", "split-info"];
 const GALLERY_LAYOUT_POOL = ["grid", "carousel"];
-const ABOUT_LAYOUT_POOL = ["text-left", "centered", "stats-split"];
+const ABOUT_LAYOUT_POOL = ["text-left", "centered", "stats-split", "image-full"];
 const FAQ_LAYOUT_POOL = ["stacked", "two-column"];
 const MAP_LAYOUT_POOL = ["inline", "full-bleed"];
 
