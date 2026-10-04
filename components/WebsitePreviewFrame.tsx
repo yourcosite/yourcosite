@@ -37,9 +37,10 @@ import { useState } from "react";
 // ner visuellt, så effekten blir starkare än själva CSS-skalan ensam.
 // 0.48 (ge minst dubbelt så mycket synligt) visade sig bli FÖR mycket i
 // praktiken av just den anledningen, och även 0.68 kändes fortfarande för
-// utzoomat enligt kunden. 0.82 ger en mer MÄRKBAR men betydligt
-// försiktigare skillnad mot originalet (ingen zoom alls).
-const DESKTOP_ZOOM = 0.82;
+// utzoomat enligt kunden. 0.82 kändes sedan i praktiken för BRETT/inzoomat
+// åt andra hållet (kundfeedback: "blir ganska mycket för bred just nu") —
+// 0.6 (ca 60%) gav en mer rättvisande bild av hur sidan faktiskt ser ut.
+const DESKTOP_ZOOM = 0.6;
 
 export default function WebsitePreviewFrame({
   siteName,
