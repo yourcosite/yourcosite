@@ -5,7 +5,7 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspiration";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
-import { ensureImageSlots } from "@/lib/ensureImageSlots";
+import { ensureImageSlots, enforceHomepageImageRichness } from "@/lib/ensureImageSlots";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
 import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteContentSchema";
 
@@ -265,7 +265,7 @@ export async function POST() {
   // Säkerställer att varje sida har minst en bildbärande sektion (hero
   // eller grid) innan vi delar ut kundens foton — annars kan en sida som
   // bara fick t.ex. about+contact hamna helt utan bild.
-  const contentWithImageSlots = ensureImageSlots(content);
+  const contentWithImageSlots = enforceHomepageImageRichness(ensureImageSlots(content));
 
   // Egna uppladdade foton (steg 3) placeras deterministiskt i layouten i
   // kod — AI:n har inte sett eller valt dem.
