@@ -48,7 +48,17 @@ const HOME_HERO_LAYOUT_POOL = [
   "split-left",
   "split-right",
   "centered",
+  "fade-bottom",
+  "fade-bottom",
 ];
+
+// Hero-layouten för SIDOR UTANFÖR startsidan — startsidan har sin egen,
+// mer utförliga instruktion ovan (prioriterar inspirationsbilder/-länkar
+// före den här poolen), men undersidornas hero fick annars ingen egen
+// "luta åt"-knuff alls och tenderade att alltid landa på samma val. Jämnare
+// fördelning än hemsidans pool eftersom "wow-intrycket" inte är lika
+// viktigt där.
+const SUBPAGE_HERO_LAYOUT_POOL = ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom"];
 
 const LAYOUT_TENDENCY_POOL = [
   "renare och mer återhållsam — luta åt layouter som \"centered\", \"list\" och \"single-quote\" där det passar",
@@ -96,17 +106,20 @@ function buildPrompt(
   // har annars en stark tendens att välja "det säkra" om och om igen).
   const heroLayoutInstruction =
     inspirationImageCount > 0
-      ? `Kunden har bifogat ${inspirationImageCount} egna inspirationsbild${inspirationImageCount === 1 ? "" : "er"} i det här meddelandet (skärmdumpar/foton av sajter eller stilar de gillar) — det är din STARKASTE signal för layoutval, starkare än både ton/bransch och nedanstående riktlinjer. Titta noga på dem: har de en stor, framträdande bild/hero högst upp, välj layouten "overlay-bottom" (fullbred bild bakom menyn) för startsidans hero; känns de mer återhållsamma/textfokuserade, välj en lugnare layout som "centered" istället.`
+      ? `Kunden har bifogat ${inspirationImageCount} egna inspirationsbild${inspirationImageCount === 1 ? "" : "er"} i det här meddelandet (skärmdumpar/foton av sajter eller stilar de gillar) — det är din STARKASTE signal för layoutval, starkare än både ton/bransch och nedanstående riktlinjer. Titta noga på dem: har de en stor, framträdande bild/hero högst upp, välj layouten "overlay-bottom" (fullbred bild bakom menyn) för startsidans hero; känns de mer återhållsamma/textfokuserade, välj en lugnare layout som "centered" eller "fade-bottom" (bilden tonar mjukt ut i bakgrunden) istället.`
       : inspiration.heroImageSignal === "yes"
       ? `Kundens egna referenssajter har tydligt en stor, framträdande bild/hero högst upp på startsidan — gör likadant här: välj layouten "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter) för startsidans hero, om inget i kundens beskrivning starkt talar emot det.`
       : inspiration.heroImageSignal === "no"
-      ? `Kundens egna referenssajter har INTE någon framträdande bild/hero högst upp — de är mer textfokuserade. Spegla det: välj en mer återhållsam layout för startsidans hero, t.ex. "centered", istället för en fullbred bilddominerad lösning, om inget i kundens beskrivning starkt talar emot det.`
-      : `Som utgångspunkt för DEN HÄR sajten (ingen tydlig signal från referenser att utgå från): luta åt layouten "${pickRandom(HOME_HERO_LAYOUT_POOL)}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right" eller "centered" om något av dem passar tydligt bättre.`;
+      ? `Kundens egna referenssajter har INTE någon framträdande bild/hero högst upp — de är mer textfokuserade. Spegla det: välj en mer återhållsam layout för startsidans hero, t.ex. "centered" eller "fade-bottom", istället för en fullbred bilddominerad lösning, om inget i kundens beskrivning starkt talar emot det.`
+      : `Som utgångspunkt för DEN HÄR sajten (ingen tydlig signal från referenser att utgå från): luta åt layouten "${pickRandom(HOME_HERO_LAYOUT_POOL)}" för startsidans hero om inget i kundens egna ord, bransch eller ton tydligt talar för en annan — men välj fritt bland "overlay-bottom" (fullbred bild bakom menyn, som stora hotell-/spa-sajter), "split-left"/"split-right", "centered" eller "fade-bottom" (bilden tonar mjukt ut i sidans bakgrund, inget hårt kant/kortintryck) om något av dem passar tydligt bättre.`;
 
   const suggestedTendency = pickRandom(LAYOUT_TENDENCY_POOL);
 
   // En slumpad "luta åt"-layout per sektionstyp, se poolerna ovan.
+  // "hero" gäller bara SIDOR UTANFÖR startsidan — startsidans hero styrs
+  // redan av den mer utförliga heroLayoutInstruction ovan.
   const sectionLayoutLean = [
+    `"hero" (på andra sidor än startsidan): luta åt "${pickRandom(SUBPAGE_HERO_LAYOUT_POOL)}"`,
     `"grid": luta åt "${pickRandom(GRID_LAYOUT_POOL)}" där inget annat talar emot`,
     `"testimonials": luta åt "${pickRandom(TESTIMONIALS_LAYOUT_POOL)}"`,
     `"cta": luta åt "${pickRandom(CTA_LAYOUT_POOL)}"`,

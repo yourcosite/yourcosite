@@ -19,6 +19,15 @@ export type BackgroundMode = "light" | "warm" | "dark";
 // /api/sites/choose-look, aldrig av Claude.
 export type ButtonStyle = "pill" | "square" | "underline";
 
+// Headerns uppbyggnad — en FJÄRDE stilaxel, samma princip som ButtonStyle
+// ovan: bunden till varje stilvariant (lib/themeVariants.ts), satt i kod i
+// /api/sites/choose-look, aldrig valbar fritt och aldrig satt av Claude.
+// "left" = logga vänster, meny höger (klassisk, som allt var innan det här
+// fältet fanns). "centered-stacked" = loggan centrerad på en egen rad, menyn
+// centrerad på raden under — varmare, mer personlig känsla. "split" = logga
+// vänster, menyn centrerad i mitten — djärvare, mer redaktionell.
+export type HeaderLayout = "left" | "centered-stacked" | "split";
+
 export interface SiteTheme {
   accentColor: string;
   secondaryColors: string[];
@@ -29,9 +38,12 @@ export interface SiteTheme {
   // Saknas den (sajter skapade innan det här fältet fanns) faller
   // SitePreview.tsx tillbaka på "pill" — se buttonShape där.
   buttonStyle?: ButtonStyle;
+  // Saknas den (sajter skapade innan det här fältet fanns) faller
+  // SitePreview.tsx tillbaka på "left" — se headerLayout där.
+  headerLayout?: HeaderLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom";
 export type AboutLayout = "text-left" | "centered";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side";

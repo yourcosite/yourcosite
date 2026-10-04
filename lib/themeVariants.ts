@@ -7,7 +7,7 @@
 // bara 3 — annars riskerade två kunder med samma ton (t.ex. båda "lekfull")
 // att alltid hamna på exakt samma tre förslag, vilket gjorde att sajter
 // kändes mallade även när kunderna själva valde olika.
-import type { ThemeFont, ButtonStyle } from "./contentModel";
+import type { ThemeFont, ButtonStyle, HeaderLayout } from "./contentModel";
 
 export type BackgroundMode = "light" | "warm" | "dark";
 
@@ -20,6 +20,9 @@ export interface ThemeVariant {
   // Knappformen hör ihop med varje variants "personlighet" — inte fritt
   // kombinerbar, se ButtonStyle i lib/contentModel.ts.
   buttonStyle: ButtonStyle;
+  // Samma princip, för headerns uppbyggnad — se HeaderLayout i
+  // lib/contentModel.ts.
+  headerLayout: HeaderLayout;
   recommended?: boolean;
 }
 
@@ -31,6 +34,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     font: "sans",
     backgroundMode: "light",
     buttonStyle: "underline",
+    headerLayout: "left",
   },
   {
     id: "luftig-klassisk",
@@ -39,6 +43,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     font: "serif",
     backgroundMode: "light",
     buttonStyle: "underline",
+    headerLayout: "left",
   },
   {
     id: "varm",
@@ -47,6 +52,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     font: "serif",
     backgroundMode: "warm",
     buttonStyle: "pill",
+    headerLayout: "centered-stacked",
     recommended: true,
   },
   {
@@ -56,6 +62,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     font: "sans",
     backgroundMode: "warm",
     buttonStyle: "pill",
+    headerLayout: "centered-stacked",
   },
   {
     id: "djarv",
@@ -64,6 +71,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     font: "sans",
     backgroundMode: "dark",
     buttonStyle: "square",
+    headerLayout: "split",
   },
   {
     id: "djarv-elegant",
@@ -72,5 +80,6 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     font: "serif",
     backgroundMode: "dark",
     buttonStyle: "square",
+    headerLayout: "split",
   },
 ];

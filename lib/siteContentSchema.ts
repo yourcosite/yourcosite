@@ -11,7 +11,12 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "hero" },
-        layout: { type: "string", enum: ["centered", "split-left", "split-right", "overlay-bottom"] },
+        layout: {
+          type: "string",
+          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom"],
+          description:
+            "\"fade-bottom\" (ny): bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\".",
+        },
         eyebrow: { type: "string" },
         headline: { type: "string" },
         body: { type: "string" },

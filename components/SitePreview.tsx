@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, ContactFormSection } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
@@ -45,6 +45,7 @@ export default function SitePreview({
   fontOverride,
   backgroundModeOverride,
   buttonStyleOverride,
+  headerLayoutOverride,
   activePath,
   basePath,
   onNavigate,
@@ -74,6 +75,9 @@ export default function SitePreview({
   // av /forslag-miniatyrerna så en stilvariant kan förhandsvisas innan
   // kunden valt den (se lib/themeVariants.ts).
   buttonStyleOverride?: ButtonStyle;
+  // Samma idé, för headerns uppbyggnad (vänster/centrerad-staplad/delad) —
+  // se lib/themeVariants.ts.
+  headerLayoutOverride?: HeaderLayout;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
   // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
@@ -152,6 +156,9 @@ export default function SitePreview({
   // Saknas den (sajter skapade innan knappform fanns) faller vi tillbaka på
   // "pill" — den ursprungliga, enda formen som fanns innan.
   const buttonShape = buttonStyleOverride ?? content.theme.buttonStyle ?? "pill";
+  // Samma princip, för headerns uppbyggnad — se HeaderLayout i
+  // lib/contentModel.ts och Header nedan.
+  const headerLayout: HeaderLayout = headerLayoutOverride ?? content.theme.headerLayout ?? "left";
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = content.theme.accentColor;
   const secondary = content.theme.secondaryColors || [];
@@ -165,6 +172,19 @@ export default function SitePreview({
   const overlayHeader =
     page.path === "/" && firstSection?.type === "hero" && (firstSection.layout || "centered") === "overlay-bottom";
   const restSections = overlayHeader ? page.sections.slice(1) : page.sections;
+
+  // Sektionen direkt under hero fick annars ALLTID samma mekaniska
+  // grå/vit-växling (jämnt/udda sektionsindex) — vilket i praktiken innebar
+  // att nästan varje sajt fick exakt samma "hero, sen en grå ruta"-känsla
+  // rakt av. Den här stabila (inte slumpad vid varje visning — den måste ge
+  // samma resultat i chattredigeraren som på den publicerade sajten) men
+  // per-SIDA varierande förskjutningen gör att ungefär hälften av
+  // sidorna/sajterna istället får en vit (inte grå) sektion direkt efter
+  // hero. Baseras på sidans path, inte sajtens övriga innehåll, så den
+  // håller sig stabil även när Millie ändrar texten på sidan.
+  let altSeed = 0;
+  for (let i = 0; i < page.path.length; i++) altSeed = (altSeed * 31 + page.path.charCodeAt(i)) >>> 0;
+  const altOffset = altSeed % 2;
 
   // Cookiebannern ska synas automatiskt på en RIKTIG sajt (alla sidor,
   // besökaren klickar runt) men aldrig i de små, icke-interaktiva
@@ -223,6 +243,7 @@ export default function SitePreview({
           basePath={basePath}
           onNavigate={onNavigate}
           overlay={overlayHeader}
+          layout={headerLayout}
         />
         {overlayHeader && firstSection && (
           <SectionBlock
@@ -277,7 +298,7 @@ export default function SitePreview({
             secondary={secondary}
             mode={mode}
             palette={palette}
-            alt={(overlayHeader ? i + 1 : i) % 2 === 1}
+            alt={((overlayHeader ? i + 1 : i) + altOffset) % 2 === 1}
             socialLinks={content.socialLinks}
             buttonShape={buttonShape}
             // Startsidans första sektion är besökarens allra första intryck —
@@ -525,6 +546,7 @@ function Header({
   basePath,
   onNavigate,
   overlay,
+  layout = "left",
 }: {
   siteName?: string;
   logoUrl?: string;
@@ -542,6 +564,10 @@ function Header({
   // vara en egen solid stapel ovanför — det där "wow"-intrycket kunden
   // efterfrågade, med menyn indragen i själva bilden.
   overlay?: boolean;
+  // Headerns uppbyggnad — se HeaderLayout i lib/contentModel.ts, bunden
+  // till sajtens stilvariant (lib/themeVariants.ts). "left" om inget annat
+  // anges, samma som innan den här axeln fanns.
+  layout?: HeaderLayout;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
@@ -549,144 +575,178 @@ function Header({
     overlay ? (active ? "#FFFFFF" : "rgba(255,255,255,0.8)") : active ? palette.text : palette.textDim;
   const hamburgerColor = overlay ? "#FFFFFF" : palette.text;
 
-  return (
-    <div
-      // OBS: "relative"/"absolute" väljs som ETT ENDA uttryck, aldrig båda
-      // klasserna samtidigt — Tailwinds genererade CSS-ordning låter annars
-      // "relative" vinna över "absolute" oavsett klassordning i strängen,
-      // vilket en gång redan orsakade en osynlig hero-bild (se ImageOrArt).
-      // Mobilmenyns utfällbara panel positioneras "absolute" mot den här
-      // headern, så den behöver vara en positionerad förälder även i
-      // icke-overlay-läget.
-      className={`flex items-center justify-between px-8 @3xl:px-12 py-4 ${
-        overlay ? "absolute top-0 left-0 right-0 z-10" : "relative"
-      }`}
-      style={
-        overlay
-          ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
-          : { borderBottom: `1px solid ${palette.cardBorder}` }
-      }
-    >
-      <div className="flex items-center gap-2.5">
-        {logoUrl ? (
-          // Loggan är kundens egen bild — ska vara ett tydligt kännetecken i
-          // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
-          // Ovanpå en foto-hero får den en ljus platta bakom sig så den
-          // alltid syns oavsett hur ljus/mörk loggan själv är.
-          <div className={overlay ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={logoUrl}
-              alt={siteName || "Logga"}
-              className={overlay ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
-            />
-          </div>
-        ) : (
-          <span className={`font-serif italic text-[19px] ${overlay ? "text-white" : ""}`}>
-            {siteName || "Ditt företag"}
-          </span>
-        )}
-      </div>
-      <nav className="hidden @3xl:flex items-center gap-7 text-[13px] font-semibold">
-        {/* Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
-            footerns gräns nedan) så en nytillagd sida inte "försvinner" ur
-            menyn bara därför att sajten redan hade fem sidor sedan
-            onboardingen. */}
-        {pages.slice(0, 8).map((p) =>
-          onNavigate ? (
-            <button
-              key={p.path}
-              type="button"
-              onClick={() => onNavigate(p.path)}
-              style={{ color: linkColor(p.path === activePath) }}
-            >
-              {p.label}
-            </button>
-          ) : basePath ? (
-            // Vanlig <a> istället för next/link — denna förhandsvisning är
-            // bara en lekstuga-webbläsare, ingen riktig SPA, och ett klick
-            // ska alltid ge en helt färsk sidladdning. next/link kunde i
-            // vissa fall återanvända en cachad klient-navigering även med
-            // staleTimes satt till 0 (känt Next.js-beteende), vilket var
-            // orsaken till att en del undersidors bilder bara syntes efter
-            // en manuell omladdning.
-            <a key={p.path} href={homeHref(p.path)} style={{ color: linkColor(p.path === activePath) }}>
-              {p.label}
-            </a>
-          ) : (
-            <span key={p.path} style={{ color: linkColor(p.path === activePath) }}>
-              {p.label}
-            </span>
-          )
-        )}
-      </nav>
+  const logoEl = logoUrl ? (
+    // Loggan är kundens egen bild — ska vara ett tydligt kännetecken i
+    // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
+    // Ovanpå en foto-hero får den en ljus platta bakom sig så den
+    // alltid syns oavsett hur ljus/mörk loggan själv är.
+    <div className={overlay ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={logoUrl}
+        alt={siteName || "Logga"}
+        className={overlay ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
+      />
+    </div>
+  ) : (
+    <span className={`font-serif italic text-[19px] ${overlay ? "text-white" : ""}`}>
+      {siteName || "Ditt företag"}
+    </span>
+  );
 
-      {/* Hamburgarmeny — tidigare fanns ingen mobilvariant av menyn alls
-          (bara "hidden @3xl:flex" ovan), så sidorna gick inte att nå på en
-          smal skärm. Syns bara under brytpunkten, fäller ut en enkel
-          lista med sidorna. Container-query (@3xl, se tailwind.config.ts)
-          istället för md: — menyn ska reagera på RUTANS egen bredd, inte
-          hela fönstrets, annars blir den felaktigt "desktop" i t.ex. den
-          smalare webbläsarrutan i /redigera trots gott om utrymme i
-          fönstret. */}
+  // Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
+  // footerns gräns nedan) så en nytillagd sida inte "försvinner" ur
+  // menyn bara därför att sajten redan hade fem sidor sedan onboardingen.
+  const navLinksEl = pages.slice(0, 8).map((p) =>
+    onNavigate ? (
       <button
+        key={p.path}
         type="button"
-        onClick={() => setMenuOpen((v) => !v)}
-        aria-label={menuOpen ? "Stäng meny" : "Öppna meny"}
-        aria-expanded={menuOpen}
-        className="@3xl:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0"
+        onClick={() => onNavigate(p.path)}
+        style={{ color: linkColor(p.path === activePath) }}
       >
-        <span
-          className="block w-[18px] h-[2px] rounded-full transition-transform"
-          style={{ background: hamburgerColor, transform: menuOpen ? "translateY(3.5px) rotate(45deg)" : undefined }}
-        />
-        <span
-          className="block w-[18px] h-[2px] rounded-full transition-transform"
-          style={{ background: hamburgerColor, transform: menuOpen ? "translateY(-3.5px) rotate(-45deg)" : undefined }}
-        />
+        {p.label}
       </button>
+    ) : basePath ? (
+      // Vanlig <a> istället för next/link — denna förhandsvisning är
+      // bara en lekstuga-webbläsare, ingen riktig SPA, och ett klick
+      // ska alltid ge en helt färsk sidladdning. next/link kunde i
+      // vissa fall återanvända en cachad klient-navigering även med
+      // staleTimes satt till 0 (känt Next.js-beteende), vilket var
+      // orsaken till att en del undersidors bilder bara syntes efter
+      // en manuell omladdning.
+      <a key={p.path} href={homeHref(p.path)} style={{ color: linkColor(p.path === activePath) }}>
+        {p.label}
+      </a>
+    ) : (
+      <span key={p.path} style={{ color: linkColor(p.path === activePath) }}>
+        {p.label}
+      </span>
+    )
+  );
 
-      {menuOpen && (
-        <div
-          className="@3xl:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
-          style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
-        >
-          {pages.slice(0, 8).map((p) =>
-            onNavigate ? (
-              <button
-                key={p.path}
-                type="button"
-                onClick={() => {
-                  onNavigate(p.path);
-                  setMenuOpen(false);
-                }}
-                className="px-8 py-3 text-[14px] font-semibold text-left"
-                style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-              >
-                {p.label}
-              </button>
-            ) : basePath ? (
-              <a
-                key={p.path}
-                href={homeHref(p.path)}
-                onClick={() => setMenuOpen(false)}
-                className="px-8 py-3 text-[14px] font-semibold"
-                style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-              >
-                {p.label}
-              </a>
-            ) : (
-              <span
-                key={p.path}
-                className="px-8 py-3 text-[14px] font-semibold"
-                style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-              >
-                {p.label}
-              </span>
-            )
-          )}
-        </div>
+  // Hamburgarmeny — syns bara under brytpunkten, fäller ut en enkel lista
+  // med sidorna. Container-query (@3xl, se tailwind.config.ts) istället
+  // för md: — menyn ska reagera på RUTANS egen bredd, inte hela fönstrets,
+  // annars blir den felaktigt "desktop" i t.ex. den smalare
+  // webbläsarrutan i /redigera trots gott om utrymme i fönstret.
+  const hamburgerBtn = (
+    <button
+      type="button"
+      onClick={() => setMenuOpen((v) => !v)}
+      aria-label={menuOpen ? "Stäng meny" : "Öppna meny"}
+      aria-expanded={menuOpen}
+      className="@3xl:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0"
+    >
+      <span
+        className="block w-[18px] h-[2px] rounded-full transition-transform"
+        style={{ background: hamburgerColor, transform: menuOpen ? "translateY(3.5px) rotate(45deg)" : undefined }}
+      />
+      <span
+        className="block w-[18px] h-[2px] rounded-full transition-transform"
+        style={{ background: hamburgerColor, transform: menuOpen ? "translateY(-3.5px) rotate(-45deg)" : undefined }}
+      />
+    </button>
+  );
+
+  // Utfällbar mobilpanel — positioneras "absolute" mot HELA headern (den
+  // yttersta div:en i varje layout-gren nedan är alltid en positionerad
+  // förälder, se outerBase), oavsett om headern i övrigt är en eller två
+  // rader.
+  const mobileMenuEl = menuOpen && (
+    <div
+      className="@3xl:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
+      style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
+    >
+      {pages.slice(0, 8).map((p) =>
+        onNavigate ? (
+          <button
+            key={p.path}
+            type="button"
+            onClick={() => {
+              onNavigate(p.path);
+              setMenuOpen(false);
+            }}
+            className="px-8 py-3 text-[14px] font-semibold text-left"
+            style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+          >
+            {p.label}
+          </button>
+        ) : basePath ? (
+          <a
+            key={p.path}
+            href={homeHref(p.path)}
+            onClick={() => setMenuOpen(false)}
+            className="px-8 py-3 text-[14px] font-semibold"
+            style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+          >
+            {p.label}
+          </a>
+        ) : (
+          <span
+            key={p.path}
+            className="px-8 py-3 text-[14px] font-semibold"
+            style={{ color: p.path === activePath ? palette.text : palette.textDim }}
+          >
+            {p.label}
+          </span>
+        )
       )}
+    </div>
+  );
+
+  // OBS: "relative"/"absolute" väljs som ETT ENDA uttryck, aldrig båda
+  // klasserna samtidigt — Tailwinds genererade CSS-ordning låter annars
+  // "relative" vinna över "absolute" oavsett klassordning i strängen,
+  // vilket en gång redan orsakade en osynlig hero-bild (se ImageOrArt).
+  const outerBase = overlay ? "absolute top-0 left-0 right-0 z-10" : "relative";
+  const outerStyle = overlay
+    ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
+    : { borderBottom: `1px solid ${palette.cardBorder}` };
+
+  if (layout === "centered-stacked") {
+    // Loggan centrerad på en egen rad, menyn centrerad på raden under —
+    // grid med symmetriska yttre kolumner (1fr/auto/1fr) håller loggan
+    // visuellt centrerad oavsett om hamburgarknappen syns eller ej.
+    return (
+      <div className={`${outerBase} px-8 @3xl:px-12 py-5`} style={outerStyle}>
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center">
+          <div />
+          <div className="justify-self-center">{logoEl}</div>
+          <div className="justify-self-end">{hamburgerBtn}</div>
+        </div>
+        <nav className="hidden @3xl:flex items-center justify-center gap-7 text-[13px] font-semibold mt-3">
+          {navLinksEl}
+        </nav>
+        {mobileMenuEl}
+      </div>
+    );
+  }
+
+  if (layout === "split") {
+    // Logga vänster, menyn centrerad i mitten (inte högerjusterad som i
+    // "left") — samma symmetriska 1fr/auto/1fr-grid som ovan, fast på en
+    // enda rad.
+    return (
+      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5">{logoEl}</div>
+        <nav className="hidden @3xl:flex items-center gap-7 text-[13px] font-semibold justify-self-center">
+          {navLinksEl}
+        </nav>
+        <div className="flex justify-end">{hamburgerBtn}</div>
+        {mobileMenuEl}
+      </div>
+    );
+  }
+
+  // "left" (standard) — logga vänster, meny höger, som innan den här
+  // stilaxeln fanns.
+  return (
+    <div className={`${outerBase} flex items-center justify-between px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className="flex items-center gap-2.5">{logoEl}</div>
+      <nav className="hidden @3xl:flex items-center gap-7 text-[13px] font-semibold">{navLinksEl}</nav>
+      {hamburgerBtn}
+      {mobileMenuEl}
     </div>
   );
 }
@@ -1518,6 +1578,84 @@ function SectionBlockInner({
                 </CtaPill>
               </FieldBadge>
             )}
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "fade-bottom") {
+        // Bilden tonar mjukt ut i sidans egen bakgrundsfärg istället för att
+        // sluta med en hård kant (som "centered" nedan) eller ligga bakom en
+        // mörk gradient (som "overlay-bottom" ovan) — texten ligger sedan på
+        // vanlig bakgrund under, ingen egen kortruta. Ett lugnare, mer
+        // organiskt alternativ som också gör att besökarens blick leds
+        // naturligt vidare ner på sidan istället för att stanna i en ruta.
+        return (
+          <div>
+            <div className={`relative ${heroEmphasis ? "h-[420px] @3xl:h-[560px]" : "h-[300px] @3xl:h-[400px]"}`}>
+              <ImageOrArt
+                imageUrl={section.imageUrl}
+                art={art}
+                fill
+                dark={mode === "dark"}
+                selectable={editable}
+                selected={!!heroSelection && selectedImageKey === heroSelection.key}
+                onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+              />
+              {/* pointer-events-none: rent dekorativt uttoningslager, se
+                  motsvarande kommentar vid overlay-bottom ovan. */}
+              <div
+                className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none"
+                style={{ background: `linear-gradient(0deg, ${palette.bg} 0%, transparent 100%)` }}
+              />
+            </div>
+            <div
+              className={`px-8 @3xl:px-14 max-w-[620px] relative ${
+                heroEmphasis ? "-mt-10 @3xl:-mt-14 pb-14" : "-mt-8 @3xl:-mt-10 pb-10"
+              }`}
+            >
+              {section.eyebrow && (
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[12px] tracking-[0.12em] font-semibold mb-3"
+                  style={{ color: accent }}
+                  selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                  onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.eyebrow.toUpperCase()}
+                </Field>
+              )}
+              <Field
+                editable={editable}
+                as="h1"
+                className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[36px] @3xl:text-[46px]" : "text-[28px] @3xl:text-[34px]"}`}
+                selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.headline}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className={`leading-relaxed mb-6 ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              {section.ctaLabel && (
+                <FieldBadge
+                  editable={editable}
+                  selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                  onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                >
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                    {section.ctaLabel}
+                  </CtaPill>
+                </FieldBadge>
+              )}
             </div>
           </div>
         );
