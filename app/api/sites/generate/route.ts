@@ -73,9 +73,9 @@ const LAYOUT_TENDENCY_POOL = [
 // varje pool slumpas fram PER GENERERING och vävs in som en knuff i
 // prompten nedan — fortfarande "luta åt", aldrig en regel som trumfar vad
 // kunden faktiskt skrivit.
-const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered"];
+const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered", "bento"];
 const TESTIMONIALS_LAYOUT_POOL = ["single-quote", "carousel-row", "side-by-side", "full-bleed"];
-const CTA_LAYOUT_POOL = ["centered", "split"];
+const CTA_LAYOUT_POOL = ["centered", "split", "image-bleed"];
 const CONTACT_LAYOUT_POOL = ["centered", "split-info"];
 const GALLERY_LAYOUT_POOL = ["grid", "carousel"];
 const ABOUT_LAYOUT_POOL = ["text-left", "centered"];
@@ -233,6 +233,8 @@ VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (sidans bildplatser 
 VIKTIGT — förstasidans extra bildsektioner, EXAKT den stil som Restaurangen/Snickeriet i /exempel har ("snygg tonat längst upp, några ingångar, en bild som täcker hela bredden med text ovanpå, snyggt cleant"): (1) lägg till en "grid"-sektion med layout "cards" direkt under hero — några kompakta ingångar/kort (t.ex. tjänster, kategorier eller avdelningar) med en liten bild var, INTE stora staplade bild+text-rader; (2) lägg om möjligt ÄVEN till en "testimonials"-sektion någonstans på förstasidan — den renderas med en EGEN stor bild som täcker hela sidans bredd med ett citat centrerat ovanpå, vilket är det dramatiska "stora bild"-momentet sajten annars saknar. Undvik "gallery" på FÖRSTASIDAN — dess små, kvadratiska rutnätsbilder (tänkt för en egen portfolio-/bildsida, t.ex. en sida som heter "Galleri" eller "Referensprojekt") ger ett tätt, katalogmässigt intryck som inte passar som själva entrén till sajten. "gallery" är bra på en sida vars enda syfte är att visa upp många bilder i rad — aldrig som bisak på förstasidan.
 
 VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. ${heroLayoutInstruction}
+
+VIKTIGT — fyll ÄVEN i headlineEmphasis och (om det finns verifierbara fakta) stats på startsidans hero-sektion, OAVSETT vilken layout du själv väljer för den — dessa fält används bara om kunden senare väljer stilvarianten "Redaktionell och bildrik" på /forslag, men ska finnas redo även då: headlineEmphasis är en kort, fristående fortsättning på rubriken (högst 4-5 ord, t.ex. rubrik "Skräddarsydda kök" + headlineEmphasis "byggda för att leva i"). stats är 2-3 korta, SANNA nyckeltal — ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal anställda/orter, certifiering) uttryckt med ord ("Familjeägt sedan 2014"), ALDRIG påhittade kund-/omdömessiffror ("50 000+ nöjda kunder") — finns inga sådana fakta i briefen, utelämna stats helt.
 
 VIKTIGT — variation mellan olika kunder, i den här prioritetsordningen: (1) kundens egen beskrivning och eventuella referenslänkar väger TYNGST — strukturen ovan och bransch-/tonval nedan ska i första hand komma från vad KUNDEN faktiskt visat och skrivit, inte hittas på; (2) saknas tydliga signaler där, luta generellt åt en ${suggestedTendency} för den här sajten. Två sajter i samma bransch och ton ska ändå inte kunna förväxlas — variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder.
 

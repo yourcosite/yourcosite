@@ -28,6 +28,16 @@ export function assignUploadedImages(
       for (const section of page.sections) {
         if (section.type === "hero") {
           section.imageUrl = next();
+          // collageImageUrls fylls ALLTID (inte bara när AI:n själv satte
+          // layout "collage") — precis som imageUrl ovan. Anledningen:
+          // startsidans hero-layout bestäms i praktiken av kundens VAL av
+          // stilvariant på /forslag (se heroLayoutOverride/theme.heroLayout
+          // i SitePreview.tsx), inte av AI:ns eget layout-värde i det här
+          // steget — samma innehåll används för alla sju förhandsvisningar.
+          // Väljer kunden INTE "redaktionell" (den enda varianten med
+          // layout "collage") används fälten aldrig, men kostar inget att
+          // ha dem redo.
+          section.collageImageUrls = [next(), next()];
         } else if (section.type === "grid" || section.type === "gallery") {
           section.items = section.items.map((item) => ({ ...item, imageUrl: next() }));
         } else if (section.type === "testimonials" && section.layout === "full-bleed") {
@@ -36,6 +46,9 @@ export function assignUploadedImages(
           // en konstbakgrund, så den behöver sin egen bild precis som en
           // hero gör. Utan uppladdade foton rör vi ingenting — SitePreview
           // faller då tillbaka på gradient-platshållaren, som vanligt.
+          section.imageUrl = next();
+        } else if (section.type === "cta" && section.layout === "image-bleed") {
+          // Samma princip igen — se contentModel.ts CtaSection.imageUrl.
           section.imageUrl = next();
         }
       }

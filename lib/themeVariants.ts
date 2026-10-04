@@ -95,4 +95,14 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     headerLayout: "split",
     heroLayout: "overlay-bottom",
   },
+  {
+    id: "redaktionell",
+    label: "Redaktionell och bildrik",
+    desc: "Krämig bakgrund, en bildkollage-hero och en kursiv rubrikrad — som ett modetidskrift.",
+    font: "serif",
+    backgroundMode: "warm",
+    buttonStyle: "pill",
+    headerLayout: "left",
+    heroLayout: "collage",
+  },
 ];

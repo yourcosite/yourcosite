@@ -1499,6 +1499,119 @@ function SectionBlockInner({
     case "hero": {
       const layout = section.layout || "centered";
 
+      if (layout === "collage") {
+        // Kundens referenssajter (Lumora/Atelier/Norden/Lume) delade ett
+        // tydligt mönster som inte fanns i någon av våra tidigare
+        // hero-layouter: flera FOTON i en överlappande komposition
+        // (istället för en enda bild), en rubrik i blandad stil (rak rad +
+        // en kursiv fortsättningsrad) och en kort nyckeltalsrad under
+        // knappen. Egna fält (headlineEmphasis/stats/collageImageUrls, se
+        // contentModel.ts) håller det isolerat till den här layouten —
+        // påverkar inget av de befintliga hero-lägena ovan/nedan.
+        const [collageA, collageB] = section.collageImageUrls || [];
+        return (
+          <div className="grid @3xl:grid-cols-2 gap-10 @3xl:gap-16 items-center px-8 @3xl:px-14 py-14 @3xl:py-20">
+            <div className={`relative ${heroEmphasis ? "h-[400px] @3xl:h-[520px]" : "h-[320px] @3xl:h-[420px]"}`}>
+              {/* Varje ruta i kollaget är EN EGEN absolut-positionerad och
+                  -storlekssatt wrapper, med ImageOrArt i "fill"-läge
+                  INUTI den — ImageOrArt sätter alltid sin egen "relative"
+                  som grundklass, och den vinner över en "absolute" som
+                  bara skickas in via className (se kommentaren vid
+                  ImageOrArt-definitionen ovan) oavsett klassordning, så
+                  positioneringen måste läggas på en egen wrapper istället. */}
+              <div className="absolute left-0 top-0 w-[44%] h-[52%]">
+                <ImageOrArt imageUrl={collageA} art={art} fill className="rounded-2xl shadow-[0_18px_36px_rgba(0,0,0,0.16)]" />
+              </div>
+              <div className="absolute right-0 top-[6%] w-[60%] h-[80%] z-10">
+                <ImageOrArt
+                  imageUrl={section.imageUrl}
+                  art={art}
+                  fill
+                  className="rounded-2xl shadow-[0_26px_52px_rgba(0,0,0,0.22)]"
+                  selectable={editable}
+                  selected={!!heroSelection && selectedImageKey === heroSelection.key}
+                  onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+                />
+              </div>
+              <div className="absolute left-[8%] bottom-0 w-[36%] h-[36%] z-20 border-4 border-white rounded-xl shadow-[0_14px_28px_rgba(0,0,0,0.18)] overflow-hidden">
+                <ImageOrArt imageUrl={collageB} art={art} fill selectable={false} />
+              </div>
+            </div>
+            <div>
+              {section.eyebrow && (
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="w-8 h-px" style={{ background: accent }} />
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[11.5px] tracking-[0.14em] font-semibold"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                    onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                  >
+                    {section.eyebrow.toUpperCase()}
+                  </Field>
+                </div>
+              )}
+              <Field
+                editable={editable}
+                as="h1"
+                className={`font-serif leading-[1.08] mb-5 ${heroEmphasis ? "text-[40px] @3xl:text-[54px]" : "text-[32px] @3xl:text-[42px]"}`}
+                selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.headline}
+                {section.headlineEmphasis && (
+                  <>
+                    <br />
+                    <Field
+                      editable={editable}
+                      as="span"
+                      className="italic"
+                      selected={selectedFieldKey === fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden")?.key}
+                      onSelect={() => { const s = fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden"); s && onSelectField?.(s); }}
+                    >
+                      {section.headlineEmphasis}
+                    </Field>
+                  </>
+                )}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className={`leading-relaxed mb-7 max-w-[460px] ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              {section.ctaLabel && (
+                <FieldBadge
+                  editable={editable}
+                  selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                  onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                >
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                    {section.ctaLabel}
+                  </CtaPill>
+                </FieldBadge>
+              )}
+              {section.stats && section.stats.length > 0 && (
+                <div className="flex flex-wrap items-center gap-5 @3xl:gap-7 mt-8 pt-6" style={{ borderTop: `1px solid ${palette.cardBorder}` }}>
+                  {section.stats.slice(0, 3).map((stat, i) => (
+                    <div key={i} className={i > 0 ? "pl-5 @3xl:pl-7 border-l" : ""} style={{ borderColor: palette.cardBorder }}>
+                      <div className="text-[17px] font-semibold font-serif">{stat.value}</div>
+                      <div className="text-[12px]" style={{ color: palette.textDim }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "split-left" || layout === "split-right") {
         const imageFirst = layout === "split-left";
         const imageCol = (
@@ -2019,6 +2132,75 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "bento") {
+        // Asymmetriskt rutnät (olika stora rutor) istället för jämna
+        // kolumner — mönstret från Lumoras mörka funktionssektion. FÖRSTA
+        // objektet i items får dubbel bredd/höjd (en "hero-ruta"), resten
+        // är vanliga kvadratiska rutor — bilden fyller HELA rutan (inte
+        // bara ett fält ovanför texten) med text overlagd nertill, över en
+        // mörk gradient, så rutorna känns som fotografiska "plattor".
+        return (
+          <div className="px-10 py-16 max-w-[1040px] mx-auto" style={{ background: sectionBg }}>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-8 text-center"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+            <div className="grid @3xl:grid-cols-3 gap-4 @3xl:auto-rows-[180px]">
+              {section.items.map((item, i) => {
+                const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+                const itemSel = gridItemSelection(i, item.title);
+                const big = i === 0;
+                return (
+                  <div
+                    key={i}
+                    className={`relative rounded-2xl overflow-hidden h-[220px] @3xl:h-auto ${big ? "@3xl:col-span-2 @3xl:row-span-2" : ""}`}
+                  >
+                    <ImageOrArt
+                      imageUrl={item.imageUrl}
+                      art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
+                      fill
+                      dark
+                      selectable={editable}
+                      selected={!!itemSel && selectedImageKey === itemSel.key}
+                      onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                    />
+                    <div
+                      className="absolute inset-0 pointer-events-none"
+                      style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.05) 55%)" }}
+                    />
+                    <div className="absolute bottom-0 left-0 right-0 p-4 @3xl:p-5 text-white">
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className={big ? "font-serif text-[20px] mb-1.5" : "font-serif text-[15.5px] mb-1"}
+                        selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                        onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                      >
+                        {item.title}
+                      </Field>
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className={big ? "text-[13.5px] leading-relaxed opacity-85" : "text-[12px] leading-relaxed opacity-80"}
+                        selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                        onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                      >
+                        {item.body}
+                      </Field>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
       // cards (default)
       return (
         <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
@@ -2303,6 +2485,53 @@ function SectionBlockInner({
                 >
                   {section.ctaLabel}
                 </CtaLink>
+              </FieldBadge>
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "image-bleed") {
+        // Samma teknik som testimonials "full-bleed" (en RIKTIG bild, satt
+        // i kod — se lib/assignUploadedImages.ts — med en mörk gradient),
+        // men VÄNSTERSTÄLLD rubrik/text istället för ett centrerat citat —
+        // det dramatiska, redaktionella avbrottet från kundens
+        // referenssajter ("Where Creativity Meets Clarity" / "Create.
+        // Customize. Grow.").
+        return (
+          <div className="relative px-8 @3xl:px-16 py-20 @3xl:py-28 text-white overflow-hidden" style={{ minHeight: 380 }}>
+            <ImageOrArt imageUrl={section.imageUrl} art={darkArt} fill dark />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(90deg, rgba(0,0,0,0.70) 0%, rgba(0,0,0,0.30) 60%, rgba(0,0,0,0.15) 100%)" }}
+            />
+            <div className="relative max-w-[480px]">
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[30px] @3xl:text-[36px] leading-[1.12] mb-4"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed mb-7 opacity-85"
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+              >
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
+                  {section.ctaLabel}
+                </CtaPill>
               </FieldBadge>
             </div>
           </div>

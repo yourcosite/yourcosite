@@ -13,12 +13,20 @@ export const SECTION_SCHEMA = {
         type: { const: "hero" },
         layout: {
           type: "string",
-          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom"],
+          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage"],
           description:
-            "\"fade-bottom\" (ny): bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\".",
+            "\"fade-bottom\": bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\". \"collage\" (ny): ett redaktionellt, bildrikt intryck — flera bilder i en överlappande komposition bredvid texten, med plats för headlineEmphasis (en kursiv fortsättning på rubriken) och stats (en kort nyckeltalsrad under knappen). Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan.",
         },
         eyebrow: { type: "string" },
         headline: { type: "string" },
+        // Bara meningsfullt tillsammans med layout "collage" — se
+        // beskrivningen i lib/contentModel.ts. Utelämna för alla andra
+        // layouter.
+        headlineEmphasis: {
+          type: "string",
+          description:
+            "Bara för layout \"collage\": en kort, fristående fortsättning på rubriken som visas KURSIVT på en egen rad (t.ex. rubrik \"Turn Your Vision\", headlineEmphasis \"Into Something Real\"). Utelämna för andra layouter.",
+        },
         body: { type: "string" },
         ctaLabel: { type: "string" },
         ctaLink: {
@@ -27,6 +35,16 @@ export const SECTION_SCHEMA = {
             "Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/kontakt\"), eller en fullständig extern URL (https://...). Utelämna helt om knappen inte ska vara klickbar.",
         },
         imageUrl: { type: "string" },
+        stats: {
+          type: "array",
+          description:
+            "Bara för layout \"collage\": en rad med 2-3 korta nyckeltal under CTA-knappen (t.ex. {value: \"Sedan 2014\", label: \"i branschen\"}). KRITISKT — HITTA ALDRIG PÅ siffror om antal kunder, omdömen/betyg eller länder/orter. Använd BARA fakta kunden faktiskt skrivit i sin brief (grundat år, antal anställda, certifiering, antal orter om kunden sagt det) uttryckt med ORD, inte en påhittad siffra (\"Familjeägt sedan 2014\" är okej, \"50 000+ nöjda kunder\" är INTE okej om kunden inte sagt att de har 50 000 kunder). Finns inga sådana verifierbara fakta i briefen: utelämna fältet helt.",
+          items: {
+            type: "object",
+            properties: { value: { type: "string" }, label: { type: "string" } },
+            required: ["value", "label"],
+          },
+        },
       },
       required: ["id", "type", "layout", "headline", "body"],
     },
@@ -51,7 +69,12 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "grid" },
-        layout: { type: "string", enum: ["cards", "alternating-rows", "list", "numbered"] },
+        layout: {
+          type: "string",
+          enum: ["cards", "alternating-rows", "list", "numbered", "bento"],
+          description:
+            "\"bento\" (ny): ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\").",
+        },
         heading: { type: "string" },
         items: {
           type: "array",
@@ -93,7 +116,12 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "cta" },
-        layout: { type: "string", enum: ["centered", "split"] },
+        layout: {
+          type: "string",
+          enum: ["centered", "split", "image-bleed"],
+          description:
+            "\"image-bleed\" (ny): en riktig bild täcker hela sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD ovanpå — ett dramatiskt, redaktionellt avbrott mellan andra sektioner. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\").",
+        },
         heading: { type: "string" },
         body: { type: "string" },
         ctaLabel: { type: "string" },

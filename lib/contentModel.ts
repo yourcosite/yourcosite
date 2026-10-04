@@ -50,11 +50,11 @@ export interface SiteTheme {
   heroLayout?: HeroLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage";
 export type AboutLayout = "text-left" | "centered";
-export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered";
+export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed";
-export type CtaLayout = "centered" | "split";
+export type CtaLayout = "centered" | "split" | "image-bleed";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
 export type MapLayout = "inline" | "full-bleed";
@@ -77,6 +77,24 @@ export interface HeroSection {
   // Satt i kod (aldrig av AI:n) utifrån kundens egna uppladdade foton,
   // om några finns — se lib/assignUploadedImages.ts.
   imageUrl?: string;
+  // Bara använd av layout "collage" — en kort, KURSIV fortsättning på
+  // rubriken, på egen rad (t.ex. rubrik "Turn Your Vision" + emphasis
+  // "Into Something Real") — den redaktionella "blandad stil"-känslan
+  // kundens referenssajter (Lumora/Atelier/Norden/Lume) alla hade.
+  // Valfri — saknas den visas bara rubriken, som vanligt.
+  headlineEmphasis?: string;
+  // Bara använd av layout "collage" — EXTRA bilder (utöver imageUrl) som
+  // läggs i en överlappande bildkollage-komposition, satt i kod precis
+  // som imageUrl — se lib/assignUploadedImages.ts. Högst 2 extra bilder
+  // används (3 totalt med imageUrl).
+  collageImageUrls?: string[];
+  // Bara använd av layout "collage" — en kort rad med 2-3 nyckeltal under
+  // CTA-knappen (t.ex. "15+ år i branschen"). VIKTIGT: AI:n får ALDRIG
+  // hitta på siffror om kunder/omdömen/länder — bara sådant kunden
+  // faktiskt skrivit i sin brief (grundat år, antal orter, certifiering
+  // etc). Saknas tydliga sådana fakta ska fältet utelämnas helt, se
+  // schema-beskrivningen i lib/siteContentSchema.ts.
+  stats?: { value: string; label: string }[];
 }
 
 export interface AboutSection {
@@ -131,6 +149,12 @@ export interface CtaSection {
   ctaLabel: string;
   // Se HeroSection.ctaLink ovan — samma princip.
   ctaLink?: string;
+  // Bara använd av layout "image-bleed" — en riktig bild som täcker hela
+  // sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD
+  // ovanpå (till skillnad från testimonials "full-bleed", som är ett
+  // centrerat citat). Satt i kod (aldrig av AI:n), som
+  // TestimonialsSection.imageUrl — se lib/assignUploadedImages.ts.
+  imageUrl?: string;
 }
 
 export interface ContactSection {
