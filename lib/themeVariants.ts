@@ -105,4 +105,14 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     headerLayout: "left",
     heroLayout: "collage",
   },
+  {
+    id: "norden",
+    label: "Ren och strukturerad",
+    desc: "Vit bakgrund, en delad hero med nyckeltal, fyrkantiga knappar — skarp och ordnad.",
+    font: "sans",
+    backgroundMode: "light",
+    buttonStyle: "square",
+    headerLayout: "left",
+    heroLayout: "split-right",
+  },
 ];

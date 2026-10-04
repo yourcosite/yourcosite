@@ -52,8 +52,8 @@ export interface SiteTheme {
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage";
 export type AboutLayout = "text-left" | "centered";
-export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento";
-export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed";
+export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row";
+export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
 export type CtaLayout = "centered" | "split" | "image-bleed";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";

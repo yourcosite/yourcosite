@@ -71,9 +71,9 @@ export const SECTION_SCHEMA = {
         type: { const: "grid" },
         layout: {
           type: "string",
-          enum: ["cards", "alternating-rows", "list", "numbered", "bento"],
+          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row"],
           description:
-            "\"bento\" (ny): ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\").",
+            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll.",
         },
         heading: { type: "string" },
         items: {
@@ -94,9 +94,9 @@ export const SECTION_SCHEMA = {
         type: { const: "testimonials" },
         layout: {
           type: "string",
-          enum: ["single-quote", "carousel-row", "side-by-side", "full-bleed"],
+          enum: ["single-quote", "carousel-row", "side-by-side", "full-bleed", "carousel-arrows"],
           description:
-            "\"single-quote\" (ett citat över en toned konstbakgrund), \"carousel-row\" (flera citat i kort sida vid sida), \"side-by-side\" (rubrik och citat i två kolumner), eller \"full-bleed\" (en RIKTIG bild som täcker hela sektionens bredd, med ett enda citat centrerat ovanpå en mörk tonad gradient — dramatiskt och rent, som en knivskarp paus mellan sidans andra sektioner; bara det första citatet i items visas).",
+            "\"single-quote\" (ett citat över en toned konstbakgrund), \"carousel-row\" (flera citat i kort sida vid sida), \"side-by-side\" (rubrik och citat i två kolumner), \"full-bleed\" (en RIKTIG bild som täcker hela sektionens bredd, med ett enda citat centrerat ovanpå en mörk tonad gradient — dramatiskt och rent, som en knivskarp paus mellan sidans andra sektioner; bara det första citatet i items visas), eller \"carousel-arrows\" (ny: ett citat i taget i ett centrerat kort, med klickbara pil-knappar och prickar under för att bläddra mellan flera citat — kräver minst 2 items för att kännas meningsfull).",
         },
         heading: { type: "string" },
         imageUrl: { type: "string" },

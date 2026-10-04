@@ -73,8 +73,8 @@ const LAYOUT_TENDENCY_POOL = [
 // varje pool slumpas fram PER GENERERING och vävs in som en knuff i
 // prompten nedan — fortfarande "luta åt", aldrig en regel som trumfar vad
 // kunden faktiskt skrivit.
-const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered", "bento"];
-const TESTIMONIALS_LAYOUT_POOL = ["single-quote", "carousel-row", "side-by-side", "full-bleed"];
+const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row"];
+const TESTIMONIALS_LAYOUT_POOL = ["single-quote", "carousel-row", "side-by-side", "full-bleed", "carousel-arrows"];
 const CTA_LAYOUT_POOL = ["centered", "split", "image-bleed"];
 const CONTACT_LAYOUT_POOL = ["centered", "split-info"];
 const GALLERY_LAYOUT_POOL = ["grid", "carousel"];
@@ -234,7 +234,7 @@ VIKTIGT — förstasidans extra bildsektioner, EXAKT den stil som Restaurangen/S
 
 VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. ${heroLayoutInstruction}
 
-VIKTIGT — fyll ÄVEN i headlineEmphasis och (om det finns verifierbara fakta) stats på startsidans hero-sektion, OAVSETT vilken layout du själv väljer för den — dessa fält används bara om kunden senare väljer stilvarianten "Redaktionell och bildrik" på /forslag, men ska finnas redo även då: headlineEmphasis är en kort, fristående fortsättning på rubriken (högst 4-5 ord, t.ex. rubrik "Skräddarsydda kök" + headlineEmphasis "byggda för att leva i"). stats är 2-3 korta, SANNA nyckeltal — ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal anställda/orter, certifiering) uttryckt med ord ("Familjeägt sedan 2014"), ALDRIG påhittade kund-/omdömessiffror ("50 000+ nöjda kunder") — finns inga sådana fakta i briefen, utelämna stats helt.
+VIKTIGT — fyll ÄVEN i headlineEmphasis och (om det finns verifierbara fakta) stats på startsidans hero-sektion, OAVSETT vilken layout du själv väljer för den — dessa fält används bara om kunden senare väljer en stilvariant som visar dem (t.ex. "Redaktionell och bildrik" eller "Ren och strukturerad" på /forslag), men ska finnas redo även då: headlineEmphasis är en kort, fristående fortsättning på rubriken (högst 4-5 ord, t.ex. rubrik "Skräddarsydda kök" + headlineEmphasis "byggda för att leva i"). stats är 2-3 korta, SANNA nyckeltal — ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal anställda/orter, certifiering) uttryckt med ord ("Familjeägt sedan 2014"), ALDRIG påhittade kund-/omdömessiffror ("50 000+ nöjda kunder") — finns inga sådana fakta i briefen, utelämna stats helt.
 
 VIKTIGT — variation mellan olika kunder, i den här prioritetsordningen: (1) kundens egen beskrivning och eventuella referenslänkar väger TYNGST — strukturen ovan och bransch-/tonval nedan ska i första hand komma från vad KUNDEN faktiskt visat och skrivit, inte hittas på; (2) saknas tydliga signaler där, luta generellt åt en ${suggestedTendency} för den här sajten. Två sajter i samma bransch och ton ska ändå inte kunna förväxlas — variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder.
 

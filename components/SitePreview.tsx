@@ -1496,6 +1496,10 @@ function SectionBlockInner({
   // Bara använd av "newsList" nedan — vilken kategori besökaren filtrerat
   // till (null = alla). Samma skäl som ovan till att den ligger ovillkorat.
   const [newsCategoryFilter, setNewsCategoryFilter] = useState<string | null>(null);
+  // Bara använd av testimonials-layouten "carousel-arrows" nedan — vilket
+  // citat som visas just nu. Samma skäl som ovan till att den ligger
+  // ovillkorat (React Hooks måste anropas i samma ordning varje render).
+  const [testimonialIndex, setTestimonialIndex] = useState(0);
 
   switch (section.type) {
     case "hero": {
@@ -1675,6 +1679,23 @@ function SectionBlockInner({
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
+            )}
+            {/* Nyckeltalsraden — ursprungligen bara "collage"-heron ovan,
+                men samma mönster (Norden-referensen) finns även i en
+                vanlig delad hero med bild bredvid, så fältet återanvänds
+                här istället för att hitta på en ny sektionstyp. */}
+            {section.stats && section.stats.length > 0 && (
+              <div
+                className={`flex flex-wrap items-center gap-5 @3xl:gap-7 mt-8 pt-6 ${imageFirst ? "" : "@3xl:justify-end"}`}
+                style={{ borderTop: `1px solid ${palette.cardBorder}` }}
+              >
+                {section.stats.slice(0, 3).map((stat, i) => (
+                  <div key={i} className={i > 0 ? "pl-5 @3xl:pl-7 border-l" : ""} style={{ borderColor: palette.cardBorder }}>
+                    <div className="text-[17px] font-semibold font-serif">{stat.value}</div>
+                    <div className="text-[12px]" style={{ color: palette.textDim }}>{stat.label}</div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         );
@@ -2137,6 +2158,58 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "icon-row") {
+        // En smal, kompakt rad med korta punkter (ingen bild) — en liten
+        // dekorativ cirkel ovanför varje istället för siffror (se
+        // "numbered" ovan) eller foton. Tänkt som en kort "i korthet"-rad
+        // direkt under en hero, inte som sidans huvudinnehåll — se
+        // Norden-referensen som inspirerade layouten.
+        return (
+          <div className="px-10 py-12 max-w-[1040px] mx-auto" style={{ background: sectionBg }}>
+            {section.heading && (
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[22px] mb-7 text-center"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+            )}
+            <div className="grid @3xl:grid-cols-4 gap-7 @3xl:gap-6">
+              {section.items.slice(0, 4).map((item, i) => (
+                <div key={i} className="text-center @3xl:text-left">
+                  <div
+                    className="w-8 h-8 rounded-full mb-3 mx-auto @3xl:mx-0"
+                    style={{ background: `${[accent, secondary[0], secondary[1]][i % 3] || accent}22` }}
+                  />
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="font-semibold text-[14.5px] mb-1.5"
+                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.title}
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[13px] leading-relaxed"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.body}
+                  </Field>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "bento") {
         // Asymmetriskt rutnät (olika stora rutor) istället för jämna
         // kolumner — mönstret från Lumoras mörka funktionssektion. FÖRSTA
@@ -2316,6 +2389,90 @@ function SectionBlockInner({
                 </div>
               ))}
             </div>
+          </div>
+        );
+      }
+
+      if (layout === "carousel-arrows") {
+        // Ett citat i taget, med pil-knappar och prickar — Norden-
+        // referensens testimonial-sektion. index clampas mot items.length
+        // ifall en redigering just tog bort ett citat medan en annan
+        // sektion var vald sist.
+        const items = section.items;
+        const idx = items.length > 0 ? ((testimonialIndex % items.length) + items.length) % items.length : 0;
+        const current = items[idx];
+        return (
+          <div className="px-10 py-16 text-center" style={{ background: sectionBg }}>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-10"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+            {current && (
+              <div className="max-w-[560px] mx-auto">
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="font-serif italic text-[21px] leading-relaxed mb-4"
+                  selected={selectedFieldKey === fieldSel("quote", current.quote, "citatet", idx)?.key}
+                  onSelect={() => { const s = fieldSel("quote", current.quote, "citatet", idx); s && onSelectField?.(s); }}
+                >
+                  &ldquo;{current.quote}&rdquo;
+                </Field>
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[12.5px] font-semibold"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("author", current.author, "namnet", idx)?.key}
+                  onSelect={() => { const s = fieldSel("author", current.author, "namnet", idx); s && onSelectField?.(s); }}
+                >
+                  {current.author}
+                </Field>
+              </div>
+            )}
+            {items.length > 1 && (
+              <div className="flex items-center justify-center gap-5 mt-9">
+                <button
+                  type="button"
+                  aria-label="Föregående citat"
+                  onClick={() => setTestimonialIndex((i) => (i - 1 + items.length) % items.length)}
+                  className="w-9 h-9 rounded-full border flex items-center justify-center flex-shrink-0"
+                  style={{ borderColor: palette.cardBorder, color: palette.textDim }}
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                </button>
+                <div className="flex items-center gap-2">
+                  {items.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      aria-label={`Visa citat ${i + 1}`}
+                      onClick={() => setTestimonialIndex(i)}
+                      className="w-2 h-2 rounded-full"
+                      style={{ background: i === idx ? accent : palette.cardBorder }}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Nästa citat"
+                  onClick={() => setTestimonialIndex((i) => (i + 1) % items.length)}
+                  className="w-9 h-9 rounded-full border flex items-center justify-center flex-shrink-0"
+                  style={{ borderColor: palette.cardBorder, color: palette.textDim }}
+                >
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
+            )}
           </div>
         );
       }
