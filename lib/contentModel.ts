@@ -41,6 +41,13 @@ export interface SiteTheme {
   // Saknas den (sajter skapade innan det här fältet fanns) faller
   // SitePreview.tsx tillbaka på "left" — se headerLayout där.
   headerLayout?: HeaderLayout;
+  // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
+  // (lib/themeVariants.ts), satt i kod i /api/sites/choose-look. Gäller
+  // BARA startsidans hero (se SitePreview.tsx) — undersidornas hero-layout
+  // sätts fortfarande fritt av AI:n vid genereringen för variation.
+  // Saknas den faller startsidans hero tillbaka på sitt eget AI-satta
+  // layout-värde, precis som innan den här axeln fanns.
+  heroLayout?: HeroLayout;
 }
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom";

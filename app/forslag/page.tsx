@@ -68,6 +68,7 @@ export default function SuggestionsPage() {
           backgroundMode: variant.backgroundMode,
           buttonStyle: variant.buttonStyle,
           headerLayout: variant.headerLayout,
+          heroLayout: variant.heroLayout,
         }),
       });
       if (!res.ok) throw new Error("Något gick fel.");
@@ -165,6 +166,7 @@ export default function SuggestionsPage() {
                         backgroundModeOverride={v.backgroundMode}
                         buttonStyleOverride={v.buttonStyle}
                         headerLayoutOverride={v.headerLayout}
+                        heroLayoutOverride={v.heroLayout}
                       />
                     </div>
                   </div>

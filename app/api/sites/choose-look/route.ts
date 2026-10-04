@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
   const body = await request.json();
-  const { font, backgroundMode, buttonStyle, headerLayout } = body;
+  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout } = body;
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -37,6 +37,9 @@ export async function POST(request: Request) {
   content.theme.headerLayout = ["left", "centered-stacked", "split"].includes(headerLayout)
     ? headerLayout
     : "left";
+  content.theme.heroLayout = ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom"].includes(heroLayout)
+    ? heroLayout
+    : "centered";
 
   const { error } = await supabase.from("sites").update({ content }).eq("id", site.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

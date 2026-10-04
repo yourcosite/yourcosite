@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, ContactFormSection } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
@@ -46,6 +46,7 @@ export default function SitePreview({
   backgroundModeOverride,
   buttonStyleOverride,
   headerLayoutOverride,
+  heroLayoutOverride,
   activePath,
   basePath,
   onNavigate,
@@ -78,6 +79,11 @@ export default function SitePreview({
   // Samma idé, för headerns uppbyggnad (vänster/centrerad-staplad/delad) —
   // se lib/themeVariants.ts.
   headerLayoutOverride?: HeaderLayout;
+  // Samma idé, men BARA för startsidans hero — se lib/themeVariants.ts och
+  // "effectiveFirstSection" nedan. Undersidornas hero-layout (satt av AI:n
+  // vid genereringen, se SUBPAGE_HERO_LAYOUT_POOL) påverkas aldrig av den
+  // här — bara startsidans allra första sektion.
+  heroLayoutOverride?: HeroLayout;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
   // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
@@ -168,10 +174,29 @@ export default function SitePreview({
   // "wow"-ingång — då låter vi menyn FLYTA transparent ovanpå bilden
   // (istället för en egen solid stapel ovanför) för ett intryck likt stora
   // hotell-/spa-sajter, med headline och CTA liggande direkt i fotot.
-  const firstSection = page.sections[0];
+  // Startsidans hero ska kännas igen som en del av kundens valda "känsla"
+  // (stilvariant) — varm/luftig/djärv har varsin karaktäristiska hero-typ
+  // (se lib/themeVariants.ts). Det gäller BARA startsidans FÖRSTA sektion,
+  // och bara när den faktiskt är en hero — undersidornas egna hero-layout
+  // (AI-satt vid genereringen, för variation mellan undersidor) rör vi
+  // aldrig. Vi klonar bara den ena sektionen (inte hela content) så
+  // resten av sidan/sajten är orörd.
+  const rawFirstSection = page.sections[0];
+  const homeHeroLayout: HeroLayout | undefined =
+    page.path === "/" && rawFirstSection?.type === "hero"
+      ? heroLayoutOverride ?? content.theme.heroLayout
+      : undefined;
+  const firstSection =
+    homeHeroLayout && rawFirstSection?.type === "hero"
+      ? { ...rawFirstSection, layout: homeHeroLayout }
+      : rawFirstSection;
+  const pageSections =
+    homeHeroLayout && rawFirstSection?.type === "hero"
+      ? [firstSection, ...page.sections.slice(1)]
+      : page.sections;
   const overlayHeader =
     page.path === "/" && firstSection?.type === "hero" && (firstSection.layout || "centered") === "overlay-bottom";
-  const restSections = overlayHeader ? page.sections.slice(1) : page.sections;
+  const restSections = overlayHeader ? pageSections.slice(1) : pageSections;
 
   // Sektionen direkt under hero fick annars ALLTID samma mekaniska
   // grå/vit-växling (jämnt/udda sektionsindex) — vilket i praktiken innebar
@@ -880,6 +905,42 @@ function SocialIcons({ socialLinks, palette }: { socialLinks: SocialLink[]; pale
   );
 }
 
+// Hero-bildens "toning" — en lätt, färgad gradient ovanpå fotot som gör att
+// varje stilvariants hero känns som sin EGEN känsla, inte bara samma foto
+// med olika knappar/meny runtom (kundönskemål: "vi varierar bildens
+// redigering med toning"). "light"/luftig får ingen toning alls (ren,
+// luftig känsla, fotot ska stå för sig själv) — "warm" lägger en varm,
+// krämig gradient och "dark" en kall, mörk gradient, båda milda nog att
+// fungera ovanpå EGNA kundfoton (inte bara vår genererade "art"-platshållare).
+// pointer-events-none + absolute inset-0: rent dekorativt, ska aldrig
+// fånga klick som är tänkta för bilden under (se samma princip vid
+// overlay-bottoms mörkläggningslager nedan).
+function HeroTint({ mode }: { mode: BackgroundMode }) {
+  if (mode === "warm") {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(160deg, rgba(201,122,74,0.22) 0%, rgba(74,46,24,0.10) 100%)",
+          mixBlendMode: "multiply",
+        }}
+      />
+    );
+  }
+  if (mode === "dark") {
+    return (
+      <div
+        className="absolute inset-0 pointer-events-none"
+        style={{
+          background: "linear-gradient(160deg, rgba(12,14,20,0.30) 0%, rgba(0,0,0,0.12) 100%)",
+          mixBlendMode: "multiply",
+        }}
+      />
+    );
+  }
+  return null;
+}
+
 // "fill" = true när boxen själv ska vara absolut positionerad och fylla sin
 // förälder (t.ex. startsidans fullbreda "overlay-bottom"-hero), istället för
 // att ha en egen explicit höjd. VIKTIGT: måste vara en egen prop, inte bara
@@ -1441,14 +1502,17 @@ function SectionBlockInner({
       if (layout === "split-left" || layout === "split-right") {
         const imageFirst = layout === "split-left";
         const imageCol = (
-          <ImageOrArt
-            imageUrl={section.imageUrl}
-            art={art}
-            className={heroEmphasis ? "h-[420px] @3xl:h-[600px]" : "h-[320px] @3xl:h-[440px]"}
-            selectable={editable}
-            selected={!!heroSelection && selectedImageKey === heroSelection.key}
-            onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
-          />
+          <div className="relative">
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              className={heroEmphasis ? "h-[420px] @3xl:h-[600px]" : "h-[320px] @3xl:h-[440px]"}
+              selectable={editable}
+              selected={!!heroSelection && selectedImageKey === heroSelection.key}
+              onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+            />
+            <HeroTint mode={mode} />
+          </div>
         );
         const textCol = (
           <div className={`flex flex-col justify-center px-8 @3xl:px-14 ${heroEmphasis ? "py-10 @3xl:py-0" : "py-10"} ${imageFirst ? "@3xl:text-left" : "@3xl:text-right @3xl:items-end"}`}>
@@ -1525,6 +1589,7 @@ function SectionBlockInner({
               selected={!!heroSelection && selectedImageKey === heroSelection.key}
               onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
             />
+            <HeroTint mode={mode} />
             {/* pointer-events-none: rent dekorativt mörkertonings-lager — utan
                 detta låg det OVANPÅ bilden i DOM-ordningen och fångade alla
                 klick själv, så "Klicka för att välja"-rutan ovan aldrig gick
@@ -1602,6 +1667,7 @@ function SectionBlockInner({
                 selected={!!heroSelection && selectedImageKey === heroSelection.key}
                 onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
               />
+              <HeroTint mode={mode} />
               {/* pointer-events-none: rent dekorativt uttoningslager, se
                   motsvarande kommentar vid overlay-bottom ovan. */}
               <div
@@ -1668,15 +1734,18 @@ function SectionBlockInner({
       // färgade yta, och aldrig utanför eller in i bilden ovanför.
       return (
         <div className="relative pb-6">
-          <ImageOrArt
-            imageUrl={section.imageUrl}
-            art={art}
-            className={heroEmphasis ? "h-[420px] @3xl:h-[580px]" : "h-[300px] @3xl:h-[380px]"}
-            dark={mode === "dark"}
-            selectable={editable}
-            selected={!!heroSelection && selectedImageKey === heroSelection.key}
-            onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
-          />
+          <div className="relative">
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              className={heroEmphasis ? "h-[420px] @3xl:h-[580px]" : "h-[300px] @3xl:h-[380px]"}
+              dark={mode === "dark"}
+              selectable={editable}
+              selected={!!heroSelection && selectedImageKey === heroSelection.key}
+              onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+            />
+            <HeroTint mode={mode} />
+          </div>
           <div
             className={`max-w-2xl mx-auto text-center px-8 @3xl:px-12 relative rounded-2xl ${
               heroEmphasis ? "py-12 @3xl:py-16 -mt-16 @3xl:-mt-20" : "py-10 @3xl:py-12 -mt-14 @3xl:-mt-16"

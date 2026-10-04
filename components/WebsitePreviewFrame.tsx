@@ -22,6 +22,19 @@ import { useState } from "react";
 // "min(94vw, 2000px)" istället — den växer med skärmens egen bredd (det
 // kundfrågan efterfrågade) och tar bara en liten marginal, men har ändå ett
 // tak så rutan inte blir orimligt stor på en jätteskärm.
+// Dator-rutan visade sidan i FULL skala inuti sin iframe — med en hero på
+// upp emot 720px högt (se heroEmphasis i SitePreview.tsx) fylldes nästan
+// hela 16:9-rutan av bara hero:n innan man ens skrollat, vilket gav ett
+// tajt, inzoomat intryck av sidan som helhet. DESKTOP_ZOOM skalar ner
+// INNEHÅLLET i iframen (inte själva rutan) så man ser åtminstone dubbelt
+// så mycket utan att skrolla — iframen görs 1/DESKTOP_ZOOM gånger större
+// än rutan och skalas sedan ner med CSS transform, ungefär som
+// webbläsarens egen zoom-ut-funktion. Containerfrågorna i SitePreview.tsx
+// (@container) mäter fortfarande mot iframens verkliga, större bredd, så
+// "dator"-layouten (inte den smala mobillayouten) triggas precis som på
+// den riktiga sajten.
+const DESKTOP_ZOOM = 0.48;
+
 export default function WebsitePreviewFrame({
   siteName,
   domainLabel,
@@ -71,11 +84,30 @@ export default function WebsitePreviewFrame({
             {domainLabel}
           </div>
         </div>
-        <iframe
-          src={contentPath}
-          title={siteName ? `Förhandsvisning av ${siteName}` : "Förhandsvisning"}
-          className="flex-1 w-full border-0 bg-white"
-        />
+        {device === "desktop" ? (
+          // overflow-hidden-rutan är den synliga ytan; iframen är
+          // 1/DESKTOP_ZOOM gånger större och skalas ner till att fylla den,
+          // se kommentaren vid DESKTOP_ZOOM ovan.
+          <div className="flex-1 w-full overflow-hidden relative">
+            <iframe
+              src={contentPath}
+              title={siteName ? `Förhandsvisning av ${siteName}` : "Förhandsvisning"}
+              className="absolute top-0 left-0 border-0 bg-white"
+              style={{
+                width: `${100 / DESKTOP_ZOOM}%`,
+                height: `${100 / DESKTOP_ZOOM}%`,
+                transform: `scale(${DESKTOP_ZOOM})`,
+                transformOrigin: "top left",
+              }}
+            />
+          </div>
+        ) : (
+          <iframe
+            src={contentPath}
+            title={siteName ? `Förhandsvisning av ${siteName}` : "Förhandsvisning"}
+            className="flex-1 w-full border-0 bg-white"
+          />
+        )}
       </div>
     </div>
   );
