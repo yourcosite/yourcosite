@@ -3,13 +3,10 @@
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-const initialToggles = [
-  { id: "changes", label: "Ändringar publicerade", desc: "Mejl varje gång en ändring går live", on: true },
-  { id: "billing", label: "Fakturering", desc: "Kvitton och betalpåminnelser", on: true },
-  { id: "tips", label: "Tips och nyheter", desc: "Då och då, inget skräppost", on: false },
-];
-
-export default function SettingsForm({
+// Kontouppgifterna — namn, kontaktväg, företag/faktureringsadress. Bröts ut
+// ur den gamla SettingsForm.tsx (som bakade ihop allt på en enda sida) när
+// /installningar blev en riktig flik-struktur, se SettingsTabs.tsx.
+export default function AccountTab({
   fullName,
   email,
   phone,
@@ -38,14 +35,9 @@ export default function SettingsForm({
   const [addressPostalCodeValue, setAddressPostalCodeValue] = useState(addressPostalCode);
   const [addressCityValue, setAddressCityValue] = useState(addressCity);
   const [billingEmailValue, setBillingEmailValue] = useState(billingEmail);
-  const [toggles, setToggles] = useState(initialToggles);
-  const [lang, setLang] = useState<"sv" | "en">("sv");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const toggle = (id: string) =>
-    setToggles((ts) => ts.map((t) => (t.id === id ? { ...t, on: !t.on } : t)));
 
   const handleSave = async () => {
     setSaving(true);
@@ -117,7 +109,7 @@ export default function SettingsForm({
         </div>
       </div>
 
-      <div className="bg-surface border border-line rounded-2xl p-6 mb-5">
+      <div className="bg-surface border border-line rounded-2xl p-6 mb-6">
         <div className="font-semibold text-[15px] mb-4">Företag och fakturering</div>
         <div className="mb-4">
           <label className="block text-[13px] font-semibold mb-1.5">Företagsnamn</label>
@@ -174,51 +166,6 @@ export default function SettingsForm({
             className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
           />
         </div>
-      </div>
-
-      <div className="bg-surface border border-line rounded-2xl p-6 mb-5">
-        <div className="font-semibold text-[15px] mb-4">Språk</div>
-        <div className="flex gap-2.5">
-          <button
-            onClick={() => setLang("sv")}
-            className={`px-4.5 py-2 rounded-full text-[13.5px] font-semibold ${
-              lang === "sv" ? "bg-accent text-accent-ink" : "border border-line text-ink-dim"
-            }`}
-          >
-            Svenska
-          </button>
-          <button
-            onClick={() => setLang("en")}
-            className={`px-4.5 py-2 rounded-full text-[13.5px] font-semibold ${
-              lang === "en" ? "bg-accent text-accent-ink" : "border border-line text-ink-dim"
-            }`}
-          >
-            English
-          </button>
-        </div>
-      </div>
-
-      <div className="bg-surface border border-line rounded-2xl p-6 mb-6">
-        <div className="font-semibold text-[15px] mb-4">E-postnotiser</div>
-        {toggles.map((t) => (
-          <div key={t.id} className="flex items-center justify-between py-2.5 border-b border-line last:border-b-0">
-            <div>
-              <div className="text-[13.5px] font-semibold">{t.label}</div>
-              <div className="text-[12px] text-ink-dim mt-0.5">{t.desc}</div>
-            </div>
-            <button
-              onClick={() => toggle(t.id)}
-              aria-label={t.label}
-              className="w-[42px] h-6 rounded-full relative flex-shrink-0"
-              style={{ background: t.on ? "#C6FF5E" : "#D9D6CE" }}
-            >
-              <div
-                className="w-[18px] h-[18px] rounded-full bg-white absolute top-[3px] transition-all"
-                style={{ left: t.on ? "21px" : "3px" }}
-              />
-            </button>
-          </div>
-        ))}
       </div>
 
       {error && <div className="text-[13.5px] text-warm font-medium mb-3">{error}</div>}

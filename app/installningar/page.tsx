@@ -1,5 +1,5 @@
 import AccountHeader from "@/components/AccountHeader";
-import SettingsForm from "./SettingsForm";
+import SettingsTabs from "./SettingsTabs";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function SettingsPage() {
@@ -14,13 +14,18 @@ export default async function SettingsPage() {
   let addressPostalCode = "";
   let addressCity = "";
   let billingEmail = "";
+  let language: "sv" | "en" = "sv";
+  let notifyChangesPublished = true;
+  let notifyBilling = true;
+  let notifyTips = false;
+  let siteCount = 0;
   const email = user?.email ?? "";
 
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select(
-        "full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email"
+        "full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, language, notify_changes_published, notify_billing, notify_tips"
       )
       .eq("id", user.id)
       .single();
@@ -32,6 +37,16 @@ export default async function SettingsPage() {
     addressPostalCode = profile?.address_postal_code ?? "";
     addressCity = profile?.address_city ?? "";
     billingEmail = profile?.billing_email ?? "";
+    language = profile?.language === "en" ? "en" : "sv";
+    notifyChangesPublished = profile?.notify_changes_published ?? true;
+    notifyBilling = profile?.notify_billing ?? true;
+    notifyTips = profile?.notify_tips ?? false;
+
+    const { count } = await supabase
+      .from("sites")
+      .select("id", { count: "exact", head: true })
+      .eq("owner_id", user.id);
+    siteCount = count ?? 0;
   }
 
   return (
@@ -39,14 +54,7 @@ export default async function SettingsPage() {
       <AccountHeader active="/installningar" userName={fullName || email} userEmail={email} />
 
       <div className="flex-1 px-6 md:px-12 py-10 flex gap-10">
-        <div className="w-[170px] flex-shrink-0 hidden md:flex flex-col gap-1">
-          <a className="px-3 py-2 rounded-lg bg-accent-soft text-ink font-semibold text-[13.5px]">Konto</a>
-          <a className="px-3 py-2 rounded-lg text-ink-dim text-[13.5px]">Lösenord</a>
-          <a className="px-3 py-2 rounded-lg text-ink-dim text-[13.5px]">Notiser</a>
-          <a className="px-3 py-2 rounded-lg text-warm text-[13.5px] mt-3.5">Ta bort konto</a>
-        </div>
-
-        <SettingsForm
+        <SettingsTabs
           fullName={fullName}
           email={email}
           phone={phone}
@@ -56,6 +64,11 @@ export default async function SettingsPage() {
           addressPostalCode={addressPostalCode}
           addressCity={addressCity}
           billingEmail={billingEmail}
+          language={language}
+          notifyChangesPublished={notifyChangesPublished}
+          notifyBilling={notifyBilling}
+          notifyTips={notifyTips}
+          siteCount={siteCount}
         />
       </div>
     </div>

@@ -35,6 +35,14 @@ create table if not exists profiles (
   billing_setup_complete boolean not null default false,
   role text not null default 'customer'
     check (role in ('customer', 'support', 'admin', 'superadmin')),
+  -- Gränssnittsspråk + e-postnotisinställningar, se /installningar
+  -- (app/installningar/NotificationsTab.tsx). Bara "sv" används faktiskt
+  -- någonstans ännu (själva produkttexterna är inte översatta till
+  -- engelska) — "en" går att välja och sparas, men ändrar inget synligt än.
+  language text not null default 'sv' check (language in ('sv', 'en')),
+  notify_changes_published boolean not null default true,
+  notify_billing boolean not null default true,
+  notify_tips boolean not null default false,
   created_at timestamptz not null default now()
 );
 
