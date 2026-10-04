@@ -54,12 +54,36 @@ export function assignUploadedImages(
           // Samma princip som hero collageImageUrls — se contentModel.ts
           // AboutSection.collageImageUrls (två foton i olika höjd).
           section.collageImageUrls = [next(), next()];
-        } else if (section.type === "about" && section.layout === "image-full") {
+        } else if (section.type === "about" && (section.layout === "image-full" || section.layout === "image-stats")) {
           // Samma princip som hero imageUrl — se contentModel.ts
           // AboutSection.imageUrl (en bild som täcker hela sektionshöjden).
           section.imageUrl = next();
         }
       }
+    }
+
+    // Startsidans FÖRSTA "about"/"cta"-sektion kan få sin layout TVINGAD
+    // av en stilvariant (SiteTheme.aboutLayout/ctaLayout — se
+    // kommentaren i lib/contentModel.ts och heroImageUrl-principen ovan)
+    // till en bildkrävande layout, OAVSETT vad AI:n själv valde för just
+    // den sektionen vid genereringen. Utan den här "toppningen" skulle en
+    // sådan sektion sakna bild/collageImageUrls om AI:ns egna layout-val
+    // råkade bli t.ex. "text-left"/"centered" — precis samma princip som
+    // hero.collageImageUrls alltid fylls ovan. Bara HEMSIDANS första
+    // sektion av respektive typ påverkas (matchar overridens egen
+    // begränsning), inte alla about/cta-sektioner på hela sajten — det
+    // skulle i onödan ta bilder från grid/galleri-rutor på andra sidor.
+    const home = content.pages.find((p) => p.path === "/");
+    const firstHomeAbout = home?.sections.find((s) => s.type === "about");
+    if (firstHomeAbout && firstHomeAbout.type === "about") {
+      if (!firstHomeAbout.collageImageUrls || firstHomeAbout.collageImageUrls.length < 2) {
+        firstHomeAbout.collageImageUrls = [next(), next()];
+      }
+      if (!firstHomeAbout.imageUrl) firstHomeAbout.imageUrl = next();
+    }
+    const firstHomeCta = home?.sections.find((s) => s.type === "cta");
+    if (firstHomeCta && firstHomeCta.type === "cta" && !firstHomeCta.imageUrl) {
+      firstHomeCta.imageUrl = next();
     }
   }
 

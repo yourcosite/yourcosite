@@ -9,7 +9,7 @@
 // för lika sina syskon för att kännas som egna, meningsfulla val. Varje
 // kvarvarande variant ska ha en tydligt egen känsla (hero-layout,
 // knappform, header-uppbyggnad), inte bara ett annat typsnitt.
-import type { ThemeFont, ButtonStyle, HeaderLayout, HeroLayout } from "./contentModel";
+import type { ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout } from "./contentModel";
 
 export type BackgroundMode = "light" | "warm" | "dark";
 
@@ -32,6 +32,15 @@ export interface ThemeVariant {
   // app/api/sites/generate/route.ts) för att inte göra alla undersidor
   // identiska.
   heroLayout: HeroLayout;
+  // Samma princip, fast för startsidans FÖRSTA "about"/"grid"/
+  // "cta"-sektion (om någon finns) — tillkom efter kundfeedback: "exakt
+  // samma under hero på alla förslag, samma ingångar och samma upplägg".
+  // Precis som heroLayout ovan gäller det BARA startsidan, och bara den
+  // första sektionen av respektive typ — se SiteTheme.aboutLayout m.fl. i
+  // lib/contentModel.ts.
+  aboutLayout: AboutLayout;
+  gridLayout: GridLayout;
+  ctaLayout: CtaLayout;
   recommended?: boolean;
 }
 
@@ -45,6 +54,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "underline",
     headerLayout: "left",
     heroLayout: "fade-bottom",
+    aboutLayout: "centered",
+    gridLayout: "list",
+    ctaLayout: "centered",
   },
   {
     id: "varm",
@@ -55,6 +67,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "pill",
     headerLayout: "centered-stacked",
     heroLayout: "centered",
+    aboutLayout: "text-left",
+    gridLayout: "alternating-rows",
+    ctaLayout: "split",
     recommended: true,
   },
   {
@@ -66,6 +81,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "square",
     headerLayout: "split",
     heroLayout: "overlay-bottom",
+    aboutLayout: "stats-split",
+    gridLayout: "bento",
+    ctaLayout: "dark-split",
   },
   {
     id: "redaktionell",
@@ -76,6 +94,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "pill",
     headerLayout: "left",
     heroLayout: "collage",
+    aboutLayout: "text-left",
+    gridLayout: "numbered",
+    ctaLayout: "split",
   },
   {
     id: "norden",
@@ -86,6 +107,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "square",
     headerLayout: "left",
     heroLayout: "quad",
+    aboutLayout: "centered",
+    gridLayout: "icon-row",
+    ctaLayout: "centered",
   },
   {
     id: "atelier",
@@ -96,6 +120,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "pill",
     headerLayout: "left",
     heroLayout: "editorial",
+    aboutLayout: "stats-split",
+    gridLayout: "cards",
+    ctaLayout: "image-bleed",
   },
   {
     id: "aurora",
@@ -106,5 +133,21 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     buttonStyle: "pill",
     headerLayout: "split",
     heroLayout: "beam",
+    aboutLayout: "image-full",
+    gridLayout: "divided-columns",
+    ctaLayout: "image-bleed",
+  },
+  {
+    id: "nord",
+    label: "Mörk och minimal",
+    desc: "Mörk bakgrund med tonade ytor, en bred intro bredvid avdelade tjänstekort och en nyckeltalsruta bredvid en helbild — lugnare och mer sansad än \"Mörk och arkitektonisk\".",
+    font: "sans",
+    backgroundMode: "dark",
+    buttonStyle: "pill",
+    headerLayout: "split",
+    heroLayout: "beam",
+    aboutLayout: "image-stats",
+    gridLayout: "intro-divided",
+    ctaLayout: "image-bleed",
   },
 ];

@@ -55,9 +55,9 @@ export const SECTION_SCHEMA = {
         type: { const: "about" },
         layout: {
           type: "string",
-          enum: ["text-left", "centered", "stats-split", "image-full"],
+          enum: ["text-left", "centered", "stats-split", "image-full", "image-stats"],
           description:
-            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout. \"image-full\" (ny): EN bild som täcker hela sektionens höjd till vänster, rubrik/text till höger med en dekorativ länkrad under — ett rent, redaktionellt avbrott utan nyckeltal.",
+            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout. \"image-full\" (ny): EN bild som täcker hela sektionens höjd till vänster, rubrik/text till höger med en dekorativ länkrad under — ett rent, redaktionellt avbrott utan nyckeltal. \"image-stats\" (ny): EN bild som täcker hela sektionens höjd till vänster, en MÖRK tonad textruta till höger med rubrik, en nyckeltalsrad (stats) och brödtext — samma nyckeltalskrav som \"stats-split\".",
         },
         heading: { type: "string" },
         body: { type: "string" },
@@ -84,11 +84,29 @@ export const SECTION_SCHEMA = {
         type: { const: "grid" },
         layout: {
           type: "string",
-          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns"],
+          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided"],
           description:
-            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll. \"divided-columns\" (ny): tre kolumner MED en tunn lodrät linje mellan varje (ingen egen kortbakgrund), en liten geometrisk symbol ovanför varje rubrik och en dekorativ \"Läs mer\"-rad under texten — passar 3 items bäst (en tjänste-/expertis-sektion).",
+            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll. \"divided-columns\" (ny): tre kolumner MED en tunn lodrät linje mellan varje (ingen egen kortbakgrund), en liten geometrisk symbol ovanför varje rubrik och en dekorativ \"Läs mer\"-rad under texten — passar 3 items bäst (en tjänste-/expertis-sektion). \"intro-divided\" (ny): en EGEN vänsterkolumn med eyebrow + rubrik + en kort introtext + knapp (använd fälten eyebrow/intro/ctaLabel/ctaLink, bara meningsfulla för DEN HÄR layouten), bredvid (inte ovanför) resten av items som avdelade kort likt \"divided-columns\". Passar 3 items i korten (4 kolumner totalt: 1 intro + 3 kort).",
         },
         heading: { type: "string" },
+        eyebrow: {
+          type: "string",
+          description:
+            "Bara meningsfullt för layout \"intro-divided\" (eyebrow/intro/ctaLabel/ctaLink används bara där). ÄR den här sektionen startsidans (path \"/\") FÖRSTA grid-sektion: fyll i det här fältet OAVSETT vilken \"layout\" du själv väljer för den — precis som hero/about-sektionernas stats-fält kan layouten bytas till \"intro-divided\" i efterhand i kod, beroende på vilken stilvariant kunden väljer. För varje ANNAN grid-sektion (senare på startsidan, eller på andra sidor): utelämna fältet helt.",
+        },
+        intro: {
+          type: "string",
+          description: "Samma regel som eyebrow precis ovan — fyll för startsidans FÖRSTA grid-sektion oavsett egen layout, utelämna annars.",
+        },
+        ctaLabel: {
+          type: "string",
+          description: "Samma regel som eyebrow precis ovan — fyll för startsidans FÖRSTA grid-sektion oavsett egen layout, utelämna annars.",
+        },
+        ctaLink: {
+          type: "string",
+          description:
+            "Samma regel som eyebrow precis ovan. Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/tjanster\"), eller en fullständig extern URL. Utelämna om knappen inte ska vara klickbar.",
+        },
         items: {
           type: "array",
           items: {

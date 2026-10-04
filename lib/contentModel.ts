@@ -48,11 +48,25 @@ export interface SiteTheme {
   // Saknas den faller startsidans hero tillbaka på sitt eget AI-satta
   // layout-värde, precis som innan den här axeln fanns.
   heroLayout?: HeroLayout;
+  // SJÄTTE/SJUNDE/ÅTTONDE stilaxeln, samma princip som heroLayout ovan —
+  // men för startsidans FÖRSTA "about"/"grid"/"cta"-sektion (om någon
+  // finns), inte bara heron. Tillkom efter kundfeedback: "exakt samma
+  // under hero på alla förslag, samma ingångar och samma upplägg" — innan
+  // de här fälten fanns var hela resten av sidan (allt UTOM heron)
+  // identisk mellan de sju/åtta förhandsvisningarna på /forslag, bara
+  // heron skilde sig åt. Nu har varje stilvariant en egen, konsekvent
+  // "känsla" rakt igenom startsidan, inte bara i heron. Rör aldrig
+  // undersidornas sektioner, och rör bara den FÖRSTA sektionen av
+  // respektive typ på startsidan — finns t.ex. två "grid"-sektioner
+  // på startsidan påverkas bara den första.
+  aboutLayout?: AboutLayout;
+  gridLayout?: GridLayout;
+  ctaLayout?: CtaLayout;
 }
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial" | "beam";
-export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full";
-export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns";
+export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats";
+export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
 export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
 export type ContactLayout = "centered" | "split-info";
@@ -114,14 +128,17 @@ export interface AboutSection {
   // exakt den kompositionen i sin "results"-sektion), satta i kod precis
   // som HeroSection.collageImageUrls — se lib/assignUploadedImages.ts.
   collageImageUrls?: string[];
-  // Bara använd av layout "stats-split" — en kort rad med 2-3 nyckeltal,
-  // SAMMA regel som HeroSection.stats: ENDAST sådant kunden faktiskt
-  // skrivit i sin brief, ALDRIG påhittade siffror. Saknas tydliga fakta,
-  // utelämna fältet helt — sektionen renderas då bara utan nyckeltalsraden.
+  // Använd av BÅDE "stats-split" (nyckeltalsraden bredvid texten) OCH
+  // "image-stats" (kundens "NORD"-referenskod, "impact"-sektionen — samma
+  // nyckeltalsrad, men under en mörk, tonad textruta istället för bredvid
+  // texten). SAMMA regel som HeroSection.stats: ENDAST sådant kunden
+  // faktiskt skrivit i sin brief, ALDRIG påhittade siffror. Saknas tydliga
+  // fakta, utelämna fältet helt — sektionen renderas då bara utan
+  // nyckeltalsraden.
   stats?: { value: string; label: string }[];
-  // Bara använd av layout "image-full" — EN bild som täcker hela
-  // sektionens höjd (kundens "Aurora Arkitektur"-referenskod), satt i
-  // kod precis som HeroSection.imageUrl — se lib/assignUploadedImages.ts.
+  // Använd av BÅDE "image-full" OCH "image-stats" — EN bild som täcker
+  // hela sektionens höjd, satt i kod precis som HeroSection.imageUrl —
+  // se lib/assignUploadedImages.ts.
   imageUrl?: string;
 }
 
@@ -138,6 +155,15 @@ export interface GridSection {
   layout: GridLayout;
   heading: string;
   items: GridItem[];
+  // Bara använda av layout "intro-divided" (kundens "NORD"-referenskod,
+  // "solutions"-sektionen) — en kort förtext ovanför rubriken, en
+  // introduktionstext och en knapp i en EGEN vänsterkolumn, bredvid (inte
+  // ovanför) de avdelade korten. Utelämna för alla andra layouter.
+  eyebrow?: string;
+  intro?: string;
+  ctaLabel?: string;
+  // Se HeroSection.ctaLink ovan — samma princip.
+  ctaLink?: string;
 }
 
 export interface TestimonialItem {

@@ -69,6 +69,9 @@ export default function SuggestionsPage() {
           buttonStyle: variant.buttonStyle,
           headerLayout: variant.headerLayout,
           heroLayout: variant.heroLayout,
+          aboutLayout: variant.aboutLayout,
+          gridLayout: variant.gridLayout,
+          ctaLayout: variant.ctaLayout,
         }),
       });
       if (!res.ok) throw new Error("Något gick fel.");
@@ -167,6 +170,9 @@ export default function SuggestionsPage() {
                         buttonStyleOverride={v.buttonStyle}
                         headerLayoutOverride={v.headerLayout}
                         heroLayoutOverride={v.heroLayout}
+                        aboutLayoutOverride={v.aboutLayout}
+                        gridLayoutOverride={v.gridLayout}
+                        ctaLayoutOverride={v.ctaLayout}
                       />
                     </div>
                   </div>

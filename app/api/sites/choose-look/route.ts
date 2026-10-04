@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
   const body = await request.json();
-  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout } = body;
+  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout, aboutLayout, gridLayout, ctaLayout } = body;
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -39,6 +39,15 @@ export async function POST(request: Request) {
     : "left";
   content.theme.heroLayout = ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage", "quad", "editorial", "beam"].includes(heroLayout)
     ? heroLayout
+    : "centered";
+  content.theme.aboutLayout = ["text-left", "centered", "stats-split", "image-full", "image-stats"].includes(aboutLayout)
+    ? aboutLayout
+    : "text-left";
+  content.theme.gridLayout = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided"].includes(gridLayout)
+    ? gridLayout
+    : "cards";
+  content.theme.ctaLayout = ["centered", "split", "image-bleed", "dark-split"].includes(ctaLayout)
+    ? ctaLayout
     : "centered";
 
   const { error } = await supabase.from("sites").update({ content }).eq("id", site.id);

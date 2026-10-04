@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, ContactFormSection } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
@@ -60,6 +60,9 @@ export default function SitePreview({
   buttonStyleOverride,
   headerLayoutOverride,
   heroLayoutOverride,
+  aboutLayoutOverride,
+  gridLayoutOverride,
+  ctaLayoutOverride,
   activePath,
   basePath,
   onNavigate,
@@ -97,6 +100,14 @@ export default function SitePreview({
   // vid genereringen, se SUBPAGE_HERO_LAYOUT_POOL) påverkas aldrig av den
   // här — bara startsidans allra första sektion.
   heroLayoutOverride?: HeroLayout;
+  // Samma idé som heroLayoutOverride, men för startsidans FÖRSTA
+  // "about"/"grid"/"cta"-sektion (se SiteTheme.aboutLayout/gridLayout/
+  // ctaLayout-kommentaren i lib/contentModel.ts för varför de tillkom —
+  // kundfeedback: "exakt samma under hero på alla förslag"). Rör aldrig
+  // undersidor, och bara den FÖRSTA sektionen av respektive typ.
+  aboutLayoutOverride?: AboutLayout;
+  gridLayoutOverride?: GridLayout;
+  ctaLayoutOverride?: CtaLayout;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
   // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
@@ -203,10 +214,39 @@ export default function SitePreview({
     homeHeroLayout && rawFirstSection?.type === "hero"
       ? { ...rawFirstSection, layout: homeHeroLayout }
       : rawFirstSection;
-  const pageSections =
+  const heroOverriddenSections =
     homeHeroLayout && rawFirstSection?.type === "hero"
       ? [firstSection, ...page.sections.slice(1)]
       : page.sections;
+
+  // Samma princip som hero-overriden ovan, men för startsidans FÖRSTA
+  // "about"/"grid"/"cta"-sektion (se SiteTheme.aboutLayout m.fl. i
+  // lib/contentModel.ts för bakgrunden). Varje typ hanteras oberoende —
+  // en sajt kan ha t.ex. en "about" men ingen "cta" på förstasidan, då
+  // rörs bara "about". Hittar funktionen ingen sektion av typen alls
+  // (ovanligt, men möjligt) görs ingenting.
+  const applyFirstSectionOverride = <T extends Section["type"]>(
+    sections: Section[],
+    type: T,
+    override: string | undefined
+  ): Section[] => {
+    if (!override || page.path !== "/") return sections;
+    const idx = sections.findIndex((s) => s.type === type);
+    if (idx === -1) return sections;
+    const target = sections[idx] as any;
+    if (target.layout === override) return sections;
+    const next = sections.slice();
+    next[idx] = { ...target, layout: override };
+    return next;
+  };
+  const pageSections = [
+    ["about", aboutLayoutOverride ?? content.theme.aboutLayout] as const,
+    ["grid", gridLayoutOverride ?? content.theme.gridLayout] as const,
+    ["cta", ctaLayoutOverride ?? content.theme.ctaLayout] as const,
+  ].reduce(
+    (acc, [type, override]) => applyFirstSectionOverride(acc, type, override),
+    heroOverriddenSections
+  );
   const overlayHeader =
     page.path === "/" && firstSection?.type === "hero" && (firstSection.layout || "centered") === "overlay-bottom";
   const restSections = overlayHeader ? pageSections.slice(1) : pageSections;
@@ -2072,6 +2112,18 @@ function SectionBlockInner({
               <span className="w-10 h-px bg-white" />
               Scrolla ner
             </div>
+            {/* Dekorativ "01/02/03"-radnummerering, referensens "slide-nav"
+                — ren dekoration (ingen riktig karusell bakom), bara nere i
+                högra hörnet, dold på mindre skärmar där utrymmet är för
+                trångt för två dekorativa rader samtidigt. */}
+            <div className="hidden @3xl:flex absolute right-14 bottom-9 flex-col gap-2 text-[11px] text-white pointer-events-none">
+              {["01", "02", "03"].map((n, i) => (
+                <div key={n} className="flex items-center gap-3" style={{ opacity: i === 0 ? 1 : 0.5 }}>
+                  {n}
+                  <span className="h-px bg-white" style={{ width: i === 0 ? 56 : 40 }} />
+                </div>
+              ))}
+            </div>
           </div>
         );
       }
@@ -2433,6 +2485,64 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "image-stats") {
+        // Kundens "NORD"-referenskod ("impact"-sektionen) — samma
+        // helbild-till-vänster-idé som "image-full" ovan, men textsidan
+        // visar en NYCKELTALSRAD (stats, samma fält/regel som
+        // "stats-split") mitt i, inte en dekorativ länk. En mjukt
+        // DIAGONAL tonad bakgrund (tonalBg med strong=true — lite
+        // tydligare än "image-full"s, referensens egen panel hade en
+        // synbart varmare gradient) på textsidan.
+        const stats = section.stats || [];
+        return (
+          <div className="grid @3xl:grid-cols-[1fr_1fr] @3xl:min-h-[500px]">
+            <div className="relative h-[280px] @3xl:h-auto">
+              <ImageOrArt imageUrl={section.imageUrl} art={art} fill selectable={false} />
+            </div>
+            <div
+              className="flex flex-col justify-center px-8 @3xl:px-16 py-14 @3xl:py-20"
+              style={{ background: tonalBg(sectionBg || palette.bg, accent, true) }}
+            >
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[30px] @3xl:text-[40px] leading-[1.0] mb-6"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              {stats.length > 0 && (
+                <div className="grid grid-cols-3 gap-5 mb-8 max-w-[440px]">
+                  {stats.slice(0, 3).map((stat, i) => (
+                    <div key={i} className={i < stats.length - 1 ? "pr-5 border-r" : ""} style={{ borderColor: palette.cardBorder }}>
+                      <div className="font-serif text-[27px] leading-none mb-1.5">{stat.value}</div>
+                      <div className="text-[11.5px] leading-snug" style={{ color: palette.textDim }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14px] leading-relaxed max-w-[460px]"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              <div
+                className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
+                style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
+              >
+                Läs mer →
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       // text-left (default) — vänsterställd, bredare text.
       return (
         <div className="px-10 py-14 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
@@ -2735,6 +2845,97 @@ function SectionBlockInner({
                   </div>
                 );
               })}
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "intro-divided") {
+        // Kundens "NORD"-referenskod ("solutions"-sektionen) — till
+        // skillnad från "divided-columns" ovan (rubriken ligger OVANFÖR
+        // alla kolumner, full bredd) ligger här rubriken/intro/knappen i
+        // en EGEN, bredare vänsterkolumn BREDVID de avdelade korten (4
+        // kolumner totalt: 1 bred intro + 3 smalare kort). Egna fält
+        // (eyebrow/intro/ctaLabel/ctaLink) — se contentModel.ts.
+        const glyphs = ["☼", "▣", "♧", "◇", "○", "△"];
+        return (
+          <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: tonalBg(sectionBg || palette.bg, accent) }}>
+            <div className="grid @3xl:grid-cols-[1.2fr_1fr_1fr_1fr] gap-8 @3xl:gap-0">
+              <div className="@3xl:pr-14">
+                {section.eyebrow && (
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[11px] tracking-[0.14em] font-semibold mb-3"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                    onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                  >
+                    {section.eyebrow.toUpperCase()}
+                  </Field>
+                )}
+                <Field
+                  editable={editable}
+                  as="h2"
+                  className="font-serif text-[30px] @3xl:text-[40px] leading-[1.05] mb-5"
+                  selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                  onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+                >
+                  {section.heading}
+                </Field>
+                {section.intro && (
+                  <Field
+                    editable={editable}
+                    as="p"
+                    className="text-[14px] leading-relaxed mb-7 max-w-[420px]"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("intro", section.intro, "introtexten")?.key}
+                    onSelect={() => { const s = fieldSel("intro", section.intro, "introtexten"); s && onSelectField?.(s); }}
+                  >
+                    {section.intro}
+                  </Field>
+                )}
+                {section.ctaLabel && (
+                  <FieldBadge
+                    editable={editable}
+                    selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                    onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                  >
+                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                      {section.ctaLabel}
+                    </CtaPill>
+                  </FieldBadge>
+                )}
+              </div>
+              {section.items.slice(0, 3).map((item, i) => (
+                <div key={i} className="@3xl:px-8 @3xl:border-l pt-8 @3xl:pt-0" style={{ borderColor: palette.cardBorder }}>
+                  <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
+                    {glyphs[i % glyphs.length]}
+                  </div>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="font-serif text-[20px] mb-2.5"
+                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.title}
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[13px] leading-relaxed"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.body}
+                  </Field>
+                  <div className="mt-4 text-[12px] font-medium" style={{ color: palette.text }}>
+                    Läs mer →
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         );
