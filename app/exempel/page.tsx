@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
   title: "Exempel",
-  description: "Tre helt olika branscher, tre helt olika känslor — allihop byggda genom samma samtal.",
+  description: "Fyra helt olika branscher, fyra helt olika känslor — allihop byggda genom samma samtal.",
 };
 
 const examples = [
@@ -31,6 +31,13 @@ const examples = [
     body: "Robust och hantverksnära — referensprojekt och offertförfrågan i fokus.",
     img: "/images/snickeri-hero.jpg",
   },
+  {
+    href: "/exempel/studio-lind",
+    name: "Studio Lind",
+    category: "Inredningsarkitekt",
+    body: "Redaktionell och bildrik — bildkollage, kursiv rubrik och nyckeltal i hero.",
+    img: "/images/inredning-vadvigor-1.jpg",
+  },
 ];
 
 export default function ExamplesPage() {
@@ -44,17 +51,17 @@ export default function ExamplesPage() {
             LIVE-DEMO
           </div>
           <h1 className="text-[36px] md:text-[42px] leading-[1.15] font-medium text-white">
-            Tre exempel på vad YourCoSite bygger
+            Fyra exempel på vad YourCoSite bygger
           </h1>
           <p className="text-[16px] leading-relaxed text-[#C9C7C2] mt-4">
-            Tre helt olika branscher, tre helt olika känslor — allihop
+            Fyra helt olika branscher, fyra helt olika känslor — allihop
             byggda genom samma samtal. Klicka runt i dem som riktiga sajter.
           </p>
         </div>
       </section>
 
       <section className="bg-surface">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 grid md:grid-cols-3 gap-6">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 grid sm:grid-cols-2 gap-6">
           {examples.map((e) => (
             <Link
               key={e.href}

@@ -2139,6 +2139,23 @@ function SectionBlockInner({
         // är vanliga kvadratiska rutor — bilden fyller HELA rutan (inte
         // bara ett fält ovanför texten) med text overlagd nertill, över en
         // mörk gradient, så rutorna känns som fotografiska "plattor".
+        //
+        // Storleksvariationen (den stora rutan) går BARA jämnt ut i ett
+        // 3-kolumnsrutnät när items.length är exakt 3 (2 rader × 3
+        // kolumner, den stora rutan tar 2×2 = 4 celler, de två små tar en
+        // cell var — precis 6 av 6 celler). Vid t.ex. 4 objekt blev
+        // resten av rutnätet fullt efter rad 1-2, så det FJÄRDE objektet
+        // hamnade ensamt på en egen, annars tom rad — det kunden
+        // rapporterade. Vid alla andra antal används därför ett jämnt
+        // rutnät utan storleksvariation istället (2 kolumner för 2/4
+        // objekt, 3 kolumner för 5/6) — fortfarande samma distinkta
+        // "fotografisk platta"-stil, bara utan den stora rutan.
+        const n = section.items.length;
+        const useBigTile = n === 3;
+        // Undviker en ensam sista rad (se kommentaren ovan): 3 kolumner
+        // som standard, men växlar till 2 när just det antalet annars
+        // skulle lämna exakt ett objekt kvar på en egen rad (t.ex. 4).
+        const cols = n > 3 && n % 3 === 1 ? 2 : 3;
         return (
           <div className="px-10 py-16 max-w-[1040px] mx-auto" style={{ background: sectionBg }}>
             <Field
@@ -2150,11 +2167,11 @@ function SectionBlockInner({
             >
               {section.heading}
             </Field>
-            <div className="grid @3xl:grid-cols-3 gap-4 @3xl:auto-rows-[180px]">
+            <div className={`grid ${cols === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-2"} gap-4 @3xl:auto-rows-[180px]`}>
               {section.items.map((item, i) => {
                 const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
                 const itemSel = gridItemSelection(i, item.title);
-                const big = i === 0;
+                const big = useBigTile && i === 0;
                 return (
                   <div
                     key={i}
