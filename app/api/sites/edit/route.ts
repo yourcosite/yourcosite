@@ -257,6 +257,10 @@ export async function POST(request: Request) {
   const body = await request.json();
   const message = typeof body.message === "string" ? body.message.trim() : "";
   if (!message) return NextResponse.json({ error: "Skriv vad du vill ändra." }, { status: 400 });
+  // Vilken av kundens (eventuellt flera) sajter redigeringen gäller — skickas
+  // med från app/redigera/page.tsx. Se getCurrentPublishedSite för varför
+  // den annars kunde träffa fel sajt på ett konto med flera.
+  const siteId = typeof body.siteId === "string" ? body.siteId : null;
 
   // Flera bilagor på en gång (t.ex. en hel hög bilder till ett nytt
   // bildgalleri) — se handleFiles i app/redigera/page.tsx. Taket här är
@@ -333,7 +337,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site || !isValidSiteContent(site.content)) {
     return NextResponse.json({ error: "Hittade ingen sajt att redigera." }, { status: 400 });
   }

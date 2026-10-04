@@ -11,12 +11,13 @@ const MAX_TITLE = 120;
 const MAX_EXCERPT = 300;
 const MAX_BODY = 20000;
 
-export async function GET() {
+export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  const requestedSiteId = new URL(request.url).searchParams.get("siteId");
+  const site = await getCurrentPublishedSite(supabase, user.id, requestedSiteId);
   if (!site) return NextResponse.json({ articles: [], categories: [] });
 
   const [articles, categories] = await Promise.all([
@@ -31,12 +32,16 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  const body = await request.json();
+  // Vilken av kundens (eventuellt flera) sajter artikeln hör till — se
+  // getCurrentPublishedSite för bakgrunden till varför det inte räcker att
+  // bara anta "senaste sajten".
+  const siteId = typeof body.siteId === "string" ? body.siteId : null;
+  const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site) {
     return NextResponse.json({ error: "Du har ingen genererad sajt ännu." }, { status: 400 });
   }
 
-  const body = await request.json();
   const title = typeof body.title === "string" ? body.title.trim().slice(0, MAX_TITLE) : "";
   const excerpt = typeof body.excerpt === "string" ? body.excerpt.trim().slice(0, MAX_EXCERPT) : "";
   const articleBody = typeof body.body === "string" ? body.body.trim().slice(0, MAX_BODY) : "";

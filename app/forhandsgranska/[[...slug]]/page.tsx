@@ -18,8 +18,10 @@ export const revalidate = 0;
 // med villkor.
 export default async function EditorPreviewPage({
   params,
+  searchParams,
 }: {
   params: { slug?: string[] };
+  searchParams?: { site?: string };
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -32,7 +34,10 @@ export default async function EditorPreviewPage({
     );
   }
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  // ?site=<id> skickas med från redigeraren (se app/redigera/page.tsx) så
+  // att förhandsvisningen garanterat visar SAMMA sajt kunden redigerar,
+  // inte bara "senaste sajten" — se getCurrentPublishedSite för bakgrunden.
+  const site = await getCurrentPublishedSite(supabase, user.id, searchParams?.site || null);
 
   if (!site || !isValidSiteContent(site.content)) {
     return (
@@ -54,7 +59,7 @@ export default async function EditorPreviewPage({
     <div className="min-h-screen bg-[#E5E3DD] flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-[1560px] flex items-center justify-between mb-4 px-1">
         <Link
-          href="/redigera"
+          href={`/redigera?site=${site.id}`}
           className="text-[13px] font-semibold text-ink-dim flex-shrink-0"
         >
           ← Tillbaka till redigeraren

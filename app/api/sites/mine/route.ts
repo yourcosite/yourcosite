@@ -1,23 +1,20 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 
-// Hämtar den inloggade kundens senast skapade sajt (med genererat innehåll).
-// Används av förhandsgranskningen efter onboardingen.
-export async function GET() {
+// Hämtar kundens sajt med genererat innehåll. Tar ett valfritt ?id= — utan
+// det (eller om id:t inte matchar en egen sajt) faller den tillbaka på
+// "senast skapade sajten", precis som innan. ?id= används av kundzonen
+// (app/dashboard) och redigeraren så att varje sajt-kort faktiskt öppnar
+// SIN egen sajt när kontot har flera — se kommentaren i
+// lib/supabase/currentSite.ts för bakgrunden till buggen det fixar.
+export async function GET(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const { data: site, error } = await supabase
-    .from("sites")
-    .select("*")
-    .eq("owner_id", user.id)
-    .not("content", "is", null)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  const requestedId = new URL(request.url).searchParams.get("id");
+  const site = await getCurrentPublishedSite(supabase, user.id, requestedId);
 
   // Hur många foton kunden faktiskt laddade upp för den här sajten — skickas
   // med så att /forslag kan varna tydligt om inga av dem kom med i designen

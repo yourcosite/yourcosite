@@ -18,6 +18,9 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const gaMeasurementId = typeof body.gaMeasurementId === "string" ? body.gaMeasurementId.trim() : "";
   const metaPixelId = typeof body.metaPixelId === "string" ? body.metaPixelId.trim() : "";
+  // Vilken av kundens (eventuellt flera) sajter inställningen gäller — se
+  // getCurrentPublishedSite för bakgrunden.
+  const siteId = typeof body.siteId === "string" ? body.siteId : null;
 
   if (gaMeasurementId && !GA_ID_PATTERN.test(gaMeasurementId)) {
     return NextResponse.json(
@@ -29,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Meta Pixel-ID ska bara innehålla siffror." }, { status: 400 });
   }
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site || !isValidSiteContent(site.content)) {
     return NextResponse.json({ error: "Hittade ingen sajt att uppdatera." }, { status: 400 });
   }

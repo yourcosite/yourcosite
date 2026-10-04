@@ -43,9 +43,11 @@ function minDateTimeLocal() {
 export default function NewsClient({
   initialArticles,
   initialCategories,
+  siteId,
 }: {
   initialArticles: NewsArticle[];
   initialCategories: string[];
+  siteId: string;
 }) {
   const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
   const [categories, setCategories] = useState<string[]>(initialCategories);
@@ -171,6 +173,7 @@ export default function NewsClient({
         category: composer.category,
         published: mode === "publish",
         scheduledAt: mode === "schedule" ? new Date(composer.scheduledAt).toISOString() : null,
+        siteId,
       };
       const res = await fetch(composer.id ? `/api/news/${composer.id}` : "/api/news", {
         method: composer.id ? "PATCH" : "POST",
@@ -198,7 +201,7 @@ export default function NewsClient({
     const res = await fetch(`/api/news/${a.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ published: !a.published }),
+      body: JSON.stringify({ published: !a.published, siteId }),
     });
     const data = await res.json();
     if (res.ok) {
@@ -207,7 +210,7 @@ export default function NewsClient({
   };
 
   const confirmDelete = async (a: NewsArticle) => {
-    const res = await fetch(`/api/news/${a.id}`, { method: "DELETE" });
+    const res = await fetch(`/api/news/${a.id}?siteId=${encodeURIComponent(siteId)}`, { method: "DELETE" });
     if (res.ok) {
       setArticles((prev) => prev.filter((x) => x.id !== a.id));
     }

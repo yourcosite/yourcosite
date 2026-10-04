@@ -12,12 +12,14 @@ export default function TrackingSettingsModal({
   onClose,
   gaMeasurementId,
   metaPixelId,
+  siteId,
   onSaved,
 }: {
   open: boolean;
   onClose: () => void;
   gaMeasurementId?: string;
   metaPixelId?: string;
+  siteId?: string;
   onSaved: (values: { gaMeasurementId?: string; metaPixelId?: string }) => void;
 }) {
   const [ga, setGa] = useState(gaMeasurementId || "");
@@ -36,7 +38,7 @@ export default function TrackingSettingsModal({
       const res = await fetch("/api/sites/tracking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gaMeasurementId: ga, metaPixelId: pixel }),
+        body: JSON.stringify({ gaMeasurementId: ga, metaPixelId: pixel, siteId }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Kunde inte spara.");

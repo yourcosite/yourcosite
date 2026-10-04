@@ -153,7 +153,7 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
               </div>
             )}
 
-            <Link href="/redigera" className="block">
+            <Link href={`/redigera?site=${s.id}`} className="block">
               <div className="aspect-[4/3] relative overflow-hidden" style={!s.content ? { background: gradients[i % gradients.length] } : undefined}>
                 {s.content ? (
                   // En riktig, levande miniatyr av startsidan — samma knep

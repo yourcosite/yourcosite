@@ -12,10 +12,18 @@ export const dynamic = "force-dynamic";
 // supabase/schema.sql). Artiklarna visas på sajten via sektionstypen
 // "newsList" (lib/contentModel.ts), som kunden lägger till på en sida i
 // chattredigeraren. Länkad från /sidor.
-export default async function NyheterPage() {
+export default async function NyheterPage({
+  searchParams,
+}: {
+  searchParams?: { site?: string };
+}) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const site = user ? await getCurrentPublishedSite(supabase, user.id) : null;
+  // ?site=<id> skickas med från redigeraren (se app/redigera/page.tsx) så
+  // att den här sidan rör samma sajt kunden kom ifrån, inte bara "senaste
+  // sajten" — se getCurrentPublishedSite för bakgrunden.
+  const requestedSiteId = searchParams?.site || null;
+  const site = user ? await getCurrentPublishedSite(supabase, user.id, requestedSiteId) : null;
   const articles = site ? await getSiteNewsArticles(supabase, site.id) : [];
   const categories = site ? await getSiteNewsCategories(supabase, site.id) : [];
 
@@ -33,7 +41,7 @@ export default async function NyheterPage() {
           </div>
         </div>
         <Link
-          href="/redigera"
+          href={`/redigera${site ? `?site=${site.id}` : ""}`}
           className="flex items-center gap-1.5 text-[13px] font-semibold text-ink bg-bg border border-line px-4 py-2 rounded-full"
         >
           ← Till redigeraren
@@ -57,7 +65,7 @@ export default async function NyheterPage() {
               </Link>
             </p>
           ) : (
-            <NewsClient initialArticles={articles} initialCategories={categories} />
+            <NewsClient initialArticles={articles} initialCategories={categories} siteId={site.id} />
           )}
         </div>
       </div>

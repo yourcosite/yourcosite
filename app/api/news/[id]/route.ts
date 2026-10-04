@@ -17,7 +17,11 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  const rawBody = await request.json();
+  // Vilken av kundens (eventuellt flera) sajter artikeln hör till — se
+  // getCurrentPublishedSite för bakgrunden.
+  const siteId = typeof rawBody.siteId === "string" ? rawBody.siteId : null;
+  const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site) return NextResponse.json({ error: "Ingen sajt hittades." }, { status: 400 });
 
   const { data: existing } = await supabase
@@ -28,7 +32,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     .maybeSingle();
   if (!existing) return NextResponse.json({ error: "Hittade inte artikeln." }, { status: 404 });
 
-  const body = await request.json();
+  const body = rawBody;
   const update: Record<string, unknown> = { updated_at: new Date().toISOString() };
 
   if (typeof body.title === "string") {
@@ -97,7 +101,8 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  const siteId = new URL(request.url).searchParams.get("siteId");
+  const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site) return NextResponse.json({ error: "Ingen sajt hittades." }, { status: 400 });
 
   const { error } = await supabase

@@ -24,8 +24,22 @@ export default function PagesManagePage() {
   const [saving, setSaving] = useState(false);
   const [justAdded, setJustAdded] = useState<{ label: string; path: string } | null>(null);
 
+  // Samma sajt-id som redigeraren skickade med hit (se
+  // app/redigera/page.tsx/DashboardClient.tsx) — annars faller den här
+  // panelen tillbaka på "senaste sajten", vilket på ett konto med flera
+  // sajter kunde peka på en ANNAN sajt än den kunden faktiskt kom ifrån.
+  const [siteIdParam, setSiteIdParam] = useState("");
+
   useEffect(() => {
-    fetch("/api/sites/mine")
+    let requestedSiteId = "";
+    try {
+      requestedSiteId = new URLSearchParams(window.location.search).get("site") || "";
+    } catch {
+      // Ignorera — faller tillbaka på "senaste sajten" som innan.
+    }
+    setSiteIdParam(requestedSiteId);
+
+    fetch(`/api/sites/mine${requestedSiteId ? `?id=${encodeURIComponent(requestedSiteId)}` : ""}`)
       .then((r) => r.json())
       .then((data) => {
         if (!data.site) {
@@ -36,6 +50,14 @@ export default function PagesManagePage() {
       })
       .catch(() => setLoadError("Kunde inte hämta sajten."));
   }, []);
+
+  const redigeraHref = (extra?: string) => {
+    const params = new URLSearchParams();
+    if (siteIdParam) params.set("site", siteIdParam);
+    if (extra) params.set("sida", extra);
+    const qs = params.toString();
+    return `/redigera${qs ? `?${qs}` : ""}`;
+  };
 
   const pages = site?.content.pages || [];
 
@@ -113,7 +135,7 @@ export default function PagesManagePage() {
           </div>
         </div>
         <Link
-          href="/redigera"
+          href={redigeraHref()}
           className="flex items-center gap-1.5 text-[13px] font-semibold text-ink bg-bg border border-line px-4 py-2 rounded-full"
         >
           ← Till redigeraren
@@ -168,7 +190,7 @@ export default function PagesManagePage() {
                         {!locked && !confirming && (
                           <div className="flex items-center gap-1 flex-shrink-0">
                             <Link
-                              href={`/redigera?sida=${encodeURIComponent(p.path)}`}
+                              href={redigeraHref(p.path)}
                               className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                             >
                               Öppna
@@ -223,7 +245,7 @@ export default function PagesManagePage() {
                 <div className="flex items-center justify-between gap-3 bg-accent-soft rounded-lg px-4 py-3 mb-4.5 text-[13px] text-ink font-semibold">
                   <span>&ldquo;{justAdded.label}&rdquo; är skapad och ligger redan i menyn.</span>
                   <Link
-                    href={`/redigera?sida=${encodeURIComponent(justAdded.path)}`}
+                    href={redigeraHref(justAdded.path)}
                     className="whitespace-nowrap underline"
                   >
                     Öppna i redigeraren →

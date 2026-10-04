@@ -156,7 +156,18 @@ export default function EditorPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/sites/mine")
+    // Vilken sajt som ska öppnas — skickas med som ?site=<id> från
+    // kundzonen (app/dashboard/DashboardClient.tsx) så att varje sajt-kort
+    // faktiskt öppnar SIN egen sajt på ett konto med flera. Läses rått ur
+    // URL:en av samma skäl som "sida" nedan (slipper ett Suspense-krav).
+    let requestedSiteId = "";
+    try {
+      requestedSiteId = new URLSearchParams(window.location.search).get("site") || "";
+    } catch {
+      // Ignorera — faller tillbaka på "senaste sajten" som innan.
+    }
+
+    fetch(`/api/sites/mine${requestedSiteId ? `?id=${encodeURIComponent(requestedSiteId)}` : ""}`)
       .then((r) => r.json())
       .then((data) => {
         if (!data.site) {
@@ -190,7 +201,7 @@ export default function EditorPage() {
     // Så "newsList"-sektionen kan visa kundens egna artiklar i
     // förhandsvisningen här också — se app/nyheter/page.tsx där de
     // skrivs och publiceras.
-    fetch("/api/news")
+    fetch(`/api/news${requestedSiteId ? `?siteId=${encodeURIComponent(requestedSiteId)}` : ""}`)
       .then((r) => r.json())
       .then((data) => setNewsArticles(data.articles || []))
       .catch(() => {});
@@ -310,6 +321,7 @@ export default function EditorPage() {
           history,
           attachments: currentAttachments,
           currentPath: activePath,
+          siteId: site?.id,
           selection: currentSelection
             ? currentSelection.target === "image"
               ? {
@@ -409,14 +421,14 @@ export default function EditorPage() {
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </button>
-          <Link href="/sidor" className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
+          <Link href={`/sidor${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             Sidor
           </Link>
-          <Link href="/nyheter" className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
+          <Link href={`/nyheter${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             Nyheter
           </Link>
           <Link
-            href="/forhandsgranska"
+            href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
             target="_blank"
             rel="noopener noreferrer"
             className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
@@ -461,21 +473,21 @@ export default function EditorPage() {
               Analys och marknadsföring
             </button>
             <Link
-              href="/sidor"
+              href={`/sidor${site ? `?site=${site.id}` : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
               Sidor
             </Link>
             <Link
-              href="/nyheter"
+              href={`/nyheter${site ? `?site=${site.id}` : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
               Nyheter
             </Link>
             <Link
-              href="/forhandsgranska"
+              href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
@@ -761,6 +773,7 @@ export default function EditorPage() {
         onClose={() => setTrackingOpen(false)}
         gaMeasurementId={content?.gaMeasurementId}
         metaPixelId={content?.metaPixelId}
+        siteId={site?.id}
         onSaved={(values) =>
           setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))
         }

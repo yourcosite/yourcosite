@@ -15,8 +15,10 @@ export const revalidate = 0;
 // precis som en besökare skulle.
 export default async function WebsitePreviewPage({
   params,
+  searchParams,
 }: {
   params: { slug?: string[] };
+  searchParams?: { site?: string };
 }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -29,7 +31,8 @@ export default async function WebsitePreviewPage({
     );
   }
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  // ?site=<id> — se motsvarande kommentar i /forhandsgranska.
+  const site = await getCurrentPublishedSite(supabase, user.id, searchParams?.site || null);
 
   if (!site || !isValidSiteContent(site.content)) {
     return (
@@ -60,7 +63,7 @@ export default async function WebsitePreviewPage({
           ← Välj en annan variant
         </Link>
         <Link
-          href="/redigera"
+          href={`/redigera?site=${site.id}`}
           className="text-[13px] font-semibold bg-accent text-accent-ink px-4 py-2 rounded-lg flex-shrink-0"
         >
           Fortsätt till redigeraren →
