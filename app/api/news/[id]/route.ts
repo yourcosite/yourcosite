@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { uniqueSlugForSite } from "@/lib/newsArticles";
+import { uniqueSlugForSite, isNewsCategory } from "@/lib/newsArticles";
 
 const MAX_TITLE = 120;
 const MAX_EXCERPT = 300;
@@ -40,6 +40,12 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
   }
   if (typeof body.excerpt === "string") update.excerpt = body.excerpt.trim().slice(0, MAX_EXCERPT) || null;
+  if (typeof body.category === "string") {
+    if (!isNewsCategory(body.category)) {
+      return NextResponse.json({ error: "Ogiltig kategori." }, { status: 400 });
+    }
+    update.category = body.category;
+  }
   if (typeof body.body === "string") {
     const articleBody = body.body.trim().slice(0, MAX_BODY);
     if (!articleBody) return NextResponse.json({ error: "Artikeln behöver text." }, { status: 400 });

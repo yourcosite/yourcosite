@@ -260,6 +260,10 @@ create table if not exists site_news_articles (
   excerpt text,
   body text not null,
   image_url text,
+  -- Fri text, men appen erbjuder bara "Nyheter"/"Erbjudanden"/"Evenemang"
+  -- (se NEWS_CATEGORIES i lib/newsArticles.ts) — ingen databas-begränsning
+  -- så listan kan utökas senare utan migrering.
+  category text not null default 'Nyheter',
   published boolean not null default false,
   published_at timestamptz,
   created_at timestamptz not null default now(),

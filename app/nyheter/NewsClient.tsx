@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import type { NewsArticle } from "@/lib/newsArticles";
+import { NEWS_CATEGORIES, DEFAULT_NEWS_CATEGORY, type NewsArticle } from "@/lib/newsArticles";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
@@ -13,9 +13,17 @@ type ComposerState = {
   excerpt: string;
   body: string;
   imageUrl: string;
+  category: string;
 };
 
-const emptyComposer: ComposerState = { id: null, title: "", excerpt: "", body: "", imageUrl: "" };
+const emptyComposer: ComposerState = {
+  id: null,
+  title: "",
+  excerpt: "",
+  body: "",
+  imageUrl: "",
+  category: DEFAULT_NEWS_CATEGORY,
+};
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("sv-SE", { year: "numeric", month: "short", day: "numeric" });
@@ -35,7 +43,14 @@ export default function NewsClient({ initialArticles }: { initialArticles: NewsA
   };
   const openEdit = (a: NewsArticle) => {
     setError("");
-    setComposer({ id: a.id, title: a.title, excerpt: a.excerpt || "", body: a.body, imageUrl: a.image_url || "" });
+    setComposer({
+      id: a.id,
+      title: a.title,
+      excerpt: a.excerpt || "",
+      body: a.body,
+      imageUrl: a.image_url || "",
+      category: a.category || DEFAULT_NEWS_CATEGORY,
+    });
   };
   const closeComposer = () => setComposer(null);
 
@@ -87,6 +102,7 @@ export default function NewsClient({ initialArticles }: { initialArticles: NewsA
         excerpt: composer.excerpt,
         body: composer.body,
         imageUrl: composer.imageUrl || null,
+        category: composer.category,
         published: publish,
       };
       const res = await fetch(composer.id ? `/api/news/${composer.id}` : "/api/news", {
@@ -152,7 +168,7 @@ export default function NewsClient({ initialArticles }: { initialArticles: NewsA
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-[14.5px] truncate">{a.title}</div>
                   <div className="text-[12px] text-ink-dim mt-0.5">
-                    {a.published ? `Publicerad ${a.published_at ? formatDate(a.published_at) : ""}` : "Utkast"}
+                    {a.category} · {a.published ? `Publicerad ${a.published_at ? formatDate(a.published_at) : ""}` : "Utkast"}
                   </div>
                 </div>
                 {!confirming && (
@@ -236,6 +252,19 @@ export default function NewsClient({ initialArticles }: { initialArticles: NewsA
               className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-4"
               placeholder="En rad som sammanfattar artikeln"
             />
+
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">Kategori</label>
+            <select
+              value={composer.category}
+              onChange={(e) => setComposer({ ...composer, category: e.target.value })}
+              className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-4 bg-bg"
+            >
+              {NEWS_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
 
             <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">Bild (valfri)</label>
             {composer.imageUrl ? (

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { getSiteNewsArticles, uniqueSlugForSite } from "@/lib/newsArticles";
+import { getSiteNewsArticles, uniqueSlugForSite, isNewsCategory, DEFAULT_NEWS_CATEGORY } from "@/lib/newsArticles";
 
 // Nyhetsartiklar för den inloggade kundens egen sajt — skapas och
 // publiceras här av kunden själv (app/nyheter/page.tsx), aldrig av Millie
@@ -38,6 +38,7 @@ export async function POST(request: Request) {
   const excerpt = typeof body.excerpt === "string" ? body.excerpt.trim().slice(0, MAX_EXCERPT) : "";
   const articleBody = typeof body.body === "string" ? body.body.trim().slice(0, MAX_BODY) : "";
   const imageUrl = typeof body.imageUrl === "string" && body.imageUrl ? body.imageUrl : null;
+  const category = isNewsCategory(body.category) ? body.category : DEFAULT_NEWS_CATEGORY;
   const published = body.published === true;
 
   if (!title) return NextResponse.json({ error: "Artikeln behöver en rubrik." }, { status: 400 });
@@ -61,6 +62,7 @@ export async function POST(request: Request) {
       excerpt: excerpt || null,
       body: articleBody,
       image_url: imageUrl,
+      category,
       published,
       published_at: published ? now : null,
     })

@@ -4,6 +4,18 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 // supabase/schema.sql) — använd av både panelens /nyheter-sida
 // (skapa/redigera/publicera) och den publika renderingen av "newsList"-
 // sektionen + artikelns egen läsvy i components/SitePreview.tsx.
+// Fasta kategorier att välja mellan — både i panelen (app/nyheter) och när
+// Millie skapar en artikel åt kunden i chattredigeraren. Inte en databas-
+// begränsning (kolumnen är bara text) så vi kan utöka listan senare utan
+// migrering, men appen erbjuder bara dessa tre.
+export const NEWS_CATEGORIES = ["Nyheter", "Erbjudanden", "Evenemang"] as const;
+export type NewsCategory = (typeof NEWS_CATEGORIES)[number];
+export const DEFAULT_NEWS_CATEGORY: NewsCategory = "Nyheter";
+
+export function isNewsCategory(value: unknown): value is NewsCategory {
+  return typeof value === "string" && (NEWS_CATEGORIES as readonly string[]).includes(value);
+}
+
 export interface NewsArticle {
   id: string;
   site_id: string;
@@ -12,6 +24,7 @@ export interface NewsArticle {
   excerpt: string | null;
   body: string;
   image_url: string | null;
+  category: string;
   published: boolean;
   published_at: string | null;
   created_at: string;

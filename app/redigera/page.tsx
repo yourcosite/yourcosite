@@ -322,6 +322,12 @@ export default function EditorPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
       setContent(data.content);
+      // Millie kan ha skapat en ny nyhetsartikel i samma svar (se
+      // app/api/sites/edit/route.ts) — lägg in den i listan direkt så en
+      // "newsList"-sektion i förhandsvisningen visar den utan omladdning.
+      if (data.newsArticle) {
+        setNewsArticles((prev) => [data.newsArticle, ...prev.filter((a) => a.id !== data.newsArticle.id)]);
+      }
       setMessages((m) => [
         ...m,
         {
@@ -388,6 +394,9 @@ export default function EditorPage() {
           <Link href="/sidor" className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             Sidor
           </Link>
+          <Link href="/nyheter" className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
+            Nyheter
+          </Link>
           <Link
             href="/forhandsgranska"
             target="_blank"
@@ -439,6 +448,13 @@ export default function EditorPage() {
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
               Sidor
+            </Link>
+            <Link
+              href="/nyheter"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
+            >
+              Nyheter
             </Link>
             <Link
               href="/forhandsgranska"

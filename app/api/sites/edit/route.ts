@@ -5,6 +5,7 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
+import { NEWS_CATEGORIES, isNewsCategory, uniqueSlugForSite, type NewsArticle } from "@/lib/newsArticles";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -28,6 +29,39 @@ const EDIT_TOOL = {
     type: "object" as const,
     properties: {
       ...EDIT_PATCH_PROPERTIES,
+      newsArticle: {
+        type: "object",
+        description:
+          "Skapar en NY nyhetsartikel (tabellen site_news_articles, skild från sajtens sidinnehåll) utifrån det kunden skrivit och/eller bifogat i DET HÄR meddelandet. Används ENDAST när kunden uttryckligen bett om att skapa/skriva/publicera en nyhet/artikel/inlägg. Utelämna annars helt — även om meddelandet nämner ordet \"nyhet\" i förbigående.",
+        properties: {
+          title: {
+            type: "string",
+            description:
+              "Artikelns rubrik. Använd EXAKT vad kunden skrev som rubrik, eller den tydliga rubriken/första raden i ett bifogat dokument. Hitta ALDRIG på en egen rubrik — är den inte tydlig, utelämna HELA \"newsArticle\"-objektet och fråga efter en rubrik i \"summary\" istället.",
+          },
+          excerpt: {
+            type: "string",
+            description: "En kort sammanfattande mening (visas i artikellistan) — du får formulera den själv utifrån texten.",
+          },
+          body: {
+            type: "string",
+            description:
+              "Artikelns brödtext, i stycken separerade med tomrad. Använd kundens egen text (skriven i meddelandet eller ett bifogat dokument) om sådan finns — korrigera bara uppenbara stavfel, skriv inte om innehållet. Saknas egen text helt (kunden bad bara \"skriv en nyhet om X\"), skriv en kort, professionell text utifrån det kunden beskrev.",
+          },
+          category: {
+            type: "string",
+            enum: [...NEWS_CATEGORIES],
+            description:
+              `Vilken av de tre kategorierna artikeln hör till: ${NEWS_CATEGORIES.join("/")}. Använd den kunden uttryckligen nämner. Annars välj den uppenbara (t.ex. en rea/kampanj -> "Erbjudanden", öppet hus/mässa/fest -> "Evenemang") BARA om det är tydligt — är det oklart, utelämna HELA "newsArticle"-objektet och fråga vilken kategori i "summary" istället.`,
+          },
+          published: {
+            type: "boolean",
+            description:
+              "true om kunden uttryckligen vill publicera direkt (t.ex. \"publicera\", \"lägg upp nu\"). false (eller utelämnat) om de vill spara som utkast, eller inte sagt något om det — nämn då i \"summary\" att de kan publicera den på Nyheter-sidan i panelen när de är nöjda.",
+          },
+        },
+        required: ["title", "body", "category"],
+      },
       summary: {
         type: "string",
         description:
@@ -49,6 +83,13 @@ type EditPatch = {
   metaPixelId?: string;
   changedPages?: SitePageContent[];
   removedPagePaths?: string[];
+  newsArticle?: {
+    title: string;
+    excerpt?: string;
+    body: string;
+    category: string;
+    published?: boolean;
+  };
   summary: string;
   unsupported?: boolean;
 };
@@ -125,7 +166,9 @@ VIKTIGT — kartsektion ("map"): fältet "address" ska vara EXAKT den adress kun
 
 VIKTIGT — sektioner läggs ALLTID under varandra, ALDRIG bredvid varandra, oavsett typ (en sida är en enkel lista av sektioner, inget rutnät av sektioner). Ber kunden om "X och Y bredvid varandra" eller "i samma sektion/rad" där X/Y är två OLIKA sektionstyper, finns bara EN kombination som faktiskt stöds: ett kontaktformulär med en karta bredvid — sätt då "contactForm"-sektionens "layout" till "split-map" och fyll i dess "address" (samma regel som för "map" ovan: EXAKT kundens adress, aldrig påhittad), ISTÄLLET FÖR en separat "map"-sektion. Har kunden redan en separat "map"-sektion med samma adress när de ber om detta, ta bort den (lägg inte till dess path i "changedPages" igen, eller skriv ut sidans sektionslista utan den) så det inte blir dubbelt. Någon annan kombination av sektioner sida vid sida går inte att göra — förklara det kort i "summary" och föreslå att lägga dem efter varandra istället.
 
-VIKTIGT — nyheter ("newsList"): den här sektionen bara visar kundens REDAN publicerade nyhetsartiklar som ett rutnät på en sida — den innehåller inga artiklar själv, bara en rubrik. Artiklarna skriver och publicerar kunden själv på "Nyheter"-sidan i panelen (inte i den här chatten) — hitta ALDRIG på artikeltitlar, artikeltexter eller artikelbilder. Ber kunden om en nyhetssida, lägg till "newsList"-sektionen på den sidan (högst en per sida) och svara i "summary" att de skriver och publicerar själva artiklarna på Nyheter-sidan i panelen.
+VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
+
+VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik och kategori får ALDRIG hittas på — se fältbeskrivningarna. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället (lista då de tre kategorierna: Nyheter/Erbjudanden/Evenemang). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också.
 
 VIKTIGT — Google Analytics/Meta Pixel: ber kunden att koppla på Google Analytics eller Meta (Facebook) Pixel och GER dig ett ID i samma meddelande, sätt det i "gaMeasurementId" respektive "metaPixelId". Ber kunden om det men utan att ange något ID, svara i "summary" och be om ID:t istället — hitta aldrig på ett. Vill kunden koppla BORT en redan kopplad tagg, sätt motsvarande fält till en tom sträng. Scripten laddas bara in på sajten efter att besökaren godkänt "Alla cookies" i cookiebannern — nämn det kort om kunden undrar varför de inte ser något direkt i förhandsvisningen utan att godkänna den.
 
@@ -385,9 +428,43 @@ export async function POST(request: Request) {
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
 
+  // Skapar en ny nyhetsartikel i en EGEN tabell (site_news_articles) om
+  // Claude bad om det (patch.newsArticle) — skild från sajtens sidinnehåll
+  // ovan, se NewsArticle i lib/newsArticles.ts. Precis som för bilder i
+  // sajtens sektioner väljer koden (inte Claude) vilken bild artikeln får:
+  // den FÖRSTA bifogade bilden i det här meddelandet, om någon — Claude
+  // ombeds aldrig ange en bild-URL själv (se verktygets fältbeskrivning).
+  let newsArticle: NewsArticle | null = null;
+  if (patch.newsArticle && isNewsCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
+    const title = patch.newsArticle.title.trim().slice(0, 120);
+    const slug = await uniqueSlugForSite(supabase, site.id, title);
+    const firstImage = imageAttachments[0]?.url || null;
+    const nowIso = new Date().toISOString();
+    const { data: inserted, error: newsError } = await supabase
+      .from("site_news_articles")
+      .insert({
+        site_id: site.id,
+        title,
+        slug,
+        excerpt: patch.newsArticle.excerpt?.trim().slice(0, 300) || null,
+        body: patch.newsArticle.body.trim().slice(0, 20000),
+        image_url: firstImage,
+        category: patch.newsArticle.category,
+        published: patch.newsArticle.published === true,
+        published_at: patch.newsArticle.published === true ? nowIso : null,
+      })
+      .select("*")
+      .single();
+    // Ett misslyckat artikelsparande ska inte få hela ändringen (som redan
+    // sparats ovan) att se ut som att den misslyckades för kunden — bara
+    // artikeln uteblir, resten av svaret går igenom som vanligt.
+    if (!newsError) newsArticle = inserted as NewsArticle;
+  }
+
   return NextResponse.json({
     content: updatedContent,
     summary: patch.summary,
     unsupported: patch.unsupported === true,
+    newsArticle,
   });
 }
