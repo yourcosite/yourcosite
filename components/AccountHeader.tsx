@@ -44,16 +44,20 @@ export default function AccountHeader({
   };
 
   return (
-    <div className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-line bg-surface flex-shrink-0">
+    <div className="flex items-center justify-between px-5 md:px-12 py-4 md:py-5 border-b border-line bg-surface flex-shrink-0">
       <Link href="/dashboard">
         <Logo light={false} />
       </Link>
       <div className="flex items-center gap-8 text-[14.5px] text-ink-dim relative">
+        {/* Navlänkarna får inte plats bredvid kontoknappen under md — där
+            visas de istället överst i kontomenyn (se nedan), så all
+            navigering fortfarande nås via EN knapp istället för att klämma
+            in en egen hamburgermeny också. */}
         {navLinks.map((l) => (
           <Link
             key={l.href}
             href={l.href}
-            className={active === l.href ? "text-ink font-semibold" : ""}
+            className={`hidden md:inline ${active === l.href ? "text-ink font-semibold" : ""}`}
           >
             {l.label}
           </Link>
@@ -62,7 +66,7 @@ export default function AccountHeader({
           onClick={() => setMenuOpen((v) => !v)}
           aria-label="Kontomeny"
           aria-expanded={menuOpen}
-          className="w-[34px] h-[34px] rounded-full bg-accent-soft text-ink flex items-center justify-center font-bold text-[13px]"
+          className="w-[34px] h-[34px] rounded-full bg-accent-soft text-ink flex items-center justify-center font-bold text-[13px] flex-shrink-0"
         >
           {initialsOf(userName)}
         </button>
@@ -75,12 +79,21 @@ export default function AccountHeader({
                 <div className="text-[12px] text-ink-dim mt-0.5">{userEmail}</div>
               )}
             </div>
-            <Link href="/installningar" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-ink">
-              Inställningar
-            </Link>
-            <Link href="/fakturering" className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-ink">
-              Fakturering
-            </Link>
+            {/* Bara på mobilen, där raden ovan är dold — annars skulle
+                Sajter/Statistik stå dubbelt i både headern och menyn. */}
+            {navLinks.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setMenuOpen(false)}
+                className={`md:hidden flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] ${
+                  active === l.href ? "text-ink font-semibold" : "text-ink"
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+            <div className="md:hidden h-px bg-line my-1.5" />
             <button
               onClick={() => {
                 setMenuOpen(false);

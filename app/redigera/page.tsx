@@ -125,6 +125,14 @@ export default function EditorPage() {
   const [supportDraft, setSupportDraft] = useState({ message: "", context: "" });
   const [trackingOpen, setTrackingOpen] = useState(false);
 
+  // Under md-brytpunkten får förhandsvisningen och chatten inte plats sida
+  // vid sida (chattpanelen är 400px fast bredd) — mobilView styr vilken av
+  // de två som visas, växlat med flikarna strax under headern. Båda
+  // panelerna ligger kvar i DOM:en hela tiden (bara dolda med CSS), så
+  // chatthistorik/scrollposition osv. inte tappas när man växlar.
+  const [mobileView, setMobileView] = useState<"preview" | "chat">("preview");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     fetch("/api/sites/mine")
       .then((r) => r.json())
@@ -244,30 +252,39 @@ export default function EditorPage() {
 
   return (
     <div className="h-screen flex flex-col font-sans overflow-hidden">
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-line bg-surface flex-shrink-0">
-        <div className="flex items-center gap-5">
+      <div className="flex items-center justify-between px-3.5 md:px-6 py-3.5 border-b border-line bg-surface flex-shrink-0 relative">
+        <div className="flex items-center gap-2.5 md:gap-5 min-w-0">
           <Link
             href="/dashboard"
             title="Tillbaka till kundzonen"
-            className="flex items-center gap-1.5 text-[12.5px] font-bold text-ink bg-bg border border-line px-3 py-1.5 rounded-full flex-shrink-0"
+            className="flex items-center gap-1.5 text-[12.5px] font-bold text-ink bg-bg border border-line px-2.5 md:px-3 py-1.5 rounded-full flex-shrink-0"
           >
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12" />
               <polyline points="12 19 5 12 12 5" />
             </svg>
-            Kundzon
+            {/* Loggan intill räcker som varumärke på en smal skärm — "Kundzon"
+                i klartext tar bara plats som den fasta "← Kundzon"-knappen
+                redan ger genom ikonen. */}
+            <span className="hidden sm:inline">Kundzon</span>
           </Link>
-          <div className="w-px h-5.5 bg-line" />
-          <Logo light={false} />
-          <div>
-            <div className="text-[14px] font-semibold">{site?.name || "Din sajt"}</div>
-            <div className="text-[11.5px] text-ink-dim">
+          <div className="hidden md:block w-px h-5.5 bg-line" />
+          <div className="hidden md:block">
+            <Logo light={false} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[14px] font-semibold truncate">{site?.name || "Din sajt"}</div>
+            <div className="text-[11.5px] text-ink-dim truncate">
               {site ? (site.status === "live" ? "Live" : "Utkast") : "…"}
               {site?.domain ? ` · ${site.domain}` : " · ingen domän ännu"}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3.5">
+
+        {/* Desktop: alla knappar synliga i rad. Under md-brytpunkten finns
+            inte plats för fyra separata knappar bredvid sajtnamnet, så de
+            samlas istället i en meny (se nedan). */}
+        <div className="hidden md:flex items-center gap-3.5 flex-shrink-0">
           <button
             type="button"
             onClick={() => setTrackingOpen(true)}
@@ -300,10 +317,85 @@ export default function EditorPage() {
             Publicera (kommer snart)
           </button>
         </div>
+
+        {/* Mobil: samma fyra åtgärder, samlade bakom en enda meny-knapp. */}
+        <button
+          type="button"
+          onClick={() => setMobileMenuOpen((v) => !v)}
+          aria-label="Fler alternativ"
+          aria-expanded={mobileMenuOpen}
+          className="md:hidden w-9 h-9 rounded-lg border border-line bg-bg flex items-center justify-center text-ink flex-shrink-0"
+        >
+          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none" />
+          </svg>
+        </button>
+
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full right-3.5 mt-1.5 w-[230px] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.14)] p-1.5 z-30">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setTrackingOpen(true);
+              }}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
+            >
+              Analys och marknadsföring
+            </button>
+            <Link
+              href="/sidor"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
+            >
+              Sidor
+            </Link>
+            <Link
+              href="/forhandsgranska"
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
+            >
+              Förhandsgranska
+            </Link>
+            <div className="h-px bg-line my-1.5" />
+            <div className="px-3 py-2 text-[12.5px] text-ink-dim leading-relaxed">
+              Publicera (kommer snart) — publicering till en riktig domän byggs i ett senare steg.
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Mobil: flikar för att växla mellan förhandsvisning och chatt — de
+          får inte plats sida vid sida under md (se mobileView ovan). */}
+      <div className="md:hidden flex border-b border-line bg-surface flex-shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobileView("preview")}
+          className={`flex-1 text-center text-[13px] font-semibold py-2.5 border-b-2 ${
+            mobileView === "preview" ? "border-ink text-ink" : "border-transparent text-ink-dim"
+          }`}
+        >
+          Sajten
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobileView("chat")}
+          className={`flex-1 text-center text-[13px] font-semibold py-2.5 border-b-2 ${
+            mobileView === "chat" ? "border-ink text-ink" : "border-transparent text-ink-dim"
+          }`}
+        >
+          Chatta med Millie
+        </button>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 bg-[#E5E3DD] flex items-center justify-center p-7 overflow-hidden">
+        <div
+          className={`${mobileView === "preview" ? "flex" : "hidden"} md:flex flex-1 bg-[#E5E3DD] items-center justify-center p-3.5 md:p-7 overflow-hidden`}
+        >
           {loadError && (
             <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px] max-w-[420px]">
               {loadError}{" "}
@@ -350,7 +442,9 @@ export default function EditorPage() {
           )}
         </div>
 
-        <div className="w-[400px] border-l border-line bg-surface flex flex-col flex-shrink-0">
+        <div
+          className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex w-full md:w-[400px] border-l-0 md:border-l border-line bg-surface flex-col flex-shrink-0`}
+        >
           <div className="px-5 py-4 border-b border-line flex items-center gap-2.5">
             <Millie size={28} />
             <div>
