@@ -108,7 +108,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
   {
     id: "norden",
     label: "Ren och strukturerad",
-    desc: "Vit bakgrund, en hero i fyra rutor med nyckeltal och tonade textfält, fyrkantiga knappar — skarp och ordnad.",
+    desc: "Vit bakgrund, en delad hero med en stor bild till höger och ett flytande AI-kort, fyrkantiga knappar — skarp och ordnad.",
     font: "sans",
     backgroundMode: "light",
     buttonStyle: "square",

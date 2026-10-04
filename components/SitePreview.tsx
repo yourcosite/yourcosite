@@ -1641,28 +1641,30 @@ function SectionBlockInner({
       }
 
       if (layout === "quad") {
-        // 2x2-rutnät — Lumora-referensen kunden visade: en tonad textruta
-        // och ett foto överst, ett andra foto med ett flytande
-        // nyckeltalskort och ännu en tonad textruta nederst. Återanvänder
-        // samma fält som "collage" (headlineEmphasis/stats/
-        // collageImageUrls) — bara kompositionen skiljer sig.
-        const [quadImageB] = section.collageImageUrls || [];
+        // HELT ombyggd efter kundens pixel-exakta referenskod ("Lumora —
+        // Split Screen Template") — det ursprungliga 2x2-rutnäts-försöket
+        // (tre bilder + två tonade textrutor) var vår egen, mindre lyckade
+        // tolkning av en skärmdump ("känns lite snedvriden" / "känns
+        // utzoomad", återkommande kundfeedback). Referenskoden visar att
+        // det faktiskt är en vanlig DELAD hero (text vänster, EN bild
+        // höger som täcker hela höjden) plus ett litet flytande
+        // "AI-verktyg"-kort nere på bilden — inte ett bildkollage. Samma
+        // fält som förut (eyebrow/headline/headlineEmphasis/body/cta),
+        // plus stats återanvänd som en kort bock-rad under knappen
+        // (referensens "No credit card required / AI powered / Publish
+        // in minutes") istället för nyckeltalssiffror — ingen ny
+        // AI-genererad data krävs, bara en annan presentation av samma
+        // fält. Det flytande kortets text är ren dekoration (som
+        // "01 — 03"-sidnumreringen i "editorial" ovan), inte kundinnehåll.
         const stats = section.stats || [];
-        const [cardStat, ...restStats] = stats;
-        // Låg, tonad bakgrund av kundens accentfärg på textrutorna — det
-        // kunden själv efterfrågade ("kundens huvudfärg i bakgrunden på
-        // fälten med texten"). Två styrkor så de två textrutorna inte blir
-        // identiska.
-        const tintStrong = `${accent}17`;
-        const tintSoft = `${accent}0C`;
         return (
-          <div className="grid @3xl:grid-cols-2">
-            <div className="flex flex-col justify-center items-start px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintStrong }}>
+          <div className="grid @3xl:grid-cols-2 items-stretch">
+            <div className="flex flex-col justify-center items-start px-8 @3xl:px-14 py-14 @3xl:py-0">
               {section.eyebrow && (
                 <Field
                   editable={editable}
                   as="div"
-                  className="text-[11.5px] tracking-[0.14em] font-semibold mb-3.5"
+                  className="text-[11px] tracking-[0.18em] font-semibold mb-4"
                   style={{ color: palette.textDim }}
                   selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
                   onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
@@ -1673,7 +1675,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[34px] @3xl:text-[44px]" : "text-[28px] @3xl:text-[34px]"}`}
+                className={`font-serif leading-[0.96] tracking-tight mb-6 ${heroEmphasis ? "text-[46px] @3xl:text-[66px]" : "text-[36px] @3xl:text-[50px]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -1684,7 +1686,7 @@ function SectionBlockInner({
                     <Field
                       editable={editable}
                       as="span"
-                      className="italic"
+                      className="block"
                       selected={selectedFieldKey === fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden")?.key}
                       onSelect={() => { const s = fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden"); s && onSelectField?.(s); }}
                     >
@@ -1696,7 +1698,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="p"
-                className="text-[14.5px] leading-relaxed mb-6 max-w-[360px]"
+                className="text-[15px] @3xl:text-[16px] leading-relaxed mb-8 max-w-[440px]"
                 style={{ color: palette.textDim }}
                 selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
                 onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
@@ -1714,67 +1716,46 @@ function SectionBlockInner({
                   </CtaPill>
                 </FieldBadge>
               )}
+              {stats.length > 0 && (
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-8 text-[12px]" style={{ color: palette.textDim }}>
+                  {stats.slice(0, 3).map((stat, i) => (
+                    <span key={i} className="flex items-center gap-1.5">
+                      <span className="font-bold" style={{ color: accent }}>✓</span>
+                      {stat.label}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
-            {/* aspect-ratio istället för en fast pixelhöjd — en fast höjd
-                (som förut) blev en orimligt bred/platt "panorama"-beskärning
-                på en bred skärm (kundens "känns utzoomad"-feedback), eftersom
-                kolumnens BREDD växer med skärmen men höjden stod stilla.
-                Med aspect-ratio växer höjden i takt med bredden istället. */}
-            <div className={`relative ${heroEmphasis ? "h-[300px]" : "h-[240px]"} @3xl:h-auto @3xl:aspect-[5/4]`}>
+            <div className={`relative ${heroEmphasis ? "h-[360px]" : "h-[300px]"} @3xl:h-auto`}>
               <ImageOrArt
                 imageUrl={section.imageUrl}
                 art={art}
                 fill
+                dark
                 selectable={editable}
                 selected={!!heroSelection && selectedImageKey === heroSelection.key}
                 onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
               />
-            </div>
-            <div className={`relative ${heroEmphasis ? "h-[300px]" : "h-[240px]"} @3xl:h-auto @3xl:aspect-[5/4]`}>
-              <ImageOrArt imageUrl={quadImageB} art={art} fill selectable={false} />
-              {cardStat && (
-                <div
-                  className="absolute left-4 bottom-4 @3xl:left-5 @3xl:bottom-5 rounded-xl px-4 py-3 max-w-[200px] shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
-                  style={{ background: palette.cardBg }}
+              {/* Rent dekorativt "AI-verktyg"-kort — referensens "Create a
+                  website / Describe your idea and let AI do the rest",
+                  samma princip som sidnumreringen i "editorial"-heron:
+                  app-chrome, inte kundinnehåll, ingen egen funktion. */}
+              <div
+                className="absolute left-1/2 -translate-x-1/2 bottom-5 @3xl:bottom-8 flex items-center gap-3 px-4 py-3.5 rounded-xl max-w-[88%] @3xl:max-w-[360px] shadow-[0_20px_50px_rgba(0,0,0,0.22)]"
+                style={{ background: "rgba(255,255,255,0.94)" }}
+              >
+                <span
+                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-[15px]"
+                  style={{ background: `${accent}22`, color: accent }}
                 >
-                  <div className="text-[19px] font-serif font-semibold">{cardStat.value}</div>
-                  <div className="text-[11.5px]" style={{ color: palette.textDim }}>{cardStat.label}</div>
+                  ✦
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[12.5px] font-semibold" style={{ color: "#17171A" }}>Skapa en sajt</div>
+                  <div className="text-[11px] truncate" style={{ color: "#6E6C68" }}>Beskriv din idé, så fixar AI resten.</div>
                 </div>
-              )}
-            </div>
-            <div className="flex flex-col justify-center items-start px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintSoft }}>
-              {restStats.length > 0 ? (
-                <div className="flex flex-col gap-5">
-                  {restStats.slice(0, 2).map((stat, i) => (
-                    <div key={i} className={i > 0 ? "pt-5 border-t" : ""} style={{ borderColor: palette.cardBorder }}>
-                      <div className="text-[20px] font-serif font-semibold">{stat.value}</div>
-                      <div className="text-[12.5px]" style={{ color: palette.textDim }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                // Inga (fler) nyckeltal att visa (vanligt — de flesta
-                // kunder har inga verifierbara siffror, se stats-fältets
-                // beskrivning) — en knapp helt utan text bredvid såg bara
-                // ut som en trasig, tom ruta (kundfeedback), så den får en
-                // kort, generisk stödrad ovanför istället för att stå ensam.
-                section.ctaLabel && (
-                  <div className="flex flex-col gap-4">
-                    <div className="font-serif text-[21px] @3xl:text-[24px] leading-snug">
-                      Redo att komma igång?
-                    </div>
-                    <FieldBadge
-                      editable={editable}
-                      selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
-                      onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
-                    >
-                      <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
-                        {section.ctaLabel}
-                      </CtaPill>
-                    </FieldBadge>
-                  </div>
-                )
-              )}
+              </div>
             </div>
           </div>
         );
