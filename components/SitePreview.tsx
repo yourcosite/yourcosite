@@ -1737,25 +1737,33 @@ function SectionBlockInner({
                 selected={!!heroSelection && selectedImageKey === heroSelection.key}
                 onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
               />
-              {/* Rent dekorativt "AI-verktyg"-kort — referensens "Create a
-                  website / Describe your idea and let AI do the rest",
-                  samma princip som sidnumreringen i "editorial"-heron:
-                  app-chrome, inte kundinnehåll, ingen egen funktion. */}
-              <div
-                className="absolute left-1/2 -translate-x-1/2 bottom-5 @3xl:bottom-8 flex items-center gap-3 px-4 py-3.5 rounded-xl max-w-[88%] @3xl:max-w-[360px] shadow-[0_20px_50px_rgba(0,0,0,0.22)]"
-                style={{ background: "rgba(255,255,255,0.94)" }}
-              >
-                <span
-                  className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-[15px]"
-                  style={{ background: `${accent}22`, color: accent }}
+              {/* Flytande kort — INTE om "skapa en sajt med AI" längre
+                  (kundfeedback: kortet ska handla om KUNDENS verksamhet,
+                  inte om hur sajten gjordes). Visar förtexten (eyebrow,
+                  samma riktiga AI-skrivna textfält som resten av heron —
+                  t.ex. "Fritid och äventyr") och, om det finns, det
+                  första nyckeltalet som en kort andra rad. Ingen bild
+                  behövs — rubriken ensam räcker för att kortet ska kännas
+                  meningsfullt, så det visas bara om eyebrow finns. */}
+              {section.eyebrow && (
+                <div
+                  className="absolute left-1/2 -translate-x-1/2 bottom-5 @3xl:bottom-8 flex items-center gap-3 px-4 py-3.5 rounded-xl max-w-[88%] @3xl:max-w-[360px] shadow-[0_20px_50px_rgba(0,0,0,0.22)]"
+                  style={{ background: "rgba(255,255,255,0.94)" }}
                 >
-                  ✦
-                </span>
-                <div className="min-w-0">
-                  <div className="text-[12.5px] font-semibold" style={{ color: "#17171A" }}>Skapa en sajt</div>
-                  <div className="text-[11px] truncate" style={{ color: "#6E6C68" }}>Beskriv din idé, så fixar AI resten.</div>
+                  <span
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-[15px] font-serif font-semibold"
+                    style={{ background: `${accent}22`, color: accent }}
+                  >
+                    {section.eyebrow.charAt(0).toUpperCase()}
+                  </span>
+                  <div className="min-w-0">
+                    <div className="text-[12.5px] font-semibold truncate" style={{ color: "#17171A" }}>{section.eyebrow}</div>
+                    {stats[0] && (
+                      <div className="text-[11px] truncate" style={{ color: "#6E6C68" }}>{stats[0].label}</div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         );

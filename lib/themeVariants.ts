@@ -3,10 +3,12 @@
 // steg 4) används i alla, bara bakgrund/typsnitt skiljer. Ingen extra
 // AI-generering krävs för det här — bara CSS.
 //
-// Täcker alla 3 bakgrundslägen × 2 typsnitt (6 kombinationer) istället för
-// bara 3 — annars riskerade två kunder med samma ton (t.ex. båda "lekfull")
-// att alltid hamna på exakt samma tre förslag, vilket gjorde att sajter
-// kändes mallade även när kunderna själva valde olika.
+// Hade tidigare 3 extra varianter ("Luftig och klassisk", "Varm och
+// lekfull", "Djärv och färgstark") som bara bytte typsnitt mot sin
+// "syskon"-variant utan att ändra hero-layout eller annat — kundfeedback:
+// för lika sina syskon för att kännas som egna, meningsfulla val. Varje
+// kvarvarande variant ska ha en tydligt egen känsla (hero-layout,
+// knappform, header-uppbyggnad), inte bara ett annat typsnitt.
 import type { ThemeFont, ButtonStyle, HeaderLayout, HeroLayout } from "./contentModel";
 
 export type BackgroundMode = "light" | "warm" | "dark";
@@ -45,16 +47,6 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     heroLayout: "fade-bottom",
   },
   {
-    id: "luftig-klassisk",
-    label: "Luftig och klassisk",
-    desc: "Vit bakgrund som ovan, men med ett snirkligare, mer tidlöst typsnitt.",
-    font: "serif",
-    backgroundMode: "light",
-    buttonStyle: "underline",
-    headerLayout: "left",
-    heroLayout: "fade-bottom",
-  },
-  {
     id: "varm",
     label: "Varm och personlig",
     desc: "Krämig bakgrund, rundare känsla, inbjudande.",
@@ -66,29 +58,9 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     recommended: true,
   },
   {
-    id: "varm-lekfull",
-    label: "Varm och lekfull",
-    desc: "Samma krämiga bakgrund, men med ett rakare, mer busigt typsnitt.",
-    font: "sans",
-    backgroundMode: "warm",
-    buttonStyle: "pill",
-    headerLayout: "centered-stacked",
-    heroLayout: "centered",
-  },
-  {
-    id: "djarv",
-    label: "Djärv och färgstark",
-    desc: "Mörk bakgrund, hög kontrast, syns direkt.",
-    font: "sans",
-    backgroundMode: "dark",
-    buttonStyle: "square",
-    headerLayout: "split",
-    heroLayout: "overlay-bottom",
-  },
-  {
     id: "djarv-elegant",
     label: "Djärv och elegant",
-    desc: "Samma mörka bakgrund, men med ett mer exklusivt, redaktionellt typsnitt.",
+    desc: "Mörk bakgrund, hög kontrast, ett exklusivt redaktionellt typsnitt — syns direkt.",
     font: "serif",
     backgroundMode: "dark",
     buttonStyle: "square",
