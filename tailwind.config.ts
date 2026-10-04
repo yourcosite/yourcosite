@@ -55,7 +55,17 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
+  // @container-queries: förhandsgranskningen i /redigera renderas i en
+  // "webbläsarruta" som kan vara mycket smalare än det faktiska
+  // skärmfönstret (chattpanelen tar plats bredvid den) — vanliga md:/lg:
+  // Tailwind-klasser reagerar på FÖNSTRETS bredd, inte rutans, så på en
+  // bred/högupplöst skärm kunde sajten tro den hade gott om plats (stora
+  // hero-höjder, datorlayout) fast själva rutan var smal, vilket klippte
+  // bilder hårt och gav en "inzoomad" känsla. SitePreview.tsx använder
+  // @xl:/@3xl: (container queries) istället för md:/lg: just där det
+  // påverkar layouten, så den alltid anpassar sig efter rutans egen
+  // bredd — både i redigeraren och på den riktiga, publika sajten.
+  plugins: [require("@tailwindcss/container-queries")],
 };
 
 export default config;

@@ -308,3 +308,31 @@ export function isValidSiteContent(value: unknown): value is SiteContent {
 
   return v.pages.every(isValidSitePage);
 }
+
+// Gör ett sidnamn till en ren url-sökväg ("Våra tjänster" -> "/vara-tjanster")
+// — samma princip som artiklarnas slugify() i lib/newsArticles.ts, men för
+// hela sidor. Används när kunden skapar en ny sida via "Sidor" i
+// redigeraren (app/sidor/page.tsx) och namnger den direkt, istället för att
+// AI:n (eller koden) hittar på ett sökvägsnamn kunden aldrig sett.
+export function slugifyPagePath(label: string): string {
+  const slug = label
+    .toLowerCase()
+    .replace(/å/g, "a")
+    .replace(/ä/g, "a")
+    .replace(/ö/g, "o")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60);
+  return `/${slug || "sida"}`;
+}
+
+// Hittar en sökväg som inte redan finns bland sajtens sidor — lägger på
+// "-2", "-3" osv. vid en krock (t.ex. två sidor som båda heter "Kontakt").
+export function uniquePagePath(pages: SitePageContent[], label: string, excludePath?: string): string {
+  const base = slugifyPagePath(label);
+  const taken = new Set(pages.filter((p) => p.path !== excludePath).map((p) => p.path));
+  if (!taken.has(base)) return base;
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n += 1;
+  return `${base}-${n}`;
+}

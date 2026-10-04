@@ -194,7 +194,17 @@ export default function SitePreview({
   };
 
   return (
-    <div className={fontClass} style={{ background: palette.bg, color: palette.text }}>
+    // "@container": gör att alla @3xl:-klasser nedan (ersätter de gamla
+    // md:-klasserna) mäter mot DEN HÄR rutans egen bredd istället för hela
+    // webbläsarfönstret. Annars gissade layouten fel i chattredigerarens
+    // smalare förhandsvisningsruta (/redigera) — en bred/högupplöst skärm
+    // kunde trigga "stor skärm"-layouten (höga hero-bilder, datormeny)
+    // trots att rutan själv var mycket smalare än fönstret, vilket klippte
+    // bilder hårt med object-cover och gav en "inzoomad", instängd känsla
+    // istället för den tänkta breda, maffiga bilden. På den riktiga,
+    // publika sajten (där rutan alltid är lika bred som fönstret) ger detta
+    // exakt samma resultat som förut.
+    <div className={`${fontClass} @container`} style={{ background: palette.bg, color: palette.text }}>
       <div className={overlayHeader ? "relative" : undefined}>
         <Header
           siteName={siteName}
@@ -240,6 +250,15 @@ export default function SitePreview({
           basePath={basePath}
           onNavigate={onNavigate}
         />
+      ) : restSections.length === 0 ? (
+        // En nyss skapad sida (via "Sidor" i redigeraren) har inget
+        // innehåll än — precis som den tomma nyhetslistan (se newsList
+        // nedan) visar vi en vänlig platshållartext istället för en helt
+        // tom yta mellan header och sidfot, tills kunden bett Millie
+        // fylla den.
+        <div className="px-10 py-24 text-center" style={{ color: palette.textDim }}>
+          <p className="text-[14.5px]">Den här sidan har inget innehåll än — berätta för Millie vad den ska handla om.</p>
+        </div>
       ) : (
         restSections.map((section, i) => (
           <SectionBlock
@@ -308,7 +327,7 @@ export default function SitePreview({
 function PrivacyPolicyBlock({ text, palette }: { text: string; palette: Palette }) {
   const blocks = text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
   return (
-    <div className="px-8 md:px-14 py-14 max-w-[720px] mx-auto">
+    <div className="px-8 @3xl:px-14 py-14 max-w-[720px] mx-auto">
       {blocks.map((block, i) =>
         block.startsWith("## ") ? (
           <h2 key={i} className="font-serif text-[22px] mt-9 mb-3 first:mt-0">
@@ -348,7 +367,7 @@ function NewsArticleDetail({
     ? new Date(article.published_at).toLocaleDateString("sv-SE", { year: "numeric", month: "long", day: "numeric" })
     : null;
   return (
-    <div className="px-8 md:px-14 py-14 max-w-[720px] mx-auto">
+    <div className="px-8 @3xl:px-14 py-14 max-w-[720px] mx-auto">
       <CtaLink
         link={listPath}
         basePath={basePath}
@@ -364,7 +383,7 @@ function NewsArticleDetail({
           <img src={article.image_url} alt={article.title} className="w-full h-auto object-cover" />
         </div>
       )}
-      <h1 className="font-serif text-[30px] md:text-[36px] leading-tight mb-2">{article.title}</h1>
+      <h1 className="font-serif text-[30px] @3xl:text-[36px] leading-tight mb-2">{article.title}</h1>
       {publishedDate && (
         <div className="text-[13px] mb-7" style={{ color: palette.textDim }}>
           {publishedDate}
@@ -529,7 +548,7 @@ function Header({
       // Mobilmenyns utfällbara panel positioneras "absolute" mot den här
       // headern, så den behöver vara en positionerad förälder även i
       // icke-overlay-läget.
-      className={`flex items-center justify-between px-8 md:px-12 py-4 ${
+      className={`flex items-center justify-between px-8 @3xl:px-12 py-4 ${
         overlay ? "absolute top-0 left-0 right-0 z-10" : "relative"
       }`}
       style={
@@ -549,7 +568,7 @@ function Header({
             <img
               src={logoUrl}
               alt={siteName || "Logga"}
-              className={overlay ? "h-12 md:h-16 max-w-[220px] object-contain" : "h-16 md:h-24 max-w-[320px] object-contain"}
+              className={overlay ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
             />
           </div>
         ) : (
@@ -558,8 +577,12 @@ function Header({
           </span>
         )}
       </div>
-      <nav className="hidden md:flex items-center gap-7 text-[13px] font-semibold">
-        {pages.slice(0, 5).map((p) =>
+      <nav className="hidden @3xl:flex items-center gap-7 text-[13px] font-semibold">
+        {/* Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
+            footerns gräns nedan) så en nytillagd sida inte "försvinner" ur
+            menyn bara därför att sajten redan hade fem sidor sedan
+            onboardingen. */}
+        {pages.slice(0, 8).map((p) =>
           onNavigate ? (
             <button
               key={p.path}
@@ -589,15 +612,19 @@ function Header({
       </nav>
 
       {/* Hamburgarmeny — tidigare fanns ingen mobilvariant av menyn alls
-          (bara "hidden md:flex" ovan), så sidorna gick inte att nå på en
-          smal skärm. Syns bara under md-brytpunkten, fäller ut en enkel
-          lista med sidorna. */}
+          (bara "hidden @3xl:flex" ovan), så sidorna gick inte att nå på en
+          smal skärm. Syns bara under brytpunkten, fäller ut en enkel
+          lista med sidorna. Container-query (@3xl, se tailwind.config.ts)
+          istället för md: — menyn ska reagera på RUTANS egen bredd, inte
+          hela fönstrets, annars blir den felaktigt "desktop" i t.ex. den
+          smalare webbläsarrutan i /redigera trots gott om utrymme i
+          fönstret. */}
       <button
         type="button"
         onClick={() => setMenuOpen((v) => !v)}
         aria-label={menuOpen ? "Stäng meny" : "Öppna meny"}
         aria-expanded={menuOpen}
-        className="md:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0"
+        className="@3xl:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0"
       >
         <span
           className="block w-[18px] h-[2px] rounded-full transition-transform"
@@ -611,10 +638,10 @@ function Header({
 
       {menuOpen && (
         <div
-          className="md:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
+          className="@3xl:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
           style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
         >
-          {pages.slice(0, 5).map((p) =>
+          {pages.slice(0, 8).map((p) =>
             onNavigate ? (
               <button
                 key={p.path}
@@ -698,7 +725,7 @@ function Footer({
       {/* Sidfotsmenyn — samma sidor, samma tre-vägs länklogik som
           huvudmenyn (onNavigate i chattredigeraren, riktig <a href> på en
           publicerad sida, annars bara text i /forslag-miniatyrerna). */}
-      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-8 md:px-12 py-5 text-[12.5px]">
+      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-8 @3xl:px-12 py-5 text-[12.5px]">
         {pages.slice(0, 8).map((p) =>
           onNavigate ? (
             <button
@@ -728,7 +755,7 @@ function Footer({
       </nav>
 
       <div
-        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 md:px-12 py-6 text-[12px]"
+        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 @3xl:px-12 py-6 text-[12px]"
         style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
       >
         <span className="flex items-center gap-4 flex-wrap justify-center">
@@ -1319,14 +1346,14 @@ function SectionBlockInner({
           <ImageOrArt
             imageUrl={section.imageUrl}
             art={art}
-            className={heroEmphasis ? "h-[420px] md:h-[600px]" : "h-[320px] md:h-[440px]"}
+            className={heroEmphasis ? "h-[420px] @3xl:h-[600px]" : "h-[320px] @3xl:h-[440px]"}
             selectable={editable}
             selected={!!heroSelection && selectedImageKey === heroSelection.key}
             onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
           />
         );
         const textCol = (
-          <div className={`flex flex-col justify-center px-8 md:px-14 ${heroEmphasis ? "py-10 md:py-0" : "py-10"} ${imageFirst ? "md:text-left" : "md:text-right md:items-end"}`}>
+          <div className={`flex flex-col justify-center px-8 @3xl:px-14 ${heroEmphasis ? "py-10 @3xl:py-0" : "py-10"} ${imageFirst ? "@3xl:text-left" : "@3xl:text-right @3xl:items-end"}`}>
             {section.eyebrow && (
               <Field
                 editable={editable}
@@ -1342,7 +1369,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h1"
-              className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[30px] md:text-[36px]"}`}
+              className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[38px] @3xl:text-[48px]" : "text-[30px] @3xl:text-[36px]"}`}
               selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -1372,7 +1399,7 @@ function SectionBlockInner({
           </div>
         );
         return (
-          <div className="grid md:grid-cols-2">
+          <div className="grid @3xl:grid-cols-2">
             {imageFirst ? (
               <>
                 {imageCol}
@@ -1390,7 +1417,7 @@ function SectionBlockInner({
 
       if (layout === "overlay-bottom") {
         return (
-          <div className={`relative ${heroEmphasis ? "h-[560px] md:h-[720px]" : "h-[460px] md:h-[560px]"}`}>
+          <div className={`relative ${heroEmphasis ? "h-[560px] @3xl:h-[720px]" : "h-[460px] @3xl:h-[560px]"}`}>
             <ImageOrArt
               imageUrl={section.imageUrl}
               art={art}
@@ -1408,7 +1435,7 @@ function SectionBlockInner({
               className="absolute inset-0 pointer-events-none"
               style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.05) 75%)" }}
             />
-            <div className={`absolute bottom-0 left-0 right-0 px-8 md:px-14 pb-10 md:pb-14 text-white ${heroEmphasis ? "max-w-[680px]" : "max-w-[560px]"}`}>
+            <div className={`absolute bottom-0 left-0 right-0 px-8 @3xl:px-14 pb-10 @3xl:pb-14 text-white ${heroEmphasis ? "max-w-[680px]" : "max-w-[560px]"}`}>
               {section.eyebrow && (
                 <Field
                   editable={editable}
@@ -1424,7 +1451,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[1.08] mb-4 ${heroEmphasis ? "text-[40px] md:text-[56px]" : "text-[32px] md:text-[42px]"}`}
+                className={`font-serif leading-[1.08] mb-4 ${heroEmphasis ? "text-[40px] @3xl:text-[56px]" : "text-[32px] @3xl:text-[42px]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -1465,15 +1492,15 @@ function SectionBlockInner({
           <ImageOrArt
             imageUrl={section.imageUrl}
             art={art}
-            className={heroEmphasis ? "h-[420px] md:h-[580px]" : "h-[300px] md:h-[380px]"}
+            className={heroEmphasis ? "h-[420px] @3xl:h-[580px]" : "h-[300px] @3xl:h-[380px]"}
             dark={mode === "dark"}
             selectable={editable}
             selected={!!heroSelection && selectedImageKey === heroSelection.key}
             onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
           />
           <div
-            className={`max-w-2xl mx-auto text-center px-8 md:px-12 relative rounded-2xl ${
-              heroEmphasis ? "py-12 md:py-16 -mt-16 md:-mt-20" : "py-10 md:py-12 -mt-14 md:-mt-16"
+            className={`max-w-2xl mx-auto text-center px-8 @3xl:px-12 relative rounded-2xl ${
+              heroEmphasis ? "py-12 @3xl:py-16 -mt-16 @3xl:-mt-20" : "py-10 @3xl:py-12 -mt-14 @3xl:-mt-16"
             }`}
             style={{ background: palette.cardBg, boxShadow: "0 16px 40px rgba(0,0,0,0.10)" }}
           >
@@ -1492,7 +1519,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h1"
-              className={`font-serif leading-[1.12] mb-5 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[32px] md:text-[40px]"}`}
+              className={`font-serif leading-[1.12] mb-5 ${heroEmphasis ? "text-[38px] @3xl:text-[48px]" : "text-[32px] @3xl:text-[40px]"}`}
               selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -1572,14 +1599,14 @@ function SectionBlockInner({
                 <ImageOrArt
                   imageUrl={item.imageUrl}
                   art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
-                  className="h-[220px] md:h-[300px]"
+                  className="h-[220px] @3xl:h-[300px]"
                   selectable={editable}
                   selected={!!itemSel && selectedImageKey === itemSel.key}
                   onSelect={() => itemSel && onSelectImage?.(itemSel)}
                 />
               );
               const textCol = (
-                <div className="flex flex-col justify-center px-8 md:px-14 py-8 max-w-[440px]">
+                <div className="flex flex-col justify-center px-8 @3xl:px-14 py-8 max-w-[440px]">
                   <Field
                     editable={editable}
                     as="div"
@@ -1602,7 +1629,7 @@ function SectionBlockInner({
                 </div>
               );
               return (
-                <div key={i} className="grid md:grid-cols-2">
+                <div key={i} className="grid @3xl:grid-cols-2">
                   {imageFirst ? (
                     <>
                       {imageCol}
@@ -1680,7 +1707,7 @@ function SectionBlockInner({
             >
               {section.heading}
             </Field>
-            <div className="grid md:grid-cols-3 gap-8">
+            <div className="grid @3xl:grid-cols-3 gap-8">
               {section.items.map((item, i) => (
                 <div key={i} className="relative pt-2">
                   <div className="text-[13px] font-bold tracking-[0.08em] mb-2" style={{ color: accent }}>
@@ -1724,7 +1751,7 @@ function SectionBlockInner({
           >
             {section.heading}
           </Field>
-          <div className="grid md:grid-cols-3 gap-7">
+          <div className="grid @3xl:grid-cols-3 gap-7">
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const itemSel = gridItemSelection(i, item.title);
@@ -1780,7 +1807,7 @@ function SectionBlockInner({
             >
               {section.heading}
             </Field>
-            <div className="grid md:grid-cols-2 gap-5 max-w-[760px] mx-auto">
+            <div className="grid @3xl:grid-cols-2 gap-5 max-w-[760px] mx-auto">
               {section.items.map((t, i) => (
                 <div key={i} className="rounded-2xl p-5 border" style={{ background: palette.cardBg, borderColor: palette.cardBorder }}>
                   <Field
@@ -1812,7 +1839,7 @@ function SectionBlockInner({
       if (layout === "side-by-side") {
         const [first, ...rest] = section.items;
         return (
-          <div className="grid md:grid-cols-2" style={{ background: sectionBg }}>
+          <div className="grid @3xl:grid-cols-2" style={{ background: sectionBg }}>
             <div className="flex flex-col justify-center px-10 py-14">
               <Field
                 editable={editable}
@@ -1868,14 +1895,14 @@ function SectionBlockInner({
       // single-quote (default) — stort citat över en bild/konstbakgrund
       const [first, ...rest] = section.items;
       return (
-        <div className="relative px-8 md:px-10 py-20 text-center" style={{ background: art }}>
+        <div className="relative px-8 @3xl:px-10 py-20 text-center" style={{ background: art }}>
           <h2 className="sr-only">{section.heading}</h2>
           {first && (
             <div className="max-w-xl mx-auto relative">
               <Field
                 editable={editable}
                 as="p"
-                className="font-serif italic text-[24px] md:text-[27px] leading-relaxed mb-4"
+                className="font-serif italic text-[24px] @3xl:text-[27px] leading-relaxed mb-4"
                 selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
                 onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
               >
@@ -1912,8 +1939,8 @@ function SectionBlockInner({
 
       if (layout === "split") {
         return (
-          <div className="grid md:grid-cols-2">
-            <div className="flex flex-col justify-center px-10 md:px-14 py-14" style={{ background: sectionBg }}>
+          <div className="grid @3xl:grid-cols-2">
+            <div className="flex flex-col justify-center px-10 @3xl:px-14 py-14" style={{ background: sectionBg }}>
               <Field
                 editable={editable}
                 as="h2"
@@ -1956,7 +1983,7 @@ function SectionBlockInner({
 
       // centered (default)
       return (
-        <div className="relative px-8 md:px-10 py-20 text-center text-white" style={{ background: darkArt }}>
+        <div className="relative px-8 @3xl:px-10 py-20 text-center text-white" style={{ background: darkArt }}>
           <Field
             editable={editable}
             as="h2"
@@ -1993,7 +2020,7 @@ function SectionBlockInner({
 
       if (layout === "split-info") {
         return (
-          <div className="grid md:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
+          <div className="grid @3xl:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
             <div>
               <Field
                 editable={editable}
@@ -2147,11 +2174,11 @@ function SectionBlockInner({
                 const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
                 const itemSel = galleryItemSelection(i);
                 return (
-                  <div key={i} className="flex-shrink-0 w-[260px] md:w-[320px]" style={{ scrollSnapAlign: "start" }}>
+                  <div key={i} className="flex-shrink-0 w-[260px] @3xl:w-[320px]" style={{ scrollSnapAlign: "start" }}>
                     <ImageOrArt
                       imageUrl={item.imageUrl}
                       art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
-                      className="h-[200px] md:h-[240px] rounded-2xl"
+                      className="h-[200px] @3xl:h-[240px] rounded-2xl"
                       selectable={editable}
                       selected={!!itemSel && selectedImageKey === itemSel.key}
                       onSelect={() => itemSel && onSelectImage?.(itemSel)}
@@ -2188,7 +2215,7 @@ function SectionBlockInner({
           >
             {section.heading}
           </Field>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 @3xl:grid-cols-3 gap-4">
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const itemSel = galleryItemSelection(i);
@@ -2364,7 +2391,7 @@ function SectionBlockInner({
         // lib/contentModel.ts).
         const mapQuery = encodeURIComponent(section.address || "");
         return (
-          <div className="grid md:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
+          <div className="grid @3xl:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
             <div>
               <Field
                 editable={editable}
@@ -2502,7 +2529,7 @@ function SectionBlockInner({
                   ))}
                 </div>
               )}
-              <div className="grid md:grid-cols-3 gap-6">
+              <div className="grid @3xl:grid-cols-3 gap-6">
               {visible.map((article) => (
                 <CtaLink
                   key={article.id}

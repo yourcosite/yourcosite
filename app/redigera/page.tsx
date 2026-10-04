@@ -164,8 +164,26 @@ export default function EditorPage() {
           return;
         }
         setSite(data.site);
-        if (isValidSiteContent(data.site.content)) setContent(data.site.content);
-        else setLoadError("Sajtens innehåll kunde inte läsas.");
+        if (isValidSiteContent(data.site.content)) {
+          setContent(data.site.content);
+          // Satt av "Sidor"-panelen (app/sidor/page.tsx) när kunden precis
+          // skapat en ny sida där och klickar sig hit direkt — hoppar
+          // förhandsvisningen direkt till den nya (tomma) sidan istället
+          // för startsidan, så den är redo för Millie utan ett extra klick
+          // i menyn. Läses rått ur URL:en (inte next/navigations
+          // useSearchParams) för att slippa ett Suspense-krav på en annars
+          // helt statisk sida.
+          try {
+            const requested = new URLSearchParams(window.location.search).get("sida");
+            if (requested && data.site.content.pages.some((p: { path: string }) => p.path === requested)) {
+              setActivePath(requested);
+            }
+          } catch {
+            // Ignorera — startsidan visas som vanligt.
+          }
+        } else {
+          setLoadError("Sajtens innehåll kunde inte läsas.");
+        }
       })
       .catch(() => setLoadError("Kunde inte hämta sajten."));
 
