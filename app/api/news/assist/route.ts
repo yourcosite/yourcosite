@@ -60,7 +60,7 @@ ${
     : "Skriv ett kort, professionellt första utkast utifrån instruktionen. Hitta inte på specifika sakuppgifter (priser, datum, platser) kunden inte nämnt — håll dig allmän där det behövs."
 }
 
-Svara via verktyget "draft_news_article" på svenska: en rubrik (behåll kundens egen om den redan är bra), en kort ingress, och brödtexten i stycken separerade med tomrad.`;
+Svara via verktyget "draft_news_article" på svenska: en rubrik (behåll kundens egen om den redan är bra), en kort ingress, och brödtexten i stycken separerade med tomrad. Skriv ALLTID rena textstycken utan någon HTML eller markdown-formatering — inga taggar som <p>, <body> eller </html>, inga asterisker eller rubriktecken. Bara vanlig löptext.`;
 
   let response;
   try {
@@ -82,8 +82,16 @@ Svara via verktyget "draft_news_article" på svenska: en rubrik (behåll kundens
 
   const draft = toolUse.input as { title?: string; excerpt?: string; body?: string };
   return NextResponse.json({
-    title: draft.title || currentTitle,
-    excerpt: draft.excerpt || "",
-    body: draft.body || currentBody,
+    title: stripStrayTags(draft.title) || currentTitle,
+    excerpt: stripStrayTags(draft.excerpt) || "",
+    body: stripStrayTags(draft.body) || currentBody,
   });
+}
+
+// Säkerhetsnät: om modellen av misstag råkar klistra in en HTML-tagg
+// (t.ex. </body>, <p>) i löptexten, städa bort den innan den visas för
+// kunden i textfältet. Texten ska alltid vara ren löptext.
+function stripStrayTags(value: string | undefined): string {
+  if (!value) return "";
+  return value.replace(/<\/?[a-zA-Z][a-zA-Z0-9]*(\s[^>]*)?>/g, "").trim();
 }
