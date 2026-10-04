@@ -235,10 +235,19 @@ export default function EditorPage() {
     <div className="h-screen flex flex-col font-sans overflow-hidden">
       <div className="flex items-center justify-between px-6 py-3.5 border-b border-line bg-surface flex-shrink-0">
         <div className="flex items-center gap-5">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo light={false} />
+          <Link
+            href="/dashboard"
+            title="Tillbaka till kundzonen"
+            className="flex items-center gap-1.5 text-[12.5px] font-bold text-ink bg-bg border border-line px-3 py-1.5 rounded-full flex-shrink-0"
+          >
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="19" y1="12" x2="5" y2="12" />
+              <polyline points="12 19 5 12 12 5" />
+            </svg>
+            Kundzon
           </Link>
           <div className="w-px h-5.5 bg-line" />
+          <Logo light={false} />
           <div>
             <div className="text-[14px] font-semibold">{site?.name || "Din sajt"}</div>
             <div className="text-[11.5px] text-ink-dim">

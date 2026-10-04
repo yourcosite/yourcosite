@@ -3,7 +3,7 @@ import Logo from "./Logo";
 
 export default function OnboardingShell({
   step,
-  totalSteps = 5,
+  totalSteps = 4,
   stepLabel,
   children,
 }: {

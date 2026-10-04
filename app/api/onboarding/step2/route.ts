@@ -11,6 +11,11 @@ export async function POST(request: Request) {
   const links = Array.isArray(body.links)
     ? body.links.filter((l: unknown) => typeof l === "string" && l.trim() !== "")
     : [];
+  // Färgvalet satt ihop med inspirationen sen det flyttades hit från det
+  // gamla "Stil"-steget (som tog bort stilkortsvalet Minimalistisk/Djärv/osv —
+  // kunden får ändå finjustera den känslan senare i chatten/redigeraren).
+  const accentColor = typeof body.accentColor === "string" ? body.accentColor : undefined;
+  const secondaryColors = Array.isArray(body.secondaryColors) ? body.secondaryColors : undefined;
 
   let draft;
   try {
@@ -21,9 +26,13 @@ export async function POST(request: Request) {
     throw e;
   }
 
+  const update: Record<string, unknown> = { inspiration_links: links };
+  if (accentColor) update.accent_color = accentColor;
+  if (secondaryColors) update.secondary_colors = secondaryColors;
+
   const { data: site, error } = await supabase
     .from("sites")
-    .update({ inspiration_links: links })
+    .update(update)
     .eq("id", draft.id)
     .select("*")
     .single();
