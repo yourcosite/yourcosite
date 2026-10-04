@@ -130,13 +130,30 @@ Svara alltid via verktyget "edit_site", plus ett kort "summary" riktat direkt ti
 Går önskemålet inte att utföra inom innehållsmodellen, eller är det för oklart för att agera på — gör INGA ändringar (utelämna "changedPages" eller lämna den tom) och förklara kort varför i "summary". Beror det specifikt på att innehållsmodellen saknar stöd (inte bara otydlighet), sätt även "unsupported" till true — det visar kunden en knapp för att skicka önskemålet vidare till oss.`;
 }
 
-function buildAttachmentNote(attachment: Attachment | undefined): string {
-  if (!attachment) return "";
-  if (attachment.kind === "image") {
-    return `\nKunden har bifogat en bild i det här meddelandet, "${attachment.name}" (visas för dig som bild). Dess permanenta webbadress — använd EXAKT den som "imageUrl" om kunden vill använda bilden någonstans på sajten, hitta aldrig på en annan — är: ${attachment.url}\nSätt bara in den om kundens meddelande faktiskt ber om att använda/lägga till/byta ut en bild med den. Är bilden bara skickad som referens (t.ex. en stilbild), beskriv den inte i onödan — fokusera på det kunden faktiskt skrev.\n`;
+function buildAttachmentNote(attachments: Attachment[]): string {
+  if (attachments.length === 0) return "";
+  const images = attachments.filter((a) => a.kind === "image");
+  const documents = attachments.filter((a) => a.kind === "document");
+  let note = "";
+
+  if (images.length === 1) {
+    const a = images[0];
+    note += `\nKunden har bifogat en bild i det här meddelandet, "${a.name}" (visas för dig som bild). Dess permanenta webbadress — använd EXAKT den som "imageUrl" om kunden vill använda bilden någonstans på sajten, hitta aldrig på en annan — är: ${a.url}\nSätt bara in den om kundens meddelande faktiskt ber om att använda/lägga till/byta ut en bild med den. Är bilden bara skickad som referens (t.ex. en stilbild), beskriv den inte i onödan — fokusera på det kunden faktiskt skrev.\n`;
+  } else if (images.length > 1) {
+    const list = images.map((a, i) => `${i + 1}. "${a.name}": ${a.url}`).join("\n");
+    note += `\nKunden har bifogat ${images.length} bilder i det här meddelandet (visas för dig i tur och ordning nedan). Deras permanenta webbadresser — använd EXAKT dessa som "imageUrl", hitta aldrig på andra — är:\n${list}\nBer kunden om ett bildgalleri/bildspel ("gallery") eller att lägga till flera bilder på en gång (t.ex. till en "grid"-sektion), använd bilderna i SAMMA ordning som listan ovan, en bild per rad i sektionens "items". Ber de istället om EN specifik bild någon annanstans på sajten (t.ex. hero), välj den de tydligast pekar ut i sitt meddelande — annars den första i listan. Är bilderna bara skickade som referens (t.ex. stilbilder), beskriv dem inte i onödan — fokusera på det kunden faktiskt skrev.\n`;
   }
-  const text = (attachment.text || "").trim();
-  return `\nKunden har bifogat dokumentet "${attachment.name}". Textinnehåll (kan vara avkortat):\n"""\n${text}\n"""\nAnvänd det som källa bara om kundens meddelande faktiskt ber om det (t.ex. "lägg in texten ovan", "sammanfatta det bifogade dokumentet som brödtext"). Hitta inte på innehåll utöver det du ser här eller det kunden själv skriver.\n`;
+
+  if (documents.length === 1) {
+    const d = documents[0];
+    const text = (d.text || "").trim();
+    note += `\nKunden har bifogat dokumentet "${d.name}". Textinnehåll (kan vara avkortat):\n"""\n${text}\n"""\nAnvänd det som källa bara om kundens meddelande faktiskt ber om det (t.ex. "lägg in texten ovan", "sammanfatta det bifogade dokumentet som brödtext"). Hitta inte på innehåll utöver det du ser här eller det kunden själv skriver.\n`;
+  } else if (documents.length > 1) {
+    const blocks = documents.map((d) => `--- "${d.name}" ---\n${(d.text || "").trim()}`).join("\n\n");
+    note += `\nKunden har bifogat ${documents.length} dokument i det här meddelandet. Textinnehåll (kan vara avkortat):\n"""\n${blocks}\n"""\nAnvänd dem som källa bara om kundens meddelande faktiskt ber om det. Hitta inte på innehåll utöver det du ser här eller det kunden själv skriver.\n`;
+  }
+
+  return note;
 }
 
 // Klistrar in Claudes patch i den befintliga, redan sparade sajten:
@@ -194,9 +211,13 @@ export async function POST(request: Request) {
   const message = typeof body.message === "string" ? body.message.trim() : "";
   if (!message) return NextResponse.json({ error: "Skriv vad du vill ändra." }, { status: 400 });
 
-  const rawAttachment = body.attachment;
-  let attachment: Attachment | undefined;
-  if (rawAttachment && typeof rawAttachment === "object") {
+  // Flera bilagor på en gång (t.ex. en hel hög bilder till ett nytt
+  // bildgalleri) — se handleFiles i app/redigera/page.tsx. Taket här är
+  // samma som klientens MAX_ATTACHMENTS, bara som ett andra skydd.
+  const rawAttachments = Array.isArray(body.attachments) ? body.attachments.slice(0, 10) : [];
+  const attachments: Attachment[] = [];
+  for (const rawAttachment of rawAttachments) {
+    if (!rawAttachment || typeof rawAttachment !== "object") continue;
     const kind = rawAttachment.kind === "image" || rawAttachment.kind === "document" ? rawAttachment.kind : undefined;
     const url = typeof rawAttachment.url === "string" ? rawAttachment.url : "";
     // Säkerhetskoll: bilagan måste ligga i kundens egen uppladdningsmapp i
@@ -205,13 +226,13 @@ export async function POST(request: Request) {
     // Claude (eller, för bilder, vilken extern URL som kan landa i en
     // sparad imageUrl).
     if (kind && url.includes(`/uploads/${user.id}/`)) {
-      attachment = {
+      attachments.push({
         kind,
         url,
         name: typeof rawAttachment.name === "string" ? rawAttachment.name : "bifogad fil",
         mimeType: typeof rawAttachment.mimeType === "string" ? rawAttachment.mimeType : undefined,
         text: typeof rawAttachment.text === "string" ? rawAttachment.text.slice(0, 20000) : undefined,
-      };
+      });
     }
   }
 
@@ -277,16 +298,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachment), currentPath, selection);
+  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection);
 
-  // Bara bildbilagor görs om till ett multimodalt meddelande (Claude ser
-  // själva bilden) — textdokument är redan omvandlade till ren text i
-  // prompten ovan, de behöver inget eget innehållsblock.
+  // Bara bildbilagor görs om till egna innehållsblock i ett multimodalt
+  // meddelande (Claude ser själva bilderna, en efter en) — textdokument är
+  // redan omvandlade till ren text i prompten ovan, de behöver inget eget
+  // innehållsblock.
+  const imageAttachments = attachments.filter((a) => a.kind === "image");
   const finalContent: Anthropic.MessageParam["content"] =
-    attachment?.kind === "image"
+    imageAttachments.length > 0
       ? [
-          { type: "image", source: { type: "url", url: attachment.url } },
-          { type: "text", text: promptText },
+          ...imageAttachments.map((a) => ({ type: "image" as const, source: { type: "url" as const, url: a.url } })),
+          { type: "text" as const, text: promptText },
         ]
       : promptText;
 

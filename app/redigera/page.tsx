@@ -13,7 +13,7 @@ import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 type ChatMessage = {
   from: "user" | "bot";
   text: string;
-  attachmentName?: string;
+  attachmentNames?: string[];
   // Satt på bot-svar när Claude flaggat "unsupported" (se
   // /api/sites/edit) — innehållsmodellen stöder helt enkelt inte
   // önskemålet (t.ex. bakgrundsfärg per enskild sida). requestText är
@@ -51,6 +51,10 @@ type Selection =
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_DOC_BYTES = 10 * 1024 * 1024;
+// Flera bilder på en gång är framförallt till för att fylla ett bildspel/
+// galleri i ett svep — ingen anledning att tillåta hur många som helst i
+// ett och samma meddelande.
+const MAX_ATTACHMENTS = 10;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const PLAIN_TEXT_TYPES = ["text/plain", "text/markdown"];
 const EXTRACTABLE_DOC_TYPES = [
@@ -128,7 +132,9 @@ export default function EditorPage() {
 
   const [selection, setSelection] = useState<Selection | null>(null);
 
-  const [attachment, setAttachment] = useState<Attachment | null>(null);
+  // Flera bilagor samtidigt (t.ex. en hel hög bilder till ett nytt
+  // bildgalleri) — se handleFiles nedan.
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -166,75 +172,101 @@ export default function EditorPage() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
-  const handleFile = async (file: File) => {
-    setAttachError("");
+  // Laddar upp EN fil och returnerar dess Attachment — kastar med ett
+  // svenskt felmeddelande om något går fel. handleFiles nedan kör den här
+  // för varje vald fil i tur och ordning.
+  const uploadOneFile = async (file: File): Promise<Attachment> => {
     const isImage = IMAGE_TYPES.includes(file.type);
     const isPlainText = PLAIN_TEXT_TYPES.includes(file.type) || /\.(txt|md)$/i.test(file.name);
     const isExtractableDoc = EXTRACTABLE_DOC_TYPES.includes(file.type);
 
     if (!isImage && !isPlainText && !isExtractableDoc) {
-      setAttachError("Filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.");
-      return;
+      throw new Error(`${file.name}: filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.`);
     }
     const maxBytes = isImage ? MAX_IMAGE_BYTES : MAX_DOC_BYTES;
     if (file.size > maxBytes) {
-      setAttachError(`Filen är större än ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+      throw new Error(`${file.name}: filen är större än ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+    }
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+
+    const ext = file.name.split(".").pop() || "bin";
+    const path = `${user.id}/chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+    const { error: uploadError } = await supabase.storage
+      .from("uploads")
+      .upload(path, file, { contentType: file.type || undefined });
+    if (uploadError) throw new Error(`Gick inte att ladda upp ${file.name}: ${uploadError.message}`);
+    const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+
+    if (isImage) {
+      return { kind: "image", url: pub.publicUrl, name: file.name, mimeType: file.type };
+    }
+
+    if (isPlainText) {
+      const text = await file.text();
+      return { kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type || "text/plain", text };
+    }
+
+    // PDF/Word kräver serverkod för att läsa ut texten.
+    const res = await fetch("/api/sites/attachments/extract", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fileUrl: pub.publicUrl, mimeType: file.type }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `Kunde inte läsa ${file.name}.`);
+    return { kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type, text: data.text };
+  };
+
+  // Tar emot EN ELLER FLERA valda filer på en gång (t.ex. en hög bilder till
+  // ett nytt bildgalleri) — laddar upp dem i tur och ordning och lägger till
+  // dem i samma bilage-lista. En fil som misslyckas stoppar inte de andra;
+  // felet visas, men det som faktiskt gick bra läggs ändå till.
+  const handleFiles = async (files: File[]) => {
+    setAttachError("");
+    const room = MAX_ATTACHMENTS - attachments.length;
+    if (room <= 0) {
+      setAttachError(`Max ${MAX_ATTACHMENTS} bilagor i samma meddelande.`);
       return;
+    }
+    const toUpload = files.slice(0, room);
+    if (files.length > toUpload.length) {
+      setAttachError(`Max ${MAX_ATTACHMENTS} bilagor i samma meddelande — tog med de första ${toUpload.length}.`);
     }
 
     setAttaching(true);
-    try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
-
-      const ext = file.name.split(".").pop() || "bin";
-      const path = `${user.id}/chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: uploadError } = await supabase.storage
-        .from("uploads")
-        .upload(path, file, { contentType: file.type || undefined });
-      if (uploadError) throw new Error(`Gick inte att ladda upp: ${uploadError.message}`);
-      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
-
-      if (isImage) {
-        setAttachment({ kind: "image", url: pub.publicUrl, name: file.name, mimeType: file.type });
-        return;
+    const uploaded: Attachment[] = [];
+    const errors: string[] = [];
+    for (const file of toUpload) {
+      try {
+        uploaded.push(await uploadOneFile(file));
+      } catch (e: any) {
+        errors.push(e.message);
       }
-
-      if (isPlainText) {
-        const text = await file.text();
-        setAttachment({ kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type || "text/plain", text });
-        return;
-      }
-
-      // PDF/Word kräver serverkod för att läsa ut texten.
-      const res = await fetch("/api/sites/attachments/extract", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fileUrl: pub.publicUrl, mimeType: file.type }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Kunde inte läsa filen.");
-      setAttachment({ kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type, text: data.text });
-    } catch (e: any) {
-      setAttachError(e.message);
-    } finally {
-      setAttaching(false);
     }
+    if (uploaded.length > 0) setAttachments((prev) => [...prev, ...uploaded]);
+    if (errors.length > 0) setAttachError(errors.join(" "));
+    setAttaching(false);
   };
 
   const send = async () => {
     const text = draft.trim();
-    if ((!text && !attachment) || sending || attaching) return;
+    if ((!text && attachments.length === 0) || sending || attaching) return;
     const history = messages;
-    const currentAttachment = attachment;
+    const currentAttachments = attachments;
     const currentSelection = selection;
     setMessages((m) => [
       ...m,
-      { from: "user", text: text || "(bifogad fil)", attachmentName: currentAttachment?.name },
+      {
+        from: "user",
+        text: text || "(bifogad fil)",
+        attachmentNames: currentAttachments.length > 0 ? currentAttachments.map((a) => a.name) : undefined,
+      },
     ]);
     setDraft("");
-    setAttachment(null);
+    setAttachments([]);
     setSelection(null);
     setSending(true);
     try {
@@ -242,9 +274,13 @@ export default function EditorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          message: text || `Se bifogad fil: ${currentAttachment?.name}`,
+          message:
+            text ||
+            (currentAttachments.length === 1
+              ? `Se bifogad fil: ${currentAttachments[0].name}`
+              : `Se bifogade filer: ${currentAttachments.map((a) => a.name).join(", ")}`),
           history,
-          attachment: currentAttachment,
+          attachments: currentAttachments,
           currentPath: activePath,
           selection: currentSelection
             ? currentSelection.target === "image"
@@ -282,7 +318,7 @@ export default function EditorPage() {
           from: "bot",
           text: data.summary || "Klart!",
           unsupported: !!data.unsupported,
-          requestText: text || currentAttachment?.name,
+          requestText: text || currentAttachments.map((a) => a.name).join(", "),
         },
       ]);
     } catch (e: any) {
@@ -526,9 +562,9 @@ export default function EditorPage() {
                       : "bg-bg rounded-[14px_14px_14px_4px]"
                   }`}
                 >
-                  {m.attachmentName && (
+                  {m.attachmentNames && m.attachmentNames.length > 0 && (
                     <div className={`text-[12px] mb-1 flex items-center gap-1 ${m.from === "user" ? "text-accent-ink/70" : "text-ink-dim"}`}>
-                      📎 {m.attachmentName}
+                      📎 {m.attachmentNames.join(", ")}
                     </div>
                   )}
                   {m.text}
@@ -580,33 +616,38 @@ export default function EditorPage() {
                 </button>
               </div>
             )}
-            {attachment && (
-              <div className="flex items-center gap-2 bg-bg border border-line rounded-lg px-3 py-2 mb-2">
-                {attachment.kind === "image" ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={attachment.url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
-                ) : (
-                  <span className="text-[14px] flex-shrink-0">📄</span>
-                )}
-                <span className="text-[12.5px] truncate flex-1">{attachment.name}</span>
-                <button
-                  type="button"
-                  onClick={() => setAttachment(null)}
-                  aria-label="Ta bort bilagan"
-                  className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
-                >
-                  ×
-                </button>
+            {attachments.length > 0 && (
+              <div className="flex flex-col gap-1.5 mb-2">
+                {attachments.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-bg border border-line rounded-lg px-3 py-2">
+                    {a.kind === "image" ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={a.url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <span className="text-[14px] flex-shrink-0">📄</span>
+                    )}
+                    <span className="text-[12.5px] truncate flex-1">{a.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                      aria-label="Ta bort bilagan"
+                      className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
               </div>
             )}
             <div className="flex items-end gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-2 pr-1.5">
               <input
                 ref={fileInputRef}
                 type="file"
+                multiple
                 accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,text/plain,text/markdown,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                 className="hidden"
                 onChange={(e) => {
-                  if (e.target.files?.[0]) handleFile(e.target.files[0]);
+                  if (e.target.files && e.target.files.length > 0) handleFiles(Array.from(e.target.files));
                   e.target.value = "";
                 }}
               />
@@ -614,8 +655,8 @@ export default function EditorPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={sending || attaching || !content}
-                aria-label="Bifoga fil"
-                title="Bifoga en bild eller ett textdokument"
+                aria-label="Bifoga filer"
+                title="Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri"
                 className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
               >
                 {attaching ? (
@@ -645,7 +686,7 @@ export default function EditorPage() {
               />
               <button
                 onClick={send}
-                disabled={sending || attaching || !content || (!draft.trim() && !attachment)}
+                disabled={sending || attaching || !content || (!draft.trim() && attachments.length === 0)}
                 aria-label="Skicka"
                 className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px]"
               >
