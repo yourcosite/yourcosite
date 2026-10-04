@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  // Behövs för att och:image/twitter:image (se app/opengraph-image.tsx) ska
+  // kunna lösas till en fullständig URL när länkar delas i t.ex. Slack/sms.
+  metadataBase: new URL("https://yourcosite.vercel.app"),
   title: {
     default: "YourCoSite — din hemsida, byggd genom ett samtal",
     template: "%s — YourCoSite",
