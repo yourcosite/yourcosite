@@ -893,6 +893,64 @@ function Field({
   );
 }
 
+// Samma idé som Field, fast för en KNAPPTEXT (CtaPill/CtaLink) — en knapp
+// gör redan något när man klickar på den (navigerar till länken, eller
+// inget om den saknar länk), så att lägga Fields klick-för-att-markera
+// direkt på knappen skulle krocka med det och göra det omöjligt att
+// testa länken. Istället läggs en liten, alltid svagt synlig
+// pennknapp i hörnet — klickar man DEN markeras knapptexten, klickar
+// man knappen själv gör den precis vad den alltid gjort. Alltid svagt
+// synlig (inte bara vid hover) så den går att upptäcka på mobil också,
+// där det inte finns någon hover-status.
+function FieldBadge({
+  editable,
+  selected,
+  onSelect,
+  children,
+}: {
+  editable?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+  children: React.ReactNode;
+}) {
+  if (!editable) return <>{children}</>;
+  return (
+    // onClick (utan stopPropagation) på själva KNAPPEN (CtaPill/CtaLink)
+    // skulle annars bubbla vidare upp till sektionens egen
+    // klicka-för-att-välja (SectionBlock) och sätta en sektionsmarkering
+    // EFTER att knappens egen onNavigate redan hunnit nollställa
+    // markeringen i samma klick — nettot blev att man navigerade dit man
+    // skulle, men satt kvar med en spökmarkering på den gamla sidan.
+    // Stoppar bubblingen här, oavsett om klicket landade på knappen eller
+    // pennan.
+    <span className="relative inline-block group/ctafld" onClick={(e) => e.stopPropagation()}>
+      {children}
+      <span
+        className={`pointer-events-none absolute -inset-1.5 rounded-full transition-opacity ${
+          selected ? "opacity-100" : "opacity-0 group-hover/ctafld:opacity-100"
+        }`}
+        style={{ outline: selected ? "2px solid #4A90D9" : "2px dashed #4A90D9", outlineOffset: "2px" }}
+      />
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+          onSelect?.();
+        }}
+        aria-label="Markera knapptexten"
+        title="Markera knapptexten (utan att klicka på knappen)"
+        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shadow transition-opacity ${
+          selected ? "opacity-100" : "opacity-45"
+        }`}
+        style={{ background: selected ? "#C6FF5E" : "#FFFFFF", color: "#0C1004", border: "1px solid rgba(0,0,0,0.15)" }}
+      >
+        ✎
+      </button>
+    </span>
+  );
+}
+
 // Läsbar svensk etikett för en HEL sektion (inte en enskild bild) — visas i
 // hover-/val-pillen nedan och skickas som selection.label till
 // /api/sites/edit, så kunden kan klicka på t.ex. rubriken eller
@@ -1045,9 +1103,15 @@ function SectionBlockInner({
               {section.body}
             </Field>
             {section.ctaLabel && (
-              <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
-                {section.ctaLabel}
-              </CtaPill>
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+              >
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                  {section.ctaLabel}
+                </CtaPill>
+              </FieldBadge>
             )}
           </div>
         );
@@ -1120,9 +1184,15 @@ function SectionBlockInner({
                 {section.body}
               </Field>
               {section.ctaLabel && (
-              <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
-                {section.ctaLabel}
-              </CtaPill>
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+              >
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                  {section.ctaLabel}
+                </CtaPill>
+              </FieldBadge>
             )}
             </div>
           </div>
@@ -1183,9 +1253,15 @@ function SectionBlockInner({
               {section.body}
             </Field>
             {section.ctaLabel && (
-              <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
-                {section.ctaLabel}
-              </CtaPill>
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+              >
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                  {section.ctaLabel}
+                </CtaPill>
+              </FieldBadge>
             )}
           </div>
         </div>
@@ -1603,14 +1679,20 @@ function SectionBlockInner({
               </Field>
             </div>
             <div className="flex items-center justify-center px-10 py-14" style={{ background: accent }}>
-              <CtaLink
-                link={section.ctaLink}
-                basePath={basePath}
-                onNavigate={onNavigate}
-                className="font-semibold text-[15px] text-[#17171A] text-center"
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                {section.ctaLabel}
-              </CtaLink>
+                <CtaLink
+                  link={section.ctaLink}
+                  basePath={basePath}
+                  onNavigate={onNavigate}
+                  className="font-semibold text-[15px] text-[#17171A] text-center"
+                >
+                  {section.ctaLabel}
+                </CtaLink>
+              </FieldBadge>
             </div>
           </div>
         );
@@ -1637,9 +1719,15 @@ function SectionBlockInner({
           >
             {section.body}
           </Field>
-          <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
-            {section.ctaLabel}
-          </CtaPill>
+          <FieldBadge
+            editable={editable}
+            selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+            onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+          >
+            <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+              {section.ctaLabel}
+            </CtaPill>
+          </FieldBadge>
         </div>
       );
     }
