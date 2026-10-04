@@ -1696,7 +1696,12 @@ function SectionBlockInner({
                 </FieldBadge>
               )}
             </div>
-            <div className={`relative ${heroEmphasis ? "h-[300px] @3xl:h-[340px]" : "h-[240px] @3xl:h-[270px]"}`}>
+            {/* aspect-ratio istället för en fast pixelhöjd — en fast höjd
+                (som förut) blev en orimligt bred/platt "panorama"-beskärning
+                på en bred skärm (kundens "känns utzoomad"-feedback), eftersom
+                kolumnens BREDD växer med skärmen men höjden stod stilla.
+                Med aspect-ratio växer höjden i takt med bredden istället. */}
+            <div className={`relative ${heroEmphasis ? "h-[300px]" : "h-[240px]"} @3xl:h-auto @3xl:aspect-[5/4]`}>
               <ImageOrArt
                 imageUrl={section.imageUrl}
                 art={art}
@@ -1706,7 +1711,7 @@ function SectionBlockInner({
                 onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
               />
             </div>
-            <div className={`relative ${heroEmphasis ? "h-[300px] @3xl:h-[340px]" : "h-[240px] @3xl:h-[270px]"}`}>
+            <div className={`relative ${heroEmphasis ? "h-[300px]" : "h-[240px]"} @3xl:h-auto @3xl:aspect-[5/4]`}>
               <ImageOrArt imageUrl={quadImageB} art={art} fill selectable={false} />
               {cardStat && (
                 <div
@@ -1729,18 +1734,26 @@ function SectionBlockInner({
                   ))}
                 </div>
               ) : (
-                // Inga (fler) nyckeltal att visa — en enkel dekorativ
-                // upprepning av uppmaningen istället för en tom ruta.
+                // Inga (fler) nyckeltal att visa (vanligt — de flesta
+                // kunder har inga verifierbara siffror, se stats-fältets
+                // beskrivning) — en knapp helt utan text bredvid såg bara
+                // ut som en trasig, tom ruta (kundfeedback), så den får en
+                // kort, generisk stödrad ovanför istället för att stå ensam.
                 section.ctaLabel && (
-                  <FieldBadge
-                    editable={editable}
-                    selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
-                    onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
-                  >
-                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
-                      {section.ctaLabel}
-                    </CtaPill>
-                  </FieldBadge>
+                  <div className="flex flex-col gap-4">
+                    <div className="font-serif text-[21px] @3xl:text-[24px] leading-snug">
+                      Redo att komma igång?
+                    </div>
+                    <FieldBadge
+                      editable={editable}
+                      selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                      onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                    >
+                      <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                        {section.ctaLabel}
+                      </CtaPill>
+                    </FieldBadge>
+                  </div>
                 )
               )}
             </div>
@@ -2423,7 +2436,14 @@ function SectionBlockInner({
         );
       }
 
-      // cards (default)
+      // cards (default) — kolumnantalet räknas ut från items.length (samma
+      // knep som "bento" ovan) istället för ett fast grid-cols-3, annars
+      // strandar t.ex. ett FJÄRDE objekt ensamt på en egen rad för sig
+      // (3+1) — precis den bugg en kund rapporterade, och eftersom "cards"
+      // är den layout som alltid tvingas på förstasidan (se
+      // randomizeSectionLayouts i app/api/sites/generate/route.ts) syns
+      // den på i stort sett varje sajt.
+      const cardCols = section.items.length > 3 && section.items.length % 3 === 1 ? 2 : 3;
       return (
         <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
           <Field
@@ -2435,7 +2455,7 @@ function SectionBlockInner({
           >
             {section.heading}
           </Field>
-          <div className="grid @3xl:grid-cols-3 gap-7">
+          <div className={`grid ${cardCols === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-2"} gap-7`}>
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const itemSel = gridItemSelection(i, item.title);
