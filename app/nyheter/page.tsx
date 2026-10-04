@@ -3,7 +3,7 @@ import Logo from "@/components/Logo";
 import NewsClient from "./NewsClient";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { getSiteNewsArticles } from "@/lib/newsArticles";
+import { getSiteNewsArticles, getSiteNewsCategories } from "@/lib/newsArticles";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +17,7 @@ export default async function NyheterPage() {
   const { data: { user } } = await supabase.auth.getUser();
   const site = user ? await getCurrentPublishedSite(supabase, user.id) : null;
   const articles = site ? await getSiteNewsArticles(supabase, site.id) : [];
+  const categories = site ? await getSiteNewsCategories(supabase, site.id) : [];
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col">
@@ -56,7 +57,7 @@ export default async function NyheterPage() {
               </Link>
             </p>
           ) : (
-            <NewsClient initialArticles={articles} />
+            <NewsClient initialArticles={articles} initialCategories={categories} />
           )}
         </div>
       </div>

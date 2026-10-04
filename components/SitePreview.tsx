@@ -5,7 +5,7 @@ import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
-import type { NewsArticle } from "@/lib/newsArticles";
+import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
 // för ett grått platshållarfält. Så fort kunden laddar upp egna foton är det
@@ -126,7 +126,7 @@ export default function SitePreview({
       if (!activePath.startsWith(prefix)) continue;
       const slug = activePath.slice(prefix.length);
       if (!slug) continue;
-      const article = (newsArticles || []).find((a) => a.slug === slug && a.published);
+      const article = (newsArticles || []).find((a) => a.slug === slug && isArticleLive(a));
       if (article) return { page: p, article };
     }
     return null;
@@ -1305,6 +1305,9 @@ function SectionBlockInner({
   // Ligger ovillkorat här (inte i case "faq") eftersom React Hooks måste
   // anropas i samma ordning varje render, oavsett sektionstyp.
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
+  // Bara använd av "newsList" nedan — vilken kategori besökaren filtrerat
+  // till (null = alla). Samma skäl som ovan till att den ligger ovillkorat.
+  const [newsCategoryFilter, setNewsCategoryFilter] = useState<string | null>(null);
 
   switch (section.type) {
     case "hero": {
@@ -2445,9 +2448,13 @@ function SectionBlockInner({
     }
 
     case "newsList": {
-      // Bara de PUBLICERADE artiklarna visas här — utkast syns bara för
-      // ägaren själv, på "Nyheter"-sidan i panelen (se app/nyheter).
-      const published = (newsArticles || []).filter((a) => a.published);
+      // Bara de LIVE artiklarna visas här — ett utkast syns bara för
+      // ägaren själv (på "Nyheter"-sidan i panelen, se app/nyheter), och en
+      // schemalagd artikel blir automatiskt live när dess klockslag passerat
+      // (se isArticleLive i lib/newsArticles.ts).
+      const live = (newsArticles || []).filter((a) => isArticleLive(a));
+      const categories = Array.from(new Set(live.map((a) => a.category)));
+      const visible = newsCategoryFilter ? live.filter((a) => a.category === newsCategoryFilter) : live;
       const articleHref = (slug: string) => `${pagePath || ""}/${slug}`;
       return (
         <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
@@ -2460,13 +2467,43 @@ function SectionBlockInner({
           >
             {section.heading}
           </Field>
-          {published.length === 0 ? (
+          {live.length === 0 ? (
             <p className="text-[14px] text-center" style={{ color: palette.textDim }}>
               Inga publicerade nyheter än.
             </p>
           ) : (
-            <div className="grid md:grid-cols-3 gap-6">
-              {published.map((article) => (
+            <>
+              {categories.length > 1 && (
+                <div className="flex flex-wrap justify-center gap-2 mb-8">
+                  <button
+                    onClick={() => setNewsCategoryFilter(null)}
+                    className="text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full border"
+                    style={
+                      newsCategoryFilter === null
+                        ? { background: accent, borderColor: accent, color: "#17171A" }
+                        : { borderColor: palette.cardBorder, color: palette.textDim }
+                    }
+                  >
+                    Alla
+                  </button>
+                  {categories.map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setNewsCategoryFilter(c)}
+                      className="text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full border"
+                      style={
+                        newsCategoryFilter === c
+                          ? { background: accent, borderColor: accent, color: "#17171A" }
+                          : { borderColor: palette.cardBorder, color: palette.textDim }
+                      }
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <div className="grid md:grid-cols-3 gap-6">
+              {visible.map((article) => (
                 <CtaLink
                   key={article.id}
                   link={articleHref(article.slug)}
@@ -2490,7 +2527,8 @@ function SectionBlockInner({
                   </div>
                 </CtaLink>
               ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       );

@@ -5,7 +5,7 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
-import { NEWS_CATEGORIES, isNewsCategory, uniqueSlugForSite, type NewsArticle } from "@/lib/newsArticles";
+import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -50,9 +50,8 @@ const EDIT_TOOL = {
           },
           category: {
             type: "string",
-            enum: [...NEWS_CATEGORIES],
             description:
-              `Vilken av de tre kategorierna artikeln hör till: ${NEWS_CATEGORIES.join("/")}. Använd den kunden uttryckligen nämner. Annars välj den uppenbara (t.ex. en rea/kampanj -> "Erbjudanden", öppet hus/mässa/fest -> "Evenemang") BARA om det är tydligt — är det oklart, utelämna HELA "newsArticle"-objektet och fråga vilken kategori i "summary" istället.`,
+              "Vilken kategori artikeln hör till — se listan över sajtens befintliga kategorier (inklusive standardförslagen Nyheter/Erbjudanden/Evenemang) längre ner i din instruktion. Matcha en BEFINTLIG kategori EXAKT (samma stavning/versalisering) om kunden syftar på samma sak, annars kan du sätta en helt ny kategori med kundens egen benämning. Är kategorin oklar, utelämna HELA \"newsArticle\"-objektet och fråga i \"summary\" istället (lista då sajtens befintliga kategorier som förslag).",
           },
           published: {
             type: "boolean",
@@ -125,7 +124,8 @@ function buildEditPrompt(
   message: string,
   attachmentNote: string,
   currentPath: string | undefined,
-  selection: Selection | undefined
+  selection: Selection | undefined,
+  existingNewsCategories: string[]
 ) {
   const pagePaths = content.pages.map((p) => `${p.path} ("${p.label}")`).join(", ");
   const currentPage = currentPath ? content.pages.find((p) => p.path === currentPath) : undefined;
@@ -168,7 +168,7 @@ VIKTIGT — sektioner läggs ALLTID under varandra, ALDRIG bredvid varandra, oav
 
 VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
 
-VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik och kategori får ALDRIG hittas på — se fältbeskrivningarna. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället (lista då de tre kategorierna: Nyheter/Erbjudanden/Evenemang). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också.
+VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik får ALDRIG hittas på — se fältbeskrivningen. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället. Sajtens befintliga kategorier just nu: ${existingNewsCategories.join(", ")} — matcha en av dessa EXAKT om kunden syftar på samma sak, annars kan du sätta en ny kategori med kundens egen benämning (lista då gärna de befintliga som förslag om du istället behöver fråga). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. Schemalagd publicering går INTE att be om här i chatten än — vill kunden schemalägga, hänvisa till Nyheter-sidan i panelen istället. Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också.
 
 VIKTIGT — Google Analytics/Meta Pixel: ber kunden att koppla på Google Analytics eller Meta (Facebook) Pixel och GER dig ett ID i samma meddelande, sätt det i "gaMeasurementId" respektive "metaPixelId". Ber kunden om det men utan att ange något ID, svara i "summary" och be om ID:t istället — hitta aldrig på ett. Vill kunden koppla BORT en redan kopplad tagg, sätt motsvarande fält till en tom sträng. Scripten laddas bara in på sajten efter att besökaren godkänt "Alla cookies" i cookiebannern — nämn det kort om kunden undrar varför de inte ser något direkt i förhandsvisningen utan att godkänna den.
 
@@ -345,7 +345,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection);
+  const existingNewsCategories = await getSiteNewsCategories(supabase, site.id);
+  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories);
 
   // Bara bildbilagor görs om till egna innehållsblock i ett multimodalt
   // meddelande (Claude ser själva bilderna, en efter en) — textdokument är
@@ -435,7 +436,8 @@ export async function POST(request: Request) {
   // den FÖRSTA bifogade bilden i det här meddelandet, om någon — Claude
   // ombeds aldrig ange en bild-URL själv (se verktygets fältbeskrivning).
   let newsArticle: NewsArticle | null = null;
-  if (patch.newsArticle && isNewsCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
+  const newsCategory = patch.newsArticle ? normalizeCategory(patch.newsArticle.category) : null;
+  if (patch.newsArticle && newsCategory && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
     const title = patch.newsArticle.title.trim().slice(0, 120);
     const slug = await uniqueSlugForSite(supabase, site.id, title);
     const firstImage = imageAttachments[0]?.url || null;
@@ -449,7 +451,7 @@ export async function POST(request: Request) {
         excerpt: patch.newsArticle.excerpt?.trim().slice(0, 300) || null,
         body: patch.newsArticle.body.trim().slice(0, 20000),
         image_url: firstImage,
-        category: patch.newsArticle.category,
+        category: newsCategory,
         published: patch.newsArticle.published === true,
         published_at: patch.newsArticle.published === true ? nowIso : null,
       })

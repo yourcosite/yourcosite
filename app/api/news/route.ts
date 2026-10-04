@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { getSiteNewsArticles, uniqueSlugForSite, isNewsCategory, DEFAULT_NEWS_CATEGORY } from "@/lib/newsArticles";
+import { getSiteNewsArticles, getSiteNewsCategories, uniqueSlugForSite, normalizeCategory, DEFAULT_NEWS_CATEGORY } from "@/lib/newsArticles";
 
 // Nyhetsartiklar för den inloggade kundens egen sajt — skapas och
 // publiceras här av kunden själv (app/nyheter/page.tsx), aldrig av Millie
@@ -17,10 +17,13 @@ export async function GET() {
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
   const site = await getCurrentPublishedSite(supabase, user.id);
-  if (!site) return NextResponse.json({ articles: [] });
+  if (!site) return NextResponse.json({ articles: [], categories: [] });
 
-  const articles = await getSiteNewsArticles(supabase, site.id);
-  return NextResponse.json({ articles, siteId: site.id });
+  const [articles, categories] = await Promise.all([
+    getSiteNewsArticles(supabase, site.id),
+    getSiteNewsCategories(supabase, site.id),
+  ]);
+  return NextResponse.json({ articles, categories, siteId: site.id });
 }
 
 export async function POST(request: Request) {
@@ -38,8 +41,21 @@ export async function POST(request: Request) {
   const excerpt = typeof body.excerpt === "string" ? body.excerpt.trim().slice(0, MAX_EXCERPT) : "";
   const articleBody = typeof body.body === "string" ? body.body.trim().slice(0, MAX_BODY) : "";
   const imageUrl = typeof body.imageUrl === "string" && body.imageUrl ? body.imageUrl : null;
-  const category = isNewsCategory(body.category) ? body.category : DEFAULT_NEWS_CATEGORY;
-  const published = body.published === true;
+  const category = normalizeCategory(body.category) || DEFAULT_NEWS_CATEGORY;
+
+  // Schemalagd publicering: ett framtida klockslag kunden valt istället
+  // för att publicera direkt — se isArticleLive/syncScheduledArticles i
+  // lib/newsArticles.ts för hur den blir synlig av sig själv när tiden
+  // passerat. Ett klockslag som redan passerat (eller en ogiltig sträng)
+  // räknas inte som schemaläggning.
+  const rawScheduledAt = typeof body.scheduledAt === "string" ? body.scheduledAt : "";
+  const scheduledDate = rawScheduledAt ? new Date(rawScheduledAt) : null;
+  const scheduledAt = scheduledDate && !isNaN(scheduledDate.getTime()) && scheduledDate.getTime() > Date.now()
+    ? scheduledDate.toISOString()
+    : null;
+  // En schemaläggning styr framför en samtidig "published" — klienten ska
+  // bara skicka ettdera, men det här gör ordningen entydig ändå.
+  const published = body.published === true && !scheduledAt;
 
   if (!title) return NextResponse.json({ error: "Artikeln behöver en rubrik." }, { status: 400 });
   if (!articleBody) return NextResponse.json({ error: "Artikeln behöver text." }, { status: 400 });
@@ -64,6 +80,7 @@ export async function POST(request: Request) {
       image_url: imageUrl,
       category,
       published,
+      scheduled_at: scheduledAt,
       published_at: published ? now : null,
     })
     .select("*")

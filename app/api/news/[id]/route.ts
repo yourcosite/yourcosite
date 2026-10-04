@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { uniqueSlugForSite, isNewsCategory } from "@/lib/newsArticles";
+import { uniqueSlugForSite, normalizeCategory } from "@/lib/newsArticles";
 
 const MAX_TITLE = 120;
 const MAX_EXCERPT = 300;
@@ -41,10 +41,9 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
   if (typeof body.excerpt === "string") update.excerpt = body.excerpt.trim().slice(0, MAX_EXCERPT) || null;
   if (typeof body.category === "string") {
-    if (!isNewsCategory(body.category)) {
-      return NextResponse.json({ error: "Ogiltig kategori." }, { status: 400 });
-    }
-    update.category = body.category;
+    const category = normalizeCategory(body.category);
+    if (!category) return NextResponse.json({ error: "Artikeln behöver en kategori." }, { status: 400 });
+    update.category = category;
   }
   if (typeof body.body === "string") {
     const articleBody = body.body.trim().slice(0, MAX_BODY);
@@ -58,9 +57,28 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
     update.image_url = imageUrl;
   }
-  if (typeof body.published === "boolean") {
+
+  // Schemaläggning (se POST-routen för samma resonemang) — skickas antingen
+  // som ett ISO-klockslag (sätt/ändra) eller null (avbryt schemaläggningen,
+  // tillbaka till utkast). Vinner över en samtidig "published" i samma
+  // anrop, precis som vid skapandet.
+  let schedulingNow = false;
+  if (body.scheduledAt === null) {
+    update.scheduled_at = null;
+  } else if (typeof body.scheduledAt === "string" && body.scheduledAt) {
+    const d = new Date(body.scheduledAt);
+    if (!isNaN(d.getTime()) && d.getTime() > Date.now()) {
+      update.scheduled_at = d.toISOString();
+      update.published = false;
+      schedulingNow = true;
+    }
+  }
+  if (typeof body.published === "boolean" && !schedulingNow) {
     update.published = body.published;
-    if (body.published && !existing.published) update.published_at = new Date().toISOString();
+    if (body.published) {
+      update.scheduled_at = null;
+      if (!existing.published) update.published_at = new Date().toISOString();
+    }
   }
 
   const { data: article, error } = await supabase
