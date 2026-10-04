@@ -82,6 +82,84 @@ const ABOUT_LAYOUT_POOL = ["text-left", "centered"];
 const FAQ_LAYOUT_POOL = ["stacked", "two-column"];
 const MAP_LAYOUT_POOL = ["inline", "full-bleed"];
 
+// Bildsäker delmängd av GRID_LAYOUT_POOL — "list"/"numbered" saknar bild
+// helt (bara rubrik+text), så den hårda kod-randomiseringen nedan väljer
+// ALDRIG dem — bara "cards"/"alternating-rows" används där, som ett
+// annars bildlös sida (eller en förstasida utan sitt bildstarka intryck)
+// kan bli resultatet.
+const GRID_IMAGE_SAFE_LAYOUT_POOL = ["cards", "alternating-rows"];
+
+// VARFÖR DET HÄR BEHÖVS: prompt-knuffarna ovan (sectionLayoutLean) är bara
+// en VÄDJAN till AI:n — och vi har sett i praktiken att språkmodeller
+// ändå konvergerar mot samma "säkra" layout om och om igen, även när de
+// uttryckligen ombeds variera (samma anledning till att
+// enforceHomepageImageRichness i lib/ensureImageSlots.ts tvingar fram
+// stora bilder i kod istället för att bara be om det). Men att TVINGA
+// FRAM EN enda fast layout (som vi gjorde för förstasidans bildsektion)
+// löser bildproblemet men gör designen helt deterministisk — varje
+// omgenerering ser likadan ut, bara texten byts ut. Den här funktionen
+// löser båda samtidigt: den SLUMPAR om layout-fältet för praktiskt taget
+// alla sektioner EFTER att AI:n svarat, med en NY slumpning vid varje
+// generering — så varje "skriv om alltihop" ger ett genuint annorlunda
+// designförslag, inte bara nya ord i samma mall. Rör aldrig
+// rubrik/text/bilder, bara layout-fältet.
+//
+// Förstasidans EGEN hero och dess FÖRSTA "grid"-sektion rörs inte här —
+// de hanteras separat (hero: variantens egen känsla på /forslag, se
+// lib/themeVariants.ts; grid: enforceHomepageImageRichness, som körs
+// EFTER den här funktionen och alltid vinner för just den sektionen) för
+// att skydda det bildstarka förstaintrycket. Allt annat — testimonials,
+// cta, contact, about, faq, map, gallery, EXTRA grid-sektioner, och
+// hero på ALLA sidor utom förstasidan — är fritt att variera.
+function randomizeSectionLayouts(content: SiteContent, homePath: string): SiteContent {
+  for (const page of content.pages) {
+    const isHome = page.path === homePath;
+    let sawFirstGridOnHome = false;
+
+    for (const section of page.sections as any[]) {
+      switch (section.type) {
+        case "hero":
+          if (!isHome) section.layout = pickRandom(SUBPAGE_HERO_LAYOUT_POOL);
+          break;
+        case "grid":
+          if (isHome && !sawFirstGridOnHome) {
+            // Skyddas av enforceHomepageImageRichness strax efter — rör
+            // den inte här, men håll ändå inom en bildsäker layout om den
+            // funktionen av någon anledning inte skulle hitta sektionen.
+            section.layout = pickRandom(GRID_IMAGE_SAFE_LAYOUT_POOL);
+            sawFirstGridOnHome = true;
+          } else {
+            section.layout = pickRandom(GRID_LAYOUT_POOL);
+          }
+          break;
+        case "testimonials":
+          section.layout = pickRandom(TESTIMONIALS_LAYOUT_POOL);
+          break;
+        case "cta":
+          section.layout = pickRandom(CTA_LAYOUT_POOL);
+          break;
+        case "contact":
+          section.layout = pickRandom(CONTACT_LAYOUT_POOL);
+          break;
+        case "gallery":
+          section.layout = pickRandom(GALLERY_LAYOUT_POOL);
+          break;
+        case "about":
+          section.layout = pickRandom(ABOUT_LAYOUT_POOL);
+          break;
+        case "faq":
+          section.layout = pickRandom(FAQ_LAYOUT_POOL);
+          break;
+        case "map":
+          section.layout = pickRandom(MAP_LAYOUT_POOL);
+          break;
+      }
+    }
+  }
+
+  return content;
+}
+
 function buildPrompt(
   site: any,
   pages: any[],
@@ -262,10 +340,14 @@ export async function POST() {
     content.socialLinks = site.social_links;
   }
 
-  // Säkerställer att varje sida har minst en bildbärande sektion (hero
-  // eller grid) innan vi delar ut kundens foton — annars kan en sida som
-  // bara fick t.ex. about+contact hamna helt utan bild.
-  const contentWithImageSlots = enforceHomepageImageRichness(ensureImageSlots(content));
+  // Slumpar om layout per sektion i kod (se randomizeSectionLayouts ovan)
+  // så varje omgenerering ger ett genuint nytt designförslag, inte bara
+  // ny text i samma mall — sedan: säkerställer att varje sida har minst
+  // en bildbärande sektion (hero eller grid) innan vi delar ut kundens
+  // foton, och tvingar till sist fram förstasidans bildstarka intryck.
+  const contentWithImageSlots = enforceHomepageImageRichness(
+    ensureImageSlots(randomizeSectionLayouts(content, "/"))
+  );
 
   // Egna uppladdade foton (steg 3) placeras deterministiskt i layouten i
   // kod — AI:n har inte sett eller valt dem.
