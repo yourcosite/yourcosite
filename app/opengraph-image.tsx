@@ -5,9 +5,15 @@ import { ImageResponse } from "next/og";
 // "app/opengraph-image.tsx") och sätter og:image/twitter:image på alla
 // sidor som inte definierar en egen — samma mörka/lime-profil som loggan
 // och resten av produkten, så en delad länk känns igen direkt.
+//
+// Texten här är på ENGELSKA med flit, även om resten av produkten (UI,
+// onboarding, Millie) är på svenska — den här bilden är det som syns när
+// NÅGON ANNAN än kunden ser länken (delad i en Slack-kanal, ett gruppchatt
+// osv.), och om/när vi går mot fler länder är det den bredast begripliga
+// varianten. Ändra tillbaka till svenska här om vi bestämmer motsatsen.
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "YourCoSite — din hemsida, byggd genom ett samtal";
+export const alt = "YourCoSite — your website, built through a conversation";
 
 export default function Image() {
   return new ImageResponse(
@@ -47,10 +53,10 @@ export default function Image() {
             fontWeight: 500,
           }}
         >
-          Din hemsida, byggd genom ett samtal
+          Your website, built through a conversation
         </div>
         <div style={{ display: "flex", fontSize: 26, color: "#9E9C97", marginTop: 26, maxWidth: 760 }}>
-          Beskriv verksamheten, välj en stil — sen fortsätter ni bara att be om ändringar.
+          Describe your business, pick a style — then just keep asking for changes.
         </div>
       </div>
     ),

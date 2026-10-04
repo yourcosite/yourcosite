@@ -12,7 +12,14 @@ export default function Millie({ active = false, size = 36 }: { active?: boolean
       style={{ width: size, height: size, flexShrink: 0 }}
       aria-hidden="true"
     >
-      <svg viewBox="0 0 64 64" width="100%" height="100%">
+      {/* viewBox har marginal runt om (inte "0 0 64 64") — hårtofsarna
+          sticker annars ut UTANFÖR 0..64 redan i vila (t.ex. toppen på de
+          två övre tofsarna, cy=6 r=8, hamnar på y=-3), och en <svg> klipper
+          som standard allt utanför sin egen viewBox. Med hår-vagg-
+          animationen (animate-millie-hair, se tailwind.config.ts) syns det
+          ännu tydligare — hela håret kunde se avklippt ut, särskilt i
+          "active"-läget. */}
+      <svg viewBox="-8 -8 80 80" width="100%" height="100%">
         {/* Stort, vilt hår — en "pom-pom"-klase av runda tofsar i olika
             gröna nyanser runt hjässan, precis vildare och yvigare än en
             enkel frisyr. */}
