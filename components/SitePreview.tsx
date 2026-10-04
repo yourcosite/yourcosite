@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 
@@ -91,7 +91,7 @@ export default function SitePreview({
   // den redan gör (navigera/inget).
   editable?: boolean;
   selectedImageKey?: string | null;
-  onSelectImage?: (sel: { key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }) => void;
+  onSelectImage?: (sel: { key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem" | "galleryItem"; itemIndex?: number; label: string }) => void;
   // Samma koncept som ovan, för att välja en HEL sektion (text) istället
   // för en enskild bild — se sectionLabel/SectionBlock nedan.
   selectedSectionKey?: string | null;
@@ -186,6 +186,7 @@ export default function SitePreview({
             socialLinks={content.socialLinks}
             heroEmphasis
             basePath={basePath}
+            siteId={siteId}
             onNavigate={onNavigate}
             pagePath={page.path}
             editable={editable}
@@ -215,6 +216,7 @@ export default function SitePreview({
             // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
             heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
             basePath={basePath}
+            siteId={siteId}
             onNavigate={onNavigate}
             pagePath={page.path}
             editable={editable}
@@ -823,7 +825,7 @@ function CtaPill({
 type ImageSelection = {
   pagePath: string;
   sectionId: string;
-  kind: "hero" | "gridItem";
+  kind: "hero" | "gridItem" | "galleryItem";
   itemIndex?: number;
   label: string;
 };
@@ -951,6 +953,126 @@ function FieldBadge({
   );
 }
 
+// Det RIKTIGA, ifyllbara kontaktformuläret (ContactFormSection) — en egen
+// toppnivåkomponent (inte en nästlad funktion inne i SectionBlockInner)
+// eftersom den har sitt eget useState för fälten/skickat-status: en
+// nästlad komponent skulle få en NY komponent-identitet varje render av
+// den omgivande sektionen och tappa sitt tillstånd (bli "osänt" igen) vid
+// varje orelaterad omrendering av sidan.
+function ContactFormBlock({
+  section,
+  palette,
+  accent,
+  pagePath,
+  siteId,
+  active,
+  editable,
+  selected,
+  onSelect,
+}: {
+  section: ContactFormSection;
+  palette: Palette;
+  accent: string;
+  pagePath?: string;
+  siteId?: string;
+  // true bara på den RIKTIGA, publikt nåbara sajten (se siteId-kommentaren
+  // i SectionBlockInner) — annars sparas inget skarpt vid "Skicka", bara
+  // en lokal bekräftelse (för att kunna visa/testa utseendet i
+  // chattredigeraren och /forslag-miniatyrerna).
+  active: boolean;
+  editable?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+}) {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!active || !siteId) {
+      setStatus("sent");
+      return;
+    }
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/public/form-submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId, pagePath, sectionId: section.id, name, email, message }),
+      });
+      if (!res.ok) throw new Error("fel");
+      setStatus("sent");
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch {
+      setStatus("error");
+    }
+  };
+
+  if (status === "sent") {
+    return (
+      <div
+        className="rounded-2xl border p-6 text-center text-[14px]"
+        style={{ background: palette.cardBg, borderColor: palette.cardBorder, color: palette.textDim }}
+      >
+        Tack, ditt meddelande har skickats!
+      </div>
+    );
+  }
+
+  const inputClass = "w-full px-4 py-3 rounded-xl border text-[14px] outline-none";
+  const inputStyle = { borderColor: palette.cardBorder, background: palette.cardBg, color: palette.text };
+
+  return (
+    <form onSubmit={submit} className="flex flex-col gap-3">
+      <input
+        type="text"
+        placeholder="Namn"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        className={inputClass}
+        style={inputStyle}
+      />
+      <input
+        type="email"
+        placeholder="E-post"
+        required
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+        className={inputClass}
+        style={inputStyle}
+      />
+      <textarea
+        placeholder="Meddelande"
+        required
+        rows={4}
+        value={message}
+        onChange={(e) => setMessage(e.target.value)}
+        className={`${inputClass} resize-none`}
+        style={inputStyle}
+      />
+      <FieldBadge editable={editable} selected={selected} onSelect={onSelect}>
+        <button
+          type="submit"
+          disabled={status === "sending"}
+          className="font-semibold text-[14px] px-7 py-3.5 rounded-full disabled:opacity-60"
+          style={{ background: accent, color: "#17171A" }}
+        >
+          {status === "sending" ? "Skickar…" : section.submitLabel || "Skicka"}
+        </button>
+      </FieldBadge>
+      {status === "error" && (
+        <p className="text-[12.5px] text-center" style={{ color: "#C0392B" }}>
+          Något gick fel — försök igen.
+        </p>
+      )}
+    </form>
+  );
+}
+
 // Läsbar svensk etikett för en HEL sektion (inte en enskild bild) — visas i
 // hover-/val-pillen nedan och skickas som selection.label till
 // /api/sites/edit, så kunden kan klicka på t.ex. rubriken eller
@@ -971,6 +1093,14 @@ function sectionLabel(section: Section): string {
       return `sektionen "${section.heading}"`;
     case "contact":
       return `sektionen "${section.heading}"`;
+    case "gallery":
+      return `sektionen "${section.heading}"`;
+    case "faq":
+      return `sektionen "${section.heading}"`;
+    case "map":
+      return section.heading ? `kartsektionen "${section.heading}"` : "kartsektionen";
+    case "contactForm":
+      return `sektionen "${section.heading}"`;
     default:
       return "den här sektionen";
   }
@@ -986,6 +1116,7 @@ function SectionBlockInner({
   socialLinks,
   heroEmphasis,
   basePath,
+  siteId,
   onNavigate,
   pagePath,
   editable,
@@ -1007,6 +1138,14 @@ function SectionBlockInner({
   // Vidarebefordras bara till CTA-knappen (se CtaLink) — samma
   // basePath/onNavigate som Header redan använder för menyn.
   basePath?: string;
+  // Sajtens id i databasen — bara för att veta VART ett riktigt
+  // kontaktformulär-inskick ska sparas (se ContactFormBlock nedan). Satt
+  // ENDAST på den riktiga, publikt nåbara renderingen (se
+  // SitePreview-kommentaren om siteId högre upp), aldrig i
+  // chattredigerarens egen förhandsvisning eller /forslag-miniatyrerna —
+  // annars skulle ett testklick i förhandsvisningen spara en skarp rad i
+  // kundens formulärsvar.
+  siteId?: string;
   onNavigate?: (path: string) => void;
   // Vilken sida sektionen tillhör — bara satt när editable (se nedan),
   // skickas med i selection-objektet så /api/sites/edit vet vilken sida
@@ -1036,6 +1175,14 @@ function SectionBlockInner({
     editable && pagePath
       ? { key: gridItemKey(i), pagePath, sectionId: section.id, kind: "gridItem", itemIndex: i, label: `bilden i rutan "${title}"` }
       : undefined;
+  // Samma idé, för en bild i ett bildspel/galleri (gallery-sektionen) —
+  // bildrutorna saknar egen titel att peka ut med, så etiketten räknar
+  // bara upp vilken bild i galleriet det är.
+  const galleryItemKey = (i: number) => `${pagePath}::gallery::${section.id}::${i}`;
+  const galleryItemSelection = (i: number): (ImageSelection & { key: string }) | undefined =>
+    editable && pagePath
+      ? { key: galleryItemKey(i), pagePath, sectionId: section.id, kind: "galleryItem", itemIndex: i, label: `bild ${i + 1} i galleriet` }
+      : undefined;
 
   // field matchar EXAKT egenskapsnamnet i innehållsmodellen (se
   // FieldSelection-kommentaren ovan) — "items.1.title" för rad 2 i en
@@ -1052,6 +1199,11 @@ function SectionBlockInner({
       label: `${desc} ("${snippet(text)}")`,
     };
   };
+
+  // Bara använd av "faq" nedan — vilken fråga som är utfälld just nu.
+  // Ligger ovillkorat här (inte i case "faq") eftersom React Hooks måste
+  // anropas i samma ordning varje render, oavsett sektionstyp.
+  const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
 
   switch (section.type) {
     case "hero": {
@@ -1868,6 +2020,260 @@ function SectionBlockInner({
         </div>
       );
     }
+
+    case "gallery": {
+      const layout = section.layout || "grid";
+
+      if (layout === "carousel") {
+        return (
+          <div className="py-16" style={{ background: sectionBg }}>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-8 text-center px-10"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+            {/* Rent CSS-horisontalskroll med snap, inget JS-tillstånd
+                behövs — fungerar direkt som ett svep-bildspel på mobil. */}
+            <div className="flex gap-4 overflow-x-auto px-10 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+              {section.items.map((item, i) => {
+                const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+                const itemSel = galleryItemSelection(i);
+                return (
+                  <div key={i} className="flex-shrink-0 w-[260px] md:w-[320px]" style={{ scrollSnapAlign: "start" }}>
+                    <ImageOrArt
+                      imageUrl={item.imageUrl}
+                      art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
+                      className="h-[200px] md:h-[240px] rounded-2xl"
+                      selectable={editable}
+                      selected={!!itemSel && selectedImageKey === itemSel.key}
+                      onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                    />
+                    {item.caption && (
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className="text-[12.5px] mt-2"
+                        style={{ color: palette.textDim }}
+                        selected={selectedFieldKey === fieldSel("caption", item.caption, "bildtexten", i)?.key}
+                        onSelect={() => { const s = fieldSel("caption", item.caption, "bildtexten", i); s && onSelectField?.(s); }}
+                      >
+                        {item.caption}
+                      </Field>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      // grid (default)
+      return (
+        <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-8 text-center"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {section.items.map((item, i) => {
+              const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+              const itemSel = galleryItemSelection(i);
+              return (
+                <div key={i}>
+                  <ImageOrArt
+                    imageUrl={item.imageUrl}
+                    art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
+                    className="aspect-square rounded-xl"
+                    selectable={editable}
+                    selected={!!itemSel && selectedImageKey === itemSel.key}
+                    onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                  />
+                  {item.caption && (
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[12.5px] mt-2"
+                      style={{ color: palette.textDim }}
+                      selected={selectedFieldKey === fieldSel("caption", item.caption, "bildtexten", i)?.key}
+                      onSelect={() => { const s = fieldSel("caption", item.caption, "bildtexten", i); s && onSelectField?.(s); }}
+                    >
+                      {item.caption}
+                    </Field>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    case "faq":
+      return (
+        <div className="px-10 py-16 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-7 text-center"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          <div className="flex flex-col gap-2.5">
+            {section.items.map((item, i) => {
+              const open = faqOpenIndex === i;
+              return (
+                <div
+                  key={i}
+                  className="rounded-xl border overflow-hidden"
+                  style={{ borderColor: palette.cardBorder, background: palette.cardBg }}
+                >
+                  <div className="flex items-center justify-between gap-3 px-5 py-4">
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="font-semibold text-[14.5px] flex-1"
+                      selected={selectedFieldKey === fieldSel("question", item.question, "frågan", i)?.key}
+                      onSelect={() => { const s = fieldSel("question", item.question, "frågan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.question}
+                    </Field>
+                    {/* Egen knapp för att fälla ut/ihop svaret, skild från
+                        Field ovan — annars skulle ett klick på frågan
+                        både markera den FÖR REDIGERING och växla
+                        utfällningen i samma klick (samma princip som
+                        FieldBadge för knapptexter ovan). */}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFaqOpenIndex(open ? null : i);
+                      }}
+                      aria-label={open ? "Dölj svaret" : "Visa svaret"}
+                      className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold"
+                      style={{ background: palette.bgAlt, color: palette.textDim }}
+                    >
+                      {open ? "–" : "+"}
+                    </button>
+                  </div>
+                  {open && (
+                    <div className="px-5 pb-4">
+                      <Field
+                        editable={editable}
+                        as="p"
+                        className="text-[13.5px] leading-relaxed"
+                        style={{ color: palette.textDim }}
+                        selected={selectedFieldKey === fieldSel("answer", item.answer, "svaret", i)?.key}
+                        onSelect={() => { const s = fieldSel("answer", item.answer, "svaret", i); s && onSelectField?.(s); }}
+                      >
+                        {item.answer}
+                      </Field>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+
+    case "map": {
+      const mapQuery = encodeURIComponent(section.address || "");
+      return (
+        <div className="px-10 py-16 max-w-[880px] mx-auto" style={{ background: sectionBg }}>
+          {section.heading && (
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-5 text-center"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+          )}
+          <div className="rounded-2xl overflow-hidden border" style={{ borderColor: palette.cardBorder }}>
+            {/* Enkel inbäddning utan API-nyckel — räcker för att visa var
+                kunden finns, ingen interaktiv Maps-integration behövs. */}
+            <iframe
+              src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
+              width="100%"
+              height="360"
+              style={{ border: 0, display: "block" }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title={section.heading || "Karta"}
+            />
+          </div>
+          {section.address && (
+            <Field
+              editable={editable}
+              as="div"
+              className="text-[13px] mt-3 text-center"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("address", section.address, "adressen")?.key}
+              onSelect={() => { const s = fieldSel("address", section.address, "adressen"); s && onSelectField?.(s); }}
+            >
+              {section.address}
+            </Field>
+          )}
+        </div>
+      );
+    }
+
+    case "contactForm":
+      return (
+        <div className="px-10 py-16 max-w-[560px] mx-auto" style={{ background: sectionBg }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-3 text-center"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          {section.body && (
+            <Field
+              editable={editable}
+              as="p"
+              className="text-[14.5px] mb-6 text-center"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+            >
+              {section.body}
+            </Field>
+          )}
+          <ContactFormBlock
+            section={section}
+            palette={palette}
+            accent={accent}
+            pagePath={pagePath}
+            siteId={siteId}
+            // Bara ett klick på den RIKTIGA, publikt nåbara sajten ska
+            // spara något skarpt i kundens formulärsvar (se
+            // siteId-kommentaren ovan) — i chattredigerarens
+            // förhandsvisning eller /forslag-miniatyrerna visas bara en
+            // "Tack, skickat!"-bekräftelse utan att något sparas.
+            active={!!basePath && !!siteId}
+            editable={editable}
+            selected={selectedFieldKey === fieldSel("submitLabel", section.submitLabel || "Skicka", "knapptexten")?.key}
+            onSelect={() => { const s = fieldSel("submitLabel", section.submitLabel || "Skicka", "knapptexten"); s && onSelectField?.(s); }}
+          />
+        </div>
+      );
 
     default:
       return null;

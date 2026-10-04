@@ -103,13 +103,75 @@ export interface ContactSection {
   address?: string;
 }
 
+export type GalleryLayout = "grid" | "carousel";
+
+export interface GalleryItem {
+  // Samma princip som GridItem.imageUrl — tilldelas i kod (eller av Millie
+  // när kunden bifogar en egen bild), aldrig en påhittad url.
+  imageUrl?: string;
+  caption?: string;
+}
+
+// Bildspel/galleri — flera bilder i rad, med valfri bildtext under varje.
+// "grid" lägger dem i ett rutnät, "carousel" i en horisontellt skrollbar
+// rad (särskilt naturlig att svepa i på mobil).
+export interface GallerySection {
+  id: string;
+  type: "gallery";
+  layout: GalleryLayout;
+  heading: string;
+  items: GalleryItem[];
+}
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+// Vanliga frågor — varje rad går att fälla ut/ihop för sig (se
+// FaqAccordion i components/SitePreview.tsx).
+export interface FaqSection {
+  id: string;
+  type: "faq";
+  heading: string;
+  items: FaqItem[];
+}
+
+// Inbäddad Google Maps-karta utifrån en adress — ingen API-nyckel behövs
+// för den enkla inbäddningen (se MapSection-renderingen i
+// components/SitePreview.tsx).
+export interface MapSection {
+  id: string;
+  type: "map";
+  heading?: string;
+  address: string;
+}
+
+// Ett RIKTIGT, ifyllbart kontaktformulär (namn/e-post/meddelande) — till
+// skillnad från ContactSection ovan, som bara VISAR kontaktuppgifter.
+// Inskicken sparas i databasen (tabellen site_form_submissions, se
+// supabase/schema.sql) via den publika rutten /api/public/form-submit och
+// syns för kunden på /statistik.
+export interface ContactFormSection {
+  id: string;
+  type: "contactForm";
+  heading: string;
+  body?: string;
+  // Text på skicka-knappen — "Skicka" om utelämnat.
+  submitLabel?: string;
+}
+
 export type Section =
   | HeroSection
   | AboutSection
   | GridSection
   | TestimonialsSection
   | CtaSection
-  | ContactSection;
+  | ContactSection
+  | GallerySection
+  | FaqSection
+  | MapSection
+  | ContactFormSection;
 
 export interface SitePageContent {
   path: string;
@@ -166,7 +228,7 @@ export function countImageSlots(content: SiteContent): { used: number; total: nu
       if (section.type === "hero") {
         total += 1;
         if (section.imageUrl) used += 1;
-      } else if (section.type === "grid") {
+      } else if (section.type === "grid" || section.type === "gallery") {
         for (const item of section.items) {
           total += 1;
           if (item.imageUrl) used += 1;
@@ -177,7 +239,18 @@ export function countImageSlots(content: SiteContent): { used: number; total: nu
   return { used, total };
 }
 
-const VALID_SECTION_TYPES = ["hero", "about", "grid", "testimonials", "cta", "contact"];
+const VALID_SECTION_TYPES = [
+  "hero",
+  "about",
+  "grid",
+  "testimonials",
+  "cta",
+  "contact",
+  "gallery",
+  "faq",
+  "map",
+  "contactForm",
+];
 
 // Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så
 // chattredigerarens patch-svar (se /api/sites/edit — den skickar bara

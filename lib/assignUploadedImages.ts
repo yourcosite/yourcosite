@@ -28,7 +28,7 @@ export function assignUploadedImages(
       for (const section of page.sections) {
         if (section.type === "hero") {
           section.imageUrl = next();
-        } else if (section.type === "grid") {
+        } else if (section.type === "grid" || section.type === "gallery") {
           section.items = section.items.map((item) => ({ ...item, imageUrl: next() }));
         }
       }

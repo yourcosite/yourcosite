@@ -45,7 +45,7 @@ type Attachment = {
 // ett citat …), "section" = hela sektionen (bakgrund eller när ingen av de
 // två ovan träffades — t.ex. ett klick mellan två textrader).
 type Selection =
-  | { target: "image"; key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }
+  | { target: "image"; key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem" | "galleryItem"; itemIndex?: number; label: string }
   | { target: "field"; key: string; pagePath: string; sectionId: string; field: string; label: string }
   | { target: "section"; key: string; pagePath: string; sectionId: string; label: string };
 

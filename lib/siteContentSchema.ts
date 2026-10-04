@@ -102,6 +102,65 @@ export const SECTION_SCHEMA = {
       },
       required: ["id", "type", "layout", "heading", "body"],
     },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "gallery" },
+        layout: { type: "string", enum: ["grid", "carousel"] },
+        heading: { type: "string" },
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { imageUrl: { type: "string" }, caption: { type: "string" } },
+          },
+        },
+      },
+      required: ["id", "type", "layout", "heading", "items"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "faq" },
+        heading: { type: "string" },
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { question: { type: "string" }, answer: { type: "string" } },
+            required: ["question", "answer"],
+          },
+        },
+      },
+      required: ["id", "type", "heading", "items"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "map" },
+        heading: { type: "string" },
+        address: {
+          type: "string",
+          description:
+            "Adressen som visas i en inbäddad Google Maps-karta, EXAKT som kunden gett den (gata, postnummer, ort), t.ex. \"Storgatan 1, 582 24 Linköping\". Hitta aldrig på en adress.",
+        },
+      },
+      required: ["id", "type", "address"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "contactForm" },
+        heading: { type: "string" },
+        body: { type: "string" },
+        submitLabel: { type: "string" },
+      },
+      required: ["id", "type", "heading"],
+    },
   ],
 };
 

@@ -75,7 +75,7 @@ type Attachment = {
 // bakgrund) — för textändringar eller när kunden pekar ut "den här
 // sektionen" snarare än en bild.
 type Selection =
-  | { target: "image"; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }
+  | { target: "image"; pagePath: string; sectionId: string; kind: "hero" | "gridItem" | "galleryItem"; itemIndex?: number; label: string }
   | { target: "field"; pagePath: string; sectionId: string; field: string; label: string }
   | { target: "section"; pagePath: string; sectionId: string; label: string };
 
@@ -94,7 +94,9 @@ function buildEditPrompt(
   const selectionNote =
     selection?.target === "image"
       ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en specifik bild i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"${
-          selection.kind === "gridItem" ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista` : ""
+          selection.kind === "gridItem" || selection.kind === "galleryItem"
+            ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista`
+            : ""
         }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.\n`
       : selection?.target === "field"
       ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT ETT SPECIFIKT textfält i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}", fältet "${selection.field}" — matchar exakt den egenskapen i innehållsmodellen, t.ex. "headline" eller "items.1.title" för rad 2 i en lista). Önskemålet gäller med STOR sannolikhet att ändra EXAKT det fältet (hela dess nya text, inte bara en del), inte något annat fält i samma eller en annan sektion — gör då ändringen bara där.\n`
@@ -118,6 +120,8 @@ VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort
 VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kunden att en knapp ska leda till en av sajtens sidor, sätt ctaLink till exakt den sidans "path" (se listan ovan) — hitta aldrig på en sökväg som inte finns där. Ber kunden om en extern länk, använd en fullständig URL (https://...). Vill kunden att knappen inte ska gå att klicka på, utelämna ctaLink helt.
 
 VIKTIGT — bakgrundsfärg på EN enskild sida (t.ex. "gör Om oss-sidan svart/mörk"): detta STÖDS, via "backgroundMode" på sidobjektet i "changedPages" — se verktygets fältbeskrivning. Välj det av de tre lägena (light/warm/dark) som bäst matchar vad kunden bad om, texten justeras automatiskt. Gäller önskemålet istället HELA sajtens färgtema (t.ex. "byt till svart genomgående" eller bara "byt accentfärg"), använd "theme" högst upp som vanligt, inte detta fält.
+
+VIKTIGT — kartsektion ("map"): fältet "address" ska vara EXAKT den adress kunden gett dig (gata, postnummer, ort) — hitta ALDRIG på en adress. Saknar kunden en adress att ange, fråga efter den i "summary" istället för att lägga till sektionen med en påhittad adress.
 
 VIKTIGT — Google Analytics/Meta Pixel: ber kunden att koppla på Google Analytics eller Meta (Facebook) Pixel och GER dig ett ID i samma meddelande, sätt det i "gaMeasurementId" respektive "metaPixelId". Ber kunden om det men utan att ange något ID, svara i "summary" och be om ID:t istället — hitta aldrig på ett. Vill kunden koppla BORT en redan kopplad tagg, sätt motsvarande fält till en tom sträng. Scripten laddas bara in på sajten efter att besökaren godkänt "Alla cookies" i cookiebannern — nämn det kort om kunden undrar varför de inte ser något direkt i förhandsvisningen utan att godkänna den.
 
@@ -231,7 +235,10 @@ export async function POST(request: Request) {
     typeof rawSelection.sectionId === "string" &&
     typeof rawSelection.label === "string"
   ) {
-    if (rawSelection.target === "image" && (rawSelection.kind === "hero" || rawSelection.kind === "gridItem")) {
+    if (
+      rawSelection.target === "image" &&
+      (rawSelection.kind === "hero" || rawSelection.kind === "gridItem" || rawSelection.kind === "galleryItem")
+    ) {
       selection = {
         target: "image",
         kind: rawSelection.kind,

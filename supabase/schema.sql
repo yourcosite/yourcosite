@@ -211,6 +211,38 @@ create policy "Staff kan läsa all statistik"
   on site_pageviews for select using (public.is_staff());
 
 -- ============================================================
+-- SITE_FORM_SUBMISSIONS
+-- Inskick från en "contactForm"-sektion (lib/contentModel.ts) på kundens
+-- sajt — ett RIKTIGT ifyllbart kontaktformulär, till skillnad från
+-- "contact"-sektionen som bara visar kontaktuppgifter. Skrivs av en
+-- publik rutt (/api/public/form-submit) med service role, exakt samma
+-- mönster som site_pageviews ovan — besökare på en kundsajt är aldrig
+-- inloggade hos oss. Visas för kunden på /statistik.
+-- ============================================================
+create table if not exists site_form_submissions (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  page_path text not null,
+  section_id text not null,
+  name text,
+  email text,
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists site_form_submissions_site_id_idx
+  on site_form_submissions (site_id, created_at desc);
+
+alter table site_form_submissions enable row level security;
+
+create policy "Ägare kan läsa sina formulärsvar"
+  on site_form_submissions for select using (
+    exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid())
+  );
+create policy "Staff kan läsa alla formulärsvar"
+  on site_form_submissions for select using (public.is_staff());
+
+-- ============================================================
 -- SITE_ASSETS
 -- Egna foton/dokument kunden laddar upp i onboardingens steg 3. "kind"
 -- styr var filen kan användas: bilder kan placeras i sajtens design,

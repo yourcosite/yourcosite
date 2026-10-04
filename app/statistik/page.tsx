@@ -27,6 +27,7 @@ export default async function StatistikPage() {
   let topReferrers: { referrer: string; count: number }[] = [];
   let total = 0;
   let today = 0;
+  let formSubmissions: { id: string; pagePath: string; name: string | null; email: string | null; message: string; createdAt: string }[] = [];
 
   if (site) {
     const since = new Date();
@@ -73,6 +74,22 @@ export default async function StatistikPage() {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 6)
       .map(([referrer, count]) => ({ referrer, count }));
+
+    const { data: submissionRows } = await supabase
+      .from("site_form_submissions")
+      .select("id, page_path, name, email, message, created_at")
+      .eq("site_id", site.id)
+      .order("created_at", { ascending: false })
+      .limit(50);
+
+    formSubmissions = (submissionRows ?? []).map((r) => ({
+      id: r.id,
+      pagePath: r.page_path,
+      name: r.name,
+      email: r.email,
+      message: r.message,
+      createdAt: r.created_at,
+    }));
   }
 
   return (
@@ -94,7 +111,14 @@ export default async function StatistikPage() {
               Besökare och sidvisningar för {site.name}, senaste {DAYS} dagarna. Ingen
               cookie, inget besökar-id — vi sparar bara vilken sida och varifrån.
             </p>
-            <StatistikClient days={days} topPages={topPages} topReferrers={topReferrers} total={total} today={today} />
+            <StatistikClient
+              days={days}
+              topPages={topPages}
+              topReferrers={topReferrers}
+              total={total}
+              today={today}
+              formSubmissions={formSubmissions}
+            />
           </>
         )}
       </div>

@@ -5,6 +5,14 @@ import { useState } from "react";
 type Day = { date: string; label: string; count: number };
 type PathCount = { path: string; count: number };
 type ReferrerCount = { referrer: string; count: number };
+type FormSubmission = {
+  id: string;
+  pagePath: string;
+  name: string | null;
+  email: string | null;
+  message: string;
+  createdAt: string;
+};
 
 export default function StatistikClient({
   days,
@@ -12,12 +20,14 @@ export default function StatistikClient({
   topReferrers,
   total,
   today,
+  formSubmissions,
 }: {
   days: Day[];
   topPages: PathCount[];
   topReferrers: ReferrerCount[];
   total: number;
   today: number;
+  formSubmissions: FormSubmission[];
 }) {
   const [hover, setHover] = useState<number | null>(null);
   const max = Math.max(1, ...days.map((d) => d.count));
@@ -112,6 +122,32 @@ export default function StatistikClient({
           </div>
         </div>
       </div>
+
+      {/* Inskickade kontaktformulär (lib/contentModel.ts, "contactForm") —
+          visas bara om kunden faktiskt lagt in en sådan sektion och fått
+          minst ett svar. */}
+      {formSubmissions.length > 0 && (
+        <div className="bg-surface border border-line rounded-2xl p-5">
+          <div className="text-[13.5px] font-semibold mb-3.5">Formulärsvar</div>
+          <div className="flex flex-col gap-3">
+            {formSubmissions.map((s) => (
+              <div key={s.id} className="border border-line rounded-xl p-4">
+                <div className="flex items-center justify-between gap-3 mb-1.5">
+                  <span className="text-[13px] font-semibold truncate">
+                    {s.name || "Namnlös"}
+                    {s.email ? ` · ${s.email}` : ""}
+                  </span>
+                  <span className="text-[11.5px] text-ink-dim flex-shrink-0">
+                    {new Date(s.createdAt).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
+                  </span>
+                </div>
+                <p className="text-[13px] text-ink-dim whitespace-pre-wrap">{s.message}</p>
+                <div className="text-[11px] text-ink-dim mt-1.5">Sidan {s.pagePath}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
