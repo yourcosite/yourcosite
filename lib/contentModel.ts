@@ -172,6 +172,19 @@ export interface ContactFormSection {
   address?: string;
 }
 
+// Visar kundens publicerade nyhetsartiklar (titel, bild, ingress) som ett
+// klickbart rutnät — varje kort länkar till en egen läsvy med hela artikeln
+// och den bifogade bilden (se NewsArticleDetail i components/SitePreview.tsx
+// och NewsArticle i lib/newsArticles.ts). Artiklarna själva skrivs och
+// publiceras av kunden på /nyheter i panelen (app/nyheter/page.tsx) — INTE
+// av Millie i chatten — den här sektionen bara BESTÄMMER VAR på sajten de
+// visas. En sida kan ha som mest en sådan sektion.
+export interface NewsListSection {
+  id: string;
+  type: "newsList";
+  heading: string;
+}
+
 export type Section =
   | HeroSection
   | AboutSection
@@ -182,7 +195,8 @@ export type Section =
   | GallerySection
   | FaqSection
   | MapSection
-  | ContactFormSection;
+  | ContactFormSection
+  | NewsListSection;
 
 export interface SitePageContent {
   path: string;
@@ -261,6 +275,7 @@ const VALID_SECTION_TYPES = [
   "faq",
   "map",
   "contactForm",
+  "newsList",
 ];
 
 // Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så

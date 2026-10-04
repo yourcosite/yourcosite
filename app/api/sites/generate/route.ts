@@ -106,7 +106,7 @@ ${inspirationImageCount > 0 ? `\nKunden har också bifogat ${inspirationImageCou
 Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
 
-${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact/gallery/faq/map/contactForm där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer. "gallery" (bildspel/galleri), "faq" (vanliga frågor), "map" (inbäddad karta) och "contactForm" (ett riktigt ifyllbart kontaktformulär) är valfria extrasektioner — lägg bara in dem där de faktiskt passar innehållet, inte på varje sajt.
+${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact/gallery/faq/map/contactForm där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer. "gallery" (bildspel/galleri), "faq" (vanliga frågor), "map" (inbäddad karta) och "contactForm" (ett riktigt ifyllbart kontaktformulär) är valfria extrasektioner — lägg bara in dem där de faktiskt passar innehållet, inte på varje sajt. Lägg ALDRIG till en "newsList"-sektion här — kunden har inga publicerade nyhetsartiklar än vid det här laget, det kan kunden be om senare i chattredigeraren när de faktiskt har artiklar att visa.
 
 VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (den är sidans enda garanterade bildplats tillsammans med "grid" — se till att minst en av dem finns på varje sida, annars blir sidan bildlös).
 

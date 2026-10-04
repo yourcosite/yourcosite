@@ -5,6 +5,7 @@ import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
+import type { NewsArticle } from "@/lib/newsArticles";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
 // för ett grått platshållarfält. Så fort kunden laddar upp egna foton är det
@@ -49,6 +50,7 @@ export default function SitePreview({
   privacyPolicyMode,
   privacyPolicyFileUrl,
   privacyPolicyText,
+  newsArticles,
   editable,
   selectedImageKey,
   onSelectImage,
@@ -83,6 +85,12 @@ export default function SitePreview({
   privacyPolicyMode?: "uploaded" | "generated" | null;
   privacyPolicyFileUrl?: string | null;
   privacyPolicyText?: string | null;
+  // Kundens egna nyhetsartiklar (utkast + publicerade, se
+  // lib/newsArticles.ts) — behövs för att rendera "newsList"-sektionen
+  // och för att hitta rätt artikel när besökaren klickar sig in på en
+  // egen läsvy (se newsDetailMatch nedan). Saknas den (t.ex. i
+  // /forslag-miniatyrerna) visas "newsList"-sektionen bara tom.
+  newsArticles?: NewsArticle[];
   // Satt av chattredigeraren (/redigera) ENDAST — låter kunden klicka på
   // en bild i förhandsvisningen istället för att beskriva vilken bild de
   // menar i ord (se ImageOrArt/SectionBlock ovan). Aldrig satt från
@@ -103,8 +111,31 @@ export default function SitePreview({
 }) {
   const isPrivacyPolicyPage =
     activePath === PRIVACY_POLICY_PATH && privacyPolicyMode === "generated" && !!privacyPolicyText;
+
+  // En artikels egen läsvy ligger inte på en egen "sida" i content.pages —
+  // det är EXAKT den sökväg som nyhetssidan själv har, plus "/<slug>" (se
+  // NewsListSection i lib/contentModel.ts). Hittar vi en sida med en
+  // "newsList"-sektion vars path är den direkta föräldern till activePath,
+  // och en PUBLICERAD artikel med den slugen, visar vi artikeln istället
+  // för sidans vanliga sektioner (se renderingen nedan).
+  const newsDetailMatch = (() => {
+    if (!activePath || activePath === "/" || isPrivacyPolicyPage) return null;
+    for (const p of content.pages) {
+      if (!p.sections.some((s) => s.type === "newsList")) continue;
+      const prefix = p.path === "/" ? "/" : `${p.path}/`;
+      if (!activePath.startsWith(prefix)) continue;
+      const slug = activePath.slice(prefix.length);
+      if (!slug) continue;
+      const article = (newsArticles || []).find((a) => a.slug === slug && a.published);
+      if (article) return { page: p, article };
+    }
+    return null;
+  })();
+
   const page = isPrivacyPolicyPage
     ? { path: PRIVACY_POLICY_PATH, label: "Integritetspolicy", sections: [] }
+    : newsDetailMatch
+    ? newsDetailMatch.page
     : content.pages.find((p) => p.path === activePath) || content.pages[0];
   const font = fontOverride ?? content.theme.font;
   // Prioritet: en uttrycklig förhandsvisnings-override (t.ex. /forslag, som
@@ -201,6 +232,14 @@ export default function SitePreview({
       </div>
       {isPrivacyPolicyPage ? (
         <PrivacyPolicyBlock text={privacyPolicyText!} palette={palette} />
+      ) : newsDetailMatch ? (
+        <NewsArticleDetail
+          article={newsDetailMatch.article}
+          listPath={newsDetailMatch.page.path}
+          palette={palette}
+          basePath={basePath}
+          onNavigate={onNavigate}
+        />
       ) : (
         restSections.map((section, i) => (
           <SectionBlock
@@ -226,6 +265,7 @@ export default function SitePreview({
             onSelectSection={onSelectSection}
             selectedFieldKey={selectedFieldKey}
             onSelectField={onSelectField}
+            newsArticles={newsArticles}
           />
         ))
       )}
@@ -280,6 +320,61 @@ function PrivacyPolicyBlock({ text, palette }: { text: string; palette: Palette 
           </p>
         )
       )}
+    </div>
+  );
+}
+
+// Läsvyn för EN artikel — öppnas när activePath pekar på
+// "<nyhetssidans path>/<slug>" för en publicerad artikel (se
+// newsDetailMatch i SitePreview ovan). Artiklar lever i sin egen tabell
+// (site_news_articles), inte i content.pages, så den här vyn renderas
+// direkt i SitePreview istället för att gå via den vanliga
+// sektions-switchen i SectionBlockInner.
+function NewsArticleDetail({
+  article,
+  listPath,
+  palette,
+  basePath,
+  onNavigate,
+}: {
+  article: NewsArticle;
+  listPath: string;
+  palette: Palette;
+  basePath?: string;
+  onNavigate?: (path: string) => void;
+}) {
+  const paragraphs = article.body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  const publishedDate = article.published_at
+    ? new Date(article.published_at).toLocaleDateString("sv-SE", { year: "numeric", month: "long", day: "numeric" })
+    : null;
+  return (
+    <div className="px-8 md:px-14 py-14 max-w-[720px] mx-auto">
+      <CtaLink
+        link={listPath}
+        basePath={basePath}
+        onNavigate={onNavigate}
+        className="text-[13px] font-semibold mb-6 inline-block"
+        style={{ color: palette.textDim }}
+      >
+        ← Alla nyheter
+      </CtaLink>
+      {article.image_url && (
+        <div className="rounded-2xl overflow-hidden mb-8">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={article.image_url} alt={article.title} className="w-full h-auto object-cover" />
+        </div>
+      )}
+      <h1 className="font-serif text-[30px] md:text-[36px] leading-tight mb-2">{article.title}</h1>
+      {publishedDate && (
+        <div className="text-[13px] mb-7" style={{ color: palette.textDim }}>
+          {publishedDate}
+        </div>
+      )}
+      {paragraphs.map((p, i) => (
+        <p key={i} className="text-[15px] leading-relaxed mb-4" style={{ color: palette.textDim }}>
+          {p}
+        </p>
+      ))}
     </div>
   );
 }
@@ -1101,6 +1196,8 @@ function sectionLabel(section: Section): string {
       return section.heading ? `kartsektionen "${section.heading}"` : "kartsektionen";
     case "contactForm":
       return `sektionen "${section.heading}"`;
+    case "newsList":
+      return `nyhetssektionen "${section.heading}"`;
     default:
       return "den här sektionen";
   }
@@ -1124,6 +1221,7 @@ function SectionBlockInner({
   onSelectImage,
   selectedFieldKey,
   onSelectField,
+  newsArticles,
 }: {
   section: Section;
   accent: string;
@@ -1158,6 +1256,9 @@ function SectionBlockInner({
   onSelectImage?: (sel: ImageSelection & { key: string }) => void;
   selectedFieldKey?: string | null;
   onSelectField?: (sel: FieldSelection & { key: string }) => void;
+  // Bara använt av "newsList" nedan — se NewsArticleDetail-kommentaren
+  // för varför artiklarna inte ligger i content.pages.
+  newsArticles?: NewsArticle[];
 }) {
   const sectionBg = alt ? palette.bgAlt : undefined;
   const art = artBackground(mode, accent, secondary);
@@ -2339,6 +2440,58 @@ function SectionBlockInner({
             </Field>
           )}
           {formBlock}
+        </div>
+      );
+    }
+
+    case "newsList": {
+      // Bara de PUBLICERADE artiklarna visas här — utkast syns bara för
+      // ägaren själv, på "Nyheter"-sidan i panelen (se app/nyheter).
+      const published = (newsArticles || []).filter((a) => a.published);
+      const articleHref = (slug: string) => `${pagePath || ""}/${slug}`;
+      return (
+        <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-8 text-center"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          {published.length === 0 ? (
+            <p className="text-[14px] text-center" style={{ color: palette.textDim }}>
+              Inga publicerade nyheter än.
+            </p>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-6">
+              {published.map((article) => (
+                <CtaLink
+                  key={article.id}
+                  link={articleHref(article.slug)}
+                  basePath={basePath}
+                  onNavigate={onNavigate}
+                  className="block rounded-xl overflow-hidden border"
+                  style={{ borderColor: palette.cardBorder, background: palette.cardBg }}
+                >
+                  <ImageOrArt
+                    imageUrl={article.image_url || undefined}
+                    art={`linear-gradient(145deg, ${accent}55, ${accent}15)`}
+                    className="aspect-[16/10]"
+                  />
+                  <div className="p-4">
+                    <div className="font-semibold text-[15px] mb-1">{article.title}</div>
+                    {article.excerpt && (
+                      <div className="text-[13px] leading-snug" style={{ color: palette.textDim }}>
+                        {article.excerpt}
+                      </div>
+                    )}
+                  </div>
+                </CtaLink>
+              ))}
+            </div>
+          )}
         </div>
       );
     }

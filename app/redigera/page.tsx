@@ -9,6 +9,7 @@ import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
+import type { NewsArticle } from "@/lib/newsArticles";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -95,6 +96,7 @@ export default function EditorPage() {
   const [content, setContent] = useState<SiteContent | null>(null);
   const [activePath, setActivePath] = useState("/");
   const [loadError, setLoadError] = useState("");
+  const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -166,6 +168,14 @@ export default function EditorPage() {
         else setLoadError("Sajtens innehåll kunde inte läsas.");
       })
       .catch(() => setLoadError("Kunde inte hämta sajten."));
+
+    // Så "newsList"-sektionen kan visa kundens egna artiklar i
+    // förhandsvisningen här också — se app/nyheter/page.tsx där de
+    // skrivs och publiceras.
+    fetch("/api/news")
+      .then((r) => r.json())
+      .then((data) => setNewsArticles(data.articles || []))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -521,6 +531,7 @@ export default function EditorPage() {
                   privacyPolicyMode={site?.privacy_policy_mode}
                   privacyPolicyFileUrl={site?.privacy_policy_file_url}
                   privacyPolicyText={site?.privacy_policy_text}
+                  newsArticles={newsArticles}
                   editable
                   selectedImageKey={selection?.target === "image" ? selection.key : null}
                   onSelectImage={(sel) =>

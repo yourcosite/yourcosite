@@ -243,6 +243,60 @@ create policy "Staff kan läsa alla formulärsvar"
   on site_form_submissions for select using (public.is_staff());
 
 -- ============================================================
+-- SITE_NEWS_ARTICLES
+-- Kundens egna nyhetsartiklar, skrivna och publicerade på /nyheter i
+-- panelen (app/nyheter/page.tsx) — INTE av Millie i chattredigeraren.
+-- Visas på kundens sajt via sektionstypen "newsList"
+-- (lib/contentModel.ts) som ett rutnät av bara de PUBLICERADE
+-- artiklarna; klick på en öppnar en egen läsvy (se
+-- components/SitePreview.tsx) med hela texten och bilden.
+-- "published = false" = utkast, syns bara för ägaren själv.
+-- ============================================================
+create table if not exists site_news_articles (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  title text not null,
+  slug text not null,
+  excerpt text,
+  body text not null,
+  image_url text,
+  published boolean not null default false,
+  published_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  unique (site_id, slug)
+);
+
+create index if not exists site_news_articles_site_id_idx
+  on site_news_articles (site_id, created_at desc);
+
+alter table site_news_articles enable row level security;
+
+create policy "Ägare kan läsa sina nyheter"
+  on site_news_articles for select using (
+    exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid())
+  );
+create policy "Ägare kan skapa nyheter"
+  on site_news_articles for insert with check (
+    exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid())
+  );
+create policy "Ägare kan uppdatera sina nyheter"
+  on site_news_articles for update using (
+    exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid())
+  );
+create policy "Ägare kan ta bort sina nyheter"
+  on site_news_articles for delete using (
+    exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid())
+  );
+create policy "Staff kan läsa alla nyheter"
+  on site_news_articles for select using (public.is_staff());
+-- Besökare på kundens sajt är aldrig inloggade hos oss (samma princip som
+-- site_pageviews/site_form_submissions) men ska kunna LÄSA publicerade
+-- artiklar — bara publicerade, utkast förblir bara synliga för ägaren.
+create policy "Alla kan läsa publicerade nyheter"
+  on site_news_articles for select using (published = true);
+
+-- ============================================================
 -- SITE_ASSETS
 -- Egna foton/dokument kunden laddar upp i onboardingens steg 3. "kind"
 -- styr var filen kan användas: bilder kan placeras i sajtens design,

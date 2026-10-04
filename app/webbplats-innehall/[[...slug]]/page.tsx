@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { getSiteNewsArticles } from "@/lib/newsArticles";
 import SitePreview from "@/components/SitePreview";
 import { isValidSiteContent } from "@/lib/contentModel";
 
@@ -26,6 +27,7 @@ export default async function WebsiteRawContent({
   if (!site || !isValidSiteContent(site.content)) return null;
 
   const requestedPath = "/" + (params.slug?.join("/") || "");
+  const newsArticles = await getSiteNewsArticles(supabase, site.id);
 
   return (
     <SitePreview
@@ -37,6 +39,7 @@ export default async function WebsiteRawContent({
       privacyPolicyMode={site.privacy_policy_mode}
       privacyPolicyFileUrl={site.privacy_policy_file_url}
       privacyPolicyText={site.privacy_policy_text}
+      newsArticles={newsArticles}
     />
   );
 }

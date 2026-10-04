@@ -172,6 +172,17 @@ export const SECTION_SCHEMA = {
       },
       required: ["id", "type", "heading"],
     },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "newsList" },
+        heading: { type: "string" },
+      },
+      required: ["id", "type", "heading"],
+      description:
+        "Visar kundens PUBLICERADE nyhetsartiklar som ett klickbart rutnät (bild, titel, ingress) — varje artikel länkar till en egen sida med hela texten och bilden. Lägg bara till en \"heading\" här — artiklarnas eget innehåll (titel, text, bild) skrivs och publiceras av kunden själv på \"Nyheter\"-sidan i panelen, aldrig av dig. Hittar INTE på artiklar eller artikelinnehåll. Högst en sådan sektion per sida.",
+    },
   ],
 };
 
