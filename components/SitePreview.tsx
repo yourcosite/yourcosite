@@ -45,6 +45,96 @@ const PALETTES: Record<BackgroundMode, { bg: string; bgAlt: string; text: string
 
 type Palette = (typeof PALETTES)[BackgroundMode];
 
+// --- Fri hex-färg på en enskild sektion/ruta/knapp -------------------------
+// Kundfeedback: när Millie bad ändra färg på BARA en sektion eller en ruta
+// gick det bara att ändra hela sidans (backgroundMode) eller hela sajtens
+// (theme.accentColor) färg — inte en enskild yta. lib/contentModel.ts's
+// Section.bgColor/GridItem.bgColor/ctaColor-fält (se där) löser det, men till
+// skillnad från PALETTES ovan är det en FRI hex-färg kunden/Millie valt, inte
+// ett av de tre färdiga lägena — så text/kort/kantfärg måste räknas ut
+// automatiskt här istället för att slås upp i en tabell, annars finns risk
+// för text som inte går att läsa mot bakgrunden.
+function hexToRgb(hex: string): [number, number, number] {
+  const h = hex.replace("#", "").trim();
+  const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h.padEnd(6, "0").slice(0, 6);
+  const num = parseInt(full, 16);
+  if (Number.isNaN(num)) return [255, 255, 255];
+  return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
+}
+
+function rgbToHex(rgb: [number, number, number]): string {
+  return (
+    "#" +
+    rgb
+      .map((v) => Math.max(0, Math.min(255, Math.round(v))).toString(16).padStart(2, "0"))
+      .join("")
+  );
+}
+
+function mixRgb(a: [number, number, number], b: [number, number, number], t: number): [number, number, number] {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+// WCAG relativ luminans — avgör om bakgrunden räknas som "mörk" (vit text
+// läsbar) eller "ljus" (svart text läsbar).
+function relativeLuminance(rgb: [number, number, number]): number {
+  const srgb = rgb
+    .map((v) => v / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+}
+
+// Svart eller vit text mot en given hex-bakgrund — den enklaste byggstenen,
+// använd direkt av knappar (se CtaPill nedan) som bara behöver EN textfärg,
+// inte en hel uppsättning (kort/kant/dämpad text).
+function textOn(bgHex: string): string {
+  return relativeLuminance(hexToRgb(bgHex)) < 0.45 ? "#F5F4F1" : "#17171A";
+}
+
+// Bygger en FULL palette (samma form som PALETTES[mode] ovan) utifrån en fri
+// hex-bakgrundsfärg — kort/kant/dämpad-textfärg skuggas/ljusas automatiskt
+// från samma bas, istället för att vara fasta värden som i PALETTES.
+function buildContrastPalette(bgHex: string): Palette {
+  const bgRgb = hexToRgb(bgHex);
+  const isDark = relativeLuminance(bgRgb) < 0.45;
+  const shadeTowards: [number, number, number] = isDark ? [255, 255, 255] : [0, 0, 0];
+  const textRgb: [number, number, number] = isDark ? [245, 244, 241] : [23, 23, 26];
+  return {
+    bg: bgHex,
+    bgAlt: rgbToHex(mixRgb(bgRgb, shadeTowards, isDark ? 0.06 : 0.04)),
+    text: rgbToHex(textRgb),
+    textDim: rgbToHex(mixRgb(textRgb, bgRgb, 0.4)),
+    cardBg: rgbToHex(mixRgb(bgRgb, shadeTowards, isDark ? 0.1 : 0.045)),
+    cardBorder: rgbToHex(mixRgb(bgRgb, shadeTowards, isDark ? 0.2 : 0.1)),
+  };
+}
+
+// Samma idé som buildContrastPalette, men för EN enskild ruta/kort inuti en
+// sektion (GridItem.bgColor) — returnerar sektionens egen palette oförändrad
+// när rutan inte har en egen färg, så anropsställena (grid-layouterna nedan)
+// alltid kan använda resultatet rakt av utan att själva kolla om fältet
+// finns.
+function itemPalette(bgColor: string | undefined, basePalette: Palette): Palette {
+  return bgColor ? buildContrastPalette(bgColor) : basePalette;
+}
+
+// Färdig inline-stil för en "ruta" (GridItem) med egen bgColor — kort med
+// bakgrund, kant, rundade hörn och automatiskt uträknad textfärg. Används av
+// grid-layouterna som INTE redan har en egen bild/kort-komposition (se
+// SectionBlockInner nedan) — returnerar undefined när rutan inte har en egen
+// färg, så normal (ofärgad) rendering är helt opåverkad.
+function gridItemCardStyle(bgColor: string | undefined, basePalette: Palette): React.CSSProperties | undefined {
+  if (!bgColor) return undefined;
+  const ip = buildContrastPalette(bgColor);
+  return {
+    background: ip.cardBg,
+    border: `1px solid ${ip.cardBorder}`,
+    borderRadius: 16,
+    padding: "20px 22px",
+    color: ip.text,
+  };
+}
+
 // Fast sökväg för kundens egen integritetspolicy (onboarding steg 5) — en
 // "virtuell" sida som INTE finns i content.pages (AI:n väljer den aldrig)
 // och därför heller inte dyker upp i huvudmenyn, bara länkad från
@@ -1116,6 +1206,7 @@ function CtaPill({
   onNavigate,
   shape = "pill",
   textColor,
+  colorOverride,
 }: {
   accent: string;
   children: React.ReactNode;
@@ -1124,15 +1215,31 @@ function CtaPill({
   onNavigate?: (path: string) => void;
   shape?: ButtonStyle;
   textColor?: string;
+  // Fri hex-färg på JUST DEN HÄR knappen (Millie, se t.ex.
+  // HeroSection.ctaColor i lib/contentModel.ts) — oberoende av sajtens
+  // vanliga accentfärg. Till skillnad från accent (alltid en av kundens
+  // egna, redan väl avvägda märkesfärger, därför den hårdkodade mörka
+  // textfärgen nedan) kan colorOverride vara VILKEN hex som helst, så
+  // textfärgen räknas ut automatiskt (se textOn) istället för att anta att
+  // den alltid är ljus nog för mörk text.
+  colorOverride?: string;
 }) {
+  const fill = colorOverride || accent;
   if (shape === "underline") {
+    // OBS: till skillnad från den fyllda knappen nedan sitter text-länken
+    // här på SIDANS bakgrund, inte ovanpå accent-/colorOverride-färgen —
+    // bara linjen under är i den färgen. Textfärgen ska därför ALLTID
+    // vara den vanliga, ärvda bläcktonen (textColor), även med en egen
+    // colorOverride — att räkna ut kontrast mot colorOverride här (som för
+    // den fyllda knappen) skulle kunna göra texten osynlig mot sidans
+    // egen, oberoende bakgrund.
     return (
       <CtaLink
         link={link}
         basePath={basePath}
         onNavigate={onNavigate}
         className="inline-flex items-center font-semibold text-[13.5px] uppercase tracking-[0.07em] pb-1 border-b-2"
-        style={{ borderColor: accent, color: textColor }}
+        style={{ borderColor: fill, color: textColor }}
       >
         {children}
       </CtaLink>
@@ -1144,7 +1251,7 @@ function CtaPill({
       basePath={basePath}
       onNavigate={onNavigate}
       className={`inline-block font-semibold text-[14px] px-7 py-3.5 ${shape === "square" ? "rounded-md" : "rounded-full"}`}
-      style={{ background: accent, color: "#17171A" }}
+      style={{ background: fill, color: colorOverride ? textOn(colorOverride) : "#17171A" }}
     >
       {children}
     </CtaLink>
@@ -1445,7 +1552,7 @@ function SectionBlockInner({
   accent,
   secondary,
   mode,
-  palette,
+  palette: basePalette,
   alt,
   socialLinks,
   buttonShape,
@@ -1501,7 +1608,17 @@ function SectionBlockInner({
   // för varför artiklarna inte ligger i content.pages.
   newsArticles?: NewsArticle[];
 }) {
-  const sectionBg = alt ? palette.bgAlt : undefined;
+  // Sektionens EGEN fria hex-bakgrundsfärg (Millie, se Section.bgColor i
+  // lib/contentModel.ts) — satt via chattredigeraren, oberoende av sidans
+  // (SitePageContent.backgroundMode) eller sajtens (theme.backgroundMode)
+  // läge. `palette` skuggas här till den uträknade kontrastsäkra varianten
+  // (se buildContrastPalette ovan) — ALLA `palette.xxx`-användningar längre
+  // ner i den här funktionen (kort/text/kantfärger, i varenda layout-gren)
+  // får då automatiskt rätt färger utan att varje gren behöver ändras för
+  // sig, precis som innan den här funktionen fick en egen `bgColor`.
+  const sectionBgColor = (section as { bgColor?: string }).bgColor;
+  const palette = sectionBgColor ? buildContrastPalette(sectionBgColor) : basePalette;
+  const sectionBg = sectionBgColor ?? (alt ? palette.bgAlt : undefined);
   const art = artBackground(mode, accent, secondary);
 
   // Stabil nyckel för en bild inom sidan — hero finns högst en gång per
@@ -1554,6 +1671,17 @@ function SectionBlockInner({
   // ovillkorat (React Hooks måste anropas i samma ordning varje render).
   const [testimonialIndex, setTestimonialIndex] = useState(0);
 
+  // Sektioner som INTE själva sätter en explicit textfärg litar på den
+  // ÄRVDA färgen från sidans rot-div (SitePreview-funktionens
+  // style={{color: palette.text}}, se den riktiga PALETTES-varianten
+  // högre upp). Det funkar fint så länge sektionen använder sidans egen
+  // bakgrund — men har sektionen en egen, fri bgColor (se ovan) kan den
+  // ärvda textfärgen vara helt fel (t.ex. mörk text på en mörk bgColor,
+  // osynlig). Hela switchen nedan görs därför till en IIFE och resultatet
+  // slås in i en egen <div style={{color: palette.text}}> ENDAST när
+  // bgColor är satt — annars är det exakt sammaträd som innan (ingen
+  // extra div, ingen risk att påverka befintlig layout).
+  const node = (() => {
   switch (section.type) {
     case "hero": {
       const layout = section.layout || "centered";
@@ -1683,7 +1811,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -1764,7 +1892,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -1897,7 +2025,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -1987,7 +2115,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -2101,7 +2229,7 @@ function SectionBlockInner({
                     selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                     onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                   >
-                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
+                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
                       {section.ctaLabel}
                     </CtaPill>
                   </FieldBadge>
@@ -2189,7 +2317,7 @@ function SectionBlockInner({
                 {/* Fast vitt här, inte palette.text — den här knappen ligger
                     alltid ovanpå en mörk gradient/bild (text-white-lagret
                     ovan), oavsett om sajtens läge är ljust/varmt/mörkt. */}
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -2268,7 +2396,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -2340,7 +2468,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -2588,6 +2716,10 @@ function SectionBlockInner({
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const imageFirst = i % 2 === 0;
               const itemSel = gridItemSelection(i, item.title);
+              // Fri hex-färg på bara DEN HÄR rutan (GridItem.bgColor) — se
+              // kommentaren i lib/contentModel.ts. Här (bild bredvid text)
+              // färgas bara textkolumnen, inte bilden.
+              const ip = itemPalette(item.bgColor, palette);
               const imageCol = (
                 <ImageOrArt
                   imageUrl={item.imageUrl}
@@ -2599,7 +2731,10 @@ function SectionBlockInner({
                 />
               );
               const textCol = (
-                <div className="flex flex-col justify-center px-8 @3xl:px-14 py-8 max-w-[440px]">
+                <div
+                  className="flex flex-col justify-center px-8 @3xl:px-14 py-8 max-w-[440px]"
+                  style={item.bgColor ? { background: ip.cardBg, color: ip.text } : undefined}
+                >
                   <Field
                     editable={editable}
                     as="div"
@@ -2613,7 +2748,7 @@ function SectionBlockInner({
                     editable={editable}
                     as="div"
                     className="text-[14px] leading-relaxed"
-                    style={{ color: palette.textDim }}
+                    style={{ color: ip.textDim }}
                     selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
                     onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
                   >
@@ -2654,35 +2789,38 @@ function SectionBlockInner({
               {section.heading}
             </Field>
             <div className="flex flex-col gap-6">
-              {section.items.map((item, i) => (
-                <div key={i} className="flex gap-4 items-start">
-                  <div
-                    className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
-                    style={{ background: [accent, secondary[0], secondary[1]][i % 3] || accent }}
-                  />
-                  <div>
-                    <Field
-                      editable={editable}
-                      as="div"
-                      className="font-semibold text-[15.5px] mb-1"
-                      selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
-                      onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
-                    >
-                      {item.title}
-                    </Field>
-                    <Field
-                      editable={editable}
-                      as="div"
-                      className="text-[13.5px] leading-relaxed"
-                      style={{ color: palette.textDim }}
-                      selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
-                      onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
-                    >
-                      {item.body}
-                    </Field>
+              {section.items.map((item, i) => {
+                const ip = itemPalette(item.bgColor, palette);
+                return (
+                  <div key={i} className="flex gap-4 items-start" style={gridItemCardStyle(item.bgColor, palette)}>
+                    <div
+                      className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
+                      style={{ background: [accent, secondary[0], secondary[1]][i % 3] || accent }}
+                    />
+                    <div>
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className="font-semibold text-[15.5px] mb-1"
+                        selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                        onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                      >
+                        {item.title}
+                      </Field>
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className="text-[13.5px] leading-relaxed"
+                        style={{ color: ip.textDim }}
+                        selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                        onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                      >
+                        {item.body}
+                      </Field>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -2701,32 +2839,35 @@ function SectionBlockInner({
               {section.heading}
             </Field>
             <div className="grid @3xl:grid-cols-3 gap-8">
-              {section.items.map((item, i) => (
-                <div key={i} className="relative pt-2">
-                  <div className="text-[13px] font-bold tracking-[0.08em] mb-2" style={{ color: accent }}>
-                    {String(i + 1).padStart(2, "0")}
+              {section.items.map((item, i) => {
+                const ip = itemPalette(item.bgColor, palette);
+                return (
+                  <div key={i} className="relative pt-2" style={gridItemCardStyle(item.bgColor, palette)}>
+                    <div className="text-[13px] font-bold tracking-[0.08em] mb-2" style={{ color: accent }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </div>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="font-serif text-[17px] mb-2"
+                      selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.title}
+                    </Field>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[13.5px] leading-relaxed"
+                      style={{ color: ip.textDim }}
+                      selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.body}
+                    </Field>
                   </div>
-                  <Field
-                    editable={editable}
-                    as="div"
-                    className="font-serif text-[17px] mb-2"
-                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
-                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
-                  >
-                    {item.title}
-                  </Field>
-                  <Field
-                    editable={editable}
-                    as="div"
-                    className="text-[13.5px] leading-relaxed"
-                    style={{ color: palette.textDim }}
-                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
-                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
-                  >
-                    {item.body}
-                  </Field>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -2752,33 +2893,36 @@ function SectionBlockInner({
               </Field>
             )}
             <div className="grid @3xl:grid-cols-4 gap-7 @3xl:gap-6">
-              {section.items.slice(0, 4).map((item, i) => (
-                <div key={i} className="text-center @3xl:text-left">
-                  <div
-                    className="w-8 h-8 rounded-full mb-3 mx-auto @3xl:mx-0"
-                    style={{ background: `${[accent, secondary[0], secondary[1]][i % 3] || accent}22` }}
-                  />
-                  <Field
-                    editable={editable}
-                    as="div"
-                    className="font-semibold text-[14.5px] mb-1.5"
-                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
-                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
-                  >
-                    {item.title}
-                  </Field>
-                  <Field
-                    editable={editable}
-                    as="div"
-                    className="text-[13px] leading-relaxed"
-                    style={{ color: palette.textDim }}
-                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
-                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
-                  >
-                    {item.body}
-                  </Field>
-                </div>
-              ))}
+              {section.items.slice(0, 4).map((item, i) => {
+                const ip = itemPalette(item.bgColor, palette);
+                return (
+                  <div key={i} className="text-center @3xl:text-left" style={gridItemCardStyle(item.bgColor, palette)}>
+                    <div
+                      className="w-8 h-8 rounded-full mb-3 mx-auto @3xl:mx-0"
+                      style={{ background: `${[accent, secondary[0], secondary[1]][i % 3] || accent}22` }}
+                    />
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="font-semibold text-[14.5px] mb-1.5"
+                      selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.title}
+                    </Field>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[13px] leading-relaxed"
+                      style={{ color: ip.textDim }}
+                      selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.body}
+                    </Field>
+                  </div>
+                );
+              })}
             </div>
           </div>
         );
@@ -2811,11 +2955,13 @@ function SectionBlockInner({
               {section.items.map((item, i) => {
                 const isFirst = i === 0;
                 const isLast = i === section.items.length - 1;
+                const ip = itemPalette(item.bgColor, palette);
+                const cardStyle = gridItemCardStyle(item.bgColor, palette);
                 return (
                   <div
                     key={i}
-                    className={`@3xl:px-10 ${isFirst ? "@3xl:pl-0" : ""} ${isLast ? "@3xl:pr-0" : ""} ${i > 0 ? "@3xl:border-l pt-8 @3xl:pt-0" : ""}`}
-                    style={{ borderColor: palette.cardBorder }}
+                    className={`@3xl:px-10 ${isFirst ? "@3xl:pl-0" : ""} ${isLast ? "@3xl:pr-0" : ""} ${i > 0 && !cardStyle ? "@3xl:border-l pt-8 @3xl:pt-0" : "pt-8 @3xl:pt-0"}`}
+                    style={cardStyle || { borderColor: palette.cardBorder }}
                   >
                     <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
                       {glyphs[i % glyphs.length]}
@@ -2833,13 +2979,13 @@ function SectionBlockInner({
                       editable={editable}
                       as="div"
                       className="text-[13px] leading-relaxed max-w-[260px]"
-                      style={{ color: palette.textDim }}
+                      style={{ color: ip.textDim }}
                       selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
                       onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
                     >
                       {item.body}
                     </Field>
-                    <div className="mt-4 text-[12px] font-medium" style={{ color: palette.text }}>
+                    <div className="mt-4 text-[12px] font-medium" style={{ color: ip.text }}>
                       Läs mer →
                     </div>
                   </div>
@@ -2901,41 +3047,49 @@ function SectionBlockInner({
                     selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                     onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                   >
-                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                       {section.ctaLabel}
                     </CtaPill>
                   </FieldBadge>
                 )}
               </div>
-              {section.items.slice(0, 3).map((item, i) => (
-                <div key={i} className="@3xl:px-8 @3xl:border-l pt-8 @3xl:pt-0" style={{ borderColor: palette.cardBorder }}>
-                  <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
-                    {glyphs[i % glyphs.length]}
-                  </div>
-                  <Field
-                    editable={editable}
-                    as="div"
-                    className="font-serif text-[20px] mb-2.5"
-                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
-                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+              {section.items.slice(0, 3).map((item, i) => {
+                const ip = itemPalette(item.bgColor, palette);
+                const cardStyle = gridItemCardStyle(item.bgColor, palette);
+                return (
+                  <div
+                    key={i}
+                    className={`@3xl:px-8 pt-8 @3xl:pt-0 ${cardStyle ? "" : "@3xl:border-l"}`}
+                    style={cardStyle || { borderColor: palette.cardBorder }}
                   >
-                    {item.title}
-                  </Field>
-                  <Field
-                    editable={editable}
-                    as="div"
-                    className="text-[13px] leading-relaxed"
-                    style={{ color: palette.textDim }}
-                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
-                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
-                  >
-                    {item.body}
-                  </Field>
-                  <div className="mt-4 text-[12px] font-medium" style={{ color: palette.text }}>
-                    Läs mer →
+                    <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
+                      {glyphs[i % glyphs.length]}
+                    </div>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="font-serif text-[20px] mb-2.5"
+                      selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.title}
+                    </Field>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[13px] leading-relaxed"
+                      style={{ color: ip.textDim }}
+                      selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.body}
+                    </Field>
+                    <div className="mt-4 text-[12px] font-medium" style={{ color: ip.text }}>
+                      Läs mer →
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
@@ -2981,6 +3135,16 @@ function SectionBlockInner({
                 const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
                 const itemSel = gridItemSelection(i, item.title);
                 const big = useBigTile && i === 0;
+                // "bento"-rutorna är fyllda av en bild — en egen bgColor
+                // kan därför inte visas som en platt bakgrund (bilden
+                // täcker den helt). Istället TONAS gradienten under texten
+                // i rutans egen färg, och textfärgen räknas ut automatiskt
+                // istället för att alltid anta vit text — se
+                // lib/contentModel.ts (GridItem.bgColor).
+                const overlayGradient = item.bgColor
+                  ? `linear-gradient(0deg, ${item.bgColor}D9 0%, ${item.bgColor}00 55%)`
+                  : "linear-gradient(0deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.05) 55%)";
+                const overlayTextColor = item.bgColor ? textOn(item.bgColor) : "#FFFFFF";
                 return (
                   <div
                     key={i}
@@ -2997,9 +3161,9 @@ function SectionBlockInner({
                     />
                     <div
                       className="absolute inset-0 pointer-events-none"
-                      style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.05) 55%)" }}
+                      style={{ background: overlayGradient }}
                     />
-                    <div className="absolute bottom-0 left-0 right-0 p-4 @3xl:p-5 text-white">
+                    <div className="absolute bottom-0 left-0 right-0 p-4 @3xl:p-5" style={{ color: overlayTextColor }}>
                       <Field
                         editable={editable}
                         as="div"
@@ -3050,6 +3214,8 @@ function SectionBlockInner({
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const itemSel = gridItemSelection(i, item.title);
+              const ip = itemPalette(item.bgColor, palette);
+              const cardStyle = gridItemCardStyle(item.bgColor, palette);
               return (
                 <div key={i}>
                   <ImageOrArt
@@ -3060,6 +3226,7 @@ function SectionBlockInner({
                     selected={!!itemSel && selectedImageKey === itemSel.key}
                     onSelect={() => itemSel && onSelectImage?.(itemSel)}
                   />
+                  <div style={cardStyle}>
                   <Field
                     editable={editable}
                     as="div"
@@ -3073,12 +3240,13 @@ function SectionBlockInner({
                     editable={editable}
                     as="div"
                     className="text-[13.5px] leading-relaxed"
-                    style={{ color: palette.textDim }}
+                    style={{ color: ip.textDim }}
                     selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
                     onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
                   >
                     {item.body}
                   </Field>
+                  </div>
                 </div>
               );
             })}
@@ -3446,7 +3614,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -3487,7 +3655,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent="#FFFFFF" link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#171511">
+                <CtaPill accent="#FFFFFF" link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#171511">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -3501,9 +3669,18 @@ function SectionBlockInner({
         );
       }
 
-      // centered (default)
+      // centered (default) — alltid en mörk bakgrund (darkArt) med vit
+      // text, OAVSETT sajtens läge, såvida inte sektionen fått en egen fri
+      // bgColor (Millie) — då används DEN istället, tonad precis som andra
+      // layouter ovan (se tonalBg), med automatiskt uträknad textfärg
+      // (ljus/mörk) i stället för det annars hårdkodade vita.
+      const centeredBg = sectionBgColor ? tonalBg(palette.bg, accent, true) : darkArt;
+      const centeredTextColor = sectionBgColor ? palette.text : "#FFFFFF";
       return (
-        <div className="relative px-8 @3xl:px-10 py-20 text-center text-white" style={{ background: darkArt }}>
+        <div
+          className={`relative px-8 @3xl:px-10 py-20 text-center ${sectionBgColor ? "" : "text-white"}`}
+          style={{ background: centeredBg, color: sectionBgColor ? centeredTextColor : undefined }}
+        >
           <Field
             editable={editable}
             as="h2"
@@ -3517,6 +3694,7 @@ function SectionBlockInner({
             editable={editable}
             as="p"
             className="text-[14.5px] mb-7 opacity-80 max-w-[480px] mx-auto"
+            style={sectionBgColor ? { color: palette.textDim } : undefined}
             selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
             onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
           >
@@ -3527,9 +3705,7 @@ function SectionBlockInner({
             selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
             onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
           >
-            {/* Fast vitt, inte palette.text — sektionen är alltid mörk
-                (darkArt) med text-white oavsett sajtens läge. */}
-            <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
+            <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={centeredTextColor}>
               {section.ctaLabel}
             </CtaPill>
           </FieldBadge>
@@ -4150,6 +4326,8 @@ function SectionBlockInner({
     default:
       return null;
   }
+  })();
+  return sectionBgColor ? <div style={{ color: palette.text }}>{node}</div> : node;
 }
 
 // Ytterst tunt omslag runt SectionBlockInner — lägger bara till

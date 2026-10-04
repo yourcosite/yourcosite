@@ -4,6 +4,29 @@
 // för att tvinga Claude svara med giltig, strukturerad JSON enligt
 // modellen — aldrig fri text eller rå HTML, och aldrig fält utanför det
 // contentModel.ts faktiskt stödjer.
+
+// Delad schema-beskrivning för Section.bgColor (se lib/contentModel.ts) —
+// samma text på varenda sektionstyp nedan, brutet ut hit för att undvika
+// att skriva om den elva gånger. Själva INSTRUKTIONEN för NÄR Millie ska
+// använda fältet (och inte) ligger i buildEditPrompt i
+// app/api/sites/edit/route.ts (en "VIKTIGT —"-sektion, samma princip som
+// den befintliga för backgroundMode) — det här är bara fältets egen,
+// korta beskrivning i verktygsschemat.
+const BG_COLOR_SCHEMA = {
+  type: "string",
+  description:
+    "Fri hex-bakgrundsfärg (\"#RRGGBB\") på BARA den här sektionen — oberoende av sidans eller sajtens vanliga färgtema. Till skillnad från sidans backgroundMode (tre färdiga lägen) är det här en FRI färg, bara satt när kunden uttryckligen bett om en specifik färg på just den här sektionen. Text-/kortfärger räknas ut automatiskt utifrån bakgrundens ljushet. Utelämna helt (vanligast) om sektionen ska se ut som resten av sidan.",
+};
+
+// Samma idé som BG_COLOR_SCHEMA, men för en enskild knapp (CTA) på
+// hero/cta-sektioner och grid-sektionens egen knapp (layout
+// "intro-divided").
+const CTA_COLOR_SCHEMA = {
+  type: "string",
+  description:
+    "Fri hex-färg (\"#RRGGBB\") på BARA den här knappen — oberoende av sajtens accentfärg. Bara satt när kunden uttryckligen bett om en specifik färg på just den här knappen. Utelämna helt (vanligast) för att använda sajtens vanliga accentfärg.",
+};
+
 export const SECTION_SCHEMA = {
   anyOf: [
     {
@@ -35,6 +58,8 @@ export const SECTION_SCHEMA = {
             "Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/kontakt\"), eller en fullständig extern URL (https://...). Utelämna helt om knappen inte ska vara klickbar.",
         },
         imageUrl: { type: "string" },
+        bgColor: BG_COLOR_SCHEMA,
+        ctaColor: CTA_COLOR_SCHEMA,
         stats: {
           type: "array",
           description:
@@ -74,6 +99,7 @@ export const SECTION_SCHEMA = {
           description:
             "Fyll i det här fältet OAVSETT vilken \"layout\" du själv väljer för den här about-sektionen (samma princip som hero-sektionens stats) — layouten kan bytas till \"stats-split\" i efterhand i kod, och då behövs fältet redan vara ifyllt. ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal orter, certifiering etc) — ALDRIG påhittade kund-/omdömessiffror. Saknas tydliga fakta i briefen, utelämna fältet helt.",
         },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "heading", "body"],
     },
@@ -107,11 +133,25 @@ export const SECTION_SCHEMA = {
           description:
             "Samma regel som eyebrow precis ovan. Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/tjanster\"), eller en fullständig extern URL. Utelämna om knappen inte ska vara klickbar.",
         },
+        ctaColor: {
+          ...CTA_COLOR_SCHEMA,
+          description: `Bara meningsfullt tillsammans med ctaLabel (layout "intro-divided"). ${CTA_COLOR_SCHEMA.description}`,
+        },
+        bgColor: BG_COLOR_SCHEMA,
         items: {
           type: "array",
           items: {
             type: "object",
-            properties: { title: { type: "string" }, body: { type: "string" }, imageUrl: { type: "string" } },
+            properties: {
+              title: { type: "string" },
+              body: { type: "string" },
+              imageUrl: { type: "string" },
+              bgColor: {
+                type: "string",
+                description:
+                  "Fri hex-bakgrundsfärg (\"#RRGGBB\") på BARA den här rutan/kortet, bland de andra i items — oberoende av resten av sektionen. Bara satt när kunden uttryckligen bett om en specifik färg på just DEN rutan (t.ex. \"gör mittenrutan orange\"). Utelämna helt (vanligast) för alla rutor som inte uttryckligen ska stå ut.",
+              },
+            },
             required: ["title", "body"],
           },
         },
@@ -131,6 +171,7 @@ export const SECTION_SCHEMA = {
         },
         heading: { type: "string" },
         imageUrl: { type: "string" },
+        bgColor: BG_COLOR_SCHEMA,
         items: {
           type: "array",
           items: {
@@ -161,6 +202,8 @@ export const SECTION_SCHEMA = {
           description:
             "Vart knappen leder: antingen en exakt sidväg från pages[].path (t.ex. \"/kontakt\"), eller en fullständig extern URL (https://...). Utelämna helt om knappen inte ska vara klickbar.",
         },
+        ctaColor: CTA_COLOR_SCHEMA,
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "heading", "body", "ctaLabel"],
     },
@@ -175,6 +218,7 @@ export const SECTION_SCHEMA = {
         email: { type: "string" },
         phone: { type: "string" },
         address: { type: "string" },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "heading", "body"],
     },
@@ -192,6 +236,7 @@ export const SECTION_SCHEMA = {
             properties: { imageUrl: { type: "string" }, caption: { type: "string" } },
           },
         },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "heading", "items"],
     },
@@ -214,6 +259,7 @@ export const SECTION_SCHEMA = {
             required: ["question", "answer"],
           },
         },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "heading", "items"],
     },
@@ -233,6 +279,7 @@ export const SECTION_SCHEMA = {
           description:
             "Adressen som visas i en inbäddad Google Maps-karta, EXAKT som kunden gett den (gata, postnummer, ort), t.ex. \"Storgatan 1, 582 24 Linköping\". Hitta aldrig på en adress.",
         },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "address"],
     },
@@ -255,6 +302,7 @@ export const SECTION_SCHEMA = {
           description:
             "Bara använd när layout är \"split-map\" — adressen som visas i kartan bredvid formuläret, EXAKT som kunden gett den. Hitta aldrig på en adress.",
         },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "heading"],
     },
@@ -264,6 +312,7 @@ export const SECTION_SCHEMA = {
         id: { type: "string" },
         type: { const: "newsList" },
         heading: { type: "string" },
+        bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "heading"],
       description:

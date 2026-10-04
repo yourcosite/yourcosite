@@ -88,9 +88,34 @@ export interface HeroSection {
   // URL ("https://..."). Saknas den är knappen bara dekorativ text, precis
   // som innan det här fältet fanns.
   ctaLink?: string;
+  // Fri hex-färg på JUST DEN HÄR knappen, satt av Millie — oberoende av
+  // sajtens vanliga accentfärg (SiteTheme.accentColor). Samma princip som
+  // bgColor ovan (fri hex, kontrastsäker text räknas ut automatiskt — se
+  // textOn i components/SitePreview.tsx), bara för knappen istället för
+  // hela sektionens bakgrund. Saknas fältet används accentfärgen, precis
+  // som innan det här fältet fanns. Samma fält finns på CtaSection och på
+  // GridSection (bara meningsfullt för layout "intro-divided", som har en
+  // egen knapp).
+  ctaColor?: string;
   // Satt i kod (aldrig av AI:n) utifrån kundens egna uppladdade foton,
   // om några finns — se lib/assignUploadedImages.ts.
   imageUrl?: string;
+  // Fri hex-bakgrundsfärg på JUST DEN HÄR sektionen, satt av Millie
+  // (chattredigeraren, /api/sites/edit) — oberoende av sidans
+  // (SitePageContent.backgroundMode) och sajtens (SiteTheme.backgroundMode)
+  // vanliga läge. Tillkom efter kundfeedback: det gick bara att ändra
+  // färgen för en hel sida eller hela sajtens tema, inte en enskild
+  // sektion. Till skillnad från backgroundMode (tre färdiga, alltid
+  // kontrastsäkra lägen, se kommentaren vid SitePageContent nedan) är det
+  // HÄR en fri hex ("#RRGGBB") — kunden valde det uttryckligen, så
+  // text-/kort-/kantfärg räknas ut automatiskt från bakgrundens ljushet
+  // istället för att slås upp i en färdig tabell (se buildContrastPalette
+  // i components/SitePreview.tsx). Saknas fältet (alla sektioner innan det
+  // här fanns, och alla sektioner kunden inte bett ändra) renderas
+  // sektionen precis som förut. Samma fält finns (med samma princip, samma
+  // kommentar gäller) på ALLA sektionstyper i den här filen, inte bara
+  // HeroSection.
+  bgColor?: string;
   // Bara använd av layout "collage" — en kort, KURSIV fortsättning på
   // rubriken, på egen rad (t.ex. rubrik "Turn Your Vision" + emphasis
   // "Into Something Real") — den redaktionella "blandad stil"-känslan
@@ -140,6 +165,8 @@ export interface AboutSection {
   // hela sektionens höjd, satt i kod precis som HeroSection.imageUrl —
   // se lib/assignUploadedImages.ts.
   imageUrl?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export interface GridItem {
@@ -147,6 +174,15 @@ export interface GridItem {
   body: string;
   // Samma princip som HeroSection.imageUrl — tilldelas i kod, inte av AI:n.
   imageUrl?: string;
+  // Fri hex-bakgrundsfärg på JUST DEN HÄR rutan (ett enskilt kort/objekt i
+  // items), satt av Millie — oberoende av sektionens egen bgColor (se
+  // HeroSection.bgColor) och sajtens tema. Samma kundfeedback som bgColor:
+  // "en ruta eller ett kort" ska gå att färga ensam, inte bara hela
+  // sektionen eller hela sajten. Samma princip (fri hex, kontrastsäker
+  // text räknas ut automatiskt, se itemPalette/gridItemCardStyle i
+  // components/SitePreview.tsx). Saknas fältet renderas rutan precis som
+  // förut, utan egen bakgrund.
+  bgColor?: string;
 }
 
 export interface GridSection {
@@ -164,6 +200,12 @@ export interface GridSection {
   ctaLabel?: string;
   // Se HeroSection.ctaLink ovan — samma princip.
   ctaLink?: string;
+  // Se HeroSection.ctaColor — samma princip. Bara meningsfullt tillsammans
+  // med ctaLabel/layout "intro-divided" (enda grid-layouten med en egen
+  // knapp).
+  ctaColor?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export interface TestimonialItem {
@@ -182,6 +224,8 @@ export interface TestimonialsSection {
   // /exempel). Satt i kod (aldrig av AI:n), precis som
   // HeroSection.imageUrl — se lib/assignUploadedImages.ts.
   imageUrl?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export interface CtaSection {
@@ -193,12 +237,16 @@ export interface CtaSection {
   ctaLabel: string;
   // Se HeroSection.ctaLink ovan — samma princip.
   ctaLink?: string;
+  // Se HeroSection.ctaColor — samma princip.
+  ctaColor?: string;
   // Bara använd av layout "image-bleed" — en riktig bild som täcker hela
   // sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD
   // ovanpå (till skillnad från testimonials "full-bleed", som är ett
   // centrerat citat). Satt i kod (aldrig av AI:n), som
   // TestimonialsSection.imageUrl — se lib/assignUploadedImages.ts.
   imageUrl?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export interface ContactSection {
@@ -210,6 +258,8 @@ export interface ContactSection {
   email?: string;
   phone?: string;
   address?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export type GalleryLayout = "grid" | "carousel";
@@ -230,6 +280,8 @@ export interface GallerySection {
   layout: GalleryLayout;
   heading: string;
   items: GalleryItem[];
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export interface FaqItem {
@@ -247,6 +299,8 @@ export interface FaqSection {
   layout?: FaqLayout;
   heading: string;
   items: FaqItem[];
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 // Inbäddad Google Maps-karta utifrån en adress — ingen API-nyckel behövs
@@ -260,6 +314,8 @@ export interface MapSection {
   layout?: MapLayout;
   heading?: string;
   address: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export type ContactFormLayout = "centered" | "split-map";
@@ -285,6 +341,8 @@ export interface ContactFormSection {
   // bredvid formuläret. Samma princip som MapSection.address: EXAKT den
   // kunden gett, aldrig påhittad.
   address?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 // Visar kundens publicerade nyhetsartiklar (titel, bild, ingress) som ett
@@ -298,6 +356,8 @@ export interface NewsListSection {
   id: string;
   type: "newsList";
   heading: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
 }
 
 export type Section =
