@@ -18,10 +18,15 @@ import { useState } from "react";
 // bred/högupplöst skärm (1920px+) blev rutan då betydligt smalare än
 // besökarens riktiga fönster skulle vara — och eftersom hero-bilder har en
 // fast pixelhöjd (se SitePreview.tsx) blev de synligt hårdare beskurna i
-// sidled än på den faktiska, publicerade sajten. Bredden är nu
-// "min(94vw, 2000px)" istället — den växer med skärmens egen bredd (det
-// kundfrågan efterfrågade) och tar bara en liten marginal, men har ändå ett
-// tak så rutan inte blir orimligt stor på en jätteskärm.
+// sidled än på den faktiska, publicerade sajten. Bredden växte därför till
+// "min(94vw, 2000px)" — nästan hela skärmens bredd. Kundfeedback sedan
+// dess: det gjorde själva RUTAN (inte bara innehållet i den, se
+// DESKTOP_ZOOM nedan) för bred mot hur sidan faktiskt upplevs — en riktig
+// besökare sitter sällan med webbläsaren maximerad till hela skärmen.
+// "min(56vw, 1200px)" (~40% indraget från var sida jämfört med 94vw) ger
+// en smalare, mer realistisk ruta, fortfarande med samma tak mot
+// jätteskärmar. Samma bredd upprepas i /webbplats-sidans headerrad (se
+// kommentaren där) så de alltid linjerar.
 // Dator-rutan visade sidan i FULL skala inuti sin iframe — med en hero på
 // upp emot 720px högt (se heroEmphasis i SitePreview.tsx) fylldes nästan
 // hela 16:9-rutan av bara hero:n innan man ens skrollat, vilket gav ett
@@ -79,7 +84,7 @@ export default function WebsitePreviewFrame({
       <div
         className={
           device === "desktop"
-            ? "w-full max-w-[min(94vw,2000px)] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
+            ? "w-full max-w-[min(56vw,1200px)] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
             : "w-[380px] max-w-full h-[720px] bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col border-[6px] border-ink"
         }
       >
