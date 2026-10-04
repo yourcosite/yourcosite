@@ -6,9 +6,10 @@ import { useState } from "react";
 // Visar själva sajten i en <iframe> (mot /webbplats-innehall) istället för
 // att rendera den direkt i sidan som tidigare — det ger två saker på
 // samma gång:
-//  1) Ett 16:9-fönster (som de flesta skärmar), med skroll inuti fönstret
-//     för långa sidor — istället för att hela förhandsvisningen (och
-//     webbläsarramen runt den) blev hur hög som helst.
+//  1) Ett fönster med egen höjd (se DESKTOP_HEIGHT nedan), med skroll
+//     inuti fönstret för långa sidor — istället för att hela
+//     förhandsvisningen (och webbläsarramen runt den) blev hur hög som
+//     helst.
 //  2) En riktig mobilförhandsvisning — iframens egen bredd avgör vilka
 //     "md:"-brytpunkter som slår till i sajtens kod, så "Mobil"-läget
 //     visar faktiskt den smala layouten, inte bara en nedskalad bild av
@@ -47,6 +48,16 @@ import { useState } from "react";
 // 0.6 (ca 60%) gav en mer rättvisande bild av hur sidan faktiskt ser ut.
 const DESKTOP_ZOOM = 0.6;
 
+// Rutan var tidigare ett fast 16:9-fönster (aspect-[16/9]) — brett men
+// KORT, så man såg förhållandevis lite av sidans höjd innan man var
+// tvungen att skrolla inuti rutan. Kundfeedback: "förlänga frame:en nedåt
+// så man ser väldigt mycket mer av sidan". En fast höjd knuten till
+// skärmens egen höjd (vh) istället för en bredd-knuten aspect-ratio ger en
+// betydligt högre ruta — bredden (se max-w nedan) och höjden styrs nu helt
+// oberoende av varandra. Taket (950px) finns av samma skäl som
+// bredd-taket: en jätteskärm ska inte ge en orimligt hög ruta.
+const DESKTOP_HEIGHT = "min(82vh,950px)";
+
 export default function WebsitePreviewFrame({
   siteName,
   domainLabel,
@@ -84,9 +95,10 @@ export default function WebsitePreviewFrame({
       <div
         className={
           device === "desktop"
-            ? "w-full max-w-[min(56vw,1200px)] aspect-[16/9] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
+            ? "w-full max-w-[min(56vw,1200px)] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col"
             : "w-[380px] max-w-full h-[720px] bg-white rounded-[28px] shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col border-[6px] border-ink"
         }
+        style={device === "desktop" ? { height: DESKTOP_HEIGHT } : undefined}
       >
         <div className="h-[38px] flex-shrink-0 bg-[#F1EFE9] flex items-center gap-1.5 px-3.5">
           <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
