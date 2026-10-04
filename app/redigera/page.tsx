@@ -284,7 +284,7 @@ export default function EditorPage() {
             Sidor
           </Link>
           <Link
-            href="/webbplats"
+            href="/forhandsgranska"
             target="_blank"
             rel="noopener noreferrer"
             className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
