@@ -1506,15 +1506,22 @@ function SectionBlockInner({
       const layout = section.layout || "centered";
 
       if (layout === "collage") {
-        // Kundens referenssajter (Lumora/Atelier/Norden/Lume) delade ett
-        // tydligt mönster som inte fanns i någon av våra tidigare
-        // hero-layouter: flera FOTON i en överlappande komposition
-        // (istället för en enda bild), en rubrik i blandad stil (rak rad +
-        // en kursiv fortsättningsrad) och en kort nyckeltalsrad under
-        // knappen. Egna fält (headlineEmphasis/stats/collageImageUrls, se
-        // contentModel.ts) håller det isolerat till den här layouten —
-        // påverkar inget av de befintliga hero-lägena ovan/nedan.
-        const [collageA, collageB] = section.collageImageUrls || [];
+        // Finjusterat efter kundens exakta referenskod (en statisk
+        // HTML/CSS-fil kundens ChatGPT hade genererat från samma
+        // referensbild): huvudfotot tar ca 58% av bredden och nästan
+        // hela höjden, men är INTE flush mot högerkanten (en marginal
+        // kvar där, som i referensen) — istället för föregående version
+        // där det var 60/80 flush mot kanten. Ett andra, mindre foto
+        // (ca 32% bredd) ligger nere till vänster med en ram i SIDANS
+        // EGEN bakgrundsfärg (inte vit som tidigare) så det ser
+        // "urklippt" mot bakgrunden ut, exakt som i referenskoden. Och i
+        // nedre högra hörnet ligger inte längre ett tredje foto — i
+        // referensen är det ett flytande TEXTKORT (en kort checklista),
+        // så den rutan återanvänder hero-stats istället för en bild.
+        // Den gamla toppvänster-bilden (collageA) är inte med längre i
+        // den här kompositionen.
+        const [, collageB] = section.collageImageUrls || [];
+        const stats = section.stats || [];
         return (
           // Extra marginal NEDÅT (mer än uppåt) — kunden tyckte nästa
           // sektion kom för nära bildkollaget. Bara den här layouten
@@ -1528,10 +1535,7 @@ function SectionBlockInner({
                   bara skickas in via className (se kommentaren vid
                   ImageOrArt-definitionen ovan) oavsett klassordning, så
                   positioneringen måste läggas på en egen wrapper istället. */}
-              <div className="absolute left-0 top-0 w-[44%] h-[52%]">
-                <ImageOrArt imageUrl={collageA} art={art} fill className="rounded-2xl shadow-[0_18px_36px_rgba(0,0,0,0.16)]" />
-              </div>
-              <div className="absolute right-0 top-[6%] w-[60%] h-[80%] z-10">
+              <div className="absolute right-[6%] top-0 w-[58%] h-[92%]">
                 <ImageOrArt
                   imageUrl={section.imageUrl}
                   art={art}
@@ -1542,9 +1546,34 @@ function SectionBlockInner({
                   onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
                 />
               </div>
-              <div className="absolute left-[8%] bottom-0 w-[36%] h-[36%] z-20 border-4 border-white rounded-xl shadow-[0_14px_28px_rgba(0,0,0,0.18)] overflow-hidden">
+              <div
+                className="absolute left-[3%] bottom-0 w-[32%] h-[45%] z-10 rounded-xl shadow-[0_14px_28px_rgba(0,0,0,0.18)] overflow-hidden"
+                style={{ border: `10px solid ${palette.bg}` }}
+              >
                 <ImageOrArt imageUrl={collageB} art={art} fill selectable={false} />
               </div>
+              {stats.length > 0 && (
+                // Referensens flytande "checklista"-kort — textkort, inte
+                // ett tredje foto. Återanvänder hero-stats (samma fält
+                // som "quad" ovan) som tre korta rader med en liten
+                // accentfärgad prick, snarare än stora nyckeltalssiffror,
+                // eftersom kortet är litet (precis som i referensens
+                // 250px-breda kort).
+                <div
+                  className="absolute right-0 bottom-0 z-20 rounded-tl-xl px-5 py-5 max-w-[220px] shadow-[0_14px_32px_rgba(0,0,0,0.16)]"
+                  style={{ background: `${palette.cardBg}EB` }}
+                >
+                  {stats.slice(0, 3).map((stat, i) => (
+                    <div key={i} className={`flex items-start gap-2 text-[12.5px] leading-snug ${i > 0 ? "mt-2.5" : ""}`}>
+                      <span className="mt-[2px] text-[12px] font-bold flex-shrink-0" style={{ color: accent }}>✓</span>
+                      <span style={{ color: palette.text }}>
+                        <span className="font-serif font-semibold">{stat.value}</span>{" "}
+                        <span style={{ color: palette.textDim }}>{stat.label}</span>
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div>
               {section.eyebrow && (
@@ -1605,16 +1634,6 @@ function SectionBlockInner({
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
-              )}
-              {section.stats && section.stats.length > 0 && (
-                <div className="flex flex-wrap items-center gap-5 @3xl:gap-7 mt-8 pt-6" style={{ borderTop: `1px solid ${palette.cardBorder}` }}>
-                  {section.stats.slice(0, 3).map((stat, i) => (
-                    <div key={i} className={i > 0 ? "pl-5 @3xl:pl-7 border-l" : ""} style={{ borderColor: palette.cardBorder }}>
-                      <div className="text-[17px] font-semibold font-serif">{stat.value}</div>
-                      <div className="text-[12px]" style={{ color: palette.textDim }}>{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
               )}
             </div>
           </div>
