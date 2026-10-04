@@ -89,6 +89,17 @@ export default function EditorPage() {
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const draftInputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Låter chattrutan växa med texten (upp till max-h i klassen på
+  // textarean) istället för att gömma det mesta av ett längre meddelande
+  // bakom en enda rad.
+  useEffect(() => {
+    const el = draftInputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [draft]);
 
   // Växlar vilken av THINKING_PHRASES som visas medan Millie jobbar, så det
   // inte känns som samma stillastående text hela vägen — se Millie röra sig
@@ -414,7 +425,7 @@ export default function EditorPage() {
                 </button>
               </div>
             )}
-            <div className="flex items-center gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-2 pr-1.5">
+            <div className="flex items-end gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-2 pr-1.5">
               <input
                 ref={fileInputRef}
                 type="file"
@@ -431,7 +442,7 @@ export default function EditorPage() {
                 disabled={sending || attaching || !content}
                 aria-label="Bifoga fil"
                 title="Bifoga en bild eller ett textdokument"
-                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60"
+                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
               >
                 {attaching ? (
                   <span className="text-[11px]">…</span>
@@ -441,19 +452,28 @@ export default function EditorPage() {
                   </svg>
                 )}
               </button>
-              <input
+              <textarea
+                ref={draftInputRef}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && send()}
+                onKeyDown={(e) => {
+                  // Enter skickar, Shift+Enter gör en ny rad — precis som i
+                  // de flesta chattverktyg.
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
                 placeholder="Skriv till Millie …"
                 disabled={sending || !content}
-                className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60"
+                rows={1}
+                className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60 resize-none py-1.5 leading-[1.4] max-h-[160px] overflow-y-auto"
               />
               <button
                 onClick={send}
                 disabled={sending || attaching || !content || (!draft.trim() && !attachment)}
                 aria-label="Skicka"
-                className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60"
+                className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px]"
               >
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0C1004" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
                   <line x1="12" y1="19" x2="12" y2="5" />
