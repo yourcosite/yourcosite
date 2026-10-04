@@ -41,9 +41,12 @@ type Attachment = {
 // "Klicka för att välja") — hålls som en chip ovanför chattrutan tills
 // nästa meddelande skickas, så Millie vet exakt vad ett otydligt "byt
 // bilden"/"ändra texten här" syftar på (se selection i /api/sites/edit).
-// "image" = en specifik bild, "section" = hela sektionen (för text).
+// "image" = en specifik bild, "field" = ETT textfält (rubrik, brödtext,
+// ett citat …), "section" = hela sektionen (bakgrund eller när ingen av de
+// två ovan träffades — t.ex. ett klick mellan två textrader).
 type Selection =
   | { target: "image"; key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }
+  | { target: "field"; key: string; pagePath: string; sectionId: string; field: string; label: string }
   | { target: "section"; key: string; pagePath: string; sectionId: string; label: string };
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -92,7 +95,7 @@ export default function EditorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       from: "bot",
-      text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild eller en sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt.",
+      text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt.",
     },
   ]);
   const [draft, setDraft] = useState("");
@@ -251,6 +254,14 @@ export default function EditorPage() {
                   sectionId: currentSelection.sectionId,
                   kind: currentSelection.kind,
                   itemIndex: currentSelection.itemIndex,
+                  label: currentSelection.label,
+                }
+              : currentSelection.target === "field"
+              ? {
+                  target: "field",
+                  pagePath: currentSelection.pagePath,
+                  sectionId: currentSelection.sectionId,
+                  field: currentSelection.field,
                   label: currentSelection.label,
                 }
               : {
@@ -483,6 +494,10 @@ export default function EditorPage() {
                   onSelectSection={(sel) =>
                     setSelection((prev) => (prev?.key === sel.key ? null : { target: "section", ...sel }))
                   }
+                  selectedFieldKey={selection?.target === "field" ? selection.key : null}
+                  onSelectField={(sel) =>
+                    setSelection((prev) => (prev?.key === sel.key ? null : { target: "field", ...sel }))
+                  }
                 />
               </div>
             </div>
@@ -549,7 +564,9 @@ export default function EditorPage() {
             {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
             {selection && (
               <div className="flex items-center gap-2 bg-accent-soft border border-line rounded-lg px-3 py-2 mb-2">
-                <span className="text-[14px] flex-shrink-0">{selection.target === "image" ? "🖼️" : "📝"}</span>
+                <span className="text-[14px] flex-shrink-0">
+                  {selection.target === "image" ? "🖼️" : selection.target === "field" ? "✏️" : "📝"}
+                </span>
                 <span className="text-[12.5px] truncate flex-1">
                   Vald: {selection.label}
                 </span>

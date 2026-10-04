@@ -76,6 +76,7 @@ type Attachment = {
 // sektionen" snarare än en bild.
 type Selection =
   | { target: "image"; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }
+  | { target: "field"; pagePath: string; sectionId: string; field: string; label: string }
   | { target: "section"; pagePath: string; sectionId: string; label: string };
 
 function buildEditPrompt(
@@ -95,6 +96,8 @@ function buildEditPrompt(
       ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en specifik bild i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"${
           selection.kind === "gridItem" ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista` : ""
         }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.\n`
+      : selection?.target === "field"
+      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT ETT SPECIFIKT textfält i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}", fältet "${selection.field}" — matchar exakt den egenskapen i innehållsmodellen, t.ex. "headline" eller "items.1.title" för rad 2 i en lista). Önskemålet gäller med STOR sannolikhet att ändra EXAKT det fältet (hela dess nya text, inte bara en del), inte något annat fält i samma eller en annan sektion — gör då ändringen bara där.\n`
       : selection?.target === "section"
       ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en hel sektion i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"). Är önskemålet oklart om VILKEN rubrik/text/sektion det gäller, syftar kunden med STOR sannolikhet på just DEN markerade sektionen — gör då ändringen där, inte i en annan sektion på sidan.\n`
       : "";
@@ -236,6 +239,14 @@ export async function POST(request: Request) {
         sectionId: rawSelection.sectionId,
         label: rawSelection.label,
         itemIndex: typeof rawSelection.itemIndex === "number" ? rawSelection.itemIndex : undefined,
+      };
+    } else if (rawSelection.target === "field" && typeof rawSelection.field === "string") {
+      selection = {
+        target: "field",
+        pagePath: rawSelection.pagePath,
+        sectionId: rawSelection.sectionId,
+        field: rawSelection.field,
+        label: rawSelection.label,
       };
     } else if (rawSelection.target === "section") {
       selection = {

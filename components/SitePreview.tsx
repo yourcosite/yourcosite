@@ -54,6 +54,8 @@ export default function SitePreview({
   onSelectImage,
   selectedSectionKey,
   onSelectSection,
+  selectedFieldKey,
+  onSelectField,
 }: {
   content: SiteContent;
   siteName?: string;
@@ -94,6 +96,10 @@ export default function SitePreview({
   // för en enskild bild — se sectionLabel/SectionBlock nedan.
   selectedSectionKey?: string | null;
   onSelectSection?: (sel: { key: string; pagePath: string; sectionId: string; label: string }) => void;
+  // Samma koncept igen, fast för ETT ENSKILT textfält (rubrik, brödtext,
+  // ett citat …) — se Field/fieldSel ovan.
+  selectedFieldKey?: string | null;
+  onSelectField?: (sel: { key: string; pagePath: string; sectionId: string; field: string; label: string }) => void;
 }) {
   const isPrivacyPolicyPage =
     activePath === PRIVACY_POLICY_PATH && privacyPolicyMode === "generated" && !!privacyPolicyText;
@@ -187,6 +193,8 @@ export default function SitePreview({
             onSelectImage={onSelectImage}
             selectedSectionKey={selectedSectionKey}
             onSelectSection={onSelectSection}
+            selectedFieldKey={selectedFieldKey}
+            onSelectField={onSelectField}
           />
         )}
       </div>
@@ -214,6 +222,8 @@ export default function SitePreview({
             onSelectImage={onSelectImage}
             selectedSectionKey={selectedSectionKey}
             onSelectSection={onSelectSection}
+            selectedFieldKey={selectedFieldKey}
+            onSelectField={onSelectField}
           />
         ))
       )}
@@ -818,6 +828,71 @@ type ImageSelection = {
   label: string;
 };
 
+// Samma idé, fast för ETT ENSKILT textfält (rubrik, brödtext, ett citat …)
+// istället för en hel sektion — "field" matchar EXAKT fältnamnet i
+// innehållsmodellen (lib/contentModel.ts), t.ex. "headline" eller
+// "items.1.title" för en rad i en lista, så /api/sites/edit kan peka
+// Claude rakt på rätt JSON-nod utan att behöva gissa.
+type FieldSelection = {
+  pagePath: string;
+  sectionId: string;
+  field: string;
+  label: string;
+};
+
+function snippet(text: string, max = 44): string {
+  const t = (text || "").trim();
+  return t.length > max ? `${t.slice(0, max)}…` : t;
+}
+
+// Tunt klickbart omslag runt ETT textfält — samma grundmönster som
+// ImageOrArt (hover visar "Klicka för att välja", vald visar en bock),
+// fast ritat som en ram runt texten istället för ovanpå en bild. "as"
+// väljer vilken tagg själva texten renderas med (h1/h2/p/div …) så
+// typografin blir exakt densamma som innan fältet blev klickbart.
+function Field({
+  editable,
+  selected,
+  onSelect,
+  as: Tag = "div",
+  className,
+  style,
+  children,
+}: {
+  editable?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
+  as?: keyof JSX.IntrinsicElements;
+  className?: string;
+  style?: React.CSSProperties;
+  children: React.ReactNode;
+}) {
+  if (!editable) {
+    const Plain = Tag;
+    return <Plain className={className} style={style}>{children}</Plain>;
+  }
+  const Inner = Tag;
+  return (
+    <div
+      className="relative group/fld cursor-pointer"
+      onClick={(e) => {
+        e.stopPropagation();
+        onSelect?.();
+      }}
+    >
+      <Inner className={className} style={style}>
+        {children}
+      </Inner>
+      <div
+        className={`pointer-events-none absolute -inset-1 rounded transition-opacity ${
+          selected ? "opacity-100" : "opacity-0 group-hover/fld:opacity-100"
+        }`}
+        style={{ outline: selected ? "2px solid #4A90D9" : "2px dashed #4A90D9", outlineOffset: "1px" }}
+      />
+    </div>
+  );
+}
+
 // Läsbar svensk etikett för en HEL sektion (inte en enskild bild) — visas i
 // hover-/val-pillen nedan och skickas som selection.label till
 // /api/sites/edit, så kunden kan klicka på t.ex. rubriken eller
@@ -858,6 +933,8 @@ function SectionBlockInner({
   editable,
   selectedImageKey,
   onSelectImage,
+  selectedFieldKey,
+  onSelectField,
 }: {
   section: Section;
   accent: string;
@@ -882,6 +959,8 @@ function SectionBlockInner({
   editable?: boolean;
   selectedImageKey?: string | null;
   onSelectImage?: (sel: ImageSelection & { key: string }) => void;
+  selectedFieldKey?: string | null;
+  onSelectField?: (sel: FieldSelection & { key: string }) => void;
 }) {
   const sectionBg = alt ? palette.bgAlt : undefined;
   const art = artBackground(mode, accent, secondary);
@@ -899,6 +978,22 @@ function SectionBlockInner({
     editable && pagePath
       ? { key: gridItemKey(i), pagePath, sectionId: section.id, kind: "gridItem", itemIndex: i, label: `bilden i rutan "${title}"` }
       : undefined;
+
+  // field matchar EXAKT egenskapsnamnet i innehållsmodellen (se
+  // FieldSelection-kommentaren ovan) — "items.1.title" för rad 2 i en
+  // lista, annars bara fältnamnet rakt av. desc är den svenska
+  // människoläsbara delen av etiketten ("rubriken", "brödtexten" …).
+  const fieldSel = (field: string, text: string | undefined, desc: string, itemIndex?: number): (FieldSelection & { key: string }) | undefined => {
+    if (!editable || !pagePath || !text) return undefined;
+    const fullField = itemIndex !== undefined ? `items.${itemIndex}.${field}` : field;
+    return {
+      key: `${pagePath}::field::${section.id}::${fullField}`,
+      pagePath,
+      sectionId: section.id,
+      field: fullField,
+      label: `${desc} ("${snippet(text)}")`,
+    };
+  };
 
   switch (section.type) {
     case "hero": {
@@ -919,16 +1014,36 @@ function SectionBlockInner({
         const textCol = (
           <div className={`flex flex-col justify-center px-8 md:px-14 ${heroEmphasis ? "py-10 md:py-0" : "py-10"} ${imageFirst ? "md:text-left" : "md:text-right md:items-end"}`}>
             {section.eyebrow && (
-              <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
+              <Field
+                editable={editable}
+                as="div"
+                className="text-[12px] tracking-[0.12em] font-semibold mb-3"
+                style={{ color: accent }}
+                selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+              >
                 {section.eyebrow.toUpperCase()}
-              </div>
+              </Field>
             )}
-            <h1 className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[30px] md:text-[36px]"}`}>
+            <Field
+              editable={editable}
+              as="h1"
+              className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[30px] md:text-[36px]"}`}
+              selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+            >
               {section.headline}
-            </h1>
-            <p className={`leading-relaxed mb-6 max-w-[420px] ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`} style={{ color: palette.textDim }}>
+            </Field>
+            <Field
+              editable={editable}
+              as="p"
+              className={`leading-relaxed mb-6 max-w-[420px] ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+            >
               {section.body}
-            </p>
+            </Field>
             {section.ctaLabel && (
               <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
                 {section.ctaLabel}
@@ -975,14 +1090,35 @@ function SectionBlockInner({
             />
             <div className={`absolute bottom-0 left-0 right-0 px-8 md:px-14 pb-10 md:pb-14 text-white ${heroEmphasis ? "max-w-[680px]" : "max-w-[560px]"}`}>
               {section.eyebrow && (
-                <div className="text-[12px] tracking-[0.12em] font-semibold mb-3" style={{ color: accent }}>
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[12px] tracking-[0.12em] font-semibold mb-3"
+                  style={{ color: accent }}
+                  selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                  onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                >
                   {section.eyebrow.toUpperCase()}
-                </div>
+                </Field>
               )}
-              <h1 className={`font-serif leading-[1.08] mb-4 ${heroEmphasis ? "text-[40px] md:text-[56px]" : "text-[32px] md:text-[42px]"}`}>
+              <Field
+                editable={editable}
+                as="h1"
+                className={`font-serif leading-[1.08] mb-4 ${heroEmphasis ? "text-[40px] md:text-[56px]" : "text-[32px] md:text-[42px]"}`}
+                selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+              >
                 {section.headline}
-              </h1>
-              <p className={`leading-relaxed mb-6 opacity-85 ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}>{section.body}</p>
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className={`leading-relaxed mb-6 opacity-85 ${heroEmphasis ? "text-[16.5px]" : "text-[15px]"}`}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
               {section.ctaLabel && (
               <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
                 {section.ctaLabel}
@@ -1016,16 +1152,36 @@ function SectionBlockInner({
             style={{ background: palette.cardBg, boxShadow: "0 16px 40px rgba(0,0,0,0.10)" }}
           >
             {section.eyebrow && (
-              <div className="text-[12px] tracking-[0.12em] font-semibold mb-4" style={{ color: accent }}>
+              <Field
+                editable={editable}
+                as="div"
+                className="text-[12px] tracking-[0.12em] font-semibold mb-4"
+                style={{ color: accent }}
+                selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+              >
                 {section.eyebrow.toUpperCase()}
-              </div>
+              </Field>
             )}
-            <h1 className={`font-serif leading-[1.12] mb-5 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[32px] md:text-[40px]"}`}>
+            <Field
+              editable={editable}
+              as="h1"
+              className={`font-serif leading-[1.12] mb-5 ${heroEmphasis ? "text-[38px] md:text-[48px]" : "text-[32px] md:text-[40px]"}`}
+              selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+            >
               {section.headline}
-            </h1>
-            <p className={`leading-relaxed mb-7 ${heroEmphasis ? "text-[16.5px]" : "text-[15.5px]"}`} style={{ color: palette.textDim }}>
+            </Field>
+            <Field
+              editable={editable}
+              as="p"
+              className={`leading-relaxed mb-7 ${heroEmphasis ? "text-[16.5px]" : "text-[15.5px]"}`}
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+            >
               {section.body}
-            </p>
+            </Field>
             {section.ctaLabel && (
               <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
                 {section.ctaLabel}
@@ -1039,10 +1195,25 @@ function SectionBlockInner({
     case "about":
       return (
         <div className="px-10 py-14 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
-          <h2 className="font-serif text-[27px] mb-4">{section.heading}</h2>
-          <p className="text-[15px] leading-relaxed" style={{ color: palette.textDim }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-4"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          <Field
+            editable={editable}
+            as="p"
+            className="text-[15px] leading-relaxed"
+            style={{ color: palette.textDim }}
+            selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+            onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+          >
             {section.body}
-          </p>
+          </Field>
         </div>
       );
 
@@ -1052,7 +1223,15 @@ function SectionBlockInner({
       if (layout === "alternating-rows") {
         return (
           <div className="py-4" style={{ background: sectionBg }}>
-            <h2 className="font-serif text-[27px] mb-2 text-center pt-10">{section.heading}</h2>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-2 text-center pt-10"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const imageFirst = i % 2 === 0;
@@ -1069,10 +1248,25 @@ function SectionBlockInner({
               );
               const textCol = (
                 <div className="flex flex-col justify-center px-8 md:px-14 py-8 max-w-[440px]">
-                  <div className="font-serif text-[20px] mb-2.5">{item.title}</div>
-                  <div className="text-[14px] leading-relaxed" style={{ color: palette.textDim }}>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="font-serif text-[20px] mb-2.5"
+                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.title}
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[14px] leading-relaxed"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                  >
                     {item.body}
-                  </div>
+                  </Field>
                 </div>
               );
               return (
@@ -1098,7 +1292,15 @@ function SectionBlockInner({
       if (layout === "list") {
         return (
           <div className="px-10 py-16 max-w-[640px] mx-auto" style={{ background: sectionBg }}>
-            <h2 className="font-serif text-[27px] mb-7">{section.heading}</h2>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-7"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
             <div className="flex flex-col gap-6">
               {section.items.map((item, i) => (
                 <div key={i} className="flex gap-4 items-start">
@@ -1107,10 +1309,25 @@ function SectionBlockInner({
                     style={{ background: [accent, secondary[0], secondary[1]][i % 3] || accent }}
                   />
                   <div>
-                    <div className="font-semibold text-[15.5px] mb-1">{item.title}</div>
-                    <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="font-semibold text-[15.5px] mb-1"
+                      selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                    >
+                      {item.title}
+                    </Field>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[13.5px] leading-relaxed"
+                      style={{ color: palette.textDim }}
+                      selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                      onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                    >
                       {item.body}
-                    </div>
+                    </Field>
                   </div>
                 </div>
               ))}
@@ -1122,17 +1339,40 @@ function SectionBlockInner({
       if (layout === "numbered") {
         return (
           <div className="px-10 py-16 max-w-[920px] mx-auto" style={{ background: sectionBg }}>
-            <h2 className="font-serif text-[27px] mb-9 text-center">{section.heading}</h2>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-9 text-center"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
             <div className="grid md:grid-cols-3 gap-8">
               {section.items.map((item, i) => (
                 <div key={i} className="relative pt-2">
                   <div className="text-[13px] font-bold tracking-[0.08em] mb-2" style={{ color: accent }}>
                     {String(i + 1).padStart(2, "0")}
                   </div>
-                  <div className="font-serif text-[17px] mb-2">{item.title}</div>
-                  <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="font-serif text-[17px] mb-2"
+                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.title}
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[13.5px] leading-relaxed"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                  >
                     {item.body}
-                  </div>
+                  </Field>
                 </div>
               ))}
             </div>
@@ -1143,7 +1383,15 @@ function SectionBlockInner({
       // cards (default)
       return (
         <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
-          <h2 className="font-serif text-[27px] mb-8 text-center">{section.heading}</h2>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-8 text-center"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
           <div className="grid md:grid-cols-3 gap-7">
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
@@ -1158,10 +1406,25 @@ function SectionBlockInner({
                     selected={!!itemSel && selectedImageKey === itemSel.key}
                     onSelect={() => itemSel && onSelectImage?.(itemSel)}
                   />
-                  <div className="font-serif text-[17px] mb-2">{item.title}</div>
-                  <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="font-serif text-[17px] mb-2"
+                    selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                  >
+                    {item.title}
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[13.5px] leading-relaxed"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                    onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                  >
                     {item.body}
-                  </div>
+                  </Field>
                 </div>
               );
             })}
@@ -1176,14 +1439,37 @@ function SectionBlockInner({
       if (layout === "carousel-row") {
         return (
           <div className="px-10 py-16" style={{ background: sectionBg }}>
-            <h2 className="font-serif text-[27px] mb-8 text-center">{section.heading}</h2>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-8 text-center"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
             <div className="grid md:grid-cols-2 gap-5 max-w-[760px] mx-auto">
               {section.items.map((t, i) => (
                 <div key={i} className="rounded-2xl p-5 border" style={{ background: palette.cardBg, borderColor: palette.cardBorder }}>
-                  <p className="text-[14px] italic mb-3">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="text-[12.5px] font-semibold" style={{ color: palette.textDim }}>
+                  <Field
+                    editable={editable}
+                    as="p"
+                    className="text-[14px] italic mb-3"
+                    selected={selectedFieldKey === fieldSel("quote", t.quote, "citatet", i)?.key}
+                    onSelect={() => { const s = fieldSel("quote", t.quote, "citatet", i); s && onSelectField?.(s); }}
+                  >
+                    &ldquo;{t.quote}&rdquo;
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[12.5px] font-semibold"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("author", t.author, "namnet", i)?.key}
+                    onSelect={() => { const s = fieldSel("author", t.author, "namnet", i); s && onSelectField?.(s); }}
+                  >
                     {t.author}
-                  </div>
+                  </Field>
                 </div>
               ))}
             </div>
@@ -1196,7 +1482,15 @@ function SectionBlockInner({
         return (
           <div className="grid md:grid-cols-2" style={{ background: sectionBg }}>
             <div className="flex flex-col justify-center px-10 py-14">
-              <h2 className="font-serif text-[27px] mb-2">{section.heading}</h2>
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[27px] mb-2"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
               <div className="text-[13.5px]" style={{ color: palette.textDim }}>
                 Vad kunder säger om oss.
               </div>
@@ -1204,10 +1498,25 @@ function SectionBlockInner({
             <div className="flex flex-col justify-center px-10 py-14" style={{ background: palette.bgAlt }}>
               {first && (
                 <>
-                  <p className="font-serif italic text-[20px] leading-relaxed mb-3">&ldquo;{first.quote}&rdquo;</p>
-                  <div className="text-[13px] font-semibold" style={{ color: palette.textDim }}>
+                  <Field
+                    editable={editable}
+                    as="p"
+                    className="font-serif italic text-[20px] leading-relaxed mb-3"
+                    selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
+                    onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
+                  >
+                    &ldquo;{first.quote}&rdquo;
+                  </Field>
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[13px] font-semibold"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("author", first.author, "namnet", 0)?.key}
+                    onSelect={() => { const s = fieldSel("author", first.author, "namnet", 0); s && onSelectField?.(s); }}
+                  >
                     — {first.author}
-                  </div>
+                  </Field>
                 </>
               )}
               {rest.length > 0 && (
@@ -1231,10 +1540,25 @@ function SectionBlockInner({
           <h2 className="sr-only">{section.heading}</h2>
           {first && (
             <div className="max-w-xl mx-auto relative">
-              <p className="font-serif italic text-[24px] md:text-[27px] leading-relaxed mb-4">&ldquo;{first.quote}&rdquo;</p>
-              <div className="text-[13.5px]" style={{ color: palette.textDim }}>
+              <Field
+                editable={editable}
+                as="p"
+                className="font-serif italic text-[24px] md:text-[27px] leading-relaxed mb-4"
+                selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
+                onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
+              >
+                &ldquo;{first.quote}&rdquo;
+              </Field>
+              <Field
+                editable={editable}
+                as="div"
+                className="text-[13.5px]"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("author", first.author, "namnet", 0)?.key}
+                onSelect={() => { const s = fieldSel("author", first.author, "namnet", 0); s && onSelectField?.(s); }}
+              >
                 — {first.author}
-              </div>
+              </Field>
             </div>
           )}
           {rest.length > 0 && (
@@ -1258,10 +1582,25 @@ function SectionBlockInner({
         return (
           <div className="grid md:grid-cols-2">
             <div className="flex flex-col justify-center px-10 md:px-14 py-14" style={{ background: sectionBg }}>
-              <h2 className="font-serif text-[27px] mb-3">{section.heading}</h2>
-              <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[27px] mb-3"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
                 {section.body}
-              </p>
+              </Field>
             </div>
             <div className="flex items-center justify-center px-10 py-14" style={{ background: accent }}>
               <CtaLink
@@ -1280,8 +1619,24 @@ function SectionBlockInner({
       // centered (default)
       return (
         <div className="relative px-8 md:px-10 py-20 text-center text-white" style={{ background: darkArt }}>
-          <h2 className="font-serif text-[29px] mb-4">{section.heading}</h2>
-          <p className="text-[14.5px] mb-7 opacity-80 max-w-[480px] mx-auto">{section.body}</p>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[29px] mb-4"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          <Field
+            editable={editable}
+            as="p"
+            className="text-[14.5px] mb-7 opacity-80 max-w-[480px] mx-auto"
+            selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+            onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+          >
+            {section.body}
+          </Field>
           <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
             {section.ctaLabel}
           </CtaPill>
@@ -1296,29 +1651,62 @@ function SectionBlockInner({
         return (
           <div className="grid md:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
             <div>
-              <h2 className="font-serif text-[27px] mb-4">{section.heading}</h2>
-              <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[27px] mb-4"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
                 {section.body}
-              </p>
+              </Field>
             </div>
             <div className="rounded-2xl border p-6 flex flex-col gap-3" style={{ background: palette.cardBg, borderColor: palette.cardBorder }}>
               {section.email && (
-                <div className="text-[13.5px]">
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[13.5px]"
+                  selected={selectedFieldKey === fieldSel("email", section.email, "e-postadressen")?.key}
+                  onSelect={() => { const s = fieldSel("email", section.email, "e-postadressen"); s && onSelectField?.(s); }}
+                >
                   <span className="font-semibold">E-post: </span>
                   <span style={{ color: palette.textDim }}>{section.email}</span>
-                </div>
+                </Field>
               )}
               {section.phone && (
-                <div className="text-[13.5px]">
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[13.5px]"
+                  selected={selectedFieldKey === fieldSel("phone", section.phone, "telefonnumret")?.key}
+                  onSelect={() => { const s = fieldSel("phone", section.phone, "telefonnumret"); s && onSelectField?.(s); }}
+                >
                   <span className="font-semibold">Telefon: </span>
                   <span style={{ color: palette.textDim }}>{section.phone}</span>
-                </div>
+                </Field>
               )}
               {section.address && (
-                <div className="text-[13.5px]">
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[13.5px]"
+                  selected={selectedFieldKey === fieldSel("address", section.address, "adressen")?.key}
+                  onSelect={() => { const s = fieldSel("address", section.address, "adressen"); s && onSelectField?.(s); }}
+                >
                   <span className="font-semibold">Adress: </span>
                   <span style={{ color: palette.textDim }}>{section.address}</span>
-                </div>
+                </Field>
               )}
               {socialLinks && socialLinks.length > 0 && (
                 <div className="pt-2">
@@ -1333,14 +1721,56 @@ function SectionBlockInner({
       // centered (default)
       return (
         <div className="px-10 py-16 max-w-[560px] mx-auto text-center" style={{ background: sectionBg }}>
-          <h2 className="font-serif text-[27px] mb-4">{section.heading}</h2>
-          <p className="text-[14.5px] mb-5" style={{ color: palette.textDim }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-serif text-[27px] mb-4"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          <Field
+            editable={editable}
+            as="p"
+            className="text-[14.5px] mb-5"
+            style={{ color: palette.textDim }}
+            selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+            onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+          >
             {section.body}
-          </p>
+          </Field>
           <div className="text-[13.5px] flex flex-col gap-1 mb-4" style={{ color: palette.textDim }}>
-            {section.email && <span>{section.email}</span>}
-            {section.phone && <span>{section.phone}</span>}
-            {section.address && <span>{section.address}</span>}
+            {section.email && (
+              <Field
+                editable={editable}
+                as="span"
+                selected={selectedFieldKey === fieldSel("email", section.email, "e-postadressen")?.key}
+                onSelect={() => { const s = fieldSel("email", section.email, "e-postadressen"); s && onSelectField?.(s); }}
+              >
+                {section.email}
+              </Field>
+            )}
+            {section.phone && (
+              <Field
+                editable={editable}
+                as="span"
+                selected={selectedFieldKey === fieldSel("phone", section.phone, "telefonnumret")?.key}
+                onSelect={() => { const s = fieldSel("phone", section.phone, "telefonnumret"); s && onSelectField?.(s); }}
+              >
+                {section.phone}
+              </Field>
+            )}
+            {section.address && (
+              <Field
+                editable={editable}
+                as="span"
+                selected={selectedFieldKey === fieldSel("address", section.address, "adressen")?.key}
+                onSelect={() => { const s = fieldSel("address", section.address, "adressen"); s && onSelectField?.(s); }}
+              >
+                {section.address}
+              </Field>
+            )}
           </div>
           {socialLinks && socialLinks.length > 0 && (
             <div className="flex justify-center">
