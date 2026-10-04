@@ -53,7 +53,7 @@ export interface SiteTheme {
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom";
 export type AboutLayout = "text-left" | "centered";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered";
-export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side";
+export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed";
 export type CtaLayout = "centered" | "split";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
@@ -115,6 +115,11 @@ export interface TestimonialsSection {
   layout: TestimonialsLayout;
   heading: string;
   items: TestimonialItem[];
+  // Bara använd av layout "full-bleed" — en bild som täcker hela
+  // sektionens bredd bakom citatet (se Restaurangen/Snickeriet i
+  // /exempel). Satt i kod (aldrig av AI:n), precis som
+  // HeroSection.imageUrl — se lib/assignUploadedImages.ts.
+  imageUrl?: string;
 }
 
 export interface CtaSection {

@@ -69,8 +69,14 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "testimonials" },
-        layout: { type: "string", enum: ["single-quote", "carousel-row", "side-by-side"] },
+        layout: {
+          type: "string",
+          enum: ["single-quote", "carousel-row", "side-by-side", "full-bleed"],
+          description:
+            "\"single-quote\" (ett citat över en toned konstbakgrund), \"carousel-row\" (flera citat i kort sida vid sida), \"side-by-side\" (rubrik och citat i två kolumner), eller \"full-bleed\" (en RIKTIG bild som täcker hela sektionens bredd, med ett enda citat centrerat ovanpå en mörk tonad gradient — dramatiskt och rent, som en knivskarp paus mellan sidans andra sektioner; bara det första citatet i items visas).",
+        },
         heading: { type: "string" },
+        imageUrl: { type: "string" },
         items: {
           type: "array",
           items: {

@@ -2172,6 +2172,54 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "full-bleed") {
+        // Kundönskemål: en RIKTIG bild som täcker hela sektionens bredd
+        // bakom ett enda centrerat citat — exakt mönstret från
+        // Restaurangen/Snickeriet i /exempel ("Snygg tonat längst upp,
+        // några ingångar, en bild som täcker hela bredden med någon text
+        // osv. Snyggt cleant."). Till skillnad från "single-quote" (som
+        // bara har en konstbakgrund, ingen riktig bild) används här en
+        // äkta bild (section.imageUrl, satt i kod — se
+        // lib/assignUploadedImages.ts) med samma mörka
+        // uttoningsgradient-teknik som heroens "overlay-bottom"/"fade-bottom"
+        // ovan. Bara det FÖRSTA citatet visas — ett enda, rent uttalande,
+        // ingen kortruta, ingen rubrik.
+        const [first] = section.items;
+        return (
+          <div className="relative py-24 @3xl:py-28 text-center overflow-hidden" style={{ minHeight: 420 }}>
+            <ImageOrArt imageUrl={section.imageUrl} art={art} fill dark />
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.30) 45%, rgba(0,0,0,0.18) 100%)" }}
+            />
+            <h2 className="sr-only">{section.heading}</h2>
+            {first && (
+              <div className="max-w-xl mx-auto relative px-8 text-white">
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="font-serif italic text-[24px] @3xl:text-[28px] leading-relaxed mb-4"
+                  selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
+                  onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
+                >
+                  &ldquo;{first.quote}&rdquo;
+                </Field>
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[13.5px]"
+                  style={{ color: "rgba(255,255,255,0.78)" }}
+                  selected={selectedFieldKey === fieldSel("author", first.author, "namnet", 0)?.key}
+                  onSelect={() => { const s = fieldSel("author", first.author, "namnet", 0); s && onSelectField?.(s); }}
+                >
+                  — {first.author}
+                </Field>
+              </div>
+            )}
+          </div>
+        );
+      }
+
       // single-quote (default) — stort citat över en bild/konstbakgrund
       const [first, ...rest] = section.items;
       return (

@@ -30,6 +30,13 @@ export function assignUploadedImages(
           section.imageUrl = next();
         } else if (section.type === "grid" || section.type === "gallery") {
           section.items = section.items.map((item) => ({ ...item, imageUrl: next() }));
+        } else if (section.type === "testimonials" && section.layout === "full-bleed") {
+          // Samma princip som hero ovan — "full-bleed" visar EN bild som
+          // täcker hela sektionen bakom citatet (se contentModel.ts), inte
+          // en konstbakgrund, så den behöver sin egen bild precis som en
+          // hero gör. Utan uppladdade foton rör vi ingenting — SitePreview
+          // faller då tillbaka på gradient-platshållaren, som vanligt.
+          section.imageUrl = next();
         }
       }
     }
