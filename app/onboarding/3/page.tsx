@@ -24,7 +24,7 @@ const defaultPages: Page[] = [
   { id: "om", label: "Om oss", menuName: "Om oss", brief: "Vår historia, vilka vi är och varför vi gör det vi gör.", included: true, removable: true },
   { id: "tjanster", label: "Tjänster", menuName: "Vad vi gör", brief: "Lista över tjänster/produkter, med en kort beskrivning av varje.", included: true, removable: true },
   { id: "inspiration", label: "Inspiration / Portfolio", menuName: "Inspiration", brief: "Bildgalleri med tidigare projekt eller referensjobb.", included: false, removable: true },
-  { id: "nyheter", label: "Nyheter", menuName: "Nyheter", brief: "Nyheter och erbjudanden, kategoriserat. Kan fyllas på med ett AI-skrivet utkast en gång i månaden.", included: false, removable: true, isNew: true },
+  { id: "nyheter", label: "Nyheter", menuName: "Nyheter", brief: "Visar era publicerade nyheter och erbjudanden. Tom tills ni skriver och publicerar den första artikeln själva i panelen — inget AI-påhittat innehåll här.", included: false, removable: true, isNew: true },
   { id: "kontakt", label: "Kontakt", menuName: "Kontakt", brief: "Adress, telefon, e-post, karta och ett kontaktformulär.", included: true, removable: true },
 ];
 
