@@ -155,9 +155,20 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "contactForm" },
+        layout: {
+          type: "string",
+          enum: ["centered", "split-map"],
+          description:
+            "\"split-map\" lägger en inbäddad karta BREDVID formuläret (kräver \"address\" ifylld) — använd det här, inte en separat \"map\"-sektion, när kunden vill ha ett formulär och en karta sida vid sida: sektioner läggs annars alltid under varandra, aldrig bredvid, oavsett typ.",
+        },
         heading: { type: "string" },
         body: { type: "string" },
         submitLabel: { type: "string" },
+        address: {
+          type: "string",
+          description:
+            "Bara använd när layout är \"split-map\" — adressen som visas i kartan bredvid formuläret, EXAKT som kunden gett den. Hitta aldrig på en adress.",
+        },
       },
       required: ["id", "type", "heading"],
     },

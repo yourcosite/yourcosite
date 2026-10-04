@@ -147,6 +147,8 @@ export interface MapSection {
   address: string;
 }
 
+export type ContactFormLayout = "centered" | "split-map";
+
 // Ett RIKTIGT, ifyllbart kontaktformulär (namn/e-post/meddelande) — till
 // skillnad från ContactSection ovan, som bara VISAR kontaktuppgifter.
 // Inskicken sparas i databasen (tabellen site_form_submissions, se
@@ -155,10 +157,19 @@ export interface MapSection {
 export interface ContactFormSection {
   id: string;
   type: "contactForm";
+  // "split-map" lägger en inbäddad karta BREDVID formuläret (kräver
+  // "address") — enda sättet att få ett kontaktformulär och en karta att
+  // stå sida vid sida, eftersom sektioner annars alltid läggs under
+  // varandra, aldrig bredvid, oavsett vilka typer de är.
+  layout?: ContactFormLayout;
   heading: string;
   body?: string;
   // Text på skicka-knappen — "Skicka" om utelämnat.
   submitLabel?: string;
+  // Bara använd när layout är "split-map" — adressen som visas i kartan
+  // bredvid formuläret. Samma princip som MapSection.address: EXAKT den
+  // kunden gett, aldrig påhittad.
+  address?: string;
 }
 
 export type Section =

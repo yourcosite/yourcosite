@@ -2232,7 +2232,89 @@ function SectionBlockInner({
       );
     }
 
-    case "contactForm":
+    case "contactForm": {
+      const layout = section.layout || "centered";
+      const formBlock = (
+        <ContactFormBlock
+          section={section}
+          palette={palette}
+          accent={accent}
+          pagePath={pagePath}
+          siteId={siteId}
+          // Bara ett klick på den RIKTIGA, publikt nåbara sajten ska
+          // spara något skarpt i kundens formulärsvar (se
+          // siteId-kommentaren ovan) — i chattredigerarens
+          // förhandsvisning eller /forslag-miniatyrerna visas bara en
+          // "Tack, skickat!"-bekräftelse utan att något sparas.
+          active={!!basePath && !!siteId}
+          editable={editable}
+          selected={selectedFieldKey === fieldSel("submitLabel", section.submitLabel || "Skicka", "knapptexten")?.key}
+          onSelect={() => { const s = fieldSel("submitLabel", section.submitLabel || "Skicka", "knapptexten"); s && onSelectField?.(s); }}
+        />
+      );
+
+      if (layout === "split-map") {
+        // Enda sättet att få ett formulär och en karta att stå SIDA VID
+        // SIDA — sektioner i övrigt läggs alltid under varandra, aldrig
+        // bredvid, oavsett typ (se kommentaren på ContactFormSection i
+        // lib/contentModel.ts).
+        const mapQuery = encodeURIComponent(section.address || "");
+        return (
+          <div className="grid md:grid-cols-2 max-w-[880px] mx-auto px-10 py-16 gap-10" style={{ background: sectionBg }}>
+            <div>
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[27px] mb-3"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              {section.body && (
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="text-[14.5px] mb-6"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                  onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.body}
+                </Field>
+              )}
+              {formBlock}
+            </div>
+            <div>
+              <div className="rounded-2xl overflow-hidden border" style={{ borderColor: palette.cardBorder }}>
+                <iframe
+                  src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
+                  width="100%"
+                  height="320"
+                  style={{ border: 0, display: "block" }}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title={section.heading || "Karta"}
+                />
+              </div>
+              {section.address && (
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[13px] mt-3 text-center"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("address", section.address, "adressen")?.key}
+                  onSelect={() => { const s = fieldSel("address", section.address, "adressen"); s && onSelectField?.(s); }}
+                >
+                  {section.address}
+                </Field>
+              )}
+            </div>
+          </div>
+        );
+      }
+
+      // centered (default)
       return (
         <div className="px-10 py-16 max-w-[560px] mx-auto" style={{ background: sectionBg }}>
           <Field
@@ -2256,24 +2338,10 @@ function SectionBlockInner({
               {section.body}
             </Field>
           )}
-          <ContactFormBlock
-            section={section}
-            palette={palette}
-            accent={accent}
-            pagePath={pagePath}
-            siteId={siteId}
-            // Bara ett klick på den RIKTIGA, publikt nåbara sajten ska
-            // spara något skarpt i kundens formulärsvar (se
-            // siteId-kommentaren ovan) — i chattredigerarens
-            // förhandsvisning eller /forslag-miniatyrerna visas bara en
-            // "Tack, skickat!"-bekräftelse utan att något sparas.
-            active={!!basePath && !!siteId}
-            editable={editable}
-            selected={selectedFieldKey === fieldSel("submitLabel", section.submitLabel || "Skicka", "knapptexten")?.key}
-            onSelect={() => { const s = fieldSel("submitLabel", section.submitLabel || "Skicka", "knapptexten"); s && onSelectField?.(s); }}
-          />
+          {formBlock}
         </div>
       );
+    }
 
     default:
       return null;
