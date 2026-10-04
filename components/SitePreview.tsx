@@ -52,6 +52,8 @@ export default function SitePreview({
   editable,
   selectedImageKey,
   onSelectImage,
+  selectedSectionKey,
+  onSelectSection,
 }: {
   content: SiteContent;
   siteName?: string;
@@ -88,6 +90,10 @@ export default function SitePreview({
   editable?: boolean;
   selectedImageKey?: string | null;
   onSelectImage?: (sel: { key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }) => void;
+  // Samma koncept som ovan, för att välja en HEL sektion (text) istället
+  // för en enskild bild — se sectionLabel/SectionBlock nedan.
+  selectedSectionKey?: string | null;
+  onSelectSection?: (sel: { key: string; pagePath: string; sectionId: string; label: string }) => void;
 }) {
   const isPrivacyPolicyPage =
     activePath === PRIVACY_POLICY_PATH && privacyPolicyMode === "generated" && !!privacyPolicyText;
@@ -179,6 +185,8 @@ export default function SitePreview({
             editable={editable}
             selectedImageKey={selectedImageKey}
             onSelectImage={onSelectImage}
+            selectedSectionKey={selectedSectionKey}
+            onSelectSection={onSelectSection}
           />
         )}
       </div>
@@ -204,6 +212,8 @@ export default function SitePreview({
             editable={editable}
             selectedImageKey={selectedImageKey}
             onSelectImage={onSelectImage}
+            selectedSectionKey={selectedSectionKey}
+            onSelectSection={onSelectSection}
           />
         ))
       )}
@@ -808,7 +818,32 @@ type ImageSelection = {
   label: string;
 };
 
-function SectionBlock({
+// Läsbar svensk etikett för en HEL sektion (inte en enskild bild) — visas i
+// hover-/val-pillen nedan och skickas som selection.label till
+// /api/sites/edit, så kunden kan klicka på t.ex. rubriken eller
+// brödtexten i en sektion ("Om oss", en hero osv.) istället för att behöva
+// beskriva i ord vilken del av sidan de menar — samma grundidé som
+// bild-markeringen ovan, fast för text/hela sektionen.
+function sectionLabel(section: Section): string {
+  switch (section.type) {
+    case "hero":
+      return section.headline ? `hero-sektionen ("${section.headline}")` : "hero-sektionen";
+    case "about":
+      return `sektionen "${section.heading}"`;
+    case "grid":
+      return `sektionen "${section.heading}"`;
+    case "testimonials":
+      return `sektionen "${section.heading}"`;
+    case "cta":
+      return `sektionen "${section.heading}"`;
+    case "contact":
+      return `sektionen "${section.heading}"`;
+    default:
+      return "den här sektionen";
+  }
+}
+
+function SectionBlockInner({
   section,
   accent,
   secondary,
@@ -930,8 +965,12 @@ function SectionBlock({
               selected={!!heroSelection && selectedImageKey === heroSelection.key}
               onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
             />
+            {/* pointer-events-none: rent dekorativt mörkertonings-lager — utan
+                detta låg det OVANPÅ bilden i DOM-ordningen och fångade alla
+                klick själv, så "Klicka för att välja"-rutan ovan aldrig gick
+                att klicka (bilden fick aldrig klicket, bara det här lagret). */}
             <div
-              className="absolute inset-0"
+              className="absolute inset-0 pointer-events-none"
               style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.05) 75%)" }}
             />
             <div className={`absolute bottom-0 left-0 right-0 px-8 md:px-14 pb-10 md:pb-14 text-white ${heroEmphasis ? "max-w-[680px]" : "max-w-[560px]"}`}>
@@ -1315,4 +1354,60 @@ function SectionBlock({
     default:
       return null;
   }
+}
+
+// Ytterst tunt omslag runt SectionBlockInner — lägger bara till
+// klicka-för-att-välja-HELA-SEKTIONEN ovanpå den (för textändringar: "byt
+// rubriken i den här sektionen", "korta ner texten här" osv.), utan att
+// röra någon av layout-grenarna ovan. En klick-markering på en enskild bild
+// (ImageOrArt, selectable ovan) stoppar sin egen bubbling (e.stopPropagation)
+// så den tar alltid företräde framför sektionsmarkeringen — klickar kunden
+// på själva bilden menar de bilden, annars (rubrik, brödtext, bakgrund …)
+// menar de sektionen.
+function SectionBlock(
+  props: Parameters<typeof SectionBlockInner>[0] & {
+    selectedSectionKey?: string | null;
+    onSelectSection?: (sel: { key: string; pagePath: string; sectionId: string; label: string }) => void;
+  }
+) {
+  const { selectedSectionKey, onSelectSection, ...inner } = props;
+  const rendered = <SectionBlockInner {...inner} />;
+
+  if (!inner.editable || !inner.pagePath) return rendered;
+
+  const sel = {
+    key: `${inner.pagePath}::section::${inner.section.id}`,
+    pagePath: inner.pagePath,
+    sectionId: inner.section.id,
+    label: sectionLabel(inner.section),
+  };
+  const selected = selectedSectionKey === sel.key;
+
+  return (
+    <div className="relative group/section cursor-pointer" onClick={() => onSelectSection?.(sel)}>
+      {rendered}
+      <div
+        className={`pointer-events-none absolute inset-0 transition-opacity ${
+          selected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
+        }`}
+        style={{ outline: "3px dashed #C6FF5E", outlineOffset: "-3px" }}
+      />
+      {/* bottom-right snarare än top-left — på startsidans overlay-bottom-hero
+          (se nedan) ligger Header flytande ovanpå sektionens topp, så en
+          badge däruppe skulle krocka med logotyp/menyn. Nederkanten är i
+          praktiken alltid ledig, oavsett sektionstyp. */}
+      <div
+        className={`pointer-events-none absolute bottom-2.5 right-2.5 transition-opacity ${
+          selected ? "opacity-100" : "opacity-0 group-hover/section:opacity-100"
+        }`}
+      >
+        <span
+          className="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block"
+          style={{ background: selected ? "#C6FF5E" : "#FFFFFF", color: "#0C1004" }}
+        >
+          {selected ? `✓ Vald: ${sel.label}` : "Klicka för att välja hela sektionen"}
+        </span>
+      </div>
+    </div>
+  );
 }

@@ -63,38 +63,41 @@ type Attachment = {
   text?: string;
 };
 
-// En bild kunden uttryckligen klickat på i förhandsvisningen (se
+// Något kunden uttryckligen klickat på/markerat i förhandsvisningen (se
 // components/SitePreview.tsx, "Klicka för att välja" och
 // app/redigera/page.tsx) — skickas med så Claude inte behöver gissa VILKEN
-// bild ett otydligt "byt bilden" syftar på. sectionId/itemIndex pekar
-// exakt ut noden i innehållsmodellen (lib/contentModel.ts); label är en
-// redan människoläsbar beskrivning (byggd i SitePreview.tsx) som också
-// kan klistras rakt in i prompten.
-type ImageSelection = {
-  pagePath: string;
-  sectionId: string;
-  kind: "hero" | "gridItem";
-  itemIndex?: number;
-  label: string;
-};
+// bild eller sektion ett otydligt önskemål ("byt bilden", "ändra texten
+// här") syftar på. sectionId/itemIndex pekar exakt ut noden i
+// innehållsmodellen (lib/contentModel.ts); label är en redan
+// människoläsbar beskrivning (byggd i SitePreview.tsx) som också kan
+// klistras rakt in i prompten. "image" = en specifik bild (hero eller en
+// grid-ruta); "section" = hela sektionen (klickat på rubrik/brödtext/
+// bakgrund) — för textändringar eller när kunden pekar ut "den här
+// sektionen" snarare än en bild.
+type Selection =
+  | { target: "image"; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }
+  | { target: "section"; pagePath: string; sectionId: string; label: string };
 
 function buildEditPrompt(
   content: SiteContent,
   message: string,
   attachmentNote: string,
   currentPath: string | undefined,
-  selection: ImageSelection | undefined
+  selection: Selection | undefined
 ) {
   const pagePaths = content.pages.map((p) => `${p.path} ("${p.label}")`).join(", ");
   const currentPage = currentPath ? content.pages.find((p) => p.path === currentPath) : undefined;
   const currentPageNote = currentPage
     ? `\nKunden tittar just nu på sidan "${currentPage.path}" ("${currentPage.label}") i förhandsvisningen. Är önskemålet oklart om VILKEN sida det gäller (t.ex. "byt rubriken" utan att nämna sida), anta med STOR sannolikhet att det är den här sidan, inte en annan.\n`
     : "";
-  const selectionNote = selection
-    ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en specifik bild i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"${
-        selection.kind === "gridItem" ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista` : ""
-      }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.\n`
-    : "";
+  const selectionNote =
+    selection?.target === "image"
+      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en specifik bild i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"${
+          selection.kind === "gridItem" ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista` : ""
+        }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.\n`
+      : selection?.target === "section"
+      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en hel sektion i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"). Är önskemålet oklart om VILKEN rubrik/text/sektion det gäller, syftar kunden med STOR sannolikhet på just DEN markerade sektionen — gör då ändringen där, inte i en annan sektion på sidan.\n`
+      : "";
   return `Du redigerar en BEFINTLIG kundwebbplats hos YourCoSite. Nedan är sajtens NUVARANDE innehåll som JSON, bara som underlag för dig — du skriver INTE ut det igen (innehållsmodellen i lib/contentModel.ts):
 
 ${JSON.stringify(content, null, 2)}
@@ -217,21 +220,29 @@ export async function POST(request: Request) {
   const currentPath = typeof body.currentPath === "string" ? body.currentPath : undefined;
 
   const rawSelection = body.selection;
-  let selection: ImageSelection | undefined;
-  if (rawSelection && typeof rawSelection === "object") {
-    const kind = rawSelection.kind === "hero" || rawSelection.kind === "gridItem" ? rawSelection.kind : undefined;
-    if (
-      kind &&
-      typeof rawSelection.pagePath === "string" &&
-      typeof rawSelection.sectionId === "string" &&
-      typeof rawSelection.label === "string"
-    ) {
+  let selection: Selection | undefined;
+  if (
+    rawSelection &&
+    typeof rawSelection === "object" &&
+    typeof rawSelection.pagePath === "string" &&
+    typeof rawSelection.sectionId === "string" &&
+    typeof rawSelection.label === "string"
+  ) {
+    if (rawSelection.target === "image" && (rawSelection.kind === "hero" || rawSelection.kind === "gridItem")) {
       selection = {
-        kind,
+        target: "image",
+        kind: rawSelection.kind,
         pagePath: rawSelection.pagePath,
         sectionId: rawSelection.sectionId,
         label: rawSelection.label,
         itemIndex: typeof rawSelection.itemIndex === "number" ? rawSelection.itemIndex : undefined,
+      };
+    } else if (rawSelection.target === "section") {
+      selection = {
+        target: "section",
+        pagePath: rawSelection.pagePath,
+        sectionId: rawSelection.sectionId,
+        label: rawSelection.label,
       };
     }
   }

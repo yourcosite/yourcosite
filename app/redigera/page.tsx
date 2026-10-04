@@ -37,18 +37,14 @@ type Attachment = {
   text?: string;
 };
 
-// En bild kunden klickat på i förhandsvisningen (se components/SitePreview.tsx,
+// Något kunden klickat på i förhandsvisningen (se components/SitePreview.tsx,
 // "Klicka för att välja") — hålls som en chip ovanför chattrutan tills
-// nästa meddelande skickas, så Millie vet exakt vilken bild ett otydligt
-// "byt bilden" syftar på (se selection i /api/sites/edit).
-type ImageSelection = {
-  key: string;
-  pagePath: string;
-  sectionId: string;
-  kind: "hero" | "gridItem";
-  itemIndex?: number;
-  label: string;
-};
+// nästa meddelande skickas, så Millie vet exakt vad ett otydligt "byt
+// bilden"/"ändra texten här" syftar på (se selection i /api/sites/edit).
+// "image" = en specifik bild, "section" = hela sektionen (för text).
+type Selection =
+  | { target: "image"; key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }
+  | { target: "section"; key: string; pagePath: string; sectionId: string; label: string };
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_DOC_BYTES = 10 * 1024 * 1024;
@@ -96,7 +92,7 @@ export default function EditorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       from: "bot",
-      text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Jag uppdaterar sajten åt dig direkt.",
+      text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild eller en sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt.",
     },
   ]);
   const [draft, setDraft] = useState("");
@@ -127,7 +123,7 @@ export default function EditorPage() {
     return () => clearInterval(id);
   }, [sending]);
 
-  const [selectedImage, setSelectedImage] = useState<ImageSelection | null>(null);
+  const [selection, setSelection] = useState<Selection | null>(null);
 
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attaching, setAttaching] = useState(false);
@@ -229,14 +225,14 @@ export default function EditorPage() {
     if ((!text && !attachment) || sending || attaching) return;
     const history = messages;
     const currentAttachment = attachment;
-    const currentSelection = selectedImage;
+    const currentSelection = selection;
     setMessages((m) => [
       ...m,
       { from: "user", text: text || "(bifogad fil)", attachmentName: currentAttachment?.name },
     ]);
     setDraft("");
     setAttachment(null);
-    setSelectedImage(null);
+    setSelection(null);
     setSending(true);
     try {
       const res = await fetch("/api/sites/edit", {
@@ -248,13 +244,21 @@ export default function EditorPage() {
           attachment: currentAttachment,
           currentPath: activePath,
           selection: currentSelection
-            ? {
-                pagePath: currentSelection.pagePath,
-                sectionId: currentSelection.sectionId,
-                kind: currentSelection.kind,
-                itemIndex: currentSelection.itemIndex,
-                label: currentSelection.label,
-              }
+            ? currentSelection.target === "image"
+              ? {
+                  target: "image",
+                  pagePath: currentSelection.pagePath,
+                  sectionId: currentSelection.sectionId,
+                  kind: currentSelection.kind,
+                  itemIndex: currentSelection.itemIndex,
+                  label: currentSelection.label,
+                }
+              : {
+                  target: "section",
+                  pagePath: currentSelection.pagePath,
+                  sectionId: currentSelection.sectionId,
+                  label: currentSelection.label,
+                }
             : null,
         }),
       });
@@ -460,20 +464,24 @@ export default function EditorPage() {
                   siteName={site?.name}
                   activePath={activePath}
                   onNavigate={(path) => {
-                    // Byter kunden sida medan en bild är markerad, ta bort
-                    // markeringen — den syftade på en bild på den gamla
+                    // Byter kunden sida medan något är markerat, ta bort
+                    // markeringen — den syftade på innehåll på den gamla
                     // sidan, och att låta den "hänga kvar" skulle kunna
                     // ställa chattens nästa ändring på fel sida.
-                    setSelectedImage(null);
+                    setSelection(null);
                     setActivePath(path);
                   }}
                   privacyPolicyMode={site?.privacy_policy_mode}
                   privacyPolicyFileUrl={site?.privacy_policy_file_url}
                   privacyPolicyText={site?.privacy_policy_text}
                   editable
-                  selectedImageKey={selectedImage?.key ?? null}
+                  selectedImageKey={selection?.target === "image" ? selection.key : null}
                   onSelectImage={(sel) =>
-                    setSelectedImage((prev) => (prev?.key === sel.key ? null : sel))
+                    setSelection((prev) => (prev?.key === sel.key ? null : { target: "image", ...sel }))
+                  }
+                  selectedSectionKey={selection?.target === "section" ? selection.key : null}
+                  onSelectSection={(sel) =>
+                    setSelection((prev) => (prev?.key === sel.key ? null : { target: "section", ...sel }))
                   }
                 />
               </div>
@@ -539,15 +547,15 @@ export default function EditorPage() {
 
           <div className="px-5 py-4 border-t border-line">
             {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
-            {selectedImage && (
+            {selection && (
               <div className="flex items-center gap-2 bg-accent-soft border border-line rounded-lg px-3 py-2 mb-2">
-                <span className="text-[14px] flex-shrink-0">🖼️</span>
+                <span className="text-[14px] flex-shrink-0">{selection.target === "image" ? "🖼️" : "📝"}</span>
                 <span className="text-[12.5px] truncate flex-1">
-                  Vald: {selectedImage.label}
+                  Vald: {selection.label}
                 </span>
                 <button
                   type="button"
-                  onClick={() => setSelectedImage(null)}
+                  onClick={() => setSelection(null)}
                   aria-label="Ta bort markeringen"
                   className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
                 >
