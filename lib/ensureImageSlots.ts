@@ -47,7 +47,18 @@ export function enforceHomepageImageRichness(content: SiteContent): SiteContent 
   if (!home) return content;
 
   const firstGrid = home.sections.find((s): s is GridSection => s.type === "grid");
-  if (firstGrid) firstGrid.layout = "alternating-rows";
+  if (firstGrid) {
+    firstGrid.layout = "alternating-rows";
+    // Layouten är medvetet FAST (alltid "alternating-rows", aldrig
+    // slumpad som randomizeSectionLayouts gör med andra sektioner) för
+    // att garantera det bildstarka förstaintrycket varje gång — men utan
+    // NÅGON variation alls blev den delen av sidan (allt som syns utan
+    // att scrolla) för identisk mellan omgenereringar. Att slumpa
+    // ORDNINGEN på rutorna (i stället för layouten) ger en annan
+    // bild/textpar i varje rad och om första raden börjar med bild eller
+    // text, utan att ge upp bildgarantin.
+    if (Math.random() < 0.5) firstGrid.items = [...firstGrid.items].reverse();
+  }
 
   // En "gallery" (små rutnätsbilder, katalogkänsla) direkt efter hero ger
   // fel förstaintryck — flyttas sist på sidan istället om den råkar hamna
