@@ -50,7 +50,7 @@ export interface SiteTheme {
   heroLayout?: HeroLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad";
 export type AboutLayout = "text-left" | "centered";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";

@@ -13,9 +13,9 @@ export const SECTION_SCHEMA = {
         type: { const: "hero" },
         layout: {
           type: "string",
-          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage"],
+          enum: ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage", "quad"],
           description:
-            "\"fade-bottom\": bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\". \"collage\" (ny): ett redaktionellt, bildrikt intryck — flera bilder i en överlappande komposition bredvid texten, med plats för headlineEmphasis (en kursiv fortsättning på rubriken) och stats (en kort nyckeltalsrad under knappen). Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan.",
+            "\"fade-bottom\": bilden tonar ut mjukt i sidans bakgrund, texten ligger därunder på vanlig bakgrund — ingen \"kortruta\" eller fullbred overlay. Ett lugnare, mer organiskt alternativ till \"centered\" och \"overlay-bottom\". \"collage\": ett redaktionellt, bildrikt intryck — flera bilder i en överlappande komposition bredvid texten, med plats för headlineEmphasis (en kursiv fortsättning på rubriken) och stats (en kort nyckeltalsrad under knappen). Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan. \"quad\" (ny): ett 2x2-rutnät — textruta (tonad i accentfärgen) uppe till vänster, ett foto uppe till höger, ett andra foto nere till vänster (med ett litet flytande nyckeltalskort ovanpå, från stats), och en till tonad textruta nere till höger med resten av stats. Används bara när stilvarianten faktiskt är \"Ren och strukturerad\".",
         },
         eyebrow: { type: "string" },
         headline: { type: "string" },

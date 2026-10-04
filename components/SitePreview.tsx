@@ -1621,6 +1621,133 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "quad") {
+        // 2x2-rutnät — Lumora-referensen kunden visade: en tonad textruta
+        // och ett foto överst, ett andra foto med ett flytande
+        // nyckeltalskort och ännu en tonad textruta nederst. Återanvänder
+        // samma fält som "collage" (headlineEmphasis/stats/
+        // collageImageUrls) — bara kompositionen skiljer sig.
+        const [quadImageB] = section.collageImageUrls || [];
+        const stats = section.stats || [];
+        const [cardStat, ...restStats] = stats;
+        // Låg, tonad bakgrund av kundens accentfärg på textrutorna — det
+        // kunden själv efterfrågade ("kundens huvudfärg i bakgrunden på
+        // fälten med texten"). Två styrkor så de två textrutorna inte blir
+        // identiska.
+        const tintStrong = `${accent}17`;
+        const tintSoft = `${accent}0C`;
+        return (
+          <div className="grid @3xl:grid-cols-2">
+            <div className="flex flex-col justify-center px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintStrong }}>
+              {section.eyebrow && (
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[11.5px] tracking-[0.14em] font-semibold mb-3.5"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                  onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.eyebrow.toUpperCase()}
+                </Field>
+              )}
+              <Field
+                editable={editable}
+                as="h1"
+                className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[34px] @3xl:text-[44px]" : "text-[28px] @3xl:text-[34px]"}`}
+                selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.headline}
+                {section.headlineEmphasis && (
+                  <>
+                    {" "}
+                    <Field
+                      editable={editable}
+                      as="span"
+                      className="italic"
+                      selected={selectedFieldKey === fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden")?.key}
+                      onSelect={() => { const s = fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden"); s && onSelectField?.(s); }}
+                    >
+                      {section.headlineEmphasis}
+                    </Field>
+                  </>
+                )}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed mb-6 max-w-[360px]"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              {section.ctaLabel && (
+                <FieldBadge
+                  editable={editable}
+                  selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                  onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                >
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                    {section.ctaLabel}
+                  </CtaPill>
+                </FieldBadge>
+              )}
+            </div>
+            <div className={`relative ${heroEmphasis ? "h-[300px] @3xl:h-[340px]" : "h-[240px] @3xl:h-[270px]"}`}>
+              <ImageOrArt
+                imageUrl={section.imageUrl}
+                art={art}
+                fill
+                selectable={editable}
+                selected={!!heroSelection && selectedImageKey === heroSelection.key}
+                onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+              />
+            </div>
+            <div className={`relative ${heroEmphasis ? "h-[300px] @3xl:h-[340px]" : "h-[240px] @3xl:h-[270px]"}`}>
+              <ImageOrArt imageUrl={quadImageB} art={art} fill selectable={false} />
+              {cardStat && (
+                <div
+                  className="absolute left-4 bottom-4 @3xl:left-5 @3xl:bottom-5 rounded-xl px-4 py-3 max-w-[200px] shadow-[0_12px_28px_rgba(0,0,0,0.18)]"
+                  style={{ background: palette.cardBg }}
+                >
+                  <div className="text-[19px] font-serif font-semibold">{cardStat.value}</div>
+                  <div className="text-[11.5px]" style={{ color: palette.textDim }}>{cardStat.label}</div>
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col justify-center px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintSoft }}>
+              {restStats.length > 0 ? (
+                <div className="flex flex-col gap-5">
+                  {restStats.slice(0, 2).map((stat, i) => (
+                    <div key={i} className={i > 0 ? "pt-5 border-t" : ""} style={{ borderColor: palette.cardBorder }}>
+                      <div className="text-[20px] font-serif font-semibold">{stat.value}</div>
+                      <div className="text-[12.5px]" style={{ color: palette.textDim }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                // Inga (fler) nyckeltal att visa — en enkel dekorativ
+                // upprepning av uppmaningen istället för en tom ruta.
+                section.ctaLabel && (
+                  <FieldBadge
+                    editable={editable}
+                    selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                    onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                  >
+                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                      {section.ctaLabel}
+                    </CtaPill>
+                  </FieldBadge>
+                )
+              )}
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "split-left" || layout === "split-right") {
         const imageFirst = layout === "split-left";
         const imageCol = (
