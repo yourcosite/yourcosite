@@ -56,6 +56,22 @@ const LAYOUT_TENDENCY_POOL = [
   "en jämn blandning, utan tydlig slagsida åt någotdera hållet",
 ];
 
+// Samma mönster som HOME_HERO_LAYOUT_POOL ovan, men för de ÖVRIGA
+// sektionstyperna — annars tenderade Claude att alltid välja samma "säkra"
+// layout per sektionstyp (t.ex. alltid "cards" för grid) oavsett kund, vilket
+// var en stor del av varför genererade sajter kändes mallade/lika. En av
+// varje pool slumpas fram PER GENERERING och vävs in som en knuff i
+// prompten nedan — fortfarande "luta åt", aldrig en regel som trumfar vad
+// kunden faktiskt skrivit.
+const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered"];
+const TESTIMONIALS_LAYOUT_POOL = ["single-quote", "carousel-row", "side-by-side"];
+const CTA_LAYOUT_POOL = ["centered", "split"];
+const CONTACT_LAYOUT_POOL = ["centered", "split-info"];
+const GALLERY_LAYOUT_POOL = ["grid", "carousel"];
+const ABOUT_LAYOUT_POOL = ["text-left", "centered"];
+const FAQ_LAYOUT_POOL = ["stacked", "two-column"];
+const MAP_LAYOUT_POOL = ["inline", "full-bleed"];
+
 function buildPrompt(
   site: any,
   pages: any[],
@@ -89,6 +105,18 @@ function buildPrompt(
 
   const suggestedTendency = pickRandom(LAYOUT_TENDENCY_POOL);
 
+  // En slumpad "luta åt"-layout per sektionstyp, se poolerna ovan.
+  const sectionLayoutLean = [
+    `"grid": luta åt "${pickRandom(GRID_LAYOUT_POOL)}" där inget annat talar emot`,
+    `"testimonials": luta åt "${pickRandom(TESTIMONIALS_LAYOUT_POOL)}"`,
+    `"cta": luta åt "${pickRandom(CTA_LAYOUT_POOL)}"`,
+    `"contact": luta åt "${pickRandom(CONTACT_LAYOUT_POOL)}"`,
+    `"gallery": luta åt "${pickRandom(GALLERY_LAYOUT_POOL)}"`,
+    `"about": luta åt "${pickRandom(ABOUT_LAYOUT_POOL)}"`,
+    `"faq": luta åt "${pickRandom(FAQ_LAYOUT_POOL)}"`,
+    `"map": luta åt "${pickRandom(MAP_LAYOUT_POOL)}"`,
+  ].join("; ");
+
   const textFillInstruction =
     site.allow_ai_text_fill === false
       ? `VIKTIGT — texten ska hålla sig nära det kunden faktiskt skrivit: kunden har INTE godkänt att du fyller ut saknad information med egna påhittade detaljer. Utgå bara från briefen, beskrivningen och branschen ovan. Hitta inte på konkreta erbjudanden, siffror, historia eller funktioner kunden inte nämnt. Där en sida eller sektion saknar underlag — håll texten kort, allmän och varumärkesneutral hellre än att fylla ut med påhittat innehåll.`
@@ -116,7 +144,7 @@ VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besöka
 
 VIKTIGT — variation mellan olika kunder, i den här prioritetsordningen: (1) kundens egen beskrivning och eventuella referenslänkar väger TYNGST — strukturen ovan och bransch-/tonval nedan ska i första hand komma från vad KUNDEN faktiskt visat och skrivit, inte hittas på; (2) saknas tydliga signaler där, luta generellt åt en ${suggestedTendency} för den här sajten. Två sajter i samma bransch och ton ska ändå inte kunna förväxlas — variera aktivt layoutval, sektionsordning och vilka sektionstyper som används mellan olika sidor/kunder.
 
-VIKTIGT — layout per sektion: varje sektion (utom "about") har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst.
+VIKTIGT — layout per sektion: varje sektion har ett obligatoriskt "layout"-fält med ett fåtal fördefinierade uppbyggnader (se verktygets schema för giltiga värden per sektionstyp). Välj layout utifrån företagets ton, bransch, beskrivning och eventuell inspiration — inte slumpmässigt och inte alltid samma. Två kunder med samma ton ska ändå kunna hamna olika beroende på vad de själva beskrivit. Variera gärna layout MELLAN sektionerna på samma sida också (t.ex. inte bild-vänster på alla sektioner) så sidan känns komponerad snarare än mallad. Riktlinjer, inte regler att följa slaviskt: en lugn/professionell ton passar ofta renare layouter ("centered", "list", "single-quote"), en personlig/lekfull ton passar ofta mer dynamiska ("split-left/right", "alternating-rows", "numbered"), men låt alltid kundens egna ord väga tyngst. Saknas en tydlig signal från kunden för en given sektionstyp, använd den här slumpade knuffen som utgångspunkt istället för att alltid välja samma "säkra" layout: ${sectionLayoutLean}.
 
 Anropa verktyget "generate_site" med hela resultatet.`;
 }

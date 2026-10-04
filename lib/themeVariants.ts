@@ -7,7 +7,7 @@
 // bara 3 — annars riskerade två kunder med samma ton (t.ex. båda "lekfull")
 // att alltid hamna på exakt samma tre förslag, vilket gjorde att sajter
 // kändes mallade även när kunderna själva valde olika.
-import type { ThemeFont } from "./contentModel";
+import type { ThemeFont, ButtonStyle } from "./contentModel";
 
 export type BackgroundMode = "light" | "warm" | "dark";
 
@@ -17,6 +17,9 @@ export interface ThemeVariant {
   desc: string;
   font: ThemeFont;
   backgroundMode: BackgroundMode;
+  // Knappformen hör ihop med varje variants "personlighet" — inte fritt
+  // kombinerbar, se ButtonStyle i lib/contentModel.ts.
+  buttonStyle: ButtonStyle;
   recommended?: boolean;
 }
 
@@ -27,6 +30,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     desc: "Vit bakgrund, gott om vitt utrymme, lugn och tydlig.",
     font: "sans",
     backgroundMode: "light",
+    buttonStyle: "underline",
   },
   {
     id: "luftig-klassisk",
@@ -34,6 +38,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     desc: "Vit bakgrund som ovan, men med ett snirkligare, mer tidlöst typsnitt.",
     font: "serif",
     backgroundMode: "light",
+    buttonStyle: "underline",
   },
   {
     id: "varm",
@@ -41,6 +46,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     desc: "Krämig bakgrund, rundare känsla, inbjudande.",
     font: "serif",
     backgroundMode: "warm",
+    buttonStyle: "pill",
     recommended: true,
   },
   {
@@ -49,6 +55,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     desc: "Samma krämiga bakgrund, men med ett rakare, mer busigt typsnitt.",
     font: "sans",
     backgroundMode: "warm",
+    buttonStyle: "pill",
   },
   {
     id: "djarv",
@@ -56,6 +63,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     desc: "Mörk bakgrund, hög kontrast, syns direkt.",
     font: "sans",
     backgroundMode: "dark",
+    buttonStyle: "square",
   },
   {
     id: "djarv-elegant",
@@ -63,5 +71,6 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     desc: "Samma mörka bakgrund, men med ett mer exklusivt, redaktionellt typsnitt.",
     font: "serif",
     backgroundMode: "dark",
+    buttonStyle: "square",
   },
 ];

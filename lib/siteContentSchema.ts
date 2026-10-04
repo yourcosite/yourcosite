@@ -30,10 +30,16 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "about" },
+        layout: {
+          type: "string",
+          enum: ["text-left", "centered"],
+          description:
+            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma.",
+        },
         heading: { type: "string" },
         body: { type: "string" },
       },
-      required: ["id", "type", "heading", "body"],
+      required: ["id", "type", "layout", "heading", "body"],
     },
     {
       type: "object",
@@ -124,6 +130,11 @@ export const SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "faq" },
+        layout: {
+          type: "string",
+          enum: ["stacked", "two-column"],
+          description: "\"stacked\" (en lång lista) eller \"two-column\" (två spalter sida vid sida — passar fler frågor bättre).",
+        },
         heading: { type: "string" },
         items: {
           type: "array",
@@ -134,13 +145,18 @@ export const SECTION_SCHEMA = {
           },
         },
       },
-      required: ["id", "type", "heading", "items"],
+      required: ["id", "type", "layout", "heading", "items"],
     },
     {
       type: "object",
       properties: {
         id: { type: "string" },
         type: { const: "map" },
+        layout: {
+          type: "string",
+          enum: ["inline", "full-bleed"],
+          description: "\"inline\" (ett inramat kort, mindre) eller \"full-bleed\" (kartan går ut i hela sidans bredd — mer dramatiskt).",
+        },
         heading: { type: "string" },
         address: {
           type: "string",
@@ -148,7 +164,7 @@ export const SECTION_SCHEMA = {
             "Adressen som visas i en inbäddad Google Maps-karta, EXAKT som kunden gett den (gata, postnummer, ort), t.ex. \"Storgatan 1, 582 24 Linköping\". Hitta aldrig på en adress.",
         },
       },
-      required: ["id", "type", "address"],
+      required: ["id", "type", "layout", "address"],
     },
     {
       type: "object",

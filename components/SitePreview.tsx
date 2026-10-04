@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ContactFormSection } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
@@ -44,6 +44,7 @@ export default function SitePreview({
   siteId,
   fontOverride,
   backgroundModeOverride,
+  buttonStyleOverride,
   activePath,
   basePath,
   onNavigate,
@@ -69,6 +70,10 @@ export default function SitePreview({
   siteId?: string;
   fontOverride?: ThemeFont;
   backgroundModeOverride?: BackgroundMode;
+  // Samma idé som ovan, för knappformen (pill/square/underline) — används
+  // av /forslag-miniatyrerna så en stilvariant kan förhandsvisas innan
+  // kunden valt den (se lib/themeVariants.ts).
+  buttonStyleOverride?: ButtonStyle;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
   // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
@@ -144,6 +149,9 @@ export default function SitePreview({
   // här sidan (SitePageContent.backgroundMode, se lib/contentModel.ts) —
   // annars sajtens vanliga tema, precis som innan det fältet fanns.
   const mode = backgroundModeOverride ?? page.backgroundMode ?? content.theme.backgroundMode ?? "light";
+  // Saknas den (sajter skapade innan knappform fanns) faller vi tillbaka på
+  // "pill" — den ursprungliga, enda formen som fanns innan.
+  const buttonShape = buttonStyleOverride ?? content.theme.buttonStyle ?? "pill";
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = content.theme.accentColor;
   const secondary = content.theme.secondaryColors || [];
@@ -225,6 +233,7 @@ export default function SitePreview({
             palette={palette}
             alt={false}
             socialLinks={content.socialLinks}
+            buttonShape={buttonShape}
             heroEmphasis
             basePath={basePath}
             siteId={siteId}
@@ -270,6 +279,7 @@ export default function SitePreview({
             palette={palette}
             alt={(overlayHeader ? i + 1 : i) % 2 === 1}
             socialLinks={content.socialLinks}
+            buttonShape={buttonShape}
             // Startsidans första sektion är besökarens allra första intryck —
             // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
             heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
@@ -915,25 +925,49 @@ function CtaLink({
   );
 }
 
+// Tre knappformer, valda per stilvariant (se lib/themeVariants.ts) —
+// bestämmer hur varje call-to-action-knapp på sajten ser ut, inte bara
+// hero-knappen. "pill"/"square" är fyllda (samma som den ursprungliga,
+// enda formen som fanns innan), "underline" är en nedtonad textlänk med en
+// accentfärgad linje under — håller textfärgen i sajtens vanliga bläckton
+// (textColor) istället för accentfärgen själv, så den alltid är läsbar
+// oavsett hur ljus/mörk kundens valda accentfärg råkar vara.
 function CtaPill({
   accent,
   children,
   link,
   basePath,
   onNavigate,
+  shape = "pill",
+  textColor,
 }: {
   accent: string;
   children: React.ReactNode;
   link?: string;
   basePath?: string;
   onNavigate?: (path: string) => void;
+  shape?: ButtonStyle;
+  textColor?: string;
 }) {
+  if (shape === "underline") {
+    return (
+      <CtaLink
+        link={link}
+        basePath={basePath}
+        onNavigate={onNavigate}
+        className="inline-flex items-center font-semibold text-[13.5px] uppercase tracking-[0.07em] pb-1 border-b-2"
+        style={{ borderColor: accent, color: textColor }}
+      >
+        {children}
+      </CtaLink>
+    );
+  }
   return (
     <CtaLink
       link={link}
       basePath={basePath}
       onNavigate={onNavigate}
-      className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
+      className={`inline-block font-semibold text-[14px] px-7 py-3.5 ${shape === "square" ? "rounded-md" : "rounded-full"}`}
       style={{ background: accent, color: "#17171A" }}
     >
       {children}
@@ -1238,6 +1272,7 @@ function SectionBlockInner({
   palette,
   alt,
   socialLinks,
+  buttonShape,
   heroEmphasis,
   basePath,
   siteId,
@@ -1257,6 +1292,9 @@ function SectionBlockInner({
   palette: Palette;
   alt: boolean;
   socialLinks?: SocialLink[];
+  // Sajtens knappform (pill/square/underline, se lib/themeVariants.ts) —
+  // vidarebefordras bara till CtaPill-anropen nedan.
+  buttonShape: ButtonStyle;
   // true för startsidans första sektion — ger hero-layouterna en större,
   // mer dramatisk bild/rubrik oavsett vilken layout AI:n valt.
   heroEmphasis?: boolean;
@@ -1391,7 +1429,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -1472,7 +1510,10 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                {/* Fast vitt här, inte palette.text — den här knappen ligger
+                    alltid ovanpå en mörk gradient/bild (text-white-lagret
+                    ovan), oavsett om sajtens läge är ljust/varmt/mörkt. */}
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -1541,7 +1582,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -1551,7 +1592,38 @@ function SectionBlockInner({
       );
     }
 
-    case "about":
+    case "about": {
+      const layout = section.layout || "text-left";
+
+      if (layout === "centered") {
+        // Smalare och centrerad — känns mer redaktionell/luftig än den
+        // vänsterställda standardversionen nedan. Se lib/siteContentSchema.ts.
+        return (
+          <div className="px-10 py-16 max-w-[560px] mx-auto text-center" style={{ background: sectionBg }}>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-serif text-[27px] mb-4"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+            <Field
+              editable={editable}
+              as="p"
+              className="text-[15px] leading-relaxed"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+            >
+              {section.body}
+            </Field>
+          </div>
+        );
+      }
+
+      // text-left (default) — vänsterställd, bredare text.
       return (
         <div className="px-10 py-14 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
           <Field
@@ -1575,6 +1647,7 @@ function SectionBlockInner({
           </Field>
         </div>
       );
+    }
 
     case "grid": {
       const layout = section.layout || "cards";
@@ -2007,7 +2080,9 @@ function SectionBlockInner({
             selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
             onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
           >
-            <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate}>
+            {/* Fast vitt, inte palette.text — sektionen är alltid mörk
+                (darkArt) med text-white oavsett sajtens läge. */}
+            <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#FFFFFF">
               {section.ctaLabel}
             </CtaPill>
           </FieldBadge>
@@ -2249,9 +2324,70 @@ function SectionBlockInner({
       );
     }
 
-    case "faq":
+    case "faq": {
+      const layout = section.layout || "stacked";
+      // "two-column" får en bredare container (som map/gallery) så två
+      // spalter får plats sida vid sida — "stacked" håller sig smalare och
+      // lättläst som en enda lång lista.
+      const renderFaqItem = (item: typeof section.items[number], i: number) => {
+        const open = faqOpenIndex === i;
+        return (
+          <div
+            key={i}
+            className="rounded-xl border overflow-hidden"
+            style={{ borderColor: palette.cardBorder, background: palette.cardBg }}
+          >
+            <div className="flex items-center justify-between gap-3 px-5 py-4">
+              <Field
+                editable={editable}
+                as="div"
+                className="font-semibold text-[14.5px] flex-1"
+                selected={selectedFieldKey === fieldSel("question", item.question, "frågan", i)?.key}
+                onSelect={() => { const s = fieldSel("question", item.question, "frågan", i); s && onSelectField?.(s); }}
+              >
+                {item.question}
+              </Field>
+              {/* Egen knapp för att fälla ut/ihop svaret, skild från
+                  Field ovan — annars skulle ett klick på frågan
+                  både markera den FÖR REDIGERING och växla
+                  utfällningen i samma klick (samma princip som
+                  FieldBadge för knapptexter ovan). */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setFaqOpenIndex(open ? null : i);
+                }}
+                aria-label={open ? "Dölj svaret" : "Visa svaret"}
+                className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold"
+                style={{ background: palette.bgAlt, color: palette.textDim }}
+              >
+                {open ? "–" : "+"}
+              </button>
+            </div>
+            {open && (
+              <div className="px-5 pb-4">
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="text-[13.5px] leading-relaxed"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("answer", item.answer, "svaret", i)?.key}
+                  onSelect={() => { const s = fieldSel("answer", item.answer, "svaret", i); s && onSelectField?.(s); }}
+                >
+                  {item.answer}
+                </Field>
+              </div>
+            )}
+          </div>
+        );
+      };
+
       return (
-        <div className="px-10 py-16 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
+        <div
+          className={`px-10 py-16 mx-auto ${layout === "two-column" ? "max-w-[920px]" : "max-w-[680px]"}`}
+          style={{ background: sectionBg }}
+        >
           <Field
             editable={editable}
             as="h2"
@@ -2261,66 +2397,64 @@ function SectionBlockInner({
           >
             {section.heading}
           </Field>
-          <div className="flex flex-col gap-2.5">
-            {section.items.map((item, i) => {
-              const open = faqOpenIndex === i;
-              return (
-                <div
-                  key={i}
-                  className="rounded-xl border overflow-hidden"
-                  style={{ borderColor: palette.cardBorder, background: palette.cardBg }}
-                >
-                  <div className="flex items-center justify-between gap-3 px-5 py-4">
-                    <Field
-                      editable={editable}
-                      as="div"
-                      className="font-semibold text-[14.5px] flex-1"
-                      selected={selectedFieldKey === fieldSel("question", item.question, "frågan", i)?.key}
-                      onSelect={() => { const s = fieldSel("question", item.question, "frågan", i); s && onSelectField?.(s); }}
-                    >
-                      {item.question}
-                    </Field>
-                    {/* Egen knapp för att fälla ut/ihop svaret, skild från
-                        Field ovan — annars skulle ett klick på frågan
-                        både markera den FÖR REDIGERING och växla
-                        utfällningen i samma klick (samma princip som
-                        FieldBadge för knapptexter ovan). */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setFaqOpenIndex(open ? null : i);
-                      }}
-                      aria-label={open ? "Dölj svaret" : "Visa svaret"}
-                      className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold"
-                      style={{ background: palette.bgAlt, color: palette.textDim }}
-                    >
-                      {open ? "–" : "+"}
-                    </button>
-                  </div>
-                  {open && (
-                    <div className="px-5 pb-4">
-                      <Field
-                        editable={editable}
-                        as="p"
-                        className="text-[13.5px] leading-relaxed"
-                        style={{ color: palette.textDim }}
-                        selected={selectedFieldKey === fieldSel("answer", item.answer, "svaret", i)?.key}
-                        onSelect={() => { const s = fieldSel("answer", item.answer, "svaret", i); s && onSelectField?.(s); }}
-                      >
-                        {item.answer}
-                      </Field>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className={layout === "two-column" ? "grid @3xl:grid-cols-2 gap-2.5 items-start" : "flex flex-col gap-2.5"}>
+            {section.items.map(renderFaqItem)}
           </div>
         </div>
       );
+    }
 
     case "map": {
       const mapQuery = encodeURIComponent(section.address || "");
+      const layout = section.layout || "inline";
+
+      if (layout === "full-bleed") {
+        // Kartan går ut i hela sidans bredd, utan ram/rundade hörn — mer
+        // dramatiskt än det inramade "inline"-kortet nedan. Rubrik/adress
+        // ligger ändå i en begränsad läsbredd ovanpå/under.
+        return (
+          <div style={{ background: sectionBg }}>
+            {section.heading && (
+              <div className="px-10 pt-16 pb-5 max-w-[880px] mx-auto">
+                <Field
+                  editable={editable}
+                  as="h2"
+                  className="font-serif text-[27px] text-center"
+                  selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                  onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+                >
+                  {section.heading}
+                </Field>
+              </div>
+            )}
+            <iframe
+              src={`https://www.google.com/maps?q=${mapQuery}&output=embed`}
+              width="100%"
+              height="480"
+              style={{ border: 0, display: "block" }}
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title={section.heading || "Karta"}
+            />
+            {section.address && (
+              <div className="px-10 py-5 max-w-[880px] mx-auto">
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[13px] text-center"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("address", section.address, "adressen")?.key}
+                  onSelect={() => { const s = fieldSel("address", section.address, "adressen"); s && onSelectField?.(s); }}
+                >
+                  {section.address}
+                </Field>
+              </div>
+            )}
+          </div>
+        );
+      }
+
+      // inline (default) — inramat kort, mindre.
       return (
         <div className="px-10 py-16 max-w-[880px] mx-auto" style={{ background: sectionBg }}>
           {section.heading && (

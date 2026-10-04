@@ -11,7 +11,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
   const body = await request.json();
-  const { font, backgroundMode } = body;
+  const { font, backgroundMode, buttonStyle } = body;
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -31,6 +31,9 @@ export async function POST(request: Request) {
   content.theme.backgroundMode = ["light", "warm", "dark"].includes(backgroundMode)
     ? backgroundMode
     : "light";
+  content.theme.buttonStyle = ["pill", "square", "underline"].includes(buttonStyle)
+    ? buttonStyle
+    : "pill";
 
   const { error } = await supabase.from("sites").update({ content }).eq("id", site.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

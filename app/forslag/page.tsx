@@ -63,7 +63,7 @@ export default function SuggestionsPage() {
       const res = await fetch("/api/sites/choose-look", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ font: variant.font, backgroundMode: variant.backgroundMode }),
+        body: JSON.stringify({ font: variant.font, backgroundMode: variant.backgroundMode, buttonStyle: variant.buttonStyle }),
       });
       if (!res.ok) throw new Error("Något gick fel.");
       router.push("/webbplats");
@@ -158,6 +158,7 @@ export default function SuggestionsPage() {
                         siteName={siteName}
                         fontOverride={v.font}
                         backgroundModeOverride={v.backgroundMode}
+                        buttonStyleOverride={v.buttonStyle}
                       />
                     </div>
                   </div>

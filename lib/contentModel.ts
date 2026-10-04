@@ -11,6 +11,14 @@
 export type ThemeFont = "serif" | "sans";
 export type BackgroundMode = "light" | "warm" | "dark";
 
+// Knapparnas form — en tredje stilaxel utöver font/bakgrund, se
+// lib/themeVariants.ts. INTE AI-vald: precis som font/backgroundMode
+// bestäms den av vilken av de sex färdiga stilvarianterna kunden väljer på
+// /forslag (en konsekvent "personlighet" hör ihop med varje variant,
+// snarare än att fritt kunna kombineras), så den sätts i kod i
+// /api/sites/choose-look, aldrig av Claude.
+export type ButtonStyle = "pill" | "square" | "underline";
+
 export interface SiteTheme {
   accentColor: string;
   secondaryColors: string[];
@@ -18,13 +26,19 @@ export interface SiteTheme {
   // Vilken av de tre stilvarianterna (lib/themeVariants.ts) kunden valt på
   // /forslag. "light" tills kunden har valt — satt av AI:n som startgissning.
   backgroundMode: BackgroundMode;
+  // Saknas den (sajter skapade innan det här fältet fanns) faller
+  // SitePreview.tsx tillbaka på "pill" — se buttonShape där.
+  buttonStyle?: ButtonStyle;
 }
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom";
+export type AboutLayout = "text-left" | "centered";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side";
 export type CtaLayout = "centered" | "split";
 export type ContactLayout = "centered" | "split-info";
+export type FaqLayout = "stacked" | "two-column";
+export type MapLayout = "inline" | "full-bleed";
 
 export interface HeroSection {
   id: string;
@@ -49,6 +63,9 @@ export interface HeroSection {
 export interface AboutSection {
   id: string;
   type: "about";
+  // Saknas den (äldre sajter, från innan det här fältet fanns) renderas
+  // sektionen som "text-left" — se SitePreview.tsx.
+  layout?: AboutLayout;
   heading: string;
   body: string;
 }
@@ -133,6 +150,9 @@ export interface FaqItem {
 export interface FaqSection {
   id: string;
   type: "faq";
+  // Saknas den (äldre sajter) renderas sektionen som "stacked" — se
+  // SitePreview.tsx.
+  layout?: FaqLayout;
   heading: string;
   items: FaqItem[];
 }
@@ -143,6 +163,9 @@ export interface FaqSection {
 export interface MapSection {
   id: string;
   type: "map";
+  // Saknas den (äldre sajter) renderas sektionen som "inline" — se
+  // SitePreview.tsx.
+  layout?: MapLayout;
   heading?: string;
   address: string;
 }
