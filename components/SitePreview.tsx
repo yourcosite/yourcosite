@@ -850,7 +850,9 @@ function Footer({
       </nav>
 
       <div
-        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 @3xl:px-12 py-6 text-[12px]"
+        // pb lite större än pt — den nedersta raden låg annars väldigt nära
+        // sajtens absoluta nederkant (ingenting kommer efter den).
+        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 @3xl:px-12 pt-6 pb-8 text-[12px]"
         style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
       >
         <span className="flex items-center gap-4 flex-wrap justify-center">
@@ -1510,7 +1512,10 @@ function SectionBlockInner({
         // påverkar inget av de befintliga hero-lägena ovan/nedan.
         const [collageA, collageB] = section.collageImageUrls || [];
         return (
-          <div className="grid @3xl:grid-cols-2 gap-10 @3xl:gap-16 items-center px-8 @3xl:px-14 py-14 @3xl:py-20">
+          // Extra marginal NEDÅT (mer än uppåt) — kunden tyckte nästa
+          // sektion kom för nära bildkollaget. Bara den här layouten
+          // påverkas, inte heroens övriga lägen.
+          <div className="grid @3xl:grid-cols-2 gap-10 @3xl:gap-16 items-center px-8 @3xl:px-14 pt-14 @3xl:pt-20 pb-20 @3xl:pb-28">
             <div className={`relative ${heroEmphasis ? "h-[400px] @3xl:h-[520px]" : "h-[320px] @3xl:h-[420px]"}`}>
               {/* Varje ruta i kollaget är EN EGEN absolut-positionerad och
                   -storlekssatt wrapper, med ImageOrArt i "fill"-läge
