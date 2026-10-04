@@ -2497,7 +2497,12 @@ function SectionBlockInner({
           >
             {section.heading}
           </Field>
-          <div className="grid grid-cols-2 @3xl:grid-cols-3 gap-4">
+          {/* Alltid 2 kolumner (inte 3 på desktop) — med 3 kolumner och ett
+              udda antal bilder (t.ex. 4) hamnade en ensam bild på en egen
+              rad under två mycket bredare, vilket gav ett skevt, ofärdigt
+              intryck. 2 kolumner ger "2 och 2" (eller "2 och 1") som alltid
+              ser balanserat ut. */}
+          <div className="grid grid-cols-2 gap-4">
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const itemSel = galleryItemSelection(i);

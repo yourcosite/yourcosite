@@ -26,14 +26,19 @@ import { useState } from "react";
 // upp emot 720px högt (se heroEmphasis i SitePreview.tsx) fylldes nästan
 // hela 16:9-rutan av bara hero:n innan man ens skrollat, vilket gav ett
 // tajt, inzoomat intryck av sidan som helhet. DESKTOP_ZOOM skalar ner
-// INNEHÅLLET i iframen (inte själva rutan) så man ser åtminstone dubbelt
-// så mycket utan att skrolla — iframen görs 1/DESKTOP_ZOOM gånger större
-// än rutan och skalas sedan ner med CSS transform, ungefär som
-// webbläsarens egen zoom-ut-funktion. Containerfrågorna i SitePreview.tsx
-// (@container) mäter fortfarande mot iframens verkliga, större bredd, så
+// INNEHÅLLET i iframen (inte själva rutan) så man ser mer utan att
+// skrolla — iframen görs 1/DESKTOP_ZOOM gånger större än rutan och skalas
+// sedan ner med CSS transform, ungefär som webbläsarens egen
+// zoom-ut-funktion. Containerfrågorna i SitePreview.tsx (@container)
+// mäter fortfarande mot iframens verkliga, större bredd, så
 // "dator"-layouten (inte den smala mobillayouten) triggas precis som på
-// den riktiga sajten.
-const DESKTOP_ZOOM = 0.48;
+// den riktiga sajten — MEN det betyder också att innehållet reflowas till
+// den bredden (tätare marginaler, mindre text) samtidigt som det skalas
+// ner visuellt, så effekten blir starkare än själva CSS-skalan ensam.
+// 0.48 (ge minst dubbelt så mycket synligt) visade sig bli FÖR mycket i
+// praktiken av just den anledningen — 0.68 ger en märkbart mer utzoomad
+// vy än originalet utan att bli extrem.
+const DESKTOP_ZOOM = 0.68;
 
 export default function WebsitePreviewFrame({
   siteName,
