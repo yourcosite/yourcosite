@@ -49,6 +49,9 @@ export default function SitePreview({
   privacyPolicyMode,
   privacyPolicyFileUrl,
   privacyPolicyText,
+  editable,
+  selectedImageKey,
+  onSelectImage,
 }: {
   content: SiteContent;
   siteName?: string;
@@ -76,6 +79,15 @@ export default function SitePreview({
   privacyPolicyMode?: "uploaded" | "generated" | null;
   privacyPolicyFileUrl?: string | null;
   privacyPolicyText?: string | null;
+  // Satt av chattredigeraren (/redigera) ENDAST — låter kunden klicka på
+  // en bild i förhandsvisningen istället för att beskriva vilken bild de
+  // menar i ord (se ImageOrArt/SectionBlock ovan). Aldrig satt från
+  // /webbplats, /forhandsgranska, /forslag eller dashboard-miniatyrerna —
+  // där ska en klick i förhandsvisningen aldrig göra något annat än det
+  // den redan gör (navigera/inget).
+  editable?: boolean;
+  selectedImageKey?: string | null;
+  onSelectImage?: (sel: { key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem"; itemIndex?: number; label: string }) => void;
 }) {
   const isPrivacyPolicyPage =
     activePath === PRIVACY_POLICY_PATH && privacyPolicyMode === "generated" && !!privacyPolicyText;
@@ -163,6 +175,10 @@ export default function SitePreview({
             heroEmphasis
             basePath={basePath}
             onNavigate={onNavigate}
+            pagePath={page.path}
+            editable={editable}
+            selectedImageKey={selectedImageKey}
+            onSelectImage={onSelectImage}
           />
         )}
       </div>
@@ -184,6 +200,10 @@ export default function SitePreview({
             heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
             basePath={basePath}
             onNavigate={onNavigate}
+            pagePath={page.path}
+            editable={editable}
+            selectedImageKey={selectedImageKey}
+            onSelectImage={onSelectImage}
           />
         ))
       )}
@@ -654,27 +674,60 @@ function SocialIcons({ socialLinks, palette }: { socialLinks: SocialLink[]; pale
 // "absolute" oavsett vilken ordning klasserna står i, så boxen (och bilden i
 // den) kollapsade till 0 pixlars höjd och blev osynlig. Det var den faktiska
 // orsaken till att startsidans hero-bild aldrig syntes.
+// selectable/selected/onSelect: bara satta när förhandsvisningen körs INUTI
+// chattredigeraren (se SitePreview-proppen "editable" nedan) — låter kunden
+// klicka direkt på en bild i förhandsvisningen istället för att beskriva
+// den i ord ("byt bilden på A2…"). Det löste en verklig förväxlingsrisk:
+// ett otydligt "byt bilden" i chatten gav AI:n inget sätt att veta VILKEN
+// bild på sidan kunden menade (se selection-fältet i app/api/sites/edit).
 function ImageOrArt({
   imageUrl,
   art,
   className,
   dark,
   fill,
+  selectable,
+  selected,
+  onSelect,
 }: {
   imageUrl?: string;
   art: string;
   className?: string;
   dark?: boolean;
   fill?: boolean;
+  selectable?: boolean;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   return (
-    <div className={`${fill ? "absolute inset-0" : "relative"} overflow-hidden ${className || ""}`} style={{ background: art }}>
+    <div
+      className={`${fill ? "absolute inset-0" : "relative"} overflow-hidden group ${selectable ? "cursor-pointer" : ""} ${className || ""}`}
+      style={{ background: art, outline: selected ? "3px solid #C6FF5E" : undefined, outlineOffset: selected ? "-3px" : undefined }}
+      onClick={selectable ? (e) => { e.stopPropagation(); onSelect?.(); } : undefined}
+      role={selectable ? "button" : undefined}
+      aria-pressed={selectable ? !!selected : undefined}
+    >
       {imageUrl && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
           {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
         </>
+      )}
+      {selectable && (
+        <div
+          className={`absolute inset-0 flex items-center justify-center transition-opacity ${
+            selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
+          style={{ background: selected ? "rgba(12,16,4,0.28)" : "rgba(12,16,4,0.38)" }}
+        >
+          <span
+            className="text-[12px] font-bold px-3 py-1.5 rounded-full"
+            style={{ background: selected ? "#C6FF5E" : "#FFFFFF", color: "#0C1004" }}
+          >
+            {selected ? "✓ Vald" : "Klicka för att välja"}
+          </span>
+        </div>
       )}
     </div>
   );
@@ -744,6 +797,17 @@ function CtaPill({
   );
 }
 
+// Beskrivs i SitePreview-kommentaren nedan (samma "editable"-koncept) —
+// pekar exakt ut en bild i innehållsmodellen, se ImageSelection i
+// app/api/sites/edit/route.ts (samma form, hålls i synk för hand).
+type ImageSelection = {
+  pagePath: string;
+  sectionId: string;
+  kind: "hero" | "gridItem";
+  itemIndex?: number;
+  label: string;
+};
+
 function SectionBlock({
   section,
   accent,
@@ -755,6 +819,10 @@ function SectionBlock({
   heroEmphasis,
   basePath,
   onNavigate,
+  pagePath,
+  editable,
+  selectedImageKey,
+  onSelectImage,
 }: {
   section: Section;
   accent: string;
@@ -770,9 +838,32 @@ function SectionBlock({
   // basePath/onNavigate som Header redan använder för menyn.
   basePath?: string;
   onNavigate?: (path: string) => void;
+  // Vilken sida sektionen tillhör — bara satt när editable (se nedan),
+  // skickas med i selection-objektet så /api/sites/edit vet vilken sida
+  // den markerade bilden ligger på.
+  pagePath?: string;
+  // Klicka-för-att-välja-bild, bara aktivt i chattredigeraren (/redigera)
+  // — se SitePreview-proppen med samma namn.
+  editable?: boolean;
+  selectedImageKey?: string | null;
+  onSelectImage?: (sel: ImageSelection & { key: string }) => void;
 }) {
   const sectionBg = alt ? palette.bgAlt : undefined;
   const art = artBackground(mode, accent, secondary);
+
+  // Stabil nyckel för en bild inom sidan — hero finns högst en gång per
+  // sektion, grid-rutor är index-adresserade (ingen egen id i
+  // lib/contentModel.ts).
+  const heroKey = `${pagePath}::hero::${section.id}`;
+  const gridItemKey = (i: number) => `${pagePath}::grid::${section.id}::${i}`;
+  const heroSelection: (ImageSelection & { key: string }) | undefined =
+    editable && pagePath
+      ? { key: heroKey, pagePath, sectionId: section.id, kind: "hero", label: "hero-bilden" }
+      : undefined;
+  const gridItemSelection = (i: number, title: string): (ImageSelection & { key: string }) | undefined =>
+    editable && pagePath
+      ? { key: gridItemKey(i), pagePath, sectionId: section.id, kind: "gridItem", itemIndex: i, label: `bilden i rutan "${title}"` }
+      : undefined;
 
   switch (section.type) {
     case "hero": {
@@ -785,6 +876,9 @@ function SectionBlock({
             imageUrl={section.imageUrl}
             art={art}
             className={heroEmphasis ? "h-[420px] md:h-[600px]" : "h-[320px] md:h-[440px]"}
+            selectable={editable}
+            selected={!!heroSelection && selectedImageKey === heroSelection.key}
+            onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
           />
         );
         const textCol = (
@@ -827,7 +921,15 @@ function SectionBlock({
       if (layout === "overlay-bottom") {
         return (
           <div className={`relative ${heroEmphasis ? "h-[560px] md:h-[720px]" : "h-[460px] md:h-[560px]"}`}>
-            <ImageOrArt imageUrl={section.imageUrl} art={art} fill dark />
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              fill
+              dark
+              selectable={editable}
+              selected={!!heroSelection && selectedImageKey === heroSelection.key}
+              onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+            />
             <div
               className="absolute inset-0"
               style={{ background: "linear-gradient(0deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.35) 45%, rgba(0,0,0,0.05) 75%)" }}
@@ -864,6 +966,9 @@ function SectionBlock({
             art={art}
             className={heroEmphasis ? "h-[420px] md:h-[580px]" : "h-[300px] md:h-[380px]"}
             dark={mode === "dark"}
+            selectable={editable}
+            selected={!!heroSelection && selectedImageKey === heroSelection.key}
+            onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
           />
           <div
             className={`max-w-2xl mx-auto text-center px-8 md:px-12 relative rounded-2xl ${
@@ -912,11 +1017,15 @@ function SectionBlock({
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
               const imageFirst = i % 2 === 0;
+              const itemSel = gridItemSelection(i, item.title);
               const imageCol = (
                 <ImageOrArt
                   imageUrl={item.imageUrl}
                   art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
                   className="h-[220px] md:h-[300px]"
+                  selectable={editable}
+                  selected={!!itemSel && selectedImageKey === itemSel.key}
+                  onSelect={() => itemSel && onSelectImage?.(itemSel)}
                 />
               );
               const textCol = (
@@ -999,9 +1108,17 @@ function SectionBlock({
           <div className="grid md:grid-cols-3 gap-7">
             {section.items.map((item, i) => {
               const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+              const itemSel = gridItemSelection(i, item.title);
               return (
                 <div key={i}>
-                  <ImageOrArt imageUrl={item.imageUrl} art={`linear-gradient(145deg, ${hue}55, ${hue}15)`} className="h-[140px] rounded-2xl mb-4" />
+                  <ImageOrArt
+                    imageUrl={item.imageUrl}
+                    art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
+                    className="h-[140px] rounded-2xl mb-4"
+                    selectable={editable}
+                    selected={!!itemSel && selectedImageKey === itemSel.key}
+                    onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                  />
                   <div className="font-serif text-[17px] mb-2">{item.title}</div>
                   <div className="text-[13.5px] leading-relaxed" style={{ color: palette.textDim }}>
                     {item.body}

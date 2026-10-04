@@ -37,6 +37,19 @@ type Attachment = {
   text?: string;
 };
 
+// En bild kunden klickat på i förhandsvisningen (se components/SitePreview.tsx,
+// "Klicka för att välja") — hålls som en chip ovanför chattrutan tills
+// nästa meddelande skickas, så Millie vet exakt vilken bild ett otydligt
+// "byt bilden" syftar på (se selection i /api/sites/edit).
+type ImageSelection = {
+  key: string;
+  pagePath: string;
+  sectionId: string;
+  kind: "hero" | "gridItem";
+  itemIndex?: number;
+  label: string;
+};
+
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_DOC_BYTES = 10 * 1024 * 1024;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
@@ -113,6 +126,8 @@ export default function EditorPage() {
     const id = setInterval(() => setPhraseIndex((i) => (i + 1) % THINKING_PHRASES.length), 1600);
     return () => clearInterval(id);
   }, [sending]);
+
+  const [selectedImage, setSelectedImage] = useState<ImageSelection | null>(null);
 
   const [attachment, setAttachment] = useState<Attachment | null>(null);
   const [attaching, setAttaching] = useState(false);
@@ -214,12 +229,14 @@ export default function EditorPage() {
     if ((!text && !attachment) || sending || attaching) return;
     const history = messages;
     const currentAttachment = attachment;
+    const currentSelection = selectedImage;
     setMessages((m) => [
       ...m,
       { from: "user", text: text || "(bifogad fil)", attachmentName: currentAttachment?.name },
     ]);
     setDraft("");
     setAttachment(null);
+    setSelectedImage(null);
     setSending(true);
     try {
       const res = await fetch("/api/sites/edit", {
@@ -229,6 +246,16 @@ export default function EditorPage() {
           message: text || `Se bifogad fil: ${currentAttachment?.name}`,
           history,
           attachment: currentAttachment,
+          currentPath: activePath,
+          selection: currentSelection
+            ? {
+                pagePath: currentSelection.pagePath,
+                sectionId: currentSelection.sectionId,
+                kind: currentSelection.kind,
+                itemIndex: currentSelection.itemIndex,
+                label: currentSelection.label,
+              }
+            : null,
         }),
       });
       const data = await res.json();
@@ -432,10 +459,22 @@ export default function EditorPage() {
                   content={content}
                   siteName={site?.name}
                   activePath={activePath}
-                  onNavigate={setActivePath}
+                  onNavigate={(path) => {
+                    // Byter kunden sida medan en bild är markerad, ta bort
+                    // markeringen — den syftade på en bild på den gamla
+                    // sidan, och att låta den "hänga kvar" skulle kunna
+                    // ställa chattens nästa ändring på fel sida.
+                    setSelectedImage(null);
+                    setActivePath(path);
+                  }}
                   privacyPolicyMode={site?.privacy_policy_mode}
                   privacyPolicyFileUrl={site?.privacy_policy_file_url}
                   privacyPolicyText={site?.privacy_policy_text}
+                  editable
+                  selectedImageKey={selectedImage?.key ?? null}
+                  onSelectImage={(sel) =>
+                    setSelectedImage((prev) => (prev?.key === sel.key ? null : sel))
+                  }
                 />
               </div>
             </div>
@@ -500,6 +539,22 @@ export default function EditorPage() {
 
           <div className="px-5 py-4 border-t border-line">
             {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
+            {selectedImage && (
+              <div className="flex items-center gap-2 bg-accent-soft border border-line rounded-lg px-3 py-2 mb-2">
+                <span className="text-[14px] flex-shrink-0">🖼️</span>
+                <span className="text-[12.5px] truncate flex-1">
+                  Vald: {selectedImage.label}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedImage(null)}
+                  aria-label="Ta bort markeringen"
+                  className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
+                >
+                  ×
+                </button>
+              </div>
+            )}
             {attachment && (
               <div className="flex items-center gap-2 bg-bg border border-line rounded-lg px-3 py-2 mb-2">
                 {attachment.kind === "image" ? (

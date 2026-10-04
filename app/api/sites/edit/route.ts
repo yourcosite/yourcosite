@@ -63,14 +63,44 @@ type Attachment = {
   text?: string;
 };
 
-function buildEditPrompt(content: SiteContent, message: string, attachmentNote: string) {
+// En bild kunden uttryckligen klickat på i förhandsvisningen (se
+// components/SitePreview.tsx, "Klicka för att välja" och
+// app/redigera/page.tsx) — skickas med så Claude inte behöver gissa VILKEN
+// bild ett otydligt "byt bilden" syftar på. sectionId/itemIndex pekar
+// exakt ut noden i innehållsmodellen (lib/contentModel.ts); label är en
+// redan människoläsbar beskrivning (byggd i SitePreview.tsx) som också
+// kan klistras rakt in i prompten.
+type ImageSelection = {
+  pagePath: string;
+  sectionId: string;
+  kind: "hero" | "gridItem";
+  itemIndex?: number;
+  label: string;
+};
+
+function buildEditPrompt(
+  content: SiteContent,
+  message: string,
+  attachmentNote: string,
+  currentPath: string | undefined,
+  selection: ImageSelection | undefined
+) {
   const pagePaths = content.pages.map((p) => `${p.path} ("${p.label}")`).join(", ");
+  const currentPage = currentPath ? content.pages.find((p) => p.path === currentPath) : undefined;
+  const currentPageNote = currentPage
+    ? `\nKunden tittar just nu på sidan "${currentPage.path}" ("${currentPage.label}") i förhandsvisningen. Är önskemålet oklart om VILKEN sida det gäller (t.ex. "byt rubriken" utan att nämna sida), anta med STOR sannolikhet att det är den här sidan, inte en annan.\n`
+    : "";
+  const selectionNote = selection
+    ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en specifik bild i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"${
+        selection.kind === "gridItem" ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista` : ""
+      }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.\n`
+    : "";
   return `Du redigerar en BEFINTLIG kundwebbplats hos YourCoSite. Nedan är sajtens NUVARANDE innehåll som JSON, bara som underlag för dig — du skriver INTE ut det igen (innehållsmodellen i lib/contentModel.ts):
 
 ${JSON.stringify(content, null, 2)}
 
 Sajtens sidor just nu: ${pagePaths}
-${attachmentNote}
+${currentPageNote}${selectionNote}${attachmentNote}
 Kundens önskemål just nu: "${message}"
 
 Uppdatera ENDAST det som faktiskt behövs för att uppfylla önskemålet.
@@ -184,6 +214,28 @@ export async function POST(request: Request) {
     ? body.history.slice(-10)
     : [];
 
+  const currentPath = typeof body.currentPath === "string" ? body.currentPath : undefined;
+
+  const rawSelection = body.selection;
+  let selection: ImageSelection | undefined;
+  if (rawSelection && typeof rawSelection === "object") {
+    const kind = rawSelection.kind === "hero" || rawSelection.kind === "gridItem" ? rawSelection.kind : undefined;
+    if (
+      kind &&
+      typeof rawSelection.pagePath === "string" &&
+      typeof rawSelection.sectionId === "string" &&
+      typeof rawSelection.label === "string"
+    ) {
+      selection = {
+        kind,
+        pagePath: rawSelection.pagePath,
+        sectionId: rawSelection.sectionId,
+        label: rawSelection.label,
+        itemIndex: typeof rawSelection.itemIndex === "number" ? rawSelection.itemIndex : undefined,
+      };
+    }
+  }
+
   const site = await getCurrentPublishedSite(supabase, user.id);
   if (!site || !isValidSiteContent(site.content)) {
     return NextResponse.json({ error: "Hittade ingen sajt att redigera." }, { status: 400 });
@@ -196,7 +248,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachment));
+  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachment), currentPath, selection);
 
   // Bara bildbilagor görs om till ett multimodalt meddelande (Claude ser
   // själva bilden) — textdokument är redan omvandlade till ren text i
