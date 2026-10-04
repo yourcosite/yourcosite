@@ -1657,7 +1657,7 @@ function SectionBlockInner({
         const tintSoft = `${accent}0C`;
         return (
           <div className="grid @3xl:grid-cols-2">
-            <div className="flex flex-col justify-center px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintStrong }}>
+            <div className="flex flex-col justify-center items-start px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintStrong }}>
               {section.eyebrow && (
                 <Field
                   editable={editable}
@@ -1742,7 +1742,7 @@ function SectionBlockInner({
                 </div>
               )}
             </div>
-            <div className="flex flex-col justify-center px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintSoft }}>
+            <div className="flex flex-col justify-center items-start px-8 @3xl:px-12 py-12 @3xl:py-0" style={{ background: tintSoft }}>
               {restStats.length > 0 ? (
                 <div className="flex flex-col gap-5">
                   {restStats.slice(0, 2).map((stat, i) => (
@@ -1780,6 +1780,117 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "editorial") {
+        // Kundens nya referens ("Atelier"-mallen, en pixel-exakt
+        // HTML/CSS-fil) — ett designstudio-portfolio-intryck: luftig
+        // rubrik till vänster, en stor STÅENDE bild till höger som tar
+        // nästan hela hero-höjden, ett mindre andra foto lager-på-lager
+        // nere i bildens vänstra hörn (samma princip som "collage"/"quad"
+        // ovan — ETT extra foto, index 0 i collageImageUrls), och en
+        // liten dekorativ sidnumrering ("01 — 03") i bildens nedre
+        // hörn — ren dekoration, ingen riktig karusell, men ger samma
+        // redaktionella känsla som referensen utan att hitta på data.
+        const [editorialSmall] = section.collageImageUrls || [];
+        return (
+          <div className="grid @3xl:grid-cols-[1fr_1.05fr] gap-10 @3xl:gap-14 items-stretch px-8 @3xl:px-14 pt-14 @3xl:pt-20 pb-16 @3xl:pb-20">
+            {/* items-start — annars sträcker flex-kolumnen knappen (den
+                blir en flex-item och "stretch" är flex-default för
+                korsaxeln) till hela bredden, trots att CtaPill själv är
+                "inline-block". Samma risk finns i princip i "quad" ovan,
+                men råkar inte synas där eftersom knappen är sista
+                barnet i en redan smal panel. */}
+            <div className="flex flex-col justify-center items-start @3xl:py-10">
+              {section.eyebrow && (
+                <div className="flex items-center gap-3 mb-5">
+                  <span className="w-11 h-px" style={{ background: accent }} />
+                  <Field
+                    editable={editable}
+                    as="div"
+                    className="text-[11px] tracking-[0.14em] font-semibold"
+                    style={{ color: palette.textDim }}
+                    selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                    onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                  >
+                    {section.eyebrow.toUpperCase()}
+                  </Field>
+                </div>
+              )}
+              <Field
+                editable={editable}
+                as="h1"
+                className={`font-serif leading-[0.98] tracking-tight mb-6 ${heroEmphasis ? "text-[48px] @3xl:text-[76px]" : "text-[38px] @3xl:text-[56px]"}`}
+                selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.headline}
+                {section.headlineEmphasis && (
+                  <>
+                    <br />
+                    <Field
+                      editable={editable}
+                      as="span"
+                      className="italic"
+                      style={{ color: accent }}
+                      selected={selectedFieldKey === fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden")?.key}
+                      onSelect={() => { const s = fieldSel("headlineEmphasis", section.headlineEmphasis, "den kursiva raden"); s && onSelectField?.(s); }}
+                    >
+                      {section.headlineEmphasis}
+                    </Field>
+                  </>
+                )}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className={`leading-relaxed mb-8 max-w-[440px] ${heroEmphasis ? "text-[16px]" : "text-[14.5px]"}`}
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              {section.ctaLabel && (
+                <FieldBadge
+                  editable={editable}
+                  selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                  onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                >
+                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                    {section.ctaLabel}
+                  </CtaPill>
+                </FieldBadge>
+              )}
+            </div>
+            <div className={`relative ${heroEmphasis ? "h-[420px] @3xl:h-[640px]" : "h-[340px] @3xl:h-[520px]"}`}>
+              <ImageOrArt
+                imageUrl={section.imageUrl}
+                art={art}
+                fill
+                className="rounded-2xl shadow-[0_26px_52px_rgba(0,0,0,0.22)]"
+                selectable={editable}
+                selected={!!heroSelection && selectedImageKey === heroSelection.key}
+                onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+              />
+              <div
+                className="absolute left-4 bottom-4 @3xl:left-6 @3xl:bottom-6 w-[38%] @3xl:w-[34%] aspect-[4/3] rounded-xl shadow-[0_14px_28px_rgba(0,0,0,0.22)] overflow-hidden"
+                style={{ border: `6px solid ${palette.bg}` }}
+              >
+                <ImageOrArt imageUrl={editorialSmall} art={art} fill selectable={false} />
+              </div>
+              {/* Rent dekorativ sidnumrering — samma känsla som referensens
+                  "01 / 03"-karusellindikator, men utan egen funktion (ingen
+                  riktig bildkaruell att räkna). */}
+              <div
+                className="absolute right-4 bottom-4 @3xl:right-6 @3xl:bottom-6 flex items-center gap-2 px-3 py-1.5 rounded-full text-[10.5px] tracking-[0.1em] font-semibold"
+                style={{ background: "rgba(255,255,255,0.88)", color: palette.text }}
+              >
+                01 — 03
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "split-left" || layout === "split-right") {
         const imageFirst = layout === "split-left";
         const imageCol = (
@@ -1796,7 +1907,7 @@ function SectionBlockInner({
           </div>
         );
         const textCol = (
-          <div className={`flex flex-col justify-center px-8 @3xl:px-14 ${heroEmphasis ? "py-10 @3xl:py-0" : "py-10"} ${imageFirst ? "@3xl:text-left" : "@3xl:text-right @3xl:items-end"}`}>
+          <div className={`flex flex-col justify-center items-start px-8 @3xl:px-14 ${heroEmphasis ? "py-10 @3xl:py-0" : "py-10"} ${imageFirst ? "@3xl:text-left" : "@3xl:text-right @3xl:items-end"}`}>
             {section.eyebrow && (
               <Field
                 editable={editable}

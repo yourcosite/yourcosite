@@ -115,4 +115,14 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     headerLayout: "left",
     heroLayout: "quad",
   },
+  {
+    id: "atelier",
+    label: "Redaktionell helbild",
+    desc: "Krämig bakgrund, en stor stående bild till höger med ett mindre foto lager-på-lager, och en luftig rubrik till vänster — som ett designstudio-portfolio.",
+    font: "serif",
+    backgroundMode: "warm",
+    buttonStyle: "pill",
+    headerLayout: "left",
+    heroLayout: "editorial",
+  },
 ];

@@ -50,7 +50,7 @@ export interface SiteTheme {
   heroLayout?: HeroLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial";
 export type AboutLayout = "text-left" | "centered";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
@@ -83,11 +83,11 @@ export interface HeroSection {
   // kundens referenssajter (Lumora/Atelier/Norden/Lume) alla hade.
   // Valfri — saknas den visas bara rubriken, som vanligt.
   headlineEmphasis?: string;
-  // Bara använd av layout "collage" (index 1, "collageB") och "quad"
-  // (index 0) — EXTRA bild(er) utöver imageUrl, satt i kod precis som
-  // imageUrl — se lib/assignUploadedImages.ts. "collage" använder bara
-  // index 1 (ETT extra foto totalt, 2 totalt med imageUrl) — kundens
-  // exakta referenskod visade två foton, inte tre.
+  // Bara använd av layout "collage" (index 1, "collageB"), "quad" (index
+  // 0) och "editorial" (index 0) — EXTRA bild(er) utöver imageUrl, satt i
+  // kod precis som imageUrl — se lib/assignUploadedImages.ts. "collage"
+  // använder bara index 1 (ETT extra foto totalt, 2 totalt med
+  // imageUrl) — kundens exakta referenskod visade två foton, inte tre.
   collageImageUrls?: string[];
   // Använd av layout "quad" (nyckeltalskortet i bildrutan) och "collage"
   // (det flytande "checklista"-kortet nere i högra hörnet, över bilden —

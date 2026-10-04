@@ -37,7 +37,7 @@ export async function POST(request: Request) {
   content.theme.headerLayout = ["left", "centered-stacked", "split"].includes(headerLayout)
     ? headerLayout
     : "left";
-  content.theme.heroLayout = ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage", "quad"].includes(heroLayout)
+  content.theme.heroLayout = ["centered", "split-left", "split-right", "overlay-bottom", "fade-bottom", "collage", "quad", "editorial"].includes(heroLayout)
     ? heroLayout
     : "centered";
 

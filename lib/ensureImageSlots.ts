@@ -1,4 +1,4 @@
-import type { SiteContent, HeroSection, GallerySection, TestimonialsSection } from "./contentModel";
+import type { SiteContent, HeroSection, GallerySection, TestimonialsSection, CtaSection } from "./contentModel";
 
 // Bara "hero"- och "grid"-sektioner har en bildplats (se contentModel.ts).
 // Väljer AI:n en sida med bara t.ex. "about" + "contact" blir den sidan
@@ -57,6 +57,22 @@ export function enforceHomepageImageRichness(content: SiteContent): SiteContent 
   );
   if (fullBleedTestimonials) {
     fullBleedTestimonials.layout = "full-bleed";
+
+    // En kund rapporterade "två liggande bilder efter varandra" på
+    // förstasidan — orsaken: "cta"-sektionens layout "image-bleed" är
+    // OCKSÅ en egen fullbred bild (se SitePreview.tsx), och
+    // randomizeSectionLayouts slumpar den fritt. Råkar den hamna direkt
+    // före eller efter det här citat-blockets tvingade fullbredds-bild
+    // blir det två tunga, liggande bilder på rad utan någon paus
+    // emellan. Byt bara DEN sektionens layout till en variant utan egen
+    // bild — rör ingenting annat på sidan.
+    const idx = home.sections.indexOf(fullBleedTestimonials);
+    for (const neighborIdx of [idx - 1, idx + 1]) {
+      const neighbor = home.sections[neighborIdx] as CtaSection | undefined;
+      if (neighbor?.type === "cta" && neighbor.layout === "image-bleed") {
+        neighbor.layout = Math.random() < 0.5 ? "centered" : "split";
+      }
+    }
   }
 
   // En "gallery" (små rutnätsbilder, katalogkänsla) direkt efter hero ger
