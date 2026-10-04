@@ -2239,6 +2239,62 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "stats-split") {
+        // Kundens "Atelier"-referenskod hade en "results"-sektion: två
+        // foton i OLIKA höjd sida vid sida (ett kort, ett högt) till
+        // vänster, rubrik/text och en kort nyckeltalsrad till höger — ett
+        // dramatiskt "resultat"-avbrott mellan andra sektioner.
+        const [tall, short] = section.collageImageUrls || [];
+        const stats = section.stats || [];
+        return (
+          <div className="grid @3xl:grid-cols-2 gap-10 @3xl:gap-16 items-center px-8 @3xl:px-14 py-16 @3xl:py-24" style={{ background: sectionBg }}>
+            <div className="grid grid-cols-[0.65fr_1fr] gap-4 items-end">
+              <div className="relative h-[180px] @3xl:h-[270px] rounded-xl overflow-hidden">
+                <ImageOrArt imageUrl={short} art={art} fill selectable={false} />
+              </div>
+              <div className="relative h-[260px] @3xl:h-[400px] rounded-xl overflow-hidden">
+                {/* Ingen egen bild-markering kopplad ännu (about-sektioner
+                    hade aldrig bilder innan den här layouten) — samma
+                    begränsning som "quad"/"collage"-herons sekundära
+                    foton, inte bara huvudbilden. */}
+                <ImageOrArt imageUrl={tall} art={art} fill selectable={false} />
+              </div>
+            </div>
+            <div>
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[30px] @3xl:text-[38px] leading-[1.05] mb-4"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed max-w-[460px]"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              {stats.length > 0 && (
+                <div className="grid grid-cols-3 mt-10 max-w-[420px]">
+                  {stats.slice(0, 3).map((stat, i) => (
+                    <div key={i} className={i > 0 ? "pl-5 border-l" : "pr-5"} style={{ borderColor: palette.cardBorder }}>
+                      <div className="font-serif text-[30px] @3xl:text-[36px] leading-none mb-1.5">{stat.value}</div>
+                      <div className="text-[11px]" style={{ color: palette.textDim }}>{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      }
+
       // text-left (default) — vänsterställd, bredare text.
       return (
         <div className="px-10 py-14 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
@@ -2989,6 +3045,52 @@ function SectionBlockInner({
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "dark-split") {
+        // Kundens "Atelier"-referenskod — en "story"-sektion: en HELT
+        // mörk bakgrund till vänster (rubrik/text/knapp i vitt), och en
+        // riktig bild som fyller högra halvan som en EGEN, separat ruta
+        // — till skillnad från "image-bleed" ovan är bilden INTE en
+        // gradient-bakgrund bakom texten.
+        return (
+          <div className="grid @3xl:grid-cols-2">
+            <div className="flex flex-col justify-center items-start px-8 @3xl:px-14 py-16 @3xl:py-20 text-white" style={{ background: "#171511" }}>
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-serif text-[30px] @3xl:text-[40px] leading-[1.02] mb-5"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[14.5px] leading-relaxed mb-7 max-w-[420px] opacity-80"
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+              >
+                <CtaPill accent="#FFFFFF" link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor="#171511">
+                  {section.ctaLabel}
+                </CtaPill>
+              </FieldBadge>
+            </div>
+            <div className="relative h-[280px] @3xl:h-auto">
+              {/* Som "image-bleed" ovan — ingen egen bild-markering kopplad
+                  för cta-sektionens bild. */}
+              <ImageOrArt imageUrl={section.imageUrl} art={darkArt} fill />
             </div>
           </div>
         );

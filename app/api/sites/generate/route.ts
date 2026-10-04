@@ -75,10 +75,10 @@ const LAYOUT_TENDENCY_POOL = [
 // kunden faktiskt skrivit.
 const GRID_LAYOUT_POOL = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row"];
 const TESTIMONIALS_LAYOUT_POOL = ["single-quote", "carousel-row", "side-by-side", "full-bleed", "carousel-arrows"];
-const CTA_LAYOUT_POOL = ["centered", "split", "image-bleed"];
+const CTA_LAYOUT_POOL = ["centered", "split", "image-bleed", "dark-split"];
 const CONTACT_LAYOUT_POOL = ["centered", "split-info"];
 const GALLERY_LAYOUT_POOL = ["grid", "carousel"];
-const ABOUT_LAYOUT_POOL = ["text-left", "centered"];
+const ABOUT_LAYOUT_POOL = ["text-left", "centered", "stats-split"];
 const FAQ_LAYOUT_POOL = ["stacked", "two-column"];
 const MAP_LAYOUT_POOL = ["inline", "full-bleed"];
 

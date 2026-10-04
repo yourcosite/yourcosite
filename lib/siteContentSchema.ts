@@ -55,12 +55,24 @@ export const SECTION_SCHEMA = {
         type: { const: "about" },
         layout: {
           type: "string",
-          enum: ["text-left", "centered"],
+          enum: ["text-left", "centered", "stats-split"],
           description:
-            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma.",
+            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout.",
         },
         heading: { type: "string" },
         body: { type: "string" },
+        // Bara meningsfullt tillsammans med layout "stats-split" — se
+        // beskrivningen i lib/contentModel.ts. Utelämna för andra layouter.
+        stats: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: { value: { type: "string" }, label: { type: "string" } },
+            required: ["value", "label"],
+          },
+          description:
+            "Fyll i det här fältet OAVSETT vilken \"layout\" du själv väljer för den här about-sektionen (samma princip som hero-sektionens stats) — layouten kan bytas till \"stats-split\" i efterhand i kod, och då behövs fältet redan vara ifyllt. ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal orter, certifiering etc) — ALDRIG påhittade kund-/omdömessiffror. Saknas tydliga fakta i briefen, utelämna fältet helt.",
+        },
       },
       required: ["id", "type", "layout", "heading", "body"],
     },
@@ -118,9 +130,9 @@ export const SECTION_SCHEMA = {
         type: { const: "cta" },
         layout: {
           type: "string",
-          enum: ["centered", "split", "image-bleed"],
+          enum: ["centered", "split", "image-bleed", "dark-split"],
           description:
-            "\"image-bleed\" (ny): en riktig bild täcker hela sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD ovanpå — ett dramatiskt, redaktionellt avbrott mellan andra sektioner. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\").",
+            "\"image-bleed\" (ny): en riktig bild täcker hela sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD ovanpå — ett dramatiskt, redaktionellt avbrott mellan andra sektioner. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"dark-split\" (ny): en HELT mörk bakgrund till vänster (rubrik/text/knapp i vitt) och en riktig bild som fyller högra halvan — till skillnad från \"image-bleed\" är bilden INTE en gradient-bakgrund bakom texten, utan en egen, separat ruta bredvid.",
         },
         heading: { type: "string" },
         body: { type: "string" },

@@ -47,9 +47,13 @@ export function assignUploadedImages(
           // hero gör. Utan uppladdade foton rör vi ingenting — SitePreview
           // faller då tillbaka på gradient-platshållaren, som vanligt.
           section.imageUrl = next();
-        } else if (section.type === "cta" && section.layout === "image-bleed") {
+        } else if (section.type === "cta" && (section.layout === "image-bleed" || section.layout === "dark-split")) {
           // Samma princip igen — se contentModel.ts CtaSection.imageUrl.
           section.imageUrl = next();
+        } else if (section.type === "about" && section.layout === "stats-split") {
+          // Samma princip som hero collageImageUrls — se contentModel.ts
+          // AboutSection.collageImageUrls (två foton i olika höjd).
+          section.collageImageUrls = [next(), next()];
         }
       }
     }

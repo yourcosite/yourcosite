@@ -51,10 +51,10 @@ export interface SiteTheme {
 }
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial";
-export type AboutLayout = "text-left" | "centered";
+export type AboutLayout = "text-left" | "centered" | "stats-split";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
-export type CtaLayout = "centered" | "split" | "image-bleed";
+export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
 export type MapLayout = "inline" | "full-bleed";
@@ -108,6 +108,16 @@ export interface AboutSection {
   layout?: AboutLayout;
   heading: string;
   body: string;
+  // Bara använd av layout "stats-split" — två foton i OLIKA höjd sida
+  // vid sida (ett kort, ett högt — kundens "Atelier"-referenskod hade
+  // exakt den kompositionen i sin "results"-sektion), satta i kod precis
+  // som HeroSection.collageImageUrls — se lib/assignUploadedImages.ts.
+  collageImageUrls?: string[];
+  // Bara använd av layout "stats-split" — en kort rad med 2-3 nyckeltal,
+  // SAMMA regel som HeroSection.stats: ENDAST sådant kunden faktiskt
+  // skrivit i sin brief, ALDRIG påhittade siffror. Saknas tydliga fakta,
+  // utelämna fältet helt — sektionen renderas då bara utan nyckeltalsraden.
+  stats?: { value: string; label: string }[];
 }
 
 export interface GridItem {
