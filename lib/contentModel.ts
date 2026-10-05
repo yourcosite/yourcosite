@@ -420,9 +420,18 @@ export interface SocialLink {
   url: string;
 }
 
+// Fotograf för en stockbild (Unsplash) kunden valt i chattredigeraren —
+// Unsplashs regler kräver att fotografen anges. Nyckeln i
+// SiteContent.photoCredits är fotots sökväg (se lib/stockPhotos.ts).
+export interface PhotoCredit {
+  name: string;
+  profileUrl: string;
+}
+
 export interface SiteContent {
   theme: SiteTheme;
   pages: SitePageContent[];
+  photoCredits?: Record<string, PhotoCredit>;
   // Satt när kunden laddat upp en egen logga i onboardingen. Saknas den
   // visar vi bara företagsnamnet i headern istället — aldrig en AI-skapad
   // logga, det gör vi medvetet inte.

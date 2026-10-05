@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit } from "@/lib/contentModel";
+import { creditsInUse } from "@/lib/stockPhotos";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { parseYouTubeId } from "@/lib/youtube";
@@ -499,6 +500,7 @@ export default function SitePreview({
         onNavigate={onNavigate}
         privacyPolicyMode={privacyPolicyMode}
         privacyPolicyFileUrl={privacyPolicyFileUrl}
+        photoCredits={creditsInUse(content)}
       />
       {showCookieBanner && cookieChoice === "pending" && (
         <CookieBanner
@@ -931,7 +933,9 @@ function Footer({
   onNavigate,
   privacyPolicyMode,
   privacyPolicyFileUrl,
+  photoCredits,
 }: {
+  photoCredits?: PhotoCredit[];
   siteName?: string;
   logoUrl?: string;
   // Hela sajtens sidlista — sidfotsmenyn visar samma sidor som
@@ -1023,6 +1027,20 @@ function Footer({
         </span>
         {socialLinks && socialLinks.length > 0 && <SocialIcons socialLinks={socialLinks} palette={palette} />}
       </div>
+      {/* Unsplashs licens: fotografen ska anges med länk till deras profil. */}
+      {photoCredits && photoCredits.length > 0 && (
+        <div className="px-8 @3xl:px-12 pb-6 text-[11px] text-center" style={{ color: palette.textDim }}>
+          Foto:{" "}
+          {photoCredits.map((c, i) => (
+            <span key={c.profileUrl}>
+              {i > 0 && ", "}
+              <a href={c.profileUrl} target="_blank" rel="noopener noreferrer" className="underline">{c.name}</a>
+            </span>
+          ))}{" "}
+          på{" "}
+          <a href="https://unsplash.com/?utm_source=YourCoSite&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline">Unsplash</a>
+        </div>
+      )}
     </div>
   );
 }

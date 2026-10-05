@@ -7,6 +7,7 @@ import Millie from "@/components/Millie";
 import SitePreview from "@/components/SitePreview";
 import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
+import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -36,6 +37,9 @@ type Attachment = {
   name: string;
   mimeType: string;
   text?: string;
+  // Bara för stockbilder (Unsplash) — fotografen, som sparas på sajten och
+  // visas i sidfoten.
+  credit?: { name: string; profileUrl: string };
 };
 
 // Något kunden klickat på i förhandsvisningen (se components/SitePreview.tsx,
@@ -137,6 +141,7 @@ export default function EditorPage() {
   // Flera bilagor samtidigt (t.ex. en hel hög bilder till ett nytt
   // bildgalleri) — se handleFiles nedan.
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [stockOpen, setStockOpen] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -288,6 +293,31 @@ export default function EditorPage() {
     if (uploaded.length > 0) setAttachments((prev) => [...prev, ...uploaded]);
     if (errors.length > 0) setAttachError(errors.join(" "));
     setAttaching(false);
+  };
+
+  const pickStockPhoto = (photo: StockPhoto) => {
+    if (attachments.length >= MAX_ATTACHMENTS) {
+      setAttachError(`Max ${MAX_ATTACHMENTS} bilagor i samma meddelande.`);
+      return;
+    }
+    setAttachError("");
+    // Unsplash vill få veta när ett foto väljs — fire-and-forget.
+    fetch("/api/images/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ downloadLocation: photo.downloadLocation }),
+    }).catch(() => {});
+    setAttachments((prev) => [
+      ...prev,
+      {
+        kind: "image",
+        url: photo.url,
+        name: `Stockbild: ${photo.alt || "foto"} (${photo.photographer})`.slice(0, 100),
+        mimeType: "image/jpeg",
+        credit: { name: photo.photographer, profileUrl: photo.profileUrl },
+      },
+    ]);
+    draftInputRef.current?.focus();
   };
 
   const send = async () => {
@@ -724,6 +754,20 @@ export default function EditorPage() {
                   </svg>
                 )}
               </button>
+              <button
+                type="button"
+                onClick={() => setStockOpen(true)}
+                disabled={sending || attaching || !content}
+                aria-label="Sök stockbilder"
+                title="Sök gratis stockbilder"
+                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" />
+                  <circle cx="8.5" cy="8.5" r="1.5" />
+                  <polyline points="21 15 16 10 5 21" />
+                </svg>
+              </button>
               <textarea
                 ref={draftInputRef}
                 value={draft}
@@ -756,6 +800,8 @@ export default function EditorPage() {
           </div>
         </div>
       </div>
+
+      <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />
 
       <ContactSupportModal
         open={supportOpen}

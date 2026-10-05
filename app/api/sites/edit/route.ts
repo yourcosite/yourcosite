@@ -6,6 +6,7 @@ import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageCon
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
+import { isUnsplashImageUrl, unsplashKey, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -94,6 +95,7 @@ type EditPatch = {
 };
 
 type Attachment = {
+  credit?: { name: string; profileUrl: string };
   kind: "image" | "document";
   url: string;
   name: string;
@@ -284,8 +286,22 @@ export async function POST(request: Request) {
     // låta ett godtyckligt klientskickat objekt styra vad som skickas till
     // Claude (eller, för bilder, vilken extern URL som kan landa i en
     // sparad imageUrl).
-    if (kind && url.includes(`/uploads/${user.id}/`)) {
+    // Undantag: en stockbild från Unsplash (vald via sökningen i
+    // chattredigeraren) — ligger på Unsplashs egen server, inte hos oss,
+    // men bara just den värden släpps igenom, och bara som bild.
+    const isStockPhoto = kind === "image" && isUnsplashImageUrl(url);
+    if (kind && (isStockPhoto || url.includes(`/uploads/${user.id}/`))) {
+      const rawCredit = rawAttachment.credit;
+      const credit =
+        isStockPhoto &&
+        rawCredit &&
+        typeof rawCredit.name === "string" &&
+        typeof rawCredit.profileUrl === "string" &&
+        rawCredit.profileUrl.startsWith(UNSPLASH_PROFILE_PREFIX)
+          ? { name: rawCredit.name.slice(0, 80), profileUrl: rawCredit.profileUrl.slice(0, 300) }
+          : undefined;
       attachments.push({
+        credit,
         kind,
         url,
         name: typeof rawAttachment.name === "string" ? rawAttachment.name : "bifogad fil",
@@ -421,6 +437,14 @@ export async function POST(request: Request) {
   // Loggan och sociala länkar sätts i kod från onboardingen, aldrig av
   // AI:n — samma säkerhetsnät som i /api/sites/generate, ifall Claude
   // skulle tappa bort dem på vägen trots instruktionen att bevara allt.
+  // Fotografer för valda stockbilder sparas på sajten så de kan visas i
+  // sidfoten (Unsplashs krav) — i kod, aldrig av AI:n.
+  for (const a of attachments) {
+    const key = a.credit ? unsplashKey(a.url) : null;
+    if (a.credit && key) {
+      updatedContent.photoCredits = { ...(updatedContent.photoCredits || {}), [key]: a.credit };
+    }
+  }
   if (site.logo_url) updatedContent.logoUrl = site.logo_url;
   if (Array.isArray(site.social_links) && site.social_links.length > 0) {
     updatedContent.socialLinks = site.social_links;
