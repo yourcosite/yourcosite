@@ -100,6 +100,7 @@ export const SECTION_SCHEMA = {
             "Fyll i det här fältet OAVSETT vilken \"layout\" du själv väljer för den här about-sektionen (samma princip som hero-sektionens stats) — layouten kan bytas till \"stats-split\" i efterhand i kod, och då behövs fältet redan vara ifyllt. ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal orter, certifiering etc) — ALDRIG påhittade kund-/omdömessiffror. Saknas tydliga fakta i briefen, utelämna fältet helt.",
         },
         bgColor: BG_COLOR_SCHEMA,
+        ctaLink: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
       },
       required: ["id", "type", "layout", "heading", "body"],
     },
@@ -146,6 +147,7 @@ export const SECTION_SCHEMA = {
               title: { type: "string" },
               body: { type: "string" },
               imageUrl: { type: "string" },
+              link: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
               bgColor: {
                 type: "string",
                 description:

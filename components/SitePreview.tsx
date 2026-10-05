@@ -2602,12 +2602,15 @@ function SectionBlockInner({
               >
                 {section.body}
               </Field>
-              <div
+              <CtaLink
+                link={section.ctaLink}
+                basePath={basePath}
+                onNavigate={onNavigate}
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
                 style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
               >
                 Läs mer →
-              </div>
+              </CtaLink>
             </div>
           </div>
         );
@@ -2660,12 +2663,15 @@ function SectionBlockInner({
               >
                 {section.body}
               </Field>
-              <div
+              <CtaLink
+                link={section.ctaLink}
+                basePath={basePath}
+                onNavigate={onNavigate}
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
                 style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
               >
                 Läs mer →
-              </div>
+              </CtaLink>
             </div>
           </div>
         );
@@ -2985,9 +2991,15 @@ function SectionBlockInner({
                     >
                       {item.body}
                     </Field>
-                    <div className="mt-4 text-[12px] font-medium" style={{ color: ip.text }}>
+                    <CtaLink
+                      link={item.link}
+                      basePath={basePath}
+                      onNavigate={onNavigate}
+                      className="mt-4 inline-block text-[12px] font-medium"
+                      style={{ color: ip.text }}
+                    >
                       Läs mer →
-                    </div>
+                    </CtaLink>
                   </div>
                 );
               })}
@@ -3084,9 +3096,15 @@ function SectionBlockInner({
                     >
                       {item.body}
                     </Field>
-                    <div className="mt-4 text-[12px] font-medium" style={{ color: ip.text }}>
+                    <CtaLink
+                      link={item.link}
+                      basePath={basePath}
+                      onNavigate={onNavigate}
+                      className="mt-4 inline-block text-[12px] font-medium"
+                      style={{ color: ip.text }}
+                    >
                       Läs mer →
-                    </div>
+                    </CtaLink>
                   </div>
                 );
               })}

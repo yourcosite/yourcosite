@@ -167,6 +167,10 @@ export interface AboutSection {
   imageUrl?: string;
   // Se HeroSection.bgColor — samma princip.
   bgColor?: string;
+  // Vart "Läs mer →"-raden (layouterna "image-full"/"image-stats") leder —
+  // samma princip som HeroSection.ctaLink. Saknas den är raden bara
+  // dekorativ text, som förut.
+  ctaLink?: string;
 }
 
 export interface GridItem {
@@ -183,6 +187,10 @@ export interface GridItem {
   // components/SitePreview.tsx). Saknas fältet renderas rutan precis som
   // förut, utan egen bakgrund.
   bgColor?: string;
+  // Vart rutans "Läs mer →"-rad (layouterna "divided-columns"/
+  // "intro-divided") leder — samma princip som HeroSection.ctaLink.
+  // Saknas den är raden bara dekorativ text, som förut.
+  link?: string;
 }
 
 export interface GridSection {
