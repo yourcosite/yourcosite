@@ -3,6 +3,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import IncludedAndChat from "@/components/IncludedAndChat";
 
 export const metadata: Metadata = {
   title: "Funktioner",
@@ -120,7 +121,9 @@ export default function FeaturesPage() {
           ))}
         </div>
 
-        <div className="text-center px-6 pb-16">
+        <IncludedAndChat />
+
+        <div className="text-center px-6 py-16">
           <Link
             href="/skapa-konto"
             className="inline-block bg-accent text-accent-ink font-bold text-[17px] px-11 py-[18px] rounded-xl shadow-[0_16px_34px_rgba(198,255,94,0.35)]"
