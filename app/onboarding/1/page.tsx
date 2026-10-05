@@ -78,7 +78,7 @@ export default function OnboardingStep1() {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="T.ex. Brunneby Musteri AB"
+              placeholder="T.ex. Vindfälle Musteri AB"
               className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
             />
           </div>
