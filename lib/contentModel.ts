@@ -72,6 +72,7 @@ export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
 export type MapLayout = "inline" | "full-bleed";
+export type VideoLayout = "inline" | "full-bleed";
 
 export interface HeroSection {
   id: string;
@@ -326,6 +327,23 @@ export interface MapSection {
   bgColor?: string;
 }
 
+// Inbäddad YouTube-video utifrån en länk — samma idé som MapSection (en
+// iframe, ingen API-nyckel). Laddas via youtube-nocookie.com och bara från
+// ett id som klarat parseYouTubeId (lib/youtube.ts).
+export interface VideoSection {
+  id: string;
+  type: "video";
+  // Saknas den (äldre sajter) renderas sektionen som "inline".
+  layout?: VideoLayout;
+  heading?: string;
+  // Kundens YouTube-länk, EXAKT som de gett den — aldrig påhittad.
+  videoUrl: string;
+  // Valfri bildtext under videon.
+  caption?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
+}
+
 export type ContactFormLayout = "centered" | "split-map";
 
 // Ett RIKTIGT, ifyllbart kontaktformulär (namn/e-post/meddelande) — till
@@ -378,6 +396,7 @@ export type Section =
   | GallerySection
   | FaqSection
   | MapSection
+  | VideoSection
   | ContactFormSection
   | NewsListSection;
 
@@ -457,6 +476,7 @@ const VALID_SECTION_TYPES = [
   "gallery",
   "faq",
   "map",
+  "video",
   "contactForm",
   "newsList",
 ];

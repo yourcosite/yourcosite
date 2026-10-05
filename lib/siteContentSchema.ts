@@ -289,6 +289,27 @@ export const SECTION_SCHEMA = {
       type: "object",
       properties: {
         id: { type: "string" },
+        type: { const: "video" },
+        layout: {
+          type: "string",
+          enum: ["inline", "full-bleed"],
+          description: "\"inline\" (inramad video i läsbredd) eller \"full-bleed\" (videon går ut i hela sidans bredd — mer dramatiskt).",
+        },
+        heading: { type: "string" },
+        videoUrl: {
+          type: "string",
+          description:
+            "Kundens YouTube-länk, EXAKT som kunden gett den (t.ex. \"https://www.youtube.com/watch?v=XXXXXXXXXXX\" eller \"https://youtu.be/XXXXXXXXXXX\"). Hitta ALDRIG på en länk eller ett video-id.",
+        },
+        caption: { type: "string", description: "Valfri kort bildtext under videon." },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "layout", "videoUrl"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
         type: { const: "contactForm" },
         layout: {
           type: "string",

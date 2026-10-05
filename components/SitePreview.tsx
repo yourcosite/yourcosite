@@ -5,6 +5,7 @@ import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection } from "@/lib/contentModel";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
+import { parseYouTubeId } from "@/lib/youtube";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
@@ -1538,6 +1539,8 @@ function sectionLabel(section: Section): string {
       return `sektionen "${section.heading}"`;
     case "map":
       return section.heading ? `kartsektionen "${section.heading}"` : "kartsektionen";
+    case "video":
+      return section.heading ? `videosektionen "${section.heading}"` : "videosektionen";
     case "contactForm":
       return `sektionen "${section.heading}"`;
     case "newsList":
@@ -4139,6 +4142,69 @@ function SectionBlockInner({
               {section.address}
             </Field>
           )}
+        </div>
+      );
+    }
+
+    case "video": {
+      const videoId = parseYouTubeId(section.videoUrl);
+      const full = section.layout === "full-bleed";
+      // 16:9-ruta via aspect-video; youtube-nocookie så ingen
+      // spårningscookie sätts förrän besökaren själv spelar videon.
+      const frame = videoId ? (
+        <div className={`aspect-video w-full overflow-hidden ${full ? "" : "rounded-2xl border"}`} style={full ? undefined : { borderColor: palette.cardBorder }}>
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${videoId}`}
+            className="w-full h-full block border-0"
+            loading="lazy"
+            allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+            allowFullScreen
+            referrerPolicy="strict-origin-when-cross-origin"
+            title={section.heading || "Video"}
+          />
+        </div>
+      ) : (
+        <div className="aspect-video w-full flex items-center justify-center text-[13px] rounded-2xl border" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+          Videolänken känns inte igen som en YouTube-länk.
+        </div>
+      );
+      const heading = section.heading && (
+        <Field
+          editable={editable}
+          as="h2"
+          className="font-serif text-[27px] mb-5 text-center"
+          selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+          onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+        >
+          {section.heading}
+        </Field>
+      );
+      const caption = section.caption && (
+        <Field
+          editable={editable}
+          as="div"
+          className="text-[13px] mt-3 text-center"
+          style={{ color: palette.textDim }}
+          selected={selectedFieldKey === fieldSel("caption", section.caption, "bildtexten")?.key}
+          onSelect={() => { const s = fieldSel("caption", section.caption, "bildtexten"); s && onSelectField?.(s); }}
+        >
+          {section.caption}
+        </Field>
+      );
+      if (full) {
+        return (
+          <div style={{ background: sectionBg }}>
+            {heading && <div className="px-10 pt-16 max-w-[880px] mx-auto">{heading}</div>}
+            {frame}
+            {caption && <div className="px-10 py-5 max-w-[880px] mx-auto">{caption}</div>}
+          </div>
+        );
+      }
+      return (
+        <div className="px-10 py-16 max-w-[880px] mx-auto" style={{ background: sectionBg }}>
+          {heading}
+          {frame}
+          {caption}
         </div>
       );
     }
