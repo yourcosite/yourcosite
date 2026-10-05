@@ -43,6 +43,14 @@ const config: Config = {
           "50%": { transform: "translateY(-1px) rotate(-2deg)" },
           "75%": { transform: "translateY(-5px) rotate(3deg)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
+        "marquee-reverse": {
+          "0%": { transform: "translateX(-50%)" },
+          "100%": { transform: "translateX(0)" },
+        },
         "millie-hair": {
           "0%, 100%": { transform: "rotate(-4deg)" },
           "50%": { transform: "rotate(4deg)" },
@@ -52,6 +60,8 @@ const config: Config = {
         "millie-float": "millie-float 2.8s ease-in-out infinite",
         "millie-bounce": "millie-bounce 0.8s ease-in-out infinite",
         "millie-hair": "millie-hair 0.6s ease-in-out infinite",
+        marquee: "marquee 60s linear infinite",
+        "marquee-reverse": "marquee-reverse 70s linear infinite",
       },
     },
   },

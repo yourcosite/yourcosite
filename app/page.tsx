@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import HeroChatDemo from "@/components/HeroChatDemo";
 import StepsDemo from "@/components/StepsDemo";
+import IncludedAndChat from "@/components/IncludedAndChat";
 
 export default function LandingPage() {
   return (
@@ -89,6 +90,8 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      <IncludedAndChat />
 
       {/* CTA band */}
       <section className="bg-ink text-center px-6 md:px-12 py-16">
