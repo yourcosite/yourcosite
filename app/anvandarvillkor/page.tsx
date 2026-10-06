@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <LegalLayout
       title="Användarvillkor"
-      updated="2026-10-03"
+      updated="2026-10-06"
       intro={
         <>
           Detta är mallar baserade på svensk och EU-rättslig standardpraxis
@@ -57,7 +57,25 @@ export default function Page() {
         avsnittet om innehållsgenerering i produkten.
       </p>
 
-      <h3>5. Immateriella rättigheter</h3>
+      <h3>5. Innehåll som skapats med AI</h3>
+      <p>
+        Tjänsten använder AI för att föreslå och skriva texter, rubriker,
+        layouter och exempelinnehåll. Sådant innehåll är förslag, inte
+        garanterade fakta. Det kan innehålla fel, och exempelinnehåll
+        såsom kundcitat, nyckeltal, statistik, priser och vanliga frågor
+        är påhittade platshållare som visar vad som är möjligt på en
+        webbplats. Kunden ansvarar för att granska allt innehåll innan
+        publicering och att byta ut eller ta bort sådant som inte stämmer
+        för den egna verksamheten. Kunden bär ansvaret för allt innehåll
+        på den publicerade webbplatsen, oavsett om det skrivits av Kunden
+        eller skapats av AI, inklusive att det inte är vilseledande eller
+        i strid med marknadsföringslagen, konsumentlagstiftning, upphovsrätt
+        eller tredje parts rättigheter. YourCoSite ansvarar inte för
+        skador som uppstår av att AI-skapat innehåll publicerats utan
+        granskning.
+      </p>
+
+      <h3>6. Immateriella rättigheter</h3>
       <p>
         Kunden äger innehållet på sin egen webbplats. YourCoSite och CS
         Kommunikationsbyrå AB äger plattformen, koden, designsystemet och
@@ -65,7 +83,7 @@ export default function Page() {
         till plattformen till Kunden.
       </p>
 
-      <h3>6. Ansvarsbegränsning</h3>
+      <h3>7. Ansvarsbegränsning</h3>
       <p>
         YourCoSite ansvarar inte för indirekta skador, förlorad data,
         förlorad omsättning eller affärsavbrott som uppstår genom
@@ -74,7 +92,7 @@ export default function Page() {
         Kunden betalat under de senaste 12 månaderna.
       </p>
 
-      <h3>7. Uppsägning och avstängning</h3>
+      <h3>8. Uppsägning och avstängning</h3>
       <p>
         Vi förbehåller oss rätten att stänga av eller avsluta ett konto
         som bryter mot dessa villkor, används för olaglig verksamhet,
@@ -82,14 +100,14 @@ export default function Page() {
         omedelbar åtgärd krävs.
       </p>
 
-      <h3>8. Ändringar av villkoren</h3>
+      <h3>9. Ändringar av villkoren</h3>
       <p>
         Vi kan uppdatera dessa villkor. Väsentliga ändringar meddelas via
         e-post eller i tjänsten minst 30 dagar innan de träder i kraft.
         Fortsatt användning efter ändringsdatumet innebär godkännande.
       </p>
 
-      <h3>9. Tillämplig lag</h3>
+      <h3>10. Tillämplig lag</h3>
       <p>
         Svensk lag tillämpas på dessa villkor. Tvister ska i första hand
         lösas genom förhandling, i andra hand av svensk allmän domstol med
