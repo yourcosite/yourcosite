@@ -7,6 +7,7 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
 import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
+import { isSkinId } from "@/lib/skins";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -164,6 +165,10 @@ VIKTIGT — knapplänkar: hero- och cta-sektioner kan ha ett "ctaLink". Ber kund
 
 VIKTIGT — bakgrundsfärg på EN enskild sida (t.ex. "gör Om oss-sidan svart/mörk"): detta STÖDS, via "backgroundMode" på sidobjektet i "changedPages" — se verktygets fältbeskrivning. Välj det av de tre lägena (light/warm/dark) som bäst matchar vad kunden bad om, texten justeras automatiskt. Gäller önskemålet istället HELA sajtens färgtema (t.ex. "byt till svart genomgående" eller bara "byt accentfärg"), använd "theme" högst upp som vanligt, inte detta fält.
 
+VIKTIGT — exempelinnehåll: förstasidan kan innehålla EXEMPELcitat, exempelnyckeltal ("stats") och exempelfrågor som vi satt dit för att visa vad som finns${content.exampleContent ? " (den här sajten har sådana)" : ""}. Ber kunden dig ta bort/byta dem ("ta bort citaten", "jag har inga såna siffror", "skriv egna omdömen") — gör det direkt: ta bort hela sektionen eller utelämna "stats". Skriver kunden egna citat/siffror, använd EXAKT kundens ord.
+
+VIKTIGT — typografi och färgpaket för HELA sajten: ber kunden om en annan stil/känsla ("gör den mörk och elegant", "fetare typsnitt", "mjukare och pastell", "byt typografi") — sätt "theme.skin" till det av paketen som passar bäst (se fältets beskrivning; "ingen" går tillbaka till det vanliga temat). Ber kunden om större eller mindre rubriker ("gör rubrikerna större") — sätt "theme.headingScale" (utgå från nuvarande värde om det finns, annars 1). Ange bara de theme-delfält som ändras. Kundens accentfärg behålls av alla paket. Nuvarande paket: "${content.theme.skin ?? "ingen"}", rubrikskala: ${content.theme.headingScale ?? 1}.
+
 VIKTIGT — färg på EN ENSKILD sektion, ruta/kort eller knapp (t.ex. "gör bara den sektionen mörkblå", "färga mittenrutan orange", "gör knappen i kontaktsektionen grön"): till skillnad från bakgrundsfärg på en HEL sida (backgroundMode, se ovan) eller HELA sajtens tema ("theme.accentColor"/"theme.secondaryColors") finns tre separata, FRIA hex-färgfält för exakt den här mindre skalan:
   • "bgColor" på VILKEN sektion som helst (hero/about/grid/testimonials/cta/contact/gallery/faq/map/contactForm/newsList) — sätt den BARA på den/de sektioner kunden uttryckligen pekar ut, aldrig på hela sidan eller sajten.
   • "bgColor" på ETT enskilt objekt i en grid-sektions "items" (en "ruta"/"kort" bland flera, t.ex. "mittenrutan" eller "den tredje"). Räkna ut VILKET index kunden menar utifrån sammanhanget (ordningsföljden i items, eller rubriken/texten de nämner) och sätt "bgColor" bara på det objektet — rör inte de andra.
@@ -243,6 +248,23 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
     theme: patch.theme ? { ...content.theme, ...patch.theme } : content.theme,
     pages,
   };
+  if (patch.theme) {
+    // "ingen" = ta bort färg-/typografipaketet; okända värden ignoreras.
+    const rawSkin = (patch.theme as { skin?: string }).skin;
+    if (rawSkin !== undefined) {
+      if (isSkinId(rawSkin)) merged.theme.skin = rawSkin;
+      else if (rawSkin === "ingen") delete merged.theme.skin;
+      else if (content.theme.skin) merged.theme.skin = content.theme.skin;
+      else delete merged.theme.skin;
+    }
+    // Rubrikskala: begränsas till 0.7-1.6, 1 (standard) sparas inte alls.
+    const rawScale = (patch.theme as { headingScale?: number }).headingScale;
+    if (rawScale !== undefined) {
+      const n = Number(rawScale);
+      if (!Number.isFinite(n) || Math.abs(n - 1) < 0.02) delete merged.theme.headingScale;
+      else merged.theme.headingScale = Math.min(1.6, Math.max(0.7, n));
+    }
+  }
   // Tomma strängar är kundens sätt att be Claude koppla BORT en tagg (se
   // promptens instruktion) — sparas aldrig som en tom sträng, fältet tas
   // bort helt istället, annars tolkar renderaren det som "sätt in en

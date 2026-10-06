@@ -415,11 +415,22 @@ export const EDIT_PATCH_PROPERTIES = {
   theme: {
     type: "object",
     description:
-      "Utelämna HELA detta fält om färgtemat inte ska ändras (vanligast). Ange det bara om kunden uttryckligen bad om en färg-/typsnittsändring.",
+      "Utelämna HELA detta fält om färgtemat inte ska ändras (vanligast). Ange det bara om kunden uttryckligen bad om en färg-/typsnittsändring. Ange i så fall BARA de delfält som ska ändras.",
     properties: {
       accentColor: { type: "string" },
       secondaryColors: { type: "array", items: { type: "string" } },
       font: { type: "string", enum: ["serif", "sans"] },
+      skin: {
+        type: "string",
+        enum: ["solglimt", "skymning", "pastell", "kontrast", "fargyta", "ingen"],
+        description:
+          "Färg- och typografipaket som byter hela sajtens känsla (färgytor, rubrikernas typsnitt, storlek och vikt) men behåller kundens accentfärg som grund. solglimt = ljus, färgstarka tonade ytor och fet grotesk; skymning = mörk och elegant med serif; pastell = mjuk, ljus och luftig; kontrast = vitt och svart med versaler och en kraftig färgyta; fargyta = djup färgfylld bakgrund med kursiv serif. \"ingen\" tar bort paketet och går tillbaka till sajtens vanliga tema. Sätt bara när kunden ber om en annan stil/typografi/känsla på hela sajten.",
+      },
+      headingScale: {
+        type: "number",
+        description:
+          "Rubrikernas storlek på hela sajten som en faktor: 1 = som nu/standard, 1.2 = en bit större, 1.4 = mycket större, 0.85 = mindre. Gäller ALLA rubriker, multipliceras med paketets egen skala. Mellan 0.7 och 1.6. Sätt bara när kunden ber om större/mindre rubriker; \"större\" ≈ 1.2–1.3, \"mycket större\" ≈ 1.45. Är den redan satt, utgå från det nuvarande värdet.",
+      },
     },
   },
   gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,

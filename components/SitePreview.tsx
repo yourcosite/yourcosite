@@ -426,13 +426,19 @@ export default function SitePreview({
         ...(skin
           ? ({
               "--ycs-hf": skin.headingFont,
-              "--ycs-ts": skin.typeScale,
               "--ycs-hw": skin.headingWeight,
               "--ycs-tr": skin.headingTracking,
               "--ycs-tt": skin.headingUppercase ? "uppercase" : "none",
               "--ycs-hs": skin.headingItalic ? "italic" : "normal",
               "--ycs-bf": skin.bodyFont || "inherit",
               ...(skin.bodyFont ? { fontFamily: skin.bodyFont } : {}),
+            } as React.CSSProperties)
+          : {}),
+        // Rubrikskalan = skinnets egen skala x kundens justering (Millie,
+        // "gör rubrikerna större"). Sätts även utan skin.
+        ...(skin || content.theme.headingScale
+          ? ({
+              "--ycs-ts": (skin?.typeScale ?? 1) * (content.theme.headingScale ?? 1),
             } as React.CSSProperties)
           : {}),
       }}

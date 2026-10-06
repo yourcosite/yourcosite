@@ -39,6 +39,8 @@ export type HeaderLayout = "left" | "centered-stacked" | "split";
 
 export interface SiteTheme {
   skin?: SkinId;
+  /** Kundens egen justering av rubrikernas storlek (1 = som mallen). Multipliceras med skinnets skala. */
+  headingScale?: number;
   accentColor: string;
   secondaryColors: string[];
   font: ThemeFont;
@@ -446,6 +448,9 @@ export interface SiteContent {
   // sektionsordning (lib/homeRecipes.ts) på förslagen på /forslag, så en
   // omgenerering ger en annan fördelning.
   layoutSeed?: number;
+  // Satt när förstasidan innehåller EXEMPELinnehåll (påhittade citat, nyckeltal,
+  // frågor) som visar vad som finns — kunden ska byta eller ta bort det.
+  exampleContent?: boolean;
   // Satt när kunden laddat upp en egen logga i onboardingen. Saknas den
   // visar vi bara företagsnamnet i headern istället — aldrig en AI-skapad
   // logga, det gör vi medvetet inte.
