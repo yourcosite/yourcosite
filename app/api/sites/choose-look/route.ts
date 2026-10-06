@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
+import { isSkinId } from "@/lib/skins";
 
 // Sparar vilken av de tre stilvarianterna (lib/themeVariants.ts) kunden
 // valde på /forslag. Innehållet (texterna) är redan genererat — det här
@@ -11,7 +12,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
   const body = await request.json();
-  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout, aboutLayout, gridLayout, ctaLayout } = body;
+  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout, aboutLayout, gridLayout, ctaLayout, skin } = body;
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -49,6 +50,12 @@ export async function POST(request: Request) {
   content.theme.ctaLayout = ["centered", "split", "image-bleed", "dark-split"].includes(ctaLayout)
     ? ctaLayout
     : "centered";
+
+  // Färg-/typografipaketet (lib/skins.ts): sätts för de nya varianterna och
+  // TAS BORT när kunden istället väljer en klassisk variant — annars skulle
+  // ett tidigare val ligga kvar och färga den nya.
+  if (isSkinId(skin)) content.theme.skin = skin;
+  else delete content.theme.skin;
 
   const { error } = await supabase.from("sites").update({ content }).eq("id", site.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

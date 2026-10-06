@@ -72,6 +72,7 @@ export default function SuggestionsPage() {
           aboutLayout: variant.aboutLayout,
           gridLayout: variant.gridLayout,
           ctaLayout: variant.ctaLayout,
+          skin: variant.skin ?? null,
         }),
       });
       if (!res.ok) throw new Error("Något gick fel.");
@@ -173,6 +174,7 @@ export default function SuggestionsPage() {
                         aboutLayoutOverride={v.aboutLayout}
                         gridLayoutOverride={v.gridLayout}
                         ctaLayoutOverride={v.ctaLayout}
+                        skinOverride={v.skin ?? null}
                       />
                     </div>
                   </div>

@@ -19,6 +19,15 @@ export type BackgroundMode = "light" | "warm" | "dark";
 // /api/sites/choose-look, aldrig av Claude.
 export type ButtonStyle = "pill" | "square" | "underline";
 
+// "Skin" — en SJUNDE stilaxel ovanpå de redan befintliga (se lib/skins.ts):
+// ett färg- och typografipaket som byter ut HELA färgläget (bakgrunder och
+// text räknas ut från kundens egen accentfärg, inte ett fast ljust/varmt/
+// mörkt läge), rubrikernas typsnitt, storlek och stil. Tillkom för att
+// förslagen skulle skilja sig på riktigt — inte bara i layout. Saknas
+// fältet (äldre sajter och de klassiska varianterna) renderas allt precis
+// som förut.
+export type SkinId = "solglimt" | "skymning" | "pastell" | "kontrast" | "fargyta";
+
 // Headerns uppbyggnad — en FJÄRDE stilaxel, samma princip som ButtonStyle
 // ovan: bunden till varje stilvariant (lib/themeVariants.ts), satt i kod i
 // /api/sites/choose-look, aldrig valbar fritt och aldrig satt av Claude.
@@ -29,6 +38,7 @@ export type ButtonStyle = "pill" | "square" | "underline";
 export type HeaderLayout = "left" | "centered-stacked" | "split";
 
 export interface SiteTheme {
+  skin?: SkinId;
   accentColor: string;
   secondaryColors: string[];
   font: ThemeFont;

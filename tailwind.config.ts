@@ -26,6 +26,9 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["Fraunces", "Georgia", "serif"],
+        // Rubriker på kundens sajt — Fraunces som förut, om inte ett skin
+        // (lib/skins.ts) sätter --ycs-hf till ett annat typsnitt.
+        heading: ["var(--ycs-hf, Fraunces)", "Georgia", "serif"],
         sans: ["Work Sans", "system-ui", "sans-serif"],
       },
       // Rörelserna för Millie, chattredigerarens maskot (components/Millie.tsx)

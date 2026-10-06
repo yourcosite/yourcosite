@@ -46,3 +46,22 @@ h1, h2, h3 {
   0% { width: 6%; }
   100% { width: 100%; }
 }
+
+/* Skins (lib/skins.ts): rubrikernas vikt, spärrning, versaler och kursiv
+   sätts via CSS-variabler på sajtens rot — gäller bara när ett skin är valt
+   (data-ycs-skin), så sajter utan skin är helt opåverkade. */
+[data-ycs-skin] .font-heading {
+  font-weight: var(--ycs-hw);
+  letter-spacing: var(--ycs-tr);
+  text-transform: var(--ycs-tt);
+  font-style: var(--ycs-hs);
+}
+/* Nyckeltal ("15 år", "400+") ska inte ärva rubrikernas versaler, extra
+   breda typsnitt eller storleksskala — siffrorna får annars inte plats. */
+[data-ycs-skin] .ycs-stat {
+  font-family: var(--ycs-bf, inherit);
+  text-transform: none;
+  letter-spacing: 0;
+  font-style: normal;
+  font-weight: 700;
+}

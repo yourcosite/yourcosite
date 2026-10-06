@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit, SkinId } from "@/lib/contentModel";
+import { SKINS } from "@/lib/skins";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
@@ -155,6 +156,7 @@ export default function SitePreview({
   aboutLayoutOverride,
   gridLayoutOverride,
   ctaLayoutOverride,
+  skinOverride,
   activePath,
   basePath,
   onNavigate,
@@ -199,6 +201,10 @@ export default function SitePreview({
   // undersidor, och bara den FÖRSTA sektionen av respektive typ.
   aboutLayoutOverride?: AboutLayout;
   gridLayoutOverride?: GridLayout;
+  // Samma idé för skin (färg-/typografipaket, se lib/skins.ts) — null
+  // betyder uttryckligen "inget skin" (de klassiska varianterna), till
+  // skillnad från undefined som läser sajtens egna theme.skin.
+  skinOverride?: SkinId | null;
   ctaLayoutOverride?: CtaLayout;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
@@ -274,7 +280,12 @@ export default function SitePreview({
   // sidans EGEN bakgrund om kunden bett om en annan bakgrund på just den
   // här sidan (SitePageContent.backgroundMode, se lib/contentModel.ts) —
   // annars sajtens vanliga tema, precis som innan det fältet fanns.
-  const mode = backgroundModeOverride ?? page.backgroundMode ?? content.theme.backgroundMode ?? "light";
+  const skinId = skinOverride !== undefined ? skinOverride : content.theme.skin;
+  const skin = skinId ? SKINS[skinId] : undefined;
+  // Ett skin tvingar sitt eget läge (ljust/mörkt) — det är hela poängen med
+  // det — men en sida kan fortfarande be om ett annat läge (page.backgroundMode)
+  // om kunden uttryckligen bett om det.
+  const mode = backgroundModeOverride ?? page.backgroundMode ?? skin?.mode ?? content.theme.backgroundMode ?? "light";
   // Saknas den (sajter skapade innan knappform fanns) faller vi tillbaka på
   // "pill" — den ursprungliga, enda formen som fanns innan.
   const buttonShape = buttonStyleOverride ?? content.theme.buttonStyle ?? "pill";
@@ -282,9 +293,13 @@ export default function SitePreview({
   // lib/contentModel.ts och Header nedan.
   const headerLayout: HeaderLayout = headerLayoutOverride ?? content.theme.headerLayout ?? "left";
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
-  const accent = content.theme.accentColor;
+  const accent = skin?.accent ? skin.accent(content.theme.accentColor) : content.theme.accentColor;
   const secondary = content.theme.secondaryColors || [];
-  const palette = PALETTES[mode];
+  // Skinets palette gäller bara så länge sidan faktiskt visas i skinets eget
+  // läge — ber kunden om en annan bakgrund på just en sida används det
+  // vanliga färdiga läget istället (annars skulle sidans bakgrund se ut att
+  // ignoreras).
+  const palette = skin && mode === skin.mode ? skin.palette(content.theme.accentColor) : PALETTES[mode];
 
   // Startsidans "overlay-bottom"-hero är tänkt att vara en riktig, fullbred
   // "wow"-ingång — då låter vi menyn FLYTA transparent ovanpå bilden
@@ -402,7 +417,26 @@ export default function SitePreview({
     // istället för den tänkta breda, maffiga bilden. På den riktiga,
     // publika sajten (där rutan alltid är lika bred som fönstret) ger detta
     // exakt samma resultat som förut.
-    <div className={`${fontClass} @container`} style={{ background: palette.bg, color: palette.text }}>
+    <div
+      className={`${fontClass} @container`}
+      data-ycs-skin={skin ? skin.id : undefined}
+      style={{
+        background: palette.bg,
+        color: palette.text,
+        ...(skin
+          ? ({
+              "--ycs-hf": skin.headingFont,
+              "--ycs-ts": skin.typeScale,
+              "--ycs-hw": skin.headingWeight,
+              "--ycs-tr": skin.headingTracking,
+              "--ycs-tt": skin.headingUppercase ? "uppercase" : "none",
+              "--ycs-hs": skin.headingItalic ? "italic" : "normal",
+              "--ycs-bf": skin.bodyFont || "inherit",
+              ...(skin.bodyFont ? { fontFamily: skin.bodyFont } : {}),
+            } as React.CSSProperties)
+          : {}),
+      }}
+    >
       <div className={overlayHeader ? "relative" : undefined}>
         <Header
           siteName={siteName}
@@ -532,7 +566,7 @@ function PrivacyPolicyBlock({ text, palette }: { text: string; palette: Palette 
     <div className="px-8 @3xl:px-14 py-14 max-w-[720px] mx-auto">
       {blocks.map((block, i) =>
         block.startsWith("## ") ? (
-          <h2 key={i} className="font-serif text-[22px] mt-9 mb-3 first:mt-0">
+          <h2 key={i} className="font-heading text-[22px] mt-9 mb-3 first:mt-0">
             {block.slice(3)}
           </h2>
         ) : (
@@ -597,7 +631,7 @@ function NewsArticleDetail({
           </div>
         ) : null;
       })()}
-      <h1 className="font-serif text-[30px] @3xl:text-[36px] leading-tight mb-2">{article.title}</h1>
+      <h1 className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(36px*var(--ycs-ts,1))] leading-tight mb-2">{article.title}</h1>
       {publishedDate && (
         <div className="text-[13px] mb-7" style={{ color: palette.textDim }}>
           {publishedDate}
@@ -772,7 +806,7 @@ function Header({
       />
     </div>
   ) : (
-    <span className={`font-serif italic text-[19px] ${overlay ? "text-white" : ""}`}>
+    <span className={`font-heading italic text-[19px] ${overlay ? "text-white" : ""}`}>
       {siteName || "Ditt företag"}
     </span>
   );
@@ -1282,7 +1316,17 @@ function CtaPill({
       basePath={basePath}
       onNavigate={onNavigate}
       className={`inline-block font-semibold text-[14px] px-7 py-3.5 ${shape === "square" ? "rounded-md" : "rounded-full"}`}
-      style={{ background: fill, color: colorOverride ? textOn(colorOverride) : "#17171A" }}
+      style={{
+        background: fill,
+        // Utan egen färg: mörk text som förut — utom på riktigt mörka
+        // accentfärger (t.ex. svarta knappar i ett skin), där den annars
+        // skulle försvinna.
+        color: colorOverride
+          ? textOn(colorOverride)
+          : relativeLuminance(hexToRgb(fill)) < 0.18
+          ? "#F5F4F1"
+          : "#17171A",
+      }}
     >
       {children}
     </CtaLink>
@@ -1781,7 +1825,7 @@ function SectionBlockInner({
                     <div key={i} className={`flex items-start gap-2 text-[12.5px] leading-snug ${i > 0 ? "mt-2.5" : ""}`}>
                       <span className="mt-[2px] text-[12px] font-bold flex-shrink-0" style={{ color: accent }}>✓</span>
                       <span style={{ color: palette.text }}>
-                        <span className="font-serif font-semibold">{stat.value}</span>{" "}
+                        <span className="font-heading ycs-stat font-semibold">{stat.value}</span>{" "}
                         <span style={{ color: palette.textDim }}>{stat.label}</span>
                       </span>
                     </div>
@@ -1808,7 +1852,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[1.08] mb-5 ${heroEmphasis ? "text-[40px] @3xl:text-[54px]" : "text-[32px] @3xl:text-[42px]"}`}
+                className={`font-heading leading-[1.08] mb-5 ${heroEmphasis ? "text-[length:calc(40px*var(--ycs-ts,1))] @3xl:text-[length:calc(54px*var(--ycs-ts,1))]" : "text-[length:calc(32px*var(--ycs-ts,1))] @3xl:text-[length:calc(42px*var(--ycs-ts,1))]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -1889,7 +1933,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[0.96] tracking-tight mb-6 ${heroEmphasis ? "text-[46px] @3xl:text-[66px]" : "text-[36px] @3xl:text-[50px]"}`}
+                className={`font-heading leading-[0.96] tracking-tight mb-6 ${heroEmphasis ? "text-[length:calc(46px*var(--ycs-ts,1))] @3xl:text-[length:calc(66px*var(--ycs-ts,1))]" : "text-[length:calc(36px*var(--ycs-ts,1))] @3xl:text-[length:calc(50px*var(--ycs-ts,1))]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -1965,7 +2009,7 @@ function SectionBlockInner({
                   style={{ background: "rgba(255,255,255,0.94)" }}
                 >
                   <span
-                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-[15px] font-serif font-semibold"
+                    className="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 text-[15px] font-heading font-semibold"
                     style={{ background: `${accent}22`, color: accent }}
                   >
                     {section.eyebrow.charAt(0).toUpperCase()}
@@ -2021,7 +2065,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[0.98] tracking-tight mb-6 ${heroEmphasis ? "text-[48px] @3xl:text-[76px]" : "text-[38px] @3xl:text-[56px]"}`}
+                className={`font-heading leading-[0.98] tracking-tight mb-6 ${heroEmphasis ? "text-[length:calc(48px*var(--ycs-ts,1))] @3xl:text-[length:calc(76px*var(--ycs-ts,1))]" : "text-[length:calc(38px*var(--ycs-ts,1))] @3xl:text-[length:calc(56px*var(--ycs-ts,1))]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2126,7 +2170,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h1"
-              className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[38px] @3xl:text-[48px]" : "text-[30px] @3xl:text-[36px]"}`}
+              className={`font-heading leading-[1.1] mb-4 ${heroEmphasis ? "text-[length:calc(38px*var(--ycs-ts,1))] @3xl:text-[length:calc(48px*var(--ycs-ts,1))]" : "text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(36px*var(--ycs-ts,1))]"}`}
               selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -2164,7 +2208,7 @@ function SectionBlockInner({
               >
                 {section.stats.slice(0, 3).map((stat, i) => (
                   <div key={i} className={i > 0 ? "pl-5 @3xl:pl-7 border-l" : ""} style={{ borderColor: palette.cardBorder }}>
-                    <div className="text-[17px] font-semibold font-serif">{stat.value}</div>
+                    <div className="text-[17px] font-semibold font-heading ycs-stat">{stat.value}</div>
                     <div className="text-[12px]" style={{ color: palette.textDim }}>{stat.label}</div>
                   </div>
                 ))}
@@ -2241,7 +2285,7 @@ function SectionBlockInner({
                 <Field
                   editable={editable}
                   as="h1"
-                  className={`font-serif leading-[0.98] tracking-tight mb-6 ${heroEmphasis ? "text-[48px] @3xl:text-[76px]" : "text-[38px] @3xl:text-[56px]"}`}
+                  className={`font-heading leading-[0.98] tracking-tight mb-6 ${heroEmphasis ? "text-[length:calc(48px*var(--ycs-ts,1))] @3xl:text-[length:calc(76px*var(--ycs-ts,1))]" : "text-[length:calc(38px*var(--ycs-ts,1))] @3xl:text-[length:calc(56px*var(--ycs-ts,1))]"}`}
                   selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                   onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
                 >
@@ -2326,7 +2370,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[1.08] mb-4 ${heroEmphasis ? "text-[40px] @3xl:text-[56px]" : "text-[32px] @3xl:text-[42px]"}`}
+                className={`font-heading leading-[1.08] mb-4 ${heroEmphasis ? "text-[length:calc(40px*var(--ycs-ts,1))] @3xl:text-[length:calc(56px*var(--ycs-ts,1))]" : "text-[length:calc(32px*var(--ycs-ts,1))] @3xl:text-[length:calc(42px*var(--ycs-ts,1))]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2407,7 +2451,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className={`font-serif leading-[1.1] mb-4 ${heroEmphasis ? "text-[36px] @3xl:text-[46px]" : "text-[28px] @3xl:text-[34px]"}`}
+                className={`font-heading leading-[1.1] mb-4 ${heroEmphasis ? "text-[length:calc(36px*var(--ycs-ts,1))] @3xl:text-[length:calc(46px*var(--ycs-ts,1))]" : "text-[length:calc(28px*var(--ycs-ts,1))] @3xl:text-[length:calc(34px*var(--ycs-ts,1))]"}`}
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2479,7 +2523,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h1"
-              className={`font-serif leading-[1.12] mb-5 ${heroEmphasis ? "text-[38px] @3xl:text-[48px]" : "text-[32px] @3xl:text-[40px]"}`}
+              className={`font-heading leading-[1.12] mb-5 ${heroEmphasis ? "text-[length:calc(38px*var(--ycs-ts,1))] @3xl:text-[length:calc(48px*var(--ycs-ts,1))]" : "text-[length:calc(32px*var(--ycs-ts,1))] @3xl:text-[length:calc(40px*var(--ycs-ts,1))]"}`}
               selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -2522,7 +2566,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-4"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-4"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -2567,7 +2611,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[30px] @3xl:text-[38px] leading-[1.05] mb-4"
+                className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(38px*var(--ycs-ts,1))] leading-[1.05] mb-4"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2587,7 +2631,7 @@ function SectionBlockInner({
                 <div className="grid grid-cols-3 mt-10 max-w-[420px]">
                   {stats.slice(0, 3).map((stat, i) => (
                     <div key={i} className={i > 0 ? "pl-5 border-l" : "pr-5"} style={{ borderColor: palette.cardBorder }}>
-                      <div className="font-serif text-[30px] @3xl:text-[36px] leading-none mb-1.5">{stat.value}</div>
+                      <div className="font-heading ycs-stat text-[30px] @3xl:text-[36px] leading-none mb-1.5">{stat.value}</div>
                       <div className="text-[11px]" style={{ color: palette.textDim }}>{stat.label}</div>
                     </div>
                   ))}
@@ -2619,7 +2663,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[30px] @3xl:text-[40px] leading-[1.05] mb-5"
+                className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(40px*var(--ycs-ts,1))] leading-[1.05] mb-5"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2670,7 +2714,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[30px] @3xl:text-[40px] leading-[1.0] mb-6"
+                className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(40px*var(--ycs-ts,1))] leading-[1.0] mb-6"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2680,7 +2724,7 @@ function SectionBlockInner({
                 <div className="grid grid-cols-3 gap-5 mb-8 max-w-[440px]">
                   {stats.slice(0, 3).map((stat, i) => (
                     <div key={i} className={i < stats.length - 1 ? "pr-5 border-r" : ""} style={{ borderColor: palette.cardBorder }}>
-                      <div className="font-serif text-[27px] leading-none mb-1.5">{stat.value}</div>
+                      <div className="font-heading ycs-stat text-[27px] leading-none mb-1.5">{stat.value}</div>
                       <div className="text-[11.5px] leading-snug" style={{ color: palette.textDim }}>{stat.label}</div>
                     </div>
                   ))}
@@ -2716,7 +2760,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-4"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-4"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -2745,7 +2789,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-2 text-center pt-10"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-2 text-center pt-10"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -2777,7 +2821,7 @@ function SectionBlockInner({
                   <Field
                     editable={editable}
                     as="div"
-                    className="font-serif text-[20px] mb-2.5"
+                    className="font-heading text-[20px] mb-2.5"
                     selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
                     onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
                   >
@@ -2821,7 +2865,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-7"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-7"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -2871,7 +2915,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-9 text-center"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-9 text-center"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -2888,7 +2932,7 @@ function SectionBlockInner({
                     <Field
                       editable={editable}
                       as="div"
-                      className="font-serif text-[17px] mb-2"
+                      className="font-heading text-[17px] mb-2"
                       selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
                       onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
                     >
@@ -2924,7 +2968,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[22px] mb-7 text-center"
+                className="font-heading text-[22px] mb-7 text-center"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -2984,7 +3028,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[32px] @3xl:text-[44px] leading-[1.05] mb-10 @3xl:mb-14 max-w-[600px]"
+              className="font-heading text-[length:calc(32px*var(--ycs-ts,1))] @3xl:text-[length:calc(44px*var(--ycs-ts,1))] leading-[1.05] mb-10 @3xl:mb-14 max-w-[600px]"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -3008,7 +3052,7 @@ function SectionBlockInner({
                     <Field
                       editable={editable}
                       as="div"
-                      className="font-serif text-[21px] mb-2.5"
+                      className="font-heading text-[21px] mb-2.5"
                       selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
                       onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
                     >
@@ -3068,7 +3112,7 @@ function SectionBlockInner({
                 <Field
                   editable={editable}
                   as="h2"
-                  className="font-serif text-[30px] @3xl:text-[40px] leading-[1.05] mb-5"
+                  className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(40px*var(--ycs-ts,1))] leading-[1.05] mb-5"
                   selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                   onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
                 >
@@ -3113,7 +3157,7 @@ function SectionBlockInner({
                     <Field
                       editable={editable}
                       as="div"
-                      className="font-serif text-[20px] mb-2.5"
+                      className="font-heading text-[20px] mb-2.5"
                       selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
                       onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
                     >
@@ -3175,7 +3219,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-8 text-center"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -3218,7 +3262,7 @@ function SectionBlockInner({
                       <Field
                         editable={editable}
                         as="div"
-                        className={big ? "font-serif text-[20px] mb-1.5" : "font-serif text-[15.5px] mb-1"}
+                        className={big ? "font-heading text-[20px] mb-1.5" : "font-heading text-[15.5px] mb-1"}
                         selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
                         onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
                       >
@@ -3255,7 +3299,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-8 text-center"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -3281,7 +3325,7 @@ function SectionBlockInner({
                   <Field
                     editable={editable}
                     as="div"
-                    className="font-serif text-[17px] mb-2"
+                    className="font-heading text-[17px] mb-2"
                     selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
                     onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
                   >
@@ -3315,7 +3359,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-8 text-center"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -3363,7 +3407,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-10"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-10"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -3374,7 +3418,7 @@ function SectionBlockInner({
                 <Field
                   editable={editable}
                   as="p"
-                  className="font-serif italic text-[21px] leading-relaxed mb-4"
+                  className="font-heading italic text-[21px] leading-relaxed mb-4"
                   selected={selectedFieldKey === fieldSel("quote", current.quote, "citatet", idx)?.key}
                   onSelect={() => { const s = fieldSel("quote", current.quote, "citatet", idx); s && onSelectField?.(s); }}
                 >
@@ -3442,7 +3486,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[27px] mb-2"
+                className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-2"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -3458,7 +3502,7 @@ function SectionBlockInner({
                   <Field
                     editable={editable}
                     as="p"
-                    className="font-serif italic text-[20px] leading-relaxed mb-3"
+                    className="font-heading italic text-[20px] leading-relaxed mb-3"
                     selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
                     onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
                   >
@@ -3516,7 +3560,7 @@ function SectionBlockInner({
                 <Field
                   editable={editable}
                   as="p"
-                  className="font-serif italic text-[24px] @3xl:text-[28px] leading-relaxed mb-4"
+                  className="font-heading italic text-[24px] @3xl:text-[length:calc(28px*var(--ycs-ts,1))] leading-relaxed mb-4"
                   selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
                   onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
                 >
@@ -3548,7 +3592,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="p"
-                className="font-serif italic text-[24px] @3xl:text-[27px] leading-relaxed mb-4"
+                className="font-heading italic text-[24px] @3xl:text-[length:calc(27px*var(--ycs-ts,1))] leading-relaxed mb-4"
                 selected={selectedFieldKey === fieldSel("quote", first.quote, "citatet", 0)?.key}
                 onSelect={() => { const s = fieldSel("quote", first.quote, "citatet", 0); s && onSelectField?.(s); }}
               >
@@ -3590,7 +3634,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[27px] mb-3"
+                className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -3645,7 +3689,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[30px] @3xl:text-[36px] leading-[1.12] mb-4"
+                className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(36px*var(--ycs-ts,1))] leading-[1.12] mb-4"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -3686,7 +3730,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[30px] @3xl:text-[40px] leading-[1.02] mb-5"
+                className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(40px*var(--ycs-ts,1))] leading-[1.02] mb-5"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -3735,7 +3779,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[29px] mb-4"
+            className="font-heading text-[length:calc(29px*var(--ycs-ts,1))] mb-4"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -3774,7 +3818,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[27px] mb-4"
+                className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-4"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -3844,7 +3888,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-4"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-4"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -3910,7 +3954,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-8 text-center px-10"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center px-10"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -3958,7 +4002,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-8 text-center"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -4070,7 +4114,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-7 text-center"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-7 text-center"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -4098,7 +4142,7 @@ function SectionBlockInner({
                 <Field
                   editable={editable}
                   as="h2"
-                  className="font-serif text-[27px] text-center"
+                  className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] text-center"
                   selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                   onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
                 >
@@ -4140,7 +4184,7 @@ function SectionBlockInner({
             <Field
               editable={editable}
               as="h2"
-              className="font-serif text-[27px] mb-5 text-center"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-5 text-center"
               selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
               onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
             >
@@ -4202,7 +4246,7 @@ function SectionBlockInner({
         <Field
           editable={editable}
           as="h2"
-          className="font-serif text-[27px] mb-5 text-center"
+          className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-5 text-center"
           selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
           onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
         >
@@ -4272,7 +4316,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h2"
-                className="font-serif text-[27px] mb-3"
+                className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3"
                 selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -4327,7 +4371,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-3 text-center"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >
@@ -4364,7 +4408,7 @@ function SectionBlockInner({
           <Field
             editable={editable}
             as="h2"
-            className="font-serif text-[27px] mb-8 text-center"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
             selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
             onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
           >

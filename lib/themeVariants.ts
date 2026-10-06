@@ -9,7 +9,7 @@
 // för lika sina syskon för att kännas som egna, meningsfulla val. Varje
 // kvarvarande variant ska ha en tydligt egen känsla (hero-layout,
 // knappform, header-uppbyggnad), inte bara ett annat typsnitt.
-import type { ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout } from "./contentModel";
+import type { SkinId, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout } from "./contentModel";
 
 export type BackgroundMode = "light" | "warm" | "dark";
 
@@ -42,6 +42,8 @@ export interface ThemeVariant {
   gridLayout: GridLayout;
   ctaLayout: CtaLayout;
   recommended?: boolean;
+  // Färg-/typografipaket (lib/skins.ts) — saknas på de klassiska varianterna.
+  skin?: SkinId;
 }
 
 export const THEME_VARIANTS: ThemeVariant[] = [
@@ -149,5 +151,75 @@ export const THEME_VARIANTS: ThemeVariant[] = [
     aboutLayout: "image-stats",
     gridLayout: "intro-divided",
     ctaLayout: "image-bleed",
+  },
+  {
+    id: "solglimt",
+    label: "Glad och färgstark",
+    desc: "Er egen färg som en klar, ljus bakgrund med stora, feta rubriker — glad, modern och full av energi.",
+    font: "sans",
+    backgroundMode: "light",
+    buttonStyle: "pill",
+    headerLayout: "centered-stacked",
+    heroLayout: "split-right",
+    aboutLayout: "stats-split",
+    gridLayout: "cards",
+    ctaLayout: "split",
+    skin: "solglimt",
+  },
+  {
+    id: "skymning",
+    label: "Djup och dramatisk",
+    desc: "Nästan svart men färgad i er nyans, med en stor, klassisk rubrik — känns exklusivt och lite filmiskt.",
+    font: "sans",
+    backgroundMode: "dark",
+    buttonStyle: "square",
+    headerLayout: "left",
+    heroLayout: "split-left",
+    aboutLayout: "centered",
+    gridLayout: "numbered",
+    ctaLayout: "dark-split",
+    skin: "skymning",
+  },
+  {
+    id: "pastell",
+    label: "Mjuk och vänlig",
+    desc: "En lätt färgton över hela sidan, mindre och rundare rubriker och gott om luft — välkomnande och lugn.",
+    font: "sans",
+    backgroundMode: "light",
+    buttonStyle: "pill",
+    headerLayout: "centered-stacked",
+    heroLayout: "centered",
+    aboutLayout: "text-left",
+    gridLayout: "icon-row",
+    ctaLayout: "centered",
+    skin: "pastell",
+  },
+  {
+    id: "kontrast",
+    label: "Skarp och orädd",
+    desc: "Vitt, svart och en enda stark färgyta. Versaler, grova rubriker och tjocka linjer — tar plats och syns.",
+    font: "sans",
+    backgroundMode: "light",
+    buttonStyle: "square",
+    headerLayout: "left",
+    heroLayout: "quad",
+    aboutLayout: "stats-split",
+    gridLayout: "bento",
+    ctaLayout: "dark-split",
+    skin: "kontrast",
+  },
+  {
+    id: "fargyta",
+    label: "Rik färgyta",
+    desc: "Er färg som hela bakgrunden, ljus text och kursiva, eleganta rubriker — varm, djup och personlig.",
+    font: "serif",
+    backgroundMode: "dark",
+    buttonStyle: "pill",
+    headerLayout: "centered-stacked",
+    heroLayout: "overlay-bottom",
+    aboutLayout: "image-full",
+    gridLayout: "list",
+    ctaLayout: "image-bleed",
+    skin: "fargyta",
   },
 ];
