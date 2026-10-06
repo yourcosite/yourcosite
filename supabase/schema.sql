@@ -33,6 +33,10 @@ create table if not exists profiles (
   -- som alltid lämnar den här false). Låter staff se i adminportalen vilka
   -- kunder som hoppade över kortuppgifterna och behöver kontaktas.
   billing_setup_complete boolean not null default false,
+  -- När kunden bockade i att AI-skapat innehåll (inkl. exempelcitat/siffror)
+  -- är deras ansvar att granska, vid paketvalet (app/skapa-konto/paket).
+  -- För befintlig databas: alter table profiles add column if not exists content_terms_accepted_at timestamptz;
+  content_terms_accepted_at timestamptz,
   role text not null default 'customer'
     check (role in ('customer', 'support', 'admin', 'superadmin')),
   -- Gränssnittsspråk + e-postnotisinställningar, se /installningar

@@ -44,6 +44,7 @@ type PlanId = (typeof PLANS)[number]["id"];
 export default function SignupPlanPage() {
   const router = useRouter();
   const [plan, setPlan] = useState<PlanId | null>(null);
+  const [accepted, setAccepted] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -80,6 +81,16 @@ export default function SignupPlanPage() {
         .update({ chosen_plan: chosenPlan })
         .eq("id", user.id);
       if (updateError) throw new Error(updateError.message);
+
+      // Bekräftelsen sparas separat och "best effort": kolumnen
+      // content_terms_accepted_at måste finnas i databasen (se
+      // supabase/schema.sql) — saknas den ska registreringen ändå gå igenom.
+      if (accepted) {
+        await supabase
+          .from("profiles")
+          .update({ content_terms_accepted_at: new Date().toISOString() })
+          .eq("id", user.id);
+      }
 
       router.push("/dashboard");
       router.refresh();
@@ -160,12 +171,30 @@ export default function SignupPlanPage() {
           </div>
         </div>
 
+        <label className="flex items-start gap-3 bg-surface border border-line rounded-2xl p-4 mb-5 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-1 w-4 h-4 shrink-0 accent-[var(--accent,#000)]"
+          />
+          <span className="text-[13px] leading-relaxed text-ink-dim">
+            Jag förstår att texter, kundcitat, nyckeltal och annat innehåll som
+            AI skapar åt mig är förslag och exempel som jag själv ansvarar för
+            att granska, byta ut eller ta bort innan publicering. Jag godkänner{" "}
+            <a href="/anvandarvillkor" target="_blank" className="underline text-ink">
+              användarvillkoren
+            </a>
+            .
+          </span>
+        </label>
+
         {error && <div className="text-[13.5px] text-warm font-medium mb-4">{error}</div>}
 
         <div className="flex items-center gap-3 flex-wrap">
           <button
             type="button"
-            disabled={saving || !plan}
+            disabled={saving || !plan || !accepted}
             onClick={() => finish(plan)}
             className="bg-accent text-accent-ink font-semibold text-[15px] px-6 py-3.5 rounded-[10px] disabled:opacity-60"
           >
@@ -174,7 +203,7 @@ export default function SignupPlanPage() {
           <button
             type="button"
             disabled={saving}
-            onClick={() => finish(plan)}
+            onClick={() => finish(accepted ? plan : null)}
             className="text-[14px] font-semibold text-ink-dim px-3 py-3.5 disabled:opacity-60"
           >
             Hoppa över för nu
