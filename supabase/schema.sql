@@ -34,7 +34,8 @@ create table if not exists profiles (
   -- kunder som hoppade över kortuppgifterna och behöver kontaktas.
   billing_setup_complete boolean not null default false,
   -- När kunden bockade i att AI-skapat innehåll (inkl. exempelcitat/siffror)
-  -- är deras ansvar att granska, vid paketvalet (app/skapa-konto/paket).
+  -- är deras ansvar att granska — obligatorisk ruta när kontot skapas
+  -- (app/skapa-konto), sätts av handle_new_user nedan.
   -- För befintlig databas: alter table profiles add column if not exists content_terms_accepted_at timestamptz;
   content_terms_accepted_at timestamptz,
   role text not null default 'customer'
@@ -432,7 +433,8 @@ as $$
 begin
   insert into public.profiles (
     id, email, full_name, phone, company_name, org_number,
-    address_street, address_postal_code, address_city, billing_email
+    address_street, address_postal_code, address_city, billing_email,
+    content_terms_accepted_at
   )
   values (
     new.id, new.email,
@@ -443,7 +445,8 @@ begin
     new.raw_user_meta_data->>'address_street',
     new.raw_user_meta_data->>'address_postal_code',
     new.raw_user_meta_data->>'address_city',
-    new.raw_user_meta_data->>'billing_email'
+    new.raw_user_meta_data->>'billing_email',
+    nullif(new.raw_user_meta_data->>'content_terms_accepted_at', '')::timestamptz
   );
   return new;
 end;

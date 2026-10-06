@@ -20,12 +20,17 @@ export default function SignupPage() {
   const [addressCity, setAddressCity] = useState("");
   const [billingEmail, setBillingEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    if (!accepted) {
+      setError("Du behöver bekräfta att du ansvarar för innehållet på din sajt för att skapa ett konto.");
+      return;
+    }
     if (password.length < 8) {
       setError("Lösenordet måste vara minst 8 tecken.");
       return;
@@ -56,6 +61,9 @@ export default function SignupPage() {
           address_postal_code: addressPostalCode,
           address_city: addressCity,
           billing_email: billingEmail,
+          // Sparas på profilen av databastriggern handle_new_user
+          // (supabase/schema.sql) — bevis på när kunden bekräftade ansvaret.
+          content_terms_accepted_at: new Date().toISOString(),
         },
       },
     });
@@ -261,13 +269,33 @@ export default function SignupPage() {
               />
             </div>
 
+            <label className="flex items-start gap-3 border border-line rounded-[10px] p-3.5 cursor-pointer">
+              <input
+                type="checkbox"
+                required
+                checked={accepted}
+                onChange={(e) => setAccepted(e.target.checked)}
+                className="mt-1 w-4 h-4 shrink-0"
+              />
+              <span className="text-[12.5px] leading-relaxed text-ink-dim">
+                Jag förstår att texter, kundcitat, nyckeltal och annat innehåll
+                som AI skapar åt mig är förslag och exempel som jag själv
+                ansvarar för att granska, byta ut eller ta bort innan
+                publicering. Jag godkänner{" "}
+                <Link href="/anvandarvillkor" target="_blank" className="font-semibold underline text-ink">
+                  användarvillkoren
+                </Link>
+                .
+              </span>
+            </label>
+
             {error && (
               <div className="text-[13.5px] text-warm font-medium -mt-1">{error}</div>
             )}
 
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || !accepted}
               className="block text-center bg-accent text-accent-ink font-semibold text-[15.5px] py-3.5 rounded-[10px] mt-1 disabled:opacity-60"
             >
               {loading ? "Skapar konto …" : "Skapa konto →"}
@@ -287,7 +315,7 @@ export default function SignupPage() {
             </Link>
           </p>
           <p className="text-center text-[11.5px] text-ink-dim mt-4 leading-relaxed">
-            Genom att skapa ett konto godkänner du våra{" "}
+            Du kan läsa våra{" "}
             <Link href="/anvandarvillkor" className="font-semibold underline">
               användarvillkor
             </Link>{" "}
