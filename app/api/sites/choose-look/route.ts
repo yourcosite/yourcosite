@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
 import { isSkinId } from "@/lib/skins";
+import { applyHomeRecipe, isHomeRecipeId } from "@/lib/homeRecipes";
 
 // Sparar vilken av de tre stilvarianterna (lib/themeVariants.ts) kunden
 // valde på /forslag. Innehållet (texterna) är redan genererat — det här
@@ -12,7 +13,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
 
   const body = await request.json();
-  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout, aboutLayout, gridLayout, ctaLayout, skin } = body;
+  const { font, backgroundMode, buttonStyle, headerLayout, heroLayout, aboutLayout, gridLayout, ctaLayout, skin, homeRecipe } = body;
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -27,7 +28,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Hittade ingen genererad sajt." }, { status: 400 });
   }
 
-  const content = site.content;
+  // Förstasidans sektionsordning enligt det valda förslagets recept
+  // (lib/homeRecipes.ts) — bara ordningen ändras, inget innehåll.
+  const content = isHomeRecipeId(homeRecipe) ? applyHomeRecipe(site.content, homeRecipe) : site.content;
   content.theme.font = font === "serif" ? "serif" : "sans";
   content.theme.backgroundMode = ["light", "warm", "dark"].includes(backgroundMode)
     ? backgroundMode

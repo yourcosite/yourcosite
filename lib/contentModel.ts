@@ -442,6 +442,10 @@ export interface SiteContent {
   theme: SiteTheme;
   pages: SitePageContent[];
   photoCredits?: Record<string, PhotoCredit>;
+  // Slumptal som sätts när sajten genereras — fördelar förstasidans
+  // sektionsordning (lib/homeRecipes.ts) på förslagen på /forslag, så en
+  // omgenerering ger en annan fördelning.
+  layoutSeed?: number;
   // Satt när kunden laddat upp en egen logga i onboardingen. Saknas den
   // visar vi bara företagsnamnet i headern istället — aldrig en AI-skapad
   // logga, det gör vi medvetet inte.

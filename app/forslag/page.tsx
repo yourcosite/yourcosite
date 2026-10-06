@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import SitePreview from "@/components/SitePreview";
 import { THEME_VARIANTS } from "@/lib/themeVariants";
+import { applyHomeRecipe, recipeForVariant } from "@/lib/homeRecipes";
 import { countImageSlots, type SiteContent } from "@/lib/contentModel";
 
 export default function SuggestionsPage() {
@@ -17,6 +18,16 @@ export default function SuggestionsPage() {
   const [uploadedPhotoCount, setUploadedPhotoCount] = useState<number | null>(null);
   const [relinking, setRelinking] = useState(false);
   const [relinkError, setRelinkError] = useState("");
+
+  // Varje förslag får sin egen ordning på förstasidans sektioner efter heron
+  // (se lib/homeRecipes.ts) — samma innehåll, olika uppbyggnad.
+  const variantContents = useMemo(
+    () =>
+      content
+        ? THEME_VARIANTS.map((_, i) => applyHomeRecipe(content, recipeForVariant(i, content.layoutSeed).id))
+        : [],
+    [content]
+  );
 
   useEffect(() => {
     fetch("/api/sites/mine")
@@ -55,7 +66,7 @@ export default function SuggestionsPage() {
     }
   };
 
-  const choose = async (variantId: string) => {
+  const choose = async (variantId: string, variantIndex: number) => {
     const variant = THEME_VARIANTS.find((v) => v.id === variantId);
     if (!variant) return;
     setChoosing(variantId);
@@ -73,6 +84,7 @@ export default function SuggestionsPage() {
           gridLayout: variant.gridLayout,
           ctaLayout: variant.ctaLayout,
           skin: variant.skin ?? null,
+          homeRecipe: recipeForVariant(variantIndex, content?.layoutSeed).id,
         }),
       });
       if (!res.ok) throw new Error("Något gick fel.");
@@ -138,7 +150,7 @@ export default function SuggestionsPage() {
 
           {content && (
             <div className="grid sm:grid-cols-2 gap-5.5">
-              {THEME_VARIANTS.map((v) => (
+              {THEME_VARIANTS.map((v, variantIndex) => (
                 <div
                   key={v.id}
                   className={`relative bg-surface rounded-2xl overflow-hidden flex flex-col ${
@@ -164,7 +176,7 @@ export default function SuggestionsPage() {
                       style={{ transform: "scale(0.25)" }}
                     >
                       <SitePreview
-                        content={content}
+                        content={variantContents[variantIndex] ?? content}
                         siteName={siteName}
                         fontOverride={v.font}
                         backgroundModeOverride={v.backgroundMode}
@@ -182,7 +194,7 @@ export default function SuggestionsPage() {
                     <div className="font-semibold text-[15.5px] mb-1">{v.label}</div>
                     <div className="text-[13px] text-ink-dim mb-4 leading-relaxed flex-1">{v.desc}</div>
                     <button
-                      onClick={() => choose(v.id)}
+                      onClick={() => choose(v.id, variantIndex)}
                       disabled={choosing !== null}
                       className="block text-center bg-accent text-accent-ink font-semibold text-[14px] py-2.5 rounded-[9px] disabled:opacity-60"
                     >

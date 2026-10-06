@@ -230,7 +230,7 @@ VIKTIGT — en sida vars syfte (se briefen ovan) är att visa kundens EGNA nyhet
 
 VIKTIGT — varje sida MÅSTE inledas med en "hero"-sektion (sidans bildplatser är "hero", "grid" och "gallery" — se till att minst EN till av dessa, utöver hero, finns på varje sida, så ingen sida blir bildlös förutom sin egen hero). En sida med bara "hero" följt av enbart textsektioner (about/testimonials/cta/faq/contact/map/contactForm) är INTE godkänt — lägg då till en "grid" eller "gallery"-sektion någonstans på sidan, även om innehållet annars känns klart.
 
-VIKTIGT — förstasidans extra bildsektioner, EXAKT den stil som Restaurangen/Snickeriet i /exempel har ("snygg tonat längst upp, några ingångar, en bild som täcker hela bredden med text ovanpå, snyggt cleant"): (1) lägg till en "grid"-sektion med layout "cards" direkt under hero — några kompakta ingångar/kort (t.ex. tjänster, kategorier eller avdelningar) med en liten bild var, INTE stora staplade bild+text-rader; (2) lägg om möjligt ÄVEN till en "testimonials"-sektion någonstans på förstasidan — den renderas med en EGEN stor bild som täcker hela sidans bredd med ett citat centrerat ovanpå, vilket är det dramatiska "stora bild"-momentet sajten annars saknar. Undvik "gallery" på FÖRSTASIDAN — dess små, kvadratiska rutnätsbilder (tänkt för en egen portfolio-/bildsida, t.ex. en sida som heter "Galleri" eller "Referensprojekt") ger ett tätt, katalogmässigt intryck som inte passar som själva entrén till sajten. "gallery" är bra på en sida vars enda syfte är att visa upp många bilder i rad — aldrig som bisak på förstasidan.
+VIKTIGT — förstasidans extra bildsektioner, EXAKT den stil som Restaurangen/Snickeriet i /exempel har ("snygg tonat längst upp, några ingångar, en bild som täcker hela bredden med text ovanpå, snyggt cleant"): (1) lägg till en "grid"-sektion med layout "cards" på förstasidan — några kompakta ingångar/kort (t.ex. tjänster, kategorier eller avdelningar) med en liten bild var, INTE stora staplade bild+text-rader; (2) lägg om möjligt ÄVEN till en "testimonials"-sektion någonstans på förstasidan — den renderas med en EGEN stor bild som täcker hela sidans bredd med ett citat centrerat ovanpå, vilket är det dramatiska "stora bild"-momentet sajten annars saknar. Undvik "gallery" på FÖRSTASIDAN — dess små, kvadratiska rutnätsbilder (tänkt för en egen portfolio-/bildsida, t.ex. en sida som heter "Galleri" eller "Referensprojekt") ger ett tätt, katalogmässigt intryck som inte passar som själva entrén till sajten. "gallery" är bra på en sida vars enda syfte är att visa upp många bilder i rad — aldrig som bisak på förstasidan.
 
 VIKTIGT — startsidans hero ska vara ett riktigt "wow"-intryck: det är besökarens första sekund på sajten. Skriv en kort, slagkraftig rubrik (inte en lång mening) och låt eyebrow/CTA dra blicken. ${heroLayoutInstruction}
 
@@ -336,6 +336,9 @@ export async function POST() {
   content.theme.secondaryColors =
     site.secondary_colors?.length ? site.secondary_colors : content.theme.secondaryColors;
   content.theme.backgroundMode = "light";
+  // Fördelar förstasidans olika sektionsordningar på förslagen (se
+  // lib/homeRecipes.ts) — ny slumpning vid varje generering.
+  content.layoutSeed = Math.floor(Math.random() * 1000);
   if (site.logo_url) content.logoUrl = site.logo_url;
   if (Array.isArray(site.social_links) && site.social_links.length > 0) {
     content.socialLinks = site.social_links;
