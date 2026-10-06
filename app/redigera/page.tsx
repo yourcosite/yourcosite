@@ -301,12 +301,6 @@ export default function EditorPage() {
       return;
     }
     setAttachError("");
-    // Unsplash vill få veta när ett foto väljs — fire-and-forget.
-    fetch("/api/images/track", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ downloadLocation: photo.downloadLocation }),
-    }).catch(() => {});
     setAttachments((prev) => [
       ...prev,
       {

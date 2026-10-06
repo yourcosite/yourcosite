@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
+import { withCredit } from "@/lib/stockPhotos";
 
 const MAX_BYTES = 15 * 1024 * 1024; // 15 MB, samma gräns som de allmänna fotona
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -25,6 +27,7 @@ export default function HeroImageUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  const [stockOpen, setStockOpen] = useState(false);
 
   const upload = async (file: File) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
@@ -66,6 +69,29 @@ export default function HeroImageUpload({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
 
+      setImageUrl(data.heroImageUrl);
+      onChange?.(data.heroImageUrl);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setUploading(false);
+      onUploadingChange?.(false);
+    }
+  };
+
+  const pickStock = async (photo: StockPhoto) => {
+    setUploading(true);
+    onUploadingChange?.(true);
+    setError("");
+    try {
+      const fileUrl = withCredit(photo.url, { name: photo.photographer, profileUrl: photo.profileUrl });
+      const res = await fetch("/api/onboarding/hero-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fileUrl }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
       setImageUrl(data.heroImageUrl);
       onChange?.(data.heroImageUrl);
     } catch (e: any) {
@@ -132,15 +158,26 @@ export default function HeroImageUpload({
           Ta bort
         </button>
       ) : (
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className="text-[12.5px] font-semibold text-ink bg-bg border border-line px-3.5 py-2 rounded-lg flex-shrink-0 disabled:opacity-60"
-        >
-          {uploading ? "Laddar upp …" : "Ladda upp huvudbild"}
-        </button>
+        <div className="flex flex-col gap-1.5 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className="text-[12.5px] font-semibold text-ink bg-bg border border-line px-3.5 py-2 rounded-lg disabled:opacity-60"
+          >
+            {uploading ? "Laddar upp …" : "Ladda upp huvudbild"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setStockOpen(true)}
+            disabled={uploading}
+            className="text-[12.5px] font-semibold text-ink-dim border border-line px-3.5 py-2 rounded-lg disabled:opacity-60"
+          >
+            Sök stockbild
+          </button>
+        </div>
       )}
+      <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStock} />
     </div>
   );
 }

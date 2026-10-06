@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit } from "@/lib/contentModel";
-import { creditsInUse } from "@/lib/stockPhotos";
+import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { parseYouTubeId } from "@/lib/youtube";
@@ -580,11 +580,23 @@ function NewsArticleDetail({
         ← Alla nyheter
       </CtaLink>
       {article.image_url && (
-        <div className="rounded-2xl overflow-hidden mb-8">
+        <div className={`rounded-2xl overflow-hidden ${creditFromUrl(article.image_url) ? "mb-2" : "mb-8"}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={article.image_url} alt={article.title} className="w-full h-auto object-cover" />
         </div>
       )}
+      {(() => {
+        // Stockbild från Unsplash — fotografen ska anges (licensen).
+        const credit = creditFromUrl(article.image_url);
+        return credit ? (
+          <div className="text-[11.5px] mb-8" style={{ color: palette.textDim }}>
+            Foto:{" "}
+            <a href={credit.profileUrl} target="_blank" rel="noopener noreferrer" className="underline">{credit.name}</a>{" "}
+            på{" "}
+            <a href="https://unsplash.com/?utm_source=YourCoSite&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline">Unsplash</a>
+          </div>
+        ) : null;
+      })()}
       <h1 className="font-serif text-[30px] @3xl:text-[36px] leading-tight mb-2">{article.title}</h1>
       {publishedDate && (
         <div className="text-[13px] mb-7" style={{ color: palette.textDim }}>

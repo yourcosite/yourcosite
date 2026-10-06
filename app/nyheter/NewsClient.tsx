@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import StockPhotoModal from "@/components/StockPhotoModal";
+import { withCredit } from "@/lib/stockPhotos";
 import { DEFAULT_NEWS_CATEGORY, type NewsArticle } from "@/lib/newsArticles";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -54,6 +56,7 @@ export default function NewsClient({
   const [composer, setComposer] = useState<ComposerState | null>(null);
   const [addingCategory, setAddingCategory] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [stockOpen, setStockOpen] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -382,6 +385,7 @@ export default function NewsClient({
                 </button>
               </div>
             ) : (
+              <>
               <label
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -394,7 +398,7 @@ export default function NewsClient({
                   const file = e.dataTransfer.files?.[0];
                   if (file) uploadImage(file);
                 }}
-                className={`flex items-center justify-center gap-2.5 border-2 border-dashed rounded-xl px-4 py-5 mb-4 text-[13px] font-semibold cursor-pointer transition-colors ${
+                className={`flex items-center justify-center gap-2.5 border-2 border-dashed rounded-xl px-4 py-5 mb-2 text-[13px] font-semibold cursor-pointer transition-colors ${
                   dragOver ? "border-ink bg-accent-soft text-ink" : "border-line text-ink-dim"
                 } ${uploading ? "opacity-60 pointer-events-none" : ""}`}
               >
@@ -412,7 +416,26 @@ export default function NewsClient({
                   className="hidden"
                 />
               </label>
+              <button
+                type="button"
+                onClick={() => setStockOpen(true)}
+                className="text-[12.5px] font-semibold text-ink-dim underline mb-4"
+              >
+                Eller sök gratis stockbilder
+              </button>
+              </>
             )}
+            <StockPhotoModal
+              open={stockOpen}
+              onClose={() => setStockOpen(false)}
+              onPick={(photo) =>
+                setComposer((prev) =>
+                  prev
+                    ? { ...prev, imageUrl: withCredit(photo.url, { name: photo.photographer, profileUrl: photo.profileUrl }) }
+                    : prev
+                )
+              }
+            />
 
             <div className="flex items-center justify-between mb-1.5">
               <label className="block text-[12.5px] font-semibold text-ink-dim">Text</label>

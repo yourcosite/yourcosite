@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { isAllowedImageUrl } from "@/lib/stockPhotos";
 import { getSiteNewsArticles, getSiteNewsCategories, uniqueSlugForSite, normalizeCategory, DEFAULT_NEWS_CATEGORY } from "@/lib/newsArticles";
 
 // Nyhetsartiklar för den inloggade kundens egen sajt — skapas och
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
 
   // Bilden måste ligga i kundens egen uppladdningsmapp — samma kontroll som
   // chattredigerarens bilagor (se app/api/sites/edit/route.ts).
-  if (imageUrl && !imageUrl.includes(`/uploads/${user.id}/`)) {
+  if (imageUrl && !isAllowedImageUrl(imageUrl, user.id)) {
     return NextResponse.json({ error: "Ogiltig bild." }, { status: 400 });
   }
 

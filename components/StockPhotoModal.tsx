@@ -103,7 +103,16 @@ export default function StockPhotoModal({
               <button
                 key={p.id}
                 type="button"
-                onClick={() => { onPick(p); onClose(); }}
+                onClick={() => {
+                  // Unsplashs regler: räkna varje valt foto (fire-and-forget).
+                  fetch("/api/images/track", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ downloadLocation: p.downloadLocation }),
+                  }).catch(() => {});
+                  onPick(p);
+                  onClose();
+                }}
                 className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-bg text-left"
                 title={`Använd fotot av ${p.photographer}`}
               >

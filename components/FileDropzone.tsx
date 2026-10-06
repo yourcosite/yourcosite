@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
+import { withCredit } from "@/lib/stockPhotos";
 
 type Asset = {
   id: string;
@@ -44,6 +46,7 @@ export default function FileDropzone({
   const [error, setError] = useState("");
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [stockOpen, setStockOpen] = useState(false);
 
   useEffect(() => {
     fetch("/api/onboarding/assets")
@@ -117,6 +120,33 @@ export default function FileDropzone({
     onUploadingChange?.(false);
   };
 
+  // Ett foto från stockbildssökningen sparas som en vanlig bild-rad —
+  // adressen pekar på Unsplash (inte vår lagring) och bär fotografen i sig
+  // (se lib/stockPhotos.ts), så den visas i sajtens sidfot sedan.
+  const addStock = async (photo: StockPhoto) => {
+    setError("");
+    onUploadingChange?.(true);
+    setUploading(true);
+    try {
+      const res = await fetch("/api/onboarding/assets", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fileName: `Stockbild (${photo.photographer})`.slice(0, 100),
+          fileUrl: withCredit(photo.url, { name: photo.photographer, profileUrl: photo.profileUrl }),
+          mimeType: "image/jpeg",
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setAssets((a) => [...a, data.asset]);
+    } catch {
+      setError("Kunde inte lägga till stockbilden.");
+    }
+    setUploading(false);
+    onUploadingChange?.(false);
+  };
+
   const remove = async (id: string) => {
     setAssets((a) => a.filter((x) => x.id !== id));
     await fetch(`/api/onboarding/assets/${id}`, { method: "DELETE" });
@@ -166,6 +196,16 @@ export default function FileDropzone({
           }}
         />
       </div>
+
+      <button
+        type="button"
+        onClick={() => setStockOpen(true)}
+        disabled={uploading}
+        className="text-[13px] font-semibold text-ink border border-line bg-surface px-4 py-2 rounded-lg mb-3 disabled:opacity-60"
+      >
+        Eller sök gratis stockbilder
+      </button>
+      <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={addStock} />
 
       {error && <p className="text-[12.5px] text-red-600 mb-3">{error}</p>}
 

@@ -6,7 +6,7 @@ import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageCon
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
-import { isUnsplashImageUrl, unsplashKey, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
+import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -476,7 +476,14 @@ export async function POST(request: Request) {
   if (patch.newsArticle && newsCategory && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
     const title = patch.newsArticle.title.trim().slice(0, 120);
     const slug = await uniqueSlugForSite(supabase, site.id, title);
-    const firstImage = imageAttachments[0]?.url || null;
+    // En stockbild bär fotografen med sig i adressen (se withCredit) så
+    // artikeln kan visa "Foto: …" under bilden.
+    const firstAttachment = imageAttachments[0];
+    const firstImage = firstAttachment
+      ? firstAttachment.credit
+        ? withCredit(firstAttachment.url, firstAttachment.credit)
+        : firstAttachment.url
+      : null;
     const nowIso = new Date().toISOString();
     const { data: inserted, error: newsError } = await supabase
       .from("site_news_articles")

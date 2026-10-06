@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isAllowedImageUrl } from "@/lib/stockPhotos";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 // Kundens eget val av HUVUDBILD — den bild som alltid blir startsidans
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
   }
   // Samma skydd som den allmänna bilduppladdningen — bara filer i kundens
   // EGEN mapp i "uploads"-bucketen får registreras.
-  if (!fileUrl.includes(`/uploads/${user.id}/`)) {
+  if (!isAllowedImageUrl(fileUrl, user.id)) {
     return NextResponse.json({ error: "Ogiltig filsökväg." }, { status: 400 });
   }
 

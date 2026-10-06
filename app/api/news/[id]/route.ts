@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { isAllowedImageUrl } from "@/lib/stockPhotos";
 import { uniqueSlugForSite, normalizeCategory } from "@/lib/newsArticles";
 
 const MAX_TITLE = 120;
@@ -56,7 +57,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   }
   if (typeof body.imageUrl === "string" || body.imageUrl === null) {
     const imageUrl = body.imageUrl || null;
-    if (imageUrl && !imageUrl.includes(`/uploads/${user.id}/`)) {
+    if (imageUrl && !isAllowedImageUrl(imageUrl, user.id)) {
       return NextResponse.json({ error: "Ogiltig bild." }, { status: 400 });
     }
     update.image_url = imageUrl;

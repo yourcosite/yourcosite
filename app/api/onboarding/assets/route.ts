@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { isAllowedImageUrl, isUnsplashImageUrl } from "@/lib/stockPhotos";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
@@ -56,7 +57,7 @@ export async function POST(request: Request) {
 
   // fileUrl måste vara en fil i kundens egen mapp i "uploads"-bucketen —
   // annars kunde man registrera en godtycklig extern URL som sin egen fil.
-  if (!fileUrl.includes(`/uploads/${user.id}/`)) {
+  if (!isAllowedImageUrl(fileUrl, user.id) || (isUnsplashImageUrl(fileUrl) && !isImage)) {
     return NextResponse.json({ error: "Ogiltig filsökväg." }, { status: 400 });
   }
 
