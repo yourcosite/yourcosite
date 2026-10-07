@@ -76,7 +76,7 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
     examples: [
       "Lägg till en ny sida som heter Priser",
       "Ta bort sidan Galleri",
-      "Skriv en nyhet om vår nya öppettid",
+      "Skriv en nyhet om vår nya öppettid (börja gärna med en kort text – Millie utökar den och sätter rubrik och ingress)",
       "Koppla på Google Analytics: G-XXXXXXXXXX",
     ],
   },

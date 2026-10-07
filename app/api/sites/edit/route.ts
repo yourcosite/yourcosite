@@ -39,7 +39,7 @@ const EDIT_TOOL = {
           title: {
             type: "string",
             description:
-              "Artikelns rubrik. Använd EXAKT vad kunden skrev som rubrik, eller den tydliga rubriken/första raden i ett bifogat dokument. Hitta ALDRIG på en egen rubrik — är den inte tydlig, utelämna HELA \"newsArticle\"-objektet och fråga efter en rubrik i \"summary\" istället.",
+              "Artikelns rubrik. Använd EXAKT vad kunden skrev som rubrik, eller den tydliga rubriken/första raden i ett bifogat dokument. Har kunden bara skrivit en kort text utan rubrik (eller bett dig utöka/skriva om den), skriv själv en kort, tydlig rubrik (högst ca 8 ord) och en ingress utifrån texten. Finns ingen text alls att utgå från, utelämna HELA \"newsArticle\"-objektet och fråga vad nyheten ska handla om i \"summary\".",
           },
           excerpt: {
             type: "string",
@@ -48,7 +48,7 @@ const EDIT_TOOL = {
           body: {
             type: "string",
             description:
-              "Artikelns brödtext, i stycken separerade med tomrad. Använd kundens egen text (skriven i meddelandet eller ett bifogat dokument) om sådan finns — korrigera bara uppenbara stavfel, skriv inte om innehållet. Saknas egen text helt (kunden bad bara \"skriv en nyhet om X\"), skriv en kort, professionell text utifrån det kunden beskrev.",
+              "Artikelns brödtext, i stycken separerade med tomrad. Använd kundens egen text (skriven i meddelandet eller ett bifogat dokument) om sådan finns — korrigera bara uppenbara stavfel, skriv inte om innehållet. Saknas egen text helt (kunden bad bara \"skriv en nyhet om X\"), skriv en kort, professionell text utifrån det kunden beskrev. Ber kunden dig utöka eller skriva om en kort text de skrivit, gör det och behåll deras fakta.",
           },
           category: {
             type: "string",

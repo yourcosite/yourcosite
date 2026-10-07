@@ -60,6 +60,8 @@ ${
     : "Skriv ett kort, professionellt första utkast utifrån instruktionen. Hitta inte på specifika sakuppgifter (priser, datum, platser) kunden inte nämnt — håll dig allmän där det behövs."
 }
 
+Sätt ALLTID både rubrik och ingress: kunden börjar ofta med bara en kort text och vill att du utökar eller skriver om den. Är kundens nuvarande rubrik tom, skriv en kort, tydlig rubrik utifrån texten (högst ca 8 ord). Ingressen är en mening (max ca 160 tecken) som lockar att läsa vidare.
+
 Svara via verktyget "draft_news_article" på svenska: en rubrik (behåll kundens egen om den redan är bra), en kort ingress, och brödtexten i stycken separerade med tomrad. Skriv ALLTID rena textstycken utan någon HTML eller markdown-formatering — inga taggar som <p>, <body> eller </html>, inga asterisker eller rubriktecken. Bara vanlig löptext.`;
 
   let response;

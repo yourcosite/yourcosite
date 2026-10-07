@@ -314,6 +314,15 @@ export default function NewsClient({
           >
             <h2 className="text-[18px] font-semibold mb-4">{composer.id ? "Redigera artikel" : "Ny artikel"}</h2>
 
+            {!composer.id && (
+              <div className="bg-accent-soft border border-line rounded-lg px-3.5 py-3 mb-4 text-[12.5px] leading-relaxed">
+                <div className="font-semibold mb-0.5">Så skriver du en nyhet</div>
+                Börja med att skriva en kort text i rutan längre ner. Behöver du hjälp? Klicka på{" "}
+                <b>✨ Be Millie om hjälp med texten</b> och skriv att du vill att hon ska <b>utöka texten</b> eller{" "}
+                <b>skriva om den</b> — då sätter hon även en rubrik och en ingress åt dig.
+              </div>
+            )}
+
             <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">Rubrik</label>
             <input
               value={composer.title}
@@ -452,9 +461,24 @@ export default function NewsClient({
                 <input
                   value={assistInstruction}
                   onChange={(e) => setAssistInstruction(e.target.value)}
-                  placeholder={composer.body ? "Vad ska Millie ändra eller färdigställa?" : "Vad ska nyheten handla om?"}
-                  className="w-full border border-line rounded-lg px-3 py-2 text-[13.5px] mb-2.5 bg-surface"
+                  placeholder={composer.body ? "T.ex. utöka texten, skriv om den eller gör den kortare" : "Vad ska nyheten handla om?"}
+                  className="w-full border border-line rounded-lg px-3 py-2 text-[13.5px] mb-2 bg-surface"
                 />
+                {composer.body.trim() && (
+                  <div className="flex flex-wrap gap-1.5 mb-2.5">
+                    {["Utöka texten", "Skriv om den", "Gör den kortare", "Gör den mer personlig"].map((c) => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => setAssistInstruction(c)}
+                        className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1"
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11.5px] text-ink-dim mb-2.5">Millie sätter också rubrik och ingress åt dig.</p>
                 {assistError && <p className="text-[12.5px] text-warm font-semibold mb-2">{assistError}</p>}
                 <div className="flex justify-end gap-2">
                   <button onClick={() => setAssistOpen(false)} className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5">
