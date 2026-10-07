@@ -420,6 +420,7 @@ export default function SitePreview({
     <div
       className={`${fontClass} @container`}
       data-ycs-skin={skin ? skin.id : undefined}
+      data-ycs-space={content.theme.sectionSpacing}
       style={{
         background: palette.bg,
         color: palette.text,
@@ -501,8 +502,8 @@ export default function SitePreview({
         </div>
       ) : (
         restSections.map((section, i) => (
+          <div key={section.id} className={section.type === "hero" ? undefined : "ycs-sec"}>
           <SectionBlock
-            key={section.id}
             section={section}
             accent={accent}
             secondary={secondary}
@@ -527,6 +528,7 @@ export default function SitePreview({
             onSelectField={onSelectField}
             newsArticles={newsArticles}
           />
+          </div>
         ))
       )}
       <Footer

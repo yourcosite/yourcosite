@@ -68,6 +68,11 @@ const EDIT_TOOL = {
         description:
           "En kort mening på svenska, riktad direkt till kunden (t.ex. \"Bytte rubriken och gjorde texten kortare.\"), som beskriver vad som ändrades — eller varför inget ändrades om önskemålet inte gick att utföra.",
       },
+      exampleContentResolved: {
+        type: "boolean",
+        description:
+          "Sätt till true när kundens önskemål innebär att ALLA exempelcitat, exempelnyckeltal och exempelfrågor på förstasidan nu är bortbytta eller borttagna (så sajten inte längre innehåller våra påhittade exempel). Annars utelämna.",
+      },
       unsupported: {
         type: "boolean",
         description:
@@ -82,6 +87,7 @@ type EditPatch = {
   theme?: Partial<SiteContent["theme"]>;
   gaMeasurementId?: string;
   metaPixelId?: string;
+  pageOrder?: string[];
   changedPages?: SitePageContent[];
   removedPagePaths?: string[];
   newsArticle?: {
@@ -92,6 +98,7 @@ type EditPatch = {
     published?: boolean;
   };
   summary: string;
+  exampleContentResolved?: boolean;
   unsupported?: boolean;
 };
 
@@ -167,6 +174,16 @@ VIKTIGT — bakgrundsfärg på EN enskild sida (t.ex. "gör Om oss-sidan svart/m
 
 VIKTIGT — exempelinnehåll: förstasidan kan innehålla EXEMPELcitat, exempelnyckeltal ("stats") och exempelfrågor som vi satt dit för att visa vad som finns${content.exampleContent ? " (den här sajten har sådana)" : ""}. Ber kunden dig ta bort/byta dem ("ta bort citaten", "jag har inga såna siffror", "skriv egna omdömen") — gör det direkt: ta bort hela sektionen eller utelämna "stats". Skriver kunden egna citat/siffror, använd EXAKT kundens ord.
 
+VIKTIGT — ändra layout på en sektion ("visa tjänsterna som en lista", "gör Om oss med en stor bild"): byt sektionens "layout"-värde till ett giltigt för den sektionstypen (se verktygets schema) och behåll allt annat innehåll, alla bgColor/ctaColor/ctaLink/link och imageUrl oförändrade. Pekar kunden ut en markerad sektion, ändra just den. Välj layouten som bäst matchar ordvalet (t.ex. "lista" → "list", "stor bild" → "image-full", "siffror" → "stats-split"). Saknar sektionen innehåll en ny layout behöver (t.ex. nyckeltal), fyll i rimliga EXEMPELvärden.
+
+VIKTIGT — flytta/ordna om: "flytta citaten högst upp" = skriv ut sidans sektioner i den nya ordningen i changedPages (hero ska alltid ligga först, och sidans kontakt/cta nära slutet om inget annat sägs). "Lägg Kontakt före Nyheter i menyn"/"byt ordning på sidorna" = ange "pageOrder" med ALLA sidors path i ny ordning; startsidan ("/") ska normalt vara först. Ändra inget annat än ordningen.
+
+VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/square/underline = runda, kantiga, understrukna knappar), "headerLayout" (left/centered-stacked/split = menyns placering), "sectionSpacing" (compact/normal/airy = tätare/standard/luftigare). Ange bara det kunden bett om.
+
+VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt "seoTitle" (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och "seoDescription" (120-155 tecken, sann och lockande) på sidan/sidorna det gäller i changedPages — och skriv ut resten av sidan oförändrad. Gäller önskemålet "alla sidor", gör det för alla sidor (det är en liten ändring). Hitta inte på fakta om verksamheten, utgå från sidans egen text.
+
+VIKTIGT — ton och omskrivning, EN SIDA I TAGET: ber kunden dig skriva om texten i en annan ton ("mer personligt", "kortare", "mer formellt") — gör det BARA på en sida per svar: den sida kunden pekar ut, annars sidan de tittar på just nu (se ovan). Rör aldrig fler sidor med en tonändring, även om kunden skriver "hela sajten". Avsluta "summary" med en vänlig fråga om vilken sida du ska ta härnäst (nämn gärna nästa sida vid namn). Bevara fakta, namn, siffror, länkar, bilder och struktur — bara formuleringarna ändras.
+
 VIKTIGT — typografi och färgpaket för HELA sajten: ber kunden om en annan stil/känsla ("gör den mörk och elegant", "fetare typsnitt", "mjukare och pastell", "byt typografi") — sätt "theme.skin" till det av paketen som passar bäst (se fältets beskrivning; "ingen" går tillbaka till det vanliga temat). Ber kunden om större eller mindre rubriker ("gör rubrikerna större") — sätt "theme.headingScale" (utgå från nuvarande värde om det finns, annars 1). Ange bara de theme-delfält som ändras. Kundens accentfärg behålls av alla paket. Nuvarande paket: "${content.theme.skin ?? "ingen"}", rubrikskala: ${content.theme.headingScale ?? 1}.
 
 VIKTIGT — färg på EN ENSKILD sektion, ruta/kort eller knapp (t.ex. "gör bara den sektionen mörkblå", "färga mittenrutan orange", "gör knappen i kontaktsektionen grön"): till skillnad från bakgrundsfärg på en HEL sida (backgroundMode, se ovan) eller HELA sajtens tema ("theme.accentColor"/"theme.secondaryColors") finns tre separata, FRIA hex-färgfält för exakt den här mindre skalan:
@@ -236,7 +253,15 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
     // bakgrunden", och en tidigare satt sidbakgrund försvinna igen nästa
     // gång kunden ber om en helt orelaterad ändring på samma sida.
     pages.push(
-      changed ? { ...changed, backgroundMode: changed.backgroundMode ?? page.backgroundMode } : page
+      changed
+        ? {
+            ...changed,
+            backgroundMode: changed.backgroundMode ?? page.backgroundMode,
+            // Samma sak för sökmotortitel/-beskrivning (seoTitle/seoDescription).
+            seoTitle: changed.seoTitle ?? page.seoTitle,
+            seoDescription: changed.seoDescription ?? page.seoDescription,
+          }
+        : page
     );
     changedByPath.delete(page.path);
   }
@@ -265,11 +290,79 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
       else merged.theme.headingScale = Math.min(1.6, Math.max(0.7, n));
     }
   }
+  if (patch.theme) {
+    const t = patch.theme as { buttonStyle?: string; headerLayout?: string; sectionSpacing?: string };
+    if (t.buttonStyle !== undefined && !["pill", "square", "underline"].includes(t.buttonStyle)) {
+      if (content.theme.buttonStyle) merged.theme.buttonStyle = content.theme.buttonStyle;
+      else delete merged.theme.buttonStyle;
+    }
+    if (t.headerLayout !== undefined && !["left", "centered-stacked", "split"].includes(t.headerLayout)) {
+      if (content.theme.headerLayout) merged.theme.headerLayout = content.theme.headerLayout;
+      else delete merged.theme.headerLayout;
+    }
+    if (t.sectionSpacing !== undefined) {
+      if (t.sectionSpacing === "compact" || t.sectionSpacing === "airy") merged.theme.sectionSpacing = t.sectionSpacing;
+      else delete merged.theme.sectionSpacing;
+    }
+  }
+  // Sidornas ordning (menyn): bara kända paths, resten läggs sist i sin
+  // gamla ordning — en ofullständig lista får aldrig tappa en sida.
+  if (Array.isArray(patch.pageOrder) && patch.pageOrder.length > 0) {
+    const byPath = new Map(merged.pages.map((pg) => [pg.path, pg]));
+    const ordered: SitePageContent[] = [];
+    for (const path of patch.pageOrder) {
+      const pg = byPath.get(path);
+      if (pg) {
+        ordered.push(pg);
+        byPath.delete(path);
+      }
+    }
+    merged.pages = [...ordered, ...merged.pages.filter((pg) => byPath.has(pg.path))];
+  }
+  // Sökmotortexter: trimmas och kortas (tom sträng = ta bort).
+  for (const pg of merged.pages) {
+    if (pg.seoTitle !== undefined) {
+      const v = String(pg.seoTitle).trim().slice(0, 70);
+      if (v) pg.seoTitle = v;
+      else delete pg.seoTitle;
+    }
+    if (pg.seoDescription !== undefined) {
+      const v = String(pg.seoDescription).trim().slice(0, 170);
+      if (v) pg.seoDescription = v;
+      else delete pg.seoDescription;
+    }
+  }
+  // Startsidans stilaxlar (theme.heroLayout/aboutLayout/gridLayout/ctaLayout,
+  // satta när kunden valde förslag) skriver över layouten på startsidans
+  // FÖRSTA sektion av respektive typ. Ber kunden Millie byta layout på just
+  // den sektionen skulle ändringen annars aldrig synas — då släpper vi axeln.
+  {
+    const oldHome = content.pages.find((pg) => pg.path === "/");
+    const newHome = merged.pages.find((pg) => pg.path === "/");
+    if (oldHome && newHome) {
+      const axes = [
+        ["hero", "heroLayout"],
+        ["about", "aboutLayout"],
+        ["grid", "gridLayout"],
+        ["cta", "ctaLayout"],
+      ] as const;
+      for (const [type, axis] of axes) {
+        if (!merged.theme[axis]) continue;
+        const nu = newHome.sections.find((sec) => sec.type === type) as any;
+        const old = nu ? (oldHome.sections.find((sec) => sec.id === nu.id) as any) : undefined;
+        const oldEffective = old ? merged.theme[axis] : undefined;
+        if (nu && old && nu.layout !== old.layout && nu.layout !== oldEffective) {
+          delete merged.theme[axis];
+        }
+      }
+    }
+  }
   // Tomma strängar är kundens sätt att be Claude koppla BORT en tagg (se
   // promptens instruktion) — sparas aldrig som en tom sträng, fältet tas
   // bort helt istället, annars tolkar renderaren det som "sätt in en
   // Google Analytics-tagg med ID:t '' ". undefined (fältet utelämnat)
   // betyder "orört", inte "ta bort" — därför den uttryckliga kollen.
+  if (patch.exampleContentResolved === true) delete merged.exampleContent;
   if (patch.gaMeasurementId !== undefined) {
     if (patch.gaMeasurementId) merged.gaMeasurementId = patch.gaMeasurementId;
     else delete merged.gaMeasurementId;

@@ -41,6 +41,8 @@ export interface SiteTheme {
   skin?: SkinId;
   /** Kundens egen justering av rubrikernas storlek (1 = som mallen). Multipliceras med skinnets skala. */
   headingScale?: number;
+  /** Avstånd mellan sektionerna. Saknas = standard. Satt av Millie. */
+  sectionSpacing?: "compact" | "airy";
   accentColor: string;
   secondaryColors: string[];
   font: ThemeFont;
@@ -425,6 +427,11 @@ export interface SitePageContent {
   // ingen risk att kunden (eller AI:n) råkar be om en bakgrund texten
   // försvinner mot.
   backgroundMode?: BackgroundMode;
+  // Sökmotorer och delning: sidans egen titel och beskrivning (sätts av Millie).
+  // Saknas de används sidans namn + sajtens namn. Används av den publicerade
+  // sajten (<title>, meta description, delningsbild-text).
+  seoTitle?: string;
+  seoDescription?: string;
 }
 
 export interface SocialLink {

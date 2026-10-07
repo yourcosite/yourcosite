@@ -355,6 +355,17 @@ const PAGE_BACKGROUND_MODE_SCHEMA = {
     "Utelämna HELA detta fält om den här sidan ska se ut som resten av sajten (vanligast, och alltid rätt om kunden inte bett om något annat). Sätt det bara om kunden uttryckligen vill ha en ANNAN bakgrund på JUST den här sidan än sajtens vanliga tema — \"light\" (ljus/vit), \"warm\" (varm/beige) eller \"dark\" (mörk/svart, det kunden oftast menar med \"svart bakgrund\"). Byter du läge görs HELA sidan om (header, sektioner och sidfot när besökaren är på den sidan) — text och kortfärger justeras automatiskt så allt syns, ingen egen textfärg behöver eller ska anges.",
 };
 
+const SEO_TITLE_SCHEMA = {
+  type: "string",
+  description:
+    "Sidans titel i Google och när den delas (helst under 60 tecken, med sidans viktigaste sökord). Sätt bara när kunden ber om sökmotor-/delningstext för just den sidan; annars utelämna, och bevara ett redan satt värde oförändrat.",
+};
+const SEO_DESCRIPTION_SCHEMA = {
+  type: "string",
+  description:
+    "Sidans beskrivning under titeln i Google och vid delning (helst 120-155 tecken, lockande och sann). Samma regel som seoTitle.",
+};
+
 // Egenskaperna för SJÄLVA innehållet (utan "summary" m.m. som bara
 // edit-routen behöver ovanpå det här) — delas rakt av mellan verktygens
 // input_schema.
@@ -426,6 +437,24 @@ export const EDIT_PATCH_PROPERTIES = {
         description:
           "Färg- och typografipaket som byter hela sajtens känsla (färgytor, rubrikernas typsnitt, storlek och vikt) men behåller kundens accentfärg som grund. solglimt = ljus, färgstarka tonade ytor och fet grotesk; skymning = mörk och elegant med serif; pastell = mjuk, ljus och luftig; kontrast = vitt och svart med versaler och en kraftig färgyta; fargyta = djup färgfylld bakgrund med kursiv serif. \"ingen\" tar bort paketet och går tillbaka till sajtens vanliga tema. Sätt bara när kunden ber om en annan stil/typografi/känsla på hela sajten.",
       },
+      buttonStyle: {
+        type: "string",
+        enum: ["pill", "square", "underline"],
+        description:
+          "Knappform på hela sajten: pill = helt runda knappar, square = kantiga, underline = understruken textlänk utan ruta. Sätt bara när kunden ber om en annan knappform.",
+      },
+      headerLayout: {
+        type: "string",
+        enum: ["left", "centered-stacked", "split"],
+        description:
+          "Headerns uppbyggnad: left = logga vänster och meny höger (klassisk), centered-stacked = logga centrerad med menyn på en egen rad under, split = logga vänster och menyn centrerad. Sätt bara när kunden ber om en annan header/meny-placering.",
+      },
+      sectionSpacing: {
+        type: "string",
+        enum: ["compact", "normal", "airy"],
+        description:
+          "Mellanrummet mellan (och inuti) sektionerna på hela sajten: compact = tätare, normal = standard, airy = luftigare. Sätt bara när kunden ber om tätare/luftigare sida eller mer/mindre luft.",
+      },
       headingScale: {
         type: "number",
         description:
@@ -435,6 +464,12 @@ export const EDIT_PATCH_PROPERTIES = {
   },
   gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,
   metaPixelId: META_PIXEL_ID_SCHEMA,
+  pageOrder: {
+    type: "array",
+    items: { type: "string" },
+    description:
+      "Sidornas path i den NYA ordningen (hela listan, alla sidor, första = längst till vänster i menyn). Ange bara när kunden bett om att flytta/omordna sidor eller menyalternativ. Sektioner flyttas inom en sida genom att skriva ut den sidans sektioner i ny ordning i changedPages, inte här.",
+  },
   changedPages: {
     type: "array",
     description:
@@ -446,6 +481,8 @@ export const EDIT_PATCH_PROPERTIES = {
         label: { type: "string" },
         sections: { type: "array", items: SECTION_SCHEMA },
         backgroundMode: PAGE_BACKGROUND_MODE_SCHEMA,
+        seoTitle: SEO_TITLE_SCHEMA,
+        seoDescription: SEO_DESCRIPTION_SCHEMA,
       },
       required: ["path", "label", "sections"],
     },

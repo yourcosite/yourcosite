@@ -23,6 +23,8 @@ type ChatMessage = {
   // "Skicka önskemål till oss"-rutan med rätt sammanhang.
   unsupported?: boolean;
   requestText?: string;
+  // Förslag kunden kan klicka på för att fylla i meddelanderutan.
+  chips?: string[];
 };
 
 // Bilagor i chatten: bilder skickas till Claude som en riktig bild (den kan
@@ -108,6 +110,10 @@ export default function EditorPage() {
       text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt.",
     },
   ]);
+  // De senaste versionerna av sajten före Millies ändringar, för "Ångra".
+  const [undoStack, setUndoStack] = useState<SiteContent[]>([]);
+  const [undoing, setUndoing] = useState(false);
+  const exampleHintShown = useRef(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -314,6 +320,48 @@ export default function EditorPage() {
     draftInputRef.current?.focus();
   };
 
+  // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
+  // nämner det en gång så kunden vet att det går att byta eller ta bort.
+  useEffect(() => {
+    if (!content?.exampleContent || exampleHintShown.current) return;
+    exampleHintShown.current = true;
+    setMessages((m) => [
+      ...m,
+      {
+        from: "bot",
+        text: "Obs: förstasidan har exempeltexter som jag lagt dit för att visa vad som går att ha — kundcitat, nyckeltal och vanliga frågor. De är påhittade, så byt ut dem mot era egna eller ta bort dem innan ni publicerar.",
+        chips: [
+          "Byt ut exempelcitaten mot mina egna",
+          "Ta bort alla exempelcitat",
+          "Ta bort nyckeltalen",
+          "Ta bort vanliga frågor",
+        ],
+      },
+    ]);
+  }, [content?.exampleContent]);
+
+  const undo = async () => {
+    const previous = undoStack[undoStack.length - 1];
+    if (!previous || undoing || sending) return;
+    setUndoing(true);
+    try {
+      const res = await fetch("/api/sites/restore", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site?.id, content: previous }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      setContent(data.content);
+      setUndoStack((st) => st.slice(0, -1));
+      setMessages((m) => [...m, { from: "bot", text: "Klart, jag har ångrat din senaste ändring." }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: `Det gick inte att ångra: ${e.message}` }]);
+    } finally {
+      setUndoing(false);
+    }
+  };
+
   const send = async () => {
     const text = draft.trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -375,6 +423,7 @@ export default function EditorPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (content) setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
       // Millie kan ha skapat en ny nyhetsartikel i samma svar (se
       // app/api/sites/edit/route.ts) — lägg in den i listan direkt så en
@@ -649,6 +698,23 @@ export default function EditorPage() {
                     </div>
                   )}
                   {m.text}
+                  {m.chips && m.chips.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-2.5">
+                      {m.chips.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => {
+                            setDraft(c);
+                            draftInputRef.current?.focus();
+                          }}
+                          className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink"
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {m.unsupported && (
                     <button
                       type="button"
@@ -679,6 +745,16 @@ export default function EditorPage() {
 
           <div className="px-5 py-4 border-t border-line">
             {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
+            {undoStack.length > 0 && (
+              <button
+                type="button"
+                onClick={undo}
+                disabled={undoing || sending}
+                className="mb-2 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5 disabled:opacity-60"
+              >
+                {undoing ? "Ångrar …" : "↩ Ångra senaste ändringen"}
+              </button>
+            )}
             {selection && (
               <div className="flex items-center gap-2 bg-accent-soft border border-line rounded-lg px-3 py-2 mb-2">
                 <span className="text-[14px] flex-shrink-0">
