@@ -8,6 +8,7 @@ import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSch
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
 import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
 import { isSkinId } from "@/lib/skins";
+import { dedupeMaps } from "@/lib/ensureImageSlots";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -544,7 +545,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "AI-svaret hade fel format." }, { status: 502 });
   }
 
-  const updatedContent = applyPatch(site.content, patch);
+  const updatedContent = dedupeMaps(applyPatch(site.content, patch), "flatten-form");
   if (!updatedContent.pages.length) {
     return NextResponse.json({ error: "Ändringen skulle lämna sajten utan sidor." }, { status: 502 });
   }

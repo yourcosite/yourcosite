@@ -85,3 +85,35 @@ export function enforceHomepageImageRichness(content: SiteContent): SiteContent 
 
   return content;
 }
+
+// Kontaktformuläret med layout "split-map" har redan en inbäddad karta
+// bredvid sig. Lägger AI:n (eller kunden via Millie) ÄVEN en separat
+// "map"-sektion på samma sida blir det två kartor. Samma sak om en sida
+// råkar få två "map"-sektioner.
+//   "drop-map"   (generering): den separata kartan tas bort — formulärets
+//                 karta visar samma adress (tas över om formuläret saknar).
+//   "flatten-form" (Millie): kunden bad nyss om en karta, så den behålls och
+//                 formuläret får layouten "centered" i stället.
+export function dedupeMaps(content: SiteContent, mode: "drop-map" | "flatten-form" = "drop-map"): SiteContent {
+  for (const page of content.pages) {
+    let seenMap = false;
+    page.sections = page.sections.filter((s) => {
+      if (s.type !== "map") return true;
+      if (seenMap) return false; // två "map" på samma sida — behåll bara den första
+      seenMap = true;
+      return true;
+    });
+    const form = page.sections.find((s) => s.type === "contactForm" && (s as any).layout === "split-map") as any;
+    const mapIdx = page.sections.findIndex((s) => s.type === "map");
+    if (form && mapIdx !== -1) {
+      if (mode === "drop-map") {
+        const map = page.sections[mapIdx] as any;
+        if (!form.address && map.address) form.address = map.address;
+        page.sections.splice(mapIdx, 1);
+      } else {
+        form.layout = "centered";
+      }
+    }
+  }
+  return content;
+}

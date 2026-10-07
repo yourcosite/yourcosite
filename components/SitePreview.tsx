@@ -269,11 +269,26 @@ export default function SitePreview({
     return null;
   })();
 
-  const page = isPrivacyPolicyPage
+  const rawPage = isPrivacyPolicyPage
     ? { path: PRIVACY_POLICY_PATH, label: "Integritetspolicy", sections: [] }
     : newsDetailMatch
     ? newsDetailMatch.page
     : content.pages.find((p) => p.path === activePath) || content.pages[0];
+  // Kontaktformulär med layout "split-map" har redan en egen karta. Finns
+  // även en separat "map"-sektion på samma sida (äldre sajter, innan
+  // lib/ensureImageSlots.ts dedupeMaps fanns) döljer vi den extra kartan
+  // vid visning, och likaså en andra "map" — innehållet rörs inte.
+  const page = (() => {
+    const hasFormMap = rawPage.sections.some((s) => s.type === "contactForm" && (s as { layout?: string }).layout === "split-map");
+    let seenMap = false;
+    const filtered = rawPage.sections.filter((s) => {
+      if (s.type !== "map") return true;
+      if (hasFormMap || seenMap) return false;
+      seenMap = true;
+      return true;
+    });
+    return filtered.length === rawPage.sections.length ? rawPage : { ...rawPage, sections: filtered };
+  })();
   const font = fontOverride ?? content.theme.font;
   // Prioritet: en uttrycklig förhandsvisnings-override (t.ex. /forslag, som
   // tvingar fram ett läge oavsett innehåll) vinner alltid. Annars används

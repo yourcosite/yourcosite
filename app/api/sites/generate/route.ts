@@ -5,7 +5,7 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspiration";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
-import { ensureImageSlots, enforceHomepageImageRichness } from "@/lib/ensureImageSlots";
+import { ensureImageSlots, enforceHomepageImageRichness, dedupeMaps } from "@/lib/ensureImageSlots";
 import { ensureShowcaseSections } from "@/lib/showcaseContent";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
 import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteContentSchema";
@@ -355,7 +355,7 @@ export async function POST() {
   // ensureShowcaseSections fyller förstasidan med exempelcitat/nyckeltal/
   // frågor om AI:n inte skrev några — förslagen ska visa upp vad som finns.
   const contentWithImageSlots = enforceHomepageImageRichness(
-    ensureImageSlots(ensureShowcaseSections(randomizeSectionLayouts(content, "/"), site.name))
+    ensureImageSlots(dedupeMaps(ensureShowcaseSections(randomizeSectionLayouts(content, "/"), site.name)))
   );
 
   // Egna uppladdade foton (steg 3) placeras deterministiskt i layouten i
