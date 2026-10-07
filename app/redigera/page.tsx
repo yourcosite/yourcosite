@@ -26,6 +26,8 @@ type ChatMessage = {
   requestText?: string;
   // Förslag kunden kan klicka på för att fylla i meddelanderutan.
   chips?: string[];
+  // Visas men sparas inte i historiken (presentation, hälsning, tips).
+  transient?: boolean;
 };
 
 // Bilagor i chatten: bilder skickas till Claude som en riktig bild (den kan
@@ -73,6 +75,20 @@ const EXTRACTABLE_DOC_TYPES = [
 // Millie, maskoten som "sköter" redigeringen — texterna växlar medan ett
 // svar väntas in så det känns som att hon faktiskt gör något, inte att
 // sidan bara hänger (se intervallet i EditorPage nedan).
+// "Välkommen tillbaka" — en slumpas varje gång man öppnar redigeraren igen.
+const WELCOME_BACK = [
+  "Välkommen tillbaka! Jag har hållit din sajt varm åt dig. 🔥",
+  "Där är du ju! Jag har suttit här och polerat rubrikerna medan du var borta.",
+  "Hej igen! Jag hann nästan sakna dig. Nästan.",
+  "Tjena! Kaffet är kallt men sajten är redo. ☕ Vad ska vi fixa idag?",
+  "Välkommen åter! Jag har inte rört något. Jag lovar. (Okej, jag tittade lite.)",
+  "Där satt den! Fint att se dig igen, vad ska vi förbättra den här gången?",
+  "Hej och välkommen tillbaka! Jag har värmt upp tangentbordet. ⌨️",
+  "Åh, du kom tillbaka! Då kör vi. Berätta vad du vill ändra.",
+  "Hallå där! Jag låg och drömde om perfekta marginaler. Vad kan jag göra för dig?",
+  "Välkommen tillbaka, chefen! Din sajt väntar, och det gör jag också. 😄",
+];
+
 const THINKING_PHRASES = [
   "Millie tänker…",
   "Millie hjälper dig nu",
@@ -108,13 +124,13 @@ export default function EditorPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       from: "bot",
+      transient: true,
       text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt.",
     },
   ]);
   // De senaste versionerna av sajten före Millies ändringar, för "Ångra".
   const [undoStack, setUndoStack] = useState<SiteContent[]>([]);
   const [undoing, setUndoing] = useState(false);
-  const exampleHintShown = useRef(false);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -338,15 +354,49 @@ export default function EditorPage() {
     draftInputRef.current?.focus();
   };
 
-  // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
-  // nämner det en gång så kunden vet att det går att byta eller ta bort.
+  // Chattens historia sparas i webbläsaren per sajt (de senaste 20
+  // ändringarna, alltså 40 meddelanden) så den finns kvar när man laddar om.
+  // Den inledande presentationen, hälsningen och tipsen är "transient" och
+  // sparas inte. Finns historik visas en "välkommen tillbaka"-hälsning
+  // (en av tio, aldrig samma två gånger i rad) i stället för presentationen.
+  const chatKey = site?.id ? `yourcosite-chat-${site.id}` : null;
+  const chatRestored = useRef(false);
   useEffect(() => {
-    if (!content?.exampleContent || exampleHintShown.current) return;
-    exampleHintShown.current = true;
-    setMessages((m) => [
-      ...m,
-      {
+    if (!chatKey || !content || chatRestored.current) return;
+    chatRestored.current = true;
+    let stored: ChatMessage[] = [];
+    let lastGreeting = -1;
+    let hintSeen = false;
+    try {
+      const raw = JSON.parse(localStorage.getItem(chatKey) || "null");
+      if (raw && Array.isArray(raw.messages)) {
+        stored = raw.messages.filter(
+          (m: any) => m && (m.from === "user" || m.from === "bot") && typeof m.text === "string"
+        );
+      }
+      lastGreeting = Number(localStorage.getItem(`${chatKey}-greeting`) ?? -1);
+      hintSeen = localStorage.getItem(`${chatKey}-hint`) === "1";
+    } catch {
+      // Blockerad lagring — då börjar chatten om som vanligt.
+    }
+    const next: ChatMessage[] = [];
+    if (stored.length > 0) {
+      let g = Math.floor(Math.random() * WELCOME_BACK.length);
+      if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
+      try {
+        localStorage.setItem(`${chatKey}-greeting`, String(g));
+      } catch {}
+      next.push(...stored, { from: "bot", text: WELCOME_BACK[g], transient: true });
+    }
+    // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
+    // nämner det en enda gång per sajt.
+    if (content.exampleContent && !hintSeen) {
+      try {
+        localStorage.setItem(`${chatKey}-hint`, "1");
+      } catch {}
+      next.push({
         from: "bot",
+        transient: true,
         text: "Obs: förstasidan har exempeltexter som jag lagt dit för att visa vad som går att ha — kundcitat, nyckeltal och vanliga frågor. De är påhittade, så byt ut dem mot era egna eller ta bort dem innan ni publicerar.",
         chips: [
           "Byt ut exempelcitaten mot mina egna",
@@ -354,9 +404,25 @@ export default function EditorPage() {
           "Ta bort nyckeltalen",
           "Ta bort vanliga frågor",
         ],
-      },
-    ]);
-  }, [content?.exampleContent]);
+      });
+    }
+    if (next.length > 0) {
+      // Har historik finns: ersätt presentationen. Annars behålls den och
+      // eventuellt tips läggs efter.
+      setMessages((m) => (stored.length > 0 ? next : [...m, ...next]));
+    }
+  }, [chatKey, !!content]);
+
+  useEffect(() => {
+    if (!chatKey || !chatRestored.current) return;
+    const toSave = messages.filter((m) => !m.transient).slice(-40);
+    if (toSave.length === 0) return; // skriv aldrig över sparad historik med tomt
+    try {
+      localStorage.setItem(chatKey, JSON.stringify({ messages: toSave }));
+    } catch {
+      // Full eller blockerad lagring — historiken sparas helt enkelt inte.
+    }
+  }, [messages, chatKey]);
 
   // Hjälpen öppnas av sig själv de tre första gångerna redigeraren visas
   // (räknas i webbläsaren), därefter bara via "Tips"-knappen.
@@ -399,7 +465,7 @@ export default function EditorPage() {
   const send = async () => {
     const text = draft.trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
-    const history = messages;
+    const history = messages.filter((m) => !m.transient);
     const currentAttachments = attachments;
     const currentSelection = selection;
     setMessages((m) => [
