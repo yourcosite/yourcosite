@@ -8,6 +8,7 @@ import SitePreview from "@/components/SitePreview";
 import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
+import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -148,6 +149,7 @@ export default function EditorPage() {
   // bildgalleri) — se handleFiles nedan.
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [stockOpen, setStockOpen] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -339,6 +341,22 @@ export default function EditorPage() {
       },
     ]);
   }, [content?.exampleContent]);
+
+  // Hjälpen öppnas av sig själv de tre första gångerna redigeraren visas
+  // (räknas i webbläsaren), därefter bara via "Tips"-knappen.
+  useEffect(() => {
+    if (!content) return;
+    try {
+      const seen = parseInt(localStorage.getItem(MILLIE_HELP_SEEN_KEY) || "0", 10) || 0;
+      if (seen < 3) {
+        localStorage.setItem(MILLIE_HELP_SEEN_KEY, String(seen + 1));
+        setHelpOpen(true);
+      }
+    } catch {
+      // localStorage kan vara blockerat — då visas hjälpen bara via knappen.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!content]);
 
   const undo = async () => {
     const previous = undoStack[undoStack.length - 1];
@@ -679,6 +697,14 @@ export default function EditorPage() {
               <div className="font-semibold text-[14.5px]">Chatta med Millie</div>
               <div className="text-[12px] text-ink-dim mt-0.5">Säg vilken sida du menar, och vad du vill ändra eller lägga till.</div>
             </div>
+            <button
+              type="button"
+              onClick={() => setHelpOpen(true)}
+              title="Se vad du kan be Millie om"
+              className="ml-auto flex-shrink-0 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
+            >
+              💡 Tips
+            </button>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4.5 flex flex-col gap-4">
@@ -871,6 +897,14 @@ export default function EditorPage() {
         </div>
       </div>
 
+      <MillieHelpModal
+        open={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        onPick={(text) => {
+          setDraft(text);
+          draftInputRef.current?.focus();
+        }}
+      />
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />
 
       <ContactSupportModal
