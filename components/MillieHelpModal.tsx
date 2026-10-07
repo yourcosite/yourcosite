@@ -108,9 +108,10 @@ export default function MillieHelpModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 border-b border-line">
           <div>
-            <h2 className="text-[19px] font-medium">Vad kan Millie göra?</h2>
+            <h2 className="text-[19px] font-medium">Hej, jag är Millie! 👋</h2>
             <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">
-              Skriv som du pratar. Klicka på ett exempel nedan så hamnar det i meddelanderutan – ändra sedan texten så den
+              Jag är din digitala assistent och hjälper dig med allt som rör din hemsida. Så här kan du be mig om hjälp:
+              skriv som du pratar. Klicka på ett exempel nedan så hamnar det i meddelanderutan – ändra sedan texten så den
               passar dig. Du kan alltid ångra med knappen i chatten.
             </p>
           </div>

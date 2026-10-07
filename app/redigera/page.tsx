@@ -143,6 +143,22 @@ export default function EditorPage() {
     return () => clearInterval(id);
   }, [sending]);
 
+  // Förloppsindikator medan Millie jobbar. Det finns ingen riktig
+  // procentsiffra att få från AI:n, så stapeln är en uppskattning: den
+  // rör sig snabbt i början och saktar in mot ~93 % (en vanlig ändring
+  // tar ungefär en kvart sekunder), och fylls till 100 % när svaret kommer.
+  const [progress, setProgress] = useState(0);
+  useEffect(() => {
+    if (!sending) return;
+    setProgress(0.03);
+    const start = Date.now();
+    const id = setInterval(() => {
+      const t = (Date.now() - start) / 1000;
+      setProgress(Math.min(0.93, 0.03 + 0.9 * (1 - Math.exp(-t / 7))));
+    }, 200);
+    return () => clearInterval(id);
+  }, [sending]);
+
   const [selection, setSelection] = useState<Selection | null>(null);
 
   // Flera bilagor samtidigt (t.ex. en hel hög bilder till ett nytt
@@ -461,6 +477,9 @@ export default function EditorPage() {
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: `Det gick inte: ${e.message}` }]);
     } finally {
+      // Fyll stapeln till 100 % en kort stund så det känns avslutat.
+      setProgress(1);
+      await new Promise((r) => setTimeout(r, 350));
       setSending(false);
     }
   };
@@ -649,7 +668,12 @@ export default function EditorPage() {
                   <div className="absolute inset-0 bg-white/40 z-40 flex items-start justify-center pt-10 pointer-events-none">
                     <div className="bg-ink text-white text-[12.5px] font-semibold pl-2 pr-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
                       <Millie active size={26} />
-                      {THINKING_PHRASES[phraseIndex]}
+                      <div>
+                        <div>{THINKING_PHRASES[phraseIndex]}</div>
+                        <div className="mt-1.5 h-1 w-40 rounded-full bg-white/25 overflow-hidden">
+                          <div className="h-full bg-white rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -762,8 +786,14 @@ export default function EditorPage() {
             {sending && (
               <div className="self-start flex items-end gap-2">
                 <Millie active size={22} />
-                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5">
-                  {THINKING_PHRASES[phraseIndex]}
+                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5 min-w-[200px]">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>{THINKING_PHRASES[phraseIndex]}</span>
+                    <span className="text-[12px] font-semibold tabular-nums">{Math.round(progress * 100)}%</span>
+                  </div>
+                  <div className="mt-2 h-1.5 rounded-full bg-line overflow-hidden">
+                    <div className="h-full bg-accent rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
+                  </div>
                 </div>
               </div>
             )}
