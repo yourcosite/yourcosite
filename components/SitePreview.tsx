@@ -1744,6 +1744,25 @@ function SectionBlockInner({
     };
   };
 
+  // Nyckeltal (stats) är index-adresserade som "stats.0", "stats.1" …;
+  // hela talet (värde + etikett) markeras som ett fält.
+  const statField = (i: number, stat: { value: string; label: string }) => {
+    const sel = fieldSel(`stats.${i}`, `${stat.value} ${stat.label}`, "nyckeltalet");
+    return {
+      selected: !!sel && selectedFieldKey === sel.key,
+      onSelect: () => { sel && onSelectField?.(sel); },
+    };
+  };
+  // "Läs mer →"-länken (about image-full/image-stats: ctaLink, grid-rutor: link).
+  const readMoreField = (field: string, desc: string, itemIndex?: number) => {
+    const sel = fieldSel(field, "Läs mer →", desc, itemIndex);
+    return {
+      editable,
+      selected: !!sel && selectedFieldKey === sel.key,
+      onSelect: () => { sel && onSelectField?.(sel); },
+    };
+  };
+
   // Bara använd av "faq" nedan — vilken fråga som är utfälld just nu.
   // Ligger ovillkorat här (inte i case "faq") eftersom React Hooks måste
   // anropas i samma ordning varje render, oavsett sektionstyp.
@@ -1830,13 +1849,13 @@ function SectionBlockInner({
                   style={{ background: `${palette.cardBg}EB` }}
                 >
                   {stats.slice(0, 3).map((stat, i) => (
-                    <div key={i} className={`flex items-start gap-2 text-[12.5px] leading-snug ${i > 0 ? "mt-2.5" : ""}`}>
+                    <Field key={i} editable={editable} as="div" className={`flex items-start gap-2 text-[12.5px] leading-snug ${i > 0 ? "mt-2.5" : ""}`} {...statField(i, stat)}>
                       <span className="mt-[2px] text-[12px] font-bold flex-shrink-0" style={{ color: accent }}>✓</span>
                       <span style={{ color: palette.text }}>
                         <span className="font-heading ycs-stat font-semibold">{stat.value}</span>{" "}
                         <span style={{ color: palette.textDim }}>{stat.label}</span>
                       </span>
-                    </div>
+                    </Field>
                   ))}
                 </div>
               )}
@@ -1985,10 +2004,10 @@ function SectionBlockInner({
               {stats.length > 0 && (
                 <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mt-8 text-[12px]" style={{ color: palette.textDim }}>
                   {stats.slice(0, 3).map((stat, i) => (
-                    <span key={i} className="flex items-center gap-1.5">
+                    <Field key={i} editable={editable} as="span" className="flex items-center gap-1.5" {...statField(i, stat)}>
                       <span className="font-bold" style={{ color: accent }}>✓</span>
                       {stat.label}
-                    </span>
+                    </Field>
                   ))}
                 </div>
               )}
@@ -2023,9 +2042,20 @@ function SectionBlockInner({
                     {section.eyebrow.charAt(0).toUpperCase()}
                   </span>
                   <div className="min-w-0">
-                    <div className="text-[12.5px] font-semibold truncate" style={{ color: "#17171A" }}>{section.eyebrow}</div>
+                    <Field
+                      editable={editable}
+                      as="div"
+                      className="text-[12.5px] font-semibold truncate"
+                      style={{ color: "#17171A" }}
+                      selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                      onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                    >
+                      {section.eyebrow}
+                    </Field>
                     {stats[0] && (
-                      <div className="text-[11px] truncate" style={{ color: "#6E6C68" }}>{stats[0].label}</div>
+                      <Field editable={editable} as="div" className="text-[11px] truncate" style={{ color: "#6E6C68" }} {...statField(0, stats[0])}>
+                        {stats[0].label}
+                      </Field>
                     )}
                   </div>
                 </div>
@@ -2215,10 +2245,10 @@ function SectionBlockInner({
                 style={{ borderTop: `1px solid ${palette.cardBorder}` }}
               >
                 {section.stats.slice(0, 3).map((stat, i) => (
-                  <div key={i} className={i > 0 ? "pl-5 @3xl:pl-7 border-l" : ""} style={{ borderColor: palette.cardBorder }}>
+                  <Field key={i} editable={editable} as="div" className={i > 0 ? "pl-5 @3xl:pl-7 border-l" : ""} style={{ borderColor: palette.cardBorder }} {...statField(i, stat)}>
                     <div className="text-[17px] font-semibold font-heading ycs-stat">{stat.value}</div>
                     <div className="text-[12px]" style={{ color: palette.textDim }}>{stat.label}</div>
-                  </div>
+                  </Field>
                 ))}
               </div>
             )}
@@ -2638,10 +2668,10 @@ function SectionBlockInner({
               {stats.length > 0 && (
                 <div className="grid grid-cols-3 mt-10 max-w-[420px]">
                   {stats.slice(0, 3).map((stat, i) => (
-                    <div key={i} className={i > 0 ? "pl-5 border-l" : "pr-5"} style={{ borderColor: palette.cardBorder }}>
+                    <Field key={i} editable={editable} as="div" className={i > 0 ? "pl-5 border-l" : "pr-5"} style={{ borderColor: palette.cardBorder }} {...statField(i, stat)}>
                       <div className="font-heading ycs-stat text-[30px] @3xl:text-[36px] leading-none mb-1.5">{stat.value}</div>
                       <div className="text-[11px]" style={{ color: palette.textDim }}>{stat.label}</div>
-                    </div>
+                    </Field>
                   ))}
                 </div>
               )}
@@ -2687,6 +2717,7 @@ function SectionBlockInner({
               >
                 {section.body}
               </Field>
+              <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"")}>
               <CtaLink
                 link={section.ctaLink}
                 basePath={basePath}
@@ -2696,6 +2727,7 @@ function SectionBlockInner({
               >
                 Läs mer →
               </CtaLink>
+              </FieldBadge>
             </div>
           </div>
         );
@@ -2731,10 +2763,10 @@ function SectionBlockInner({
               {stats.length > 0 && (
                 <div className="grid grid-cols-3 gap-5 mb-8 max-w-[440px]">
                   {stats.slice(0, 3).map((stat, i) => (
-                    <div key={i} className={i < stats.length - 1 ? "pr-5 border-r" : ""} style={{ borderColor: palette.cardBorder }}>
+                    <Field key={i} editable={editable} as="div" className={i < stats.length - 1 ? "pr-5 border-r" : ""} style={{ borderColor: palette.cardBorder }} {...statField(i, stat)}>
                       <div className="font-heading ycs-stat text-[27px] leading-none mb-1.5">{stat.value}</div>
                       <div className="text-[11.5px] leading-snug" style={{ color: palette.textDim }}>{stat.label}</div>
-                    </div>
+                    </Field>
                   ))}
                 </div>
               )}
@@ -2748,6 +2780,7 @@ function SectionBlockInner({
               >
                 {section.body}
               </Field>
+              <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"")}>
               <CtaLink
                 link={section.ctaLink}
                 basePath={basePath}
@@ -2757,6 +2790,7 @@ function SectionBlockInner({
               >
                 Läs mer →
               </CtaLink>
+              </FieldBadge>
             </div>
           </div>
         );
@@ -3076,6 +3110,7 @@ function SectionBlockInner({
                     >
                       {item.body}
                     </Field>
+                    <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i)}>
                     <CtaLink
                       link={item.link}
                       basePath={basePath}
@@ -3085,6 +3120,7 @@ function SectionBlockInner({
                     >
                       Läs mer →
                     </CtaLink>
+                    </FieldBadge>
                   </div>
                 );
               })}
@@ -3181,6 +3217,7 @@ function SectionBlockInner({
                     >
                       {item.body}
                     </Field>
+                    <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i)}>
                     <CtaLink
                       link={item.link}
                       basePath={basePath}
@@ -3190,6 +3227,7 @@ function SectionBlockInner({
                     >
                       Läs mer →
                     </CtaLink>
+                    </FieldBadge>
                   </div>
                 );
               })}
@@ -3531,9 +3569,17 @@ function SectionBlockInner({
               {rest.length > 0 && (
                 <div className="flex flex-col gap-2 mt-5">
                   {rest.map((t, i) => (
-                    <div key={i} className="text-[12.5px]" style={{ color: palette.textDim }}>
+                    <Field
+                      key={i}
+                      editable={editable}
+                      as="div"
+                      className="text-[12.5px]"
+                      style={{ color: palette.textDim }}
+                      selected={selectedFieldKey === fieldSel("quote", t.quote, "citatet", i + 1)?.key}
+                      onSelect={() => { const s = fieldSel("quote", t.quote, "citatet", i + 1); s && onSelectField?.(s); }}
+                    >
                       &ldquo;{t.quote.slice(0, 70)}{t.quote.length > 70 ? "…" : ""}&rdquo; — {t.author}
-                    </div>
+                    </Field>
                   ))}
                 </div>
               )}
@@ -3621,9 +3667,17 @@ function SectionBlockInner({
           {rest.length > 0 && (
             <div className="flex flex-wrap justify-center gap-3 mt-8 max-w-2xl mx-auto">
               {rest.map((t, i) => (
-                <div key={i} className="text-[12.5px] px-4 py-2.5 rounded-xl border" style={{ background: palette.cardBg, borderColor: palette.cardBorder, color: palette.textDim }}>
+                <Field
+                  key={i}
+                  editable={editable}
+                  as="div"
+                  className="text-[12.5px] px-4 py-2.5 rounded-xl border"
+                  style={{ background: palette.cardBg, borderColor: palette.cardBorder, color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("quote", t.quote, "citatet", i + 1)?.key}
+                  onSelect={() => { const s = fieldSel("quote", t.quote, "citatet", i + 1); s && onSelectField?.(s); }}
+                >
                   &ldquo;{t.quote.slice(0, 60)}{t.quote.length > 60 ? "…" : ""}&rdquo; — {t.author}
-                </div>
+                </Field>
               ))}
             </div>
           )}
