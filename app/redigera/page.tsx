@@ -362,55 +362,76 @@ export default function EditorPage() {
   const chatKey = site?.id ? `yourcosite-chat-${site.id}` : null;
   const chatRestored = useRef(false);
   useEffect(() => {
-    if (!chatKey || !content || chatRestored.current) return;
-    chatRestored.current = true;
-    let stored: ChatMessage[] = [];
-    let lastGreeting = -1;
-    let hintSeen = false;
-    try {
-      const raw = JSON.parse(localStorage.getItem(chatKey) || "null");
-      if (raw && Array.isArray(raw.messages)) {
-        stored = raw.messages.filter(
-          (m: any) => m && (m.from === "user" || m.from === "bot") && typeof m.text === "string"
-        );
+    if (!chatKey || !content || chatRestored.current || !site?.id) return;
+    let cancelled = false;
+    (async () => {
+      let stored: ChatMessage[] = [];
+      const valid = (list: any): ChatMessage[] =>
+        Array.isArray(list)
+          ? list.filter((m: any) => m && (m.from === "user" || m.from === "bot") && typeof m.text === "string")
+          : [];
+      // 1) Servern (följer med mellan dator och mobil)
+      try {
+        const res = await fetch(`/api/sites/chat?siteId=${encodeURIComponent(site.id)}`);
+        if (res.ok) {
+          const data = await res.json();
+          stored = valid(data.messages);
+        }
+      } catch {
+        // Ingen kontakt — prova webbläsarens egen kopia.
       }
-      lastGreeting = Number(localStorage.getItem(`${chatKey}-greeting`) ?? -1);
-      hintSeen = localStorage.getItem(`${chatKey}-hint`) === "1";
-    } catch {
-      // Blockerad lagring — då börjar chatten om som vanligt.
-    }
-    const next: ChatMessage[] = [];
-    if (stored.length > 0) {
-      let g = Math.floor(Math.random() * WELCOME_BACK.length);
-      if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
+      let lastGreeting = -1;
+      let hintSeen = false;
       try {
-        localStorage.setItem(`${chatKey}-greeting`, String(g));
-      } catch {}
-      next.push(...stored, { from: "bot", text: WELCOME_BACK[g], transient: true });
-    }
-    // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
-    // nämner det en enda gång per sajt.
-    if (content.exampleContent && !hintSeen) {
-      try {
-        localStorage.setItem(`${chatKey}-hint`, "1");
-      } catch {}
-      next.push({
-        from: "bot",
-        transient: true,
-        text: "Obs: förstasidan har exempeltexter som jag lagt dit för att visa vad som går att ha — kundcitat, nyckeltal och vanliga frågor. De är påhittade, så byt ut dem mot era egna eller ta bort dem innan ni publicerar.",
-        chips: [
-          "Byt ut exempelcitaten mot mina egna",
-          "Ta bort alla exempelcitat",
-          "Ta bort nyckeltalen",
-          "Ta bort vanliga frågor",
-        ],
-      });
-    }
-    if (next.length > 0) {
-      // Har historik finns: ersätt presentationen. Annars behålls den och
-      // eventuellt tips läggs efter.
-      setMessages((m) => (stored.length > 0 ? next : [...m, ...next]));
-    }
+        // 2) Webbläsarens kopia, om servern inte hade något (eller saknar kolumnen)
+        if (stored.length === 0) {
+          const raw = JSON.parse(localStorage.getItem(chatKey) || "null");
+          stored = valid(raw?.messages);
+        }
+        lastGreeting = Number(localStorage.getItem(`${chatKey}-greeting`) ?? -1);
+        hintSeen = localStorage.getItem(`${chatKey}-hint`) === "1";
+      } catch {
+        // Blockerad lagring — då börjar chatten om som vanligt.
+      }
+      if (cancelled) return;
+      chatRestored.current = true;
+      const next: ChatMessage[] = [];
+      if (stored.length > 0) {
+        let g = Math.floor(Math.random() * WELCOME_BACK.length);
+        if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
+        try {
+          localStorage.setItem(`${chatKey}-greeting`, String(g));
+        } catch {}
+        next.push(...stored, { from: "bot", text: WELCOME_BACK[g], transient: true });
+      }
+      // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
+      // nämner det en enda gång per sajt.
+      if (content.exampleContent && !hintSeen) {
+        try {
+          localStorage.setItem(`${chatKey}-hint`, "1");
+        } catch {}
+        next.push({
+          from: "bot",
+          transient: true,
+          text: "Obs: förstasidan har exempeltexter som jag lagt dit för att visa vad som går att ha — kundcitat, nyckeltal och vanliga frågor. De är påhittade, så byt ut dem mot era egna eller ta bort dem innan ni publicerar.",
+          chips: [
+            "Byt ut exempelcitaten mot mina egna",
+            "Ta bort alla exempelcitat",
+            "Ta bort nyckeltalen",
+            "Ta bort vanliga frågor",
+          ],
+        });
+      }
+      if (next.length > 0) {
+        // Finns historik ersätter den presentationen; annars behålls
+        // presentationen och ett eventuellt tips läggs efter.
+        setMessages((m) => (stored.length > 0 ? next : [...m, ...next]));
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatKey, !!content]);
 
   useEffect(() => {
@@ -420,8 +441,20 @@ export default function EditorPage() {
     try {
       localStorage.setItem(chatKey, JSON.stringify({ messages: toSave }));
     } catch {
-      // Full eller blockerad lagring — historiken sparas helt enkelt inte.
+      // Full eller blockerad lagring — webbläsarkopian sparas helt enkelt inte.
     }
+    // Servern (dator och mobil delar historik) — dröjsmål så flera
+    // meddelanden i rad blir ett enda anrop. Misslyckas det är
+    // webbläsarkopian fortfarande kvar.
+    const siteIdForSave = site?.id;
+    const timer = setTimeout(() => {
+      fetch("/api/sites/chat", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: siteIdForSave, messages: toSave }),
+      }).catch(() => {});
+    }, 1200);
+    return () => clearTimeout(timer);
   }, [messages, chatKey]);
 
   // Hjälpen öppnas av sig själv de tre första gångerna redigeraren visas

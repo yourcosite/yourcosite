@@ -91,6 +91,9 @@ create policy "Staff kan läsa alla profiler"
 -- ============================================================
 create table if not exists sites (
   id uuid primary key default gen_random_uuid(),
+  -- Chatthistoriken med Millie (senaste 40 meddelandena), app/api/sites/chat.
+  -- För befintlig databas: alter table sites add column if not exists chat_history jsonb;
+  chat_history jsonb,
   owner_id uuid not null references profiles (id) on delete cascade,
   name text not null,
   domain text,
