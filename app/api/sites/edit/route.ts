@@ -181,6 +181,8 @@ VIKTIGT — flytta/ordna om: "flytta citaten högst upp" = skriv ut sidans sekti
 
 VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/square/underline = runda, kantiga, understrukna knappar), "headerLayout" (left/centered-stacked/split = menyns placering), "sectionSpacing" (compact/normal/airy = tätare/standard/luftigare). Ange bara det kunden bett om.
 
+VIKTIGT — tätare/luftigare på EN sektion och textjustering: ber kunden om tätare eller luftigare avstånd (mindre/mer luft) på en enskild sektion ("gör den här sektionen tajtare"), sätt "spacing" på just den sektionen — compact = tätare, airy = luftigare, normal = tillbaka till sajtens vanliga. Pekar kunden ut en markerad sektion, ändra just den; annars den som beskrivs. Rör ALDRIG theme.sectionSpacing för en enskild sektion, och inga andra sektioner. Hero-sektionen har inget justerbart avstånd — förklara det kort i "summary" om kunden ber om det. Ber kunden om vänster-, höger- eller mittjusterad text ("centrera texten", "vänsterställ rubriken och texten", "högerjustera"), sätt "textAlign" (left/center/right) på sektionen/sektionerna det gäller; "på hela sidan" = alla den sidans sektioner, "på hela sajten" = "theme.textAlign" (auto tar bort). Texten, bilderna och allt annat i sektionen lämnas oförändrat. Skriver du om en sektion av annan anledning ska redan satta "spacing"/"textAlign" följa med oförändrade. Nuvarande sajtinställning för text: ${content.theme.textAlign ?? "mallens egen"}.
+
 VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt "seoTitle" (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och "seoDescription" (120-155 tecken, sann och lockande) på sidan/sidorna det gäller i changedPages — och skriv ut resten av sidan oförändrad. Gäller önskemålet "alla sidor", gör det för alla sidor (det är en liten ändring). Hitta inte på fakta om verksamheten, utgå från sidans egen text.
 
 VIKTIGT — ton och omskrivning, EN SIDA I TAGET: ber kunden dig skriva om texten i en annan ton ("mer personligt", "kortare", "mer formellt") — gör det BARA på en sida per svar: den sida kunden pekar ut, annars sidan de tittar på just nu (se ovan). Rör aldrig fler sidor med en tonändring, även om kunden skriver "hela sajten". Avsluta "summary" med en vänlig fråga om vilken sida du ska ta härnäst (nämn gärna nästa sida vid namn). Bevara fakta, namn, siffror, länkar, bilder och struktur — bara formuleringarna ändras.
@@ -304,6 +306,33 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
     if (t.sectionSpacing !== undefined) {
       if (t.sectionSpacing === "compact" || t.sectionSpacing === "airy") merged.theme.sectionSpacing = t.sectionSpacing;
       else delete merged.theme.sectionSpacing;
+    }
+  }
+  // Textjustering för hela sajten: "auto" tar bort, okända värden ignoreras.
+  if (patch.theme) {
+    const ta = (patch.theme as { textAlign?: string }).textAlign;
+    if (ta !== undefined) {
+      if (ta === "left" || ta === "center" || ta === "right") merged.theme.textAlign = ta;
+      else if (ta === "auto") delete merged.theme.textAlign;
+      else if (content.theme.textAlign) merged.theme.textAlign = content.theme.textAlign;
+      else delete merged.theme.textAlign;
+    }
+  }
+  // Sektionernas egna reglage (spacing/textAlign): ogiltiga värden ignoreras,
+  // "normal" tar bort avståndsinställningen, och skriver Millie om en sektion
+  // utan att nämna dem behålls det kunden redan har (samma id) — annars
+  // skulle en ren textändring råka nollställa t.ex. ett tajtare avstånd.
+  {
+    const oldById = new Map<string, any>();
+    for (const pg of content.pages) for (const sec of pg.sections) oldById.set(sec.id, sec);
+    for (const pg of merged.pages) {
+      for (const sec of pg.sections as any[]) {
+        const old = oldById.get(sec.id);
+        if (sec.spacing === undefined && old?.spacing) sec.spacing = old.spacing;
+        if (sec.spacing !== undefined && sec.spacing !== "compact" && sec.spacing !== "airy") delete sec.spacing;
+        if (sec.textAlign === undefined && old?.textAlign) sec.textAlign = old.textAlign;
+        if (sec.textAlign !== undefined && !["left", "center", "right"].includes(sec.textAlign)) delete sec.textAlign;
+      }
     }
   }
   // Sidornas ordning (menyn): bara kända paths, resten läggs sist i sin

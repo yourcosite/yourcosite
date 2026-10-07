@@ -472,6 +472,7 @@ export default function SitePreview({
           layout={headerLayout}
         />
         {overlayHeader && firstSection && (
+          <div className="contents ycs-blk" data-ycs-align={firstSection.textAlign ?? content.theme.textAlign}>
           <SectionBlock
             section={firstSection}
             accent={accent}
@@ -494,6 +495,7 @@ export default function SitePreview({
             selectedFieldKey={selectedFieldKey}
             onSelectField={onSelectField}
           />
+          </div>
         )}
       </div>
       {isPrivacyPolicyPage ? (
@@ -517,7 +519,12 @@ export default function SitePreview({
         </div>
       ) : (
         restSections.map((section, i) => (
-          <div key={section.id} className={section.type === "hero" ? undefined : "ycs-sec"}>
+          <div
+            key={section.id}
+            className={section.type === "hero" ? "ycs-blk" : "ycs-sec ycs-blk"}
+            data-ycs-sp={section.type === "hero" ? undefined : section.spacing}
+            data-ycs-align={section.textAlign ?? content.theme.textAlign}
+          >
           <SectionBlock
             section={section}
             accent={accent}

@@ -27,7 +27,7 @@ const CTA_COLOR_SCHEMA = {
     "Fri hex-färg (\"#RRGGBB\") på BARA den här knappen — oberoende av sajtens accentfärg. Bara satt när kunden uttryckligen bett om en specifik färg på just den här knappen. Utelämna helt (vanligast) för att använda sajtens vanliga accentfärg.",
 };
 
-export const SECTION_SCHEMA = {
+const RAW_SECTION_SCHEMA = {
   anyOf: [
     {
       type: "object",
@@ -366,6 +366,27 @@ const SEO_DESCRIPTION_SCHEMA = {
     "Sidans beskrivning under titeln i Google och vid delning (helst 120-155 tecken, lockande och sann). Samma regel som seoTitle.",
 };
 
+// Reglage som gäller VILKEN sektion som helst: avstånd och textjustering.
+// Läggs på varje sektionstyp ovan här istället för att upprepas tolv gånger.
+const SPACING_SCHEMA = {
+  type: "string",
+  enum: ["compact", "normal", "airy"],
+  description:
+    "Lodrätt avstånd i BARA den här sektionen: compact = tätare, airy = luftigare, normal = tillbaka till sajtens vanliga avstånd. Sätt bara när kunden ber om tätare/luftigare på just den sektionen (gäller inte hero). Utelämna annars, och behåll ett redan satt värde oförändrat när du skriver om sektionen av annan anledning.",
+};
+const TEXT_ALIGN_SCHEMA = {
+  type: "string",
+  enum: ["left", "center", "right"],
+  description:
+    "Textjustering i BARA den här sektionen: left = vänsterställd, center = centrerad, right = högerställd. Sätt bara när kunden ber om det för just den sektionen. Utelämna annars, och behåll ett redan satt värde oförändrat när du skriver om sektionen av annan anledning.",
+};
+export const SECTION_SCHEMA = {
+  anyOf: RAW_SECTION_SCHEMA.anyOf.map((variant) => ({
+    ...variant,
+    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA },
+  })),
+};
+
 // Egenskaperna för SJÄLVA innehållet (utan "summary" m.m. som bara
 // edit-routen behöver ovanpå det här) — delas rakt av mellan verktygens
 // input_schema.
@@ -454,6 +475,12 @@ export const EDIT_PATCH_PROPERTIES = {
         enum: ["compact", "normal", "airy"],
         description:
           "Mellanrummet mellan (och inuti) sektionerna på hela sajten: compact = tätare, normal = standard, airy = luftigare. Sätt bara när kunden ber om tätare/luftigare sida eller mer/mindre luft.",
+      },
+      textAlign: {
+        type: "string",
+        enum: ["left", "center", "right", "auto"],
+        description:
+          "Textjustering på HELA sajten: left = vänsterställd, center = centrerad, right = högerställd, auto = tillbaka till mallens egen. Sätt bara när kunden ber om det för hela sajten. Gäller kunden en enskild sektion eller sida, sätt \"textAlign\" på sektionerna istället.",
       },
       headingScale: {
         type: "number",

@@ -43,6 +43,8 @@ export interface SiteTheme {
   headingScale?: number;
   /** Avstånd mellan sektionerna. Saknas = standard. Satt av Millie. */
   sectionSpacing?: "compact" | "airy";
+  /** Textjustering på hela sajten (sektionernas egen textAlign går före). Saknas = som mallen. Satt av Millie. */
+  textAlign?: TextAlign;
   accentColor: string;
   secondaryColors: string[];
   font: ThemeFont;
@@ -400,7 +402,17 @@ export interface NewsListSection {
   bgColor?: string;
 }
 
-export type Section =
+// Sektionsegna reglage som Millie kan sätta på VILKEN sektion som helst.
+// "spacing": tätare/luftigare lodrätt avstånd i just den sektionen (hero
+// rörs inte). "textAlign": text vänster/mitten/höger i just den sektionen.
+// Saknas fältet följer sektionen sajtens inställning (theme).
+export type TextAlign = "left" | "center" | "right";
+export interface SectionExtras {
+  spacing?: "compact" | "airy" | "normal";
+  textAlign?: TextAlign;
+}
+
+export type Section = (
   | HeroSection
   | AboutSection
   | GridSection
@@ -412,7 +424,9 @@ export type Section =
   | MapSection
   | VideoSection
   | ContactFormSection
-  | NewsListSection;
+  | NewsListSection
+) &
+  SectionExtras;
 
 export interface SitePageContent {
   path: string;
