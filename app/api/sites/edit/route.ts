@@ -74,6 +74,14 @@ const EDIT_TOOL = {
         description:
           "Sätt till true när kundens önskemål innebär att ALLA exempelcitat, exempelnyckeltal och exempelfrågor på förstasidan nu är bortbytta eller borttagna (så sajten inte längre innehåller våra påhittade exempel). Annars utelämna.",
       },
+      clarifyOptions: {
+        type: "array",
+        items: { type: "string" },
+        minItems: 2,
+        maxItems: 4,
+        description:
+          "Använd när kundens önskemål är så pass otydligt att du annars skulle behöva gissa (t.ex. \"gör den snyggare\", flera sektioner passar in, eller flera rimliga tolkningar finns). Då gör du INGA ändringar (utelämna changedPages/theme helt) och ställer din fråga i \"summary\", plus 2-4 korta, tydliga svarsalternativ här som kunden kan klicka på. Varje alternativ ska vara ett KOMPLETT önskemål som går att skicka som det är, skrivet som kunden själv skulle skriva det (t.ex. \"Gör rubriken större på startsidan\"), inte \"Alternativ 1\". Sätt det mest sannolika först. Använd det sparsamt — bara när en gissning riskerar att bli fel, aldrig när önskemålet är tydligt.",
+      },
       unsupported: {
         type: "boolean",
         description:
@@ -99,6 +107,7 @@ type EditPatch = {
     published?: boolean;
   };
   summary: string;
+  clarifyOptions?: string[];
   exampleContentResolved?: boolean;
   unsupported?: boolean;
 };
@@ -180,6 +189,8 @@ VIKTIGT — ändra layout på en sektion ("visa tjänsterna som en lista", "gör
 VIKTIGT — flytta/ordna om: "flytta citaten högst upp" = skriv ut sidans sektioner i den nya ordningen i changedPages (hero ska alltid ligga först, och sidans kontakt/cta nära slutet om inget annat sägs). "Lägg Kontakt före Nyheter i menyn"/"byt ordning på sidorna" = ange "pageOrder" med ALLA sidors path i ny ordning; startsidan ("/") ska normalt vara först. Ändra inget annat än ordningen.
 
 VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/square/underline = runda, kantiga, understrukna knappar), "headerLayout" (left/centered-stacked/split = menyns placering), "sectionSpacing" (compact/normal/airy = tätare/standard/luftigare). Ange bara det kunden bett om.
+
+VIKTIGT — kontrollfrågor: är önskemålet så oklart att du måste gissa (t.ex. "gör det snyggare", "ändra rubriken" när flera rubriker finns, eller flera helt olika tolkningar är rimliga) — gissa inte. Ställ en kort fråga i "summary" och ge 2-4 klickbara svar i "clarifyOptions" (kompletta önskemål, mest sannolikt först), och gör INGA ändringar. Fråga bara när en felgissning skulle märkas eller vara jobbig att ångra; är det tydligt nog, utför det direkt. Ställ aldrig två kontrollfrågor i rad om samma sak — har kunden redan svarat på din fråga, utför det.
 
 VIKTIGT — tätare/luftigare på EN sektion och textjustering: ber kunden om tätare eller luftigare avstånd (mindre/mer luft) på en enskild sektion ("gör den här sektionen tajtare"), sätt "spacing" på just den sektionen — compact = tätare, airy = luftigare, normal = tillbaka till sajtens vanliga. Pekar kunden ut en markerad sektion, ändra just den; annars den som beskrivs. Rör ALDRIG theme.sectionSpacing för en enskild sektion, och inga andra sektioner. Hero-sektionen har inget justerbart avstånd — förklara det kort i "summary" om kunden ber om det. Ber kunden om vänster-, höger- eller mittjusterad text ("centrera texten", "vänsterställ rubriken och texten", "högerjustera"), sätt "textAlign" (left/center/right) på sektionen/sektionerna det gäller; "på hela sidan" = alla den sidans sektioner, "på hela sajten" = "theme.textAlign" (auto tar bort). Texten, bilderna och allt annat i sektionen lämnas oförändrat. Skriver du om en sektion av annan anledning ska redan satta "spacing"/"textAlign" följa med oförändrade. Nuvarande sajtinställning för text: ${content.theme.textAlign ?? "mallens egen"}.
 
@@ -570,6 +581,23 @@ export async function POST(request: Request) {
   }
 
   const patch = toolUse.input as EditPatch;
+  // Kontrollfråga: Millie är osäker och ger kunden alternativ att klicka på
+  // istället för att gissa. Inget ändras eller sparas.
+  const clarifyOptions = Array.isArray(patch.clarifyOptions)
+    ? patch.clarifyOptions
+        .filter((o): o is string => typeof o === "string" && o.trim().length > 0)
+        .map((o) => o.trim().slice(0, 120))
+        .slice(0, 4)
+    : [];
+  if (clarifyOptions.length >= 2 && patch.summary) {
+    return NextResponse.json({
+      content: site.content,
+      summary: patch.summary,
+      unsupported: false,
+      options: clarifyOptions,
+      newsArticle: null,
+    });
+  }
   if (patch.changedPages && !patch.changedPages.every(isValidSitePage)) {
     return NextResponse.json({ error: "AI-svaret hade fel format." }, { status: 502 });
   }

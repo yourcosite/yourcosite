@@ -26,6 +26,9 @@ type ChatMessage = {
   requestText?: string;
   // Förslag kunden kan klicka på för att fylla i meddelanderutan.
   chips?: string[];
+  // Millies kontrollfråga: svarsalternativ som skickas direkt vid klick.
+  // Visas bara på det SISTA meddelandet och sparas inte i historiken.
+  options?: string[];
   // Visas men sparas inte i historiken (presentation, hälsning, tips).
   transient?: boolean;
 };
@@ -436,7 +439,7 @@ export default function EditorPage() {
 
   useEffect(() => {
     if (!chatKey || !chatRestored.current) return;
-    const toSave = messages.filter((m) => !m.transient).slice(-40);
+    const toSave = messages.filter((m) => !m.transient).slice(-40).map(({ options, ...rest }) => rest);
     if (toSave.length === 0) return; // skriv aldrig över sparad historik med tomt
     try {
       localStorage.setItem(chatKey, JSON.stringify({ messages: toSave }));
@@ -495,8 +498,8 @@ export default function EditorPage() {
     }
   };
 
-  const send = async () => {
-    const text = draft.trim();
+  const send = async (override?: string) => {
+    const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
     const history = messages.filter((m) => !m.transient);
     const currentAttachments = attachments;
@@ -556,8 +559,11 @@ export default function EditorPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
-      if (content) setUndoStack((st) => [...st.slice(-9), content]);
-      setContent(data.content);
+      const isQuestion = Array.isArray(data.options) && data.options.length >= 2;
+      if (!isQuestion) {
+        if (content) setUndoStack((st) => [...st.slice(-9), content]);
+        setContent(data.content);
+      }
       // Millie kan ha skapat en ny nyhetsartikel i samma svar (se
       // app/api/sites/edit/route.ts) — lägg in den i listan direkt så en
       // "newsList"-sektion i förhandsvisningen visar den utan omladdning.
@@ -570,6 +576,7 @@ export default function EditorPage() {
           from: "bot",
           text: data.summary || "Klart!",
           unsupported: !!data.unsupported,
+          options: isQuestion ? data.options : undefined,
           requestText: text || currentAttachments.map((a) => a.name).join(", "),
         },
       ]);
@@ -864,6 +871,20 @@ export default function EditorPage() {
                       ))}
                     </div>
                   )}
+                  {m.options && m.options.length > 0 && i === messages.length - 1 && !sending && (
+                    <div className="flex flex-col gap-1.5 mt-2.5">
+                      {m.options.map((o) => (
+                        <button
+                          key={o}
+                          type="button"
+                          onClick={() => send(o)}
+                          className="text-left text-[12.5px] font-semibold bg-surface border border-line rounded-xl px-3 py-2 text-ink hover:border-ink"
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                   {m.unsupported && (
                     <button
                       type="button"
@@ -1011,7 +1032,7 @@ export default function EditorPage() {
                 className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60 resize-none py-1.5 leading-[1.4] max-h-[160px] overflow-y-auto"
               />
               <button
-                onClick={send}
+                onClick={() => send()}
                 disabled={sending || attaching || !content || (!draft.trim() && attachments.length === 0)}
                 aria-label="Skicka"
                 className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px]"
