@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <LegalLayout
       title="Integritetspolicy"
-      updated="2026-10-03"
+      updated="2026-10-07"
       intro={
         <>
           Detta är mallar baserade på svensk och EU-rättslig standardpraxis
@@ -56,6 +56,15 @@ export default function Page() {
             <td>Innehåll på kundens sajt</td>
             <td>Texter, bilder, sidstruktur</td>
             <td>Kunden själv</td>
+          </tr>
+          <tr>
+            <td>Chatthistorik med Millie</td>
+            <td>
+              Meddelanden Kunden skriver till assistenten Millie och hennes
+              svar (de senaste 20 ändringarna), samt namn på bifogade
+              filer
+            </td>
+            <td>Kunden själv vid användning av redigeraren</td>
           </tr>
           <tr>
             <td>Användningsdata</td>
@@ -107,8 +116,11 @@ export default function Page() {
       <p>
         Vi delar uppgifter med underleverantörer (personuppgiftsbiträden)
         som hjälper oss leverera tjänsten: betallösning (Stripe),
-        molnhosting/serverdrift, och eventuella analys- eller
-        supportverktyg. Alla biträden regleras av
+        molnhosting/serverdrift, en AI-leverantör (Anthropic) som
+        bearbetar de texter, bilder och dokument Kunden skickar till Millie
+        och de uppgifter som behövs för att skapa och ändra webbplatsen,
+        bildtjänsten Unsplash när Kunden söker och väljer stockbilder, och
+        eventuella analys- eller supportverktyg. Alla biträden regleras av
         personuppgiftsbiträdesavtal (DPA). Vi säljer aldrig
         personuppgifter till tredje part.
       </p>
@@ -126,6 +138,15 @@ export default function Page() {
         anonymiseras inom 12 månader efter avslutad prenumeration, om
         inte bokföringslagen kräver längre lagring (7 år för
         bokföringsunderlag).
+      </p>
+
+      <p>
+        Chatthistoriken med Millie sparas bara för att Kunden ska kunna se
+        sina senaste ändringar på olika enheter. Den innehåller de 20
+        senaste ändringarna, äldre meddelanden skrivs över löpande, och den
+        raderas när sajten eller kontot raderas. Kunden bör inte skriva
+        känsliga personuppgifter i chatten. Chatten kan ingå i den
+        dataexport vi tillhandahåller på begäran.
       </p>
 
       <h3>7. Kundens rättigheter</h3>
