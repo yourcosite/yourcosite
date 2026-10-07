@@ -668,9 +668,9 @@ export default function EditorPage() {
                   <div className="absolute inset-0 bg-white/40 z-40 flex items-start justify-center pt-10 pointer-events-none">
                     <div className="bg-ink text-white text-[12.5px] font-semibold pl-2 pr-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
                       <Millie active size={26} />
-                      <div>
-                        <div>{THINKING_PHRASES[phraseIndex]}</div>
-                        <div className="mt-1.5 h-1 w-40 rounded-full bg-white/25 overflow-hidden">
+                      <div className="w-[230px]">
+                        <div className="truncate">{THINKING_PHRASES[phraseIndex]}</div>
+                        <div className="mt-1.5 h-1 w-full rounded-full bg-white/25 overflow-hidden">
                           <div className="h-full bg-white rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
                         </div>
                       </div>
@@ -786,10 +786,10 @@ export default function EditorPage() {
             {sending && (
               <div className="self-start flex items-end gap-2">
                 <Millie active size={22} />
-                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5 min-w-[200px]">
+                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5 w-[250px]">
                   <div className="flex items-center justify-between gap-3">
-                    <span>{THINKING_PHRASES[phraseIndex]}</span>
-                    <span className="text-[12px] font-semibold tabular-nums">{Math.round(progress * 100)}%</span>
+                    <span className="truncate">{THINKING_PHRASES[phraseIndex]}</span>
+                    <span className="text-[12px] font-semibold tabular-nums w-9 text-right flex-shrink-0">{Math.round(progress * 100)}%</span>
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-line overflow-hidden">
                     <div className="h-full bg-accent rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
