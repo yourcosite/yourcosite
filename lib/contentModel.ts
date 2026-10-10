@@ -81,7 +81,7 @@ export interface SiteTheme {
 }
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial" | "beam";
-export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats";
+export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right";
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
 export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
@@ -178,7 +178,8 @@ export interface AboutSection {
   // fakta, utelämna fältet helt — sektionen renderas då bara utan
   // nyckeltalsraden.
   stats?: { value: string; label: string }[];
-  // Använd av BÅDE "image-full" OCH "image-stats" — EN bild som täcker
+  // Använd av "image-left"/"image-right" (en inramad bild BREDVID texten),
+  // och av BÅDE "image-full" OCH "image-stats" — EN bild som täcker
   // hela sektionens höjd, satt i kod precis som HeroSection.imageUrl —
   // se lib/assignUploadedImages.ts.
   imageUrl?: string;

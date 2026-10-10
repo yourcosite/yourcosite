@@ -80,9 +80,9 @@ const RAW_SECTION_SCHEMA = {
         type: { const: "about" },
         layout: {
           type: "string",
-          enum: ["text-left", "centered", "stats-split", "image-full", "image-stats"],
+          enum: ["text-left", "centered", "stats-split", "image-full", "image-stats", "image-left", "image-right"],
           description:
-            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout. \"image-full\" (ny): EN bild som täcker hela sektionens höjd till vänster, rubrik/text till höger med en dekorativ länkrad under — ett rent, redaktionellt avbrott utan nyckeltal. \"image-stats\" (ny): EN bild som täcker hela sektionens höjd till vänster, en MÖRK tonad textruta till höger med rubrik, en nyckeltalsrad (stats) och brödtext — samma nyckeltalskrav som \"stats-split\".",
+            "\"text-left\" (vänsterställd, bredare text) eller \"centered\" (centrerad, smalare — känns mer redaktionell/luftig). Variera mellan sajter, inte alltid samma. \"stats-split\" (ny): två foton i olika höjd sida vid sida (collageImageUrls) till vänster, rubrik/text och en kort nyckeltalsrad (stats) till höger — ett dramatiskt \"resultat\"-avbrott. Kräver verifierbara nyckeltal (se stats-fältets regel nedan) för att kännas meningsfull — annars välj en annan layout. \"image-full\" (ny): EN bild som täcker hela sektionens höjd till vänster, rubrik/text till höger med en dekorativ länkrad under — ett rent, redaktionellt avbrott utan nyckeltal. \"image-stats\" (ny): EN bild som täcker hela sektionens höjd till vänster, en MÖRK tonad textruta till höger med rubrik, en nyckeltalsrad (stats) och brödtext — samma nyckeltalskrav som \"stats-split\". \"image-left\" / \"image-right\" (ny): en vanlig, inramad bild (imageUrl) BREDVID texten, till vänster respektive höger — välj en av dem när kunden vill ha en bild bredvid en textruta.",
         },
         heading: { type: "string" },
         body: { type: "string" },

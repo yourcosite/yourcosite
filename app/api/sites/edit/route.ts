@@ -192,6 +192,8 @@ VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/squ
 
 VIKTIGT — kontrollfrågor: är önskemålet så oklart att du måste gissa (t.ex. "gör det snyggare", "ändra rubriken" när flera rubriker finns, eller flera helt olika tolkningar är rimliga) — gissa inte. Ställ en kort fråga i "summary" och ge 2-4 klickbara svar i "clarifyOptions" (kompletta önskemål, mest sannolikt först), och gör INGA ändringar. Fråga bara när en felgissning skulle märkas eller vara jobbig att ångra; är det tydligt nog, utför det direkt. ${selection ? "Kunden har just nu MARKERAT något i förhandsvisningen (se ovan) — då vet du redan VAR ändringen ska göras, så fråga ALDRIG var eller vilken sektion/text/rubrik; utför ändringen på det markerade direkt. Fråga högst om själva ändringen, och bara om den verkligen inte går att tolka." : ""} Meddelanden kan vara dikterade med rösten: de är ofta korta, utan skiljetecken och informella ("gör den lite större", "byt till mer personlig") — tolka dem välvilligt och handla hellre än att fråga. Ställ aldrig två kontrollfrågor i rad om samma sak — har kunden redan svarat på din fråga, utför det.
 
+VIKTIGT — bild BREDVID en textruta ("lägg en bild bredvid texten", "bild till höger om rutan"): bara vissa sektioner kan visa en bild. En Om oss-sektion ("about") får det med layouten "image-right" (bild till höger) eller "image-left" (bild till vänster) — byt layout till en av dem och sätt "imageUrl" (kundens bifogade bild, exakt adress) på sektionen; saknas en bild, byt ändå layouten (en snygg platshållare visas) och be kunden bifoga en bild. En hero med layouterna "split-left"/"split-right" har också en bild bredvid texten. Sektionerna "cta", "contactForm", "faq" och citat-sektioner kan INTE visa en bild bredvid texten (centrerad text utan bildplats ritar aldrig ut en bild). Gäller önskemålet en sådan sektion: sätt aldrig "imageUrl" och påstå inte att du lagt till en bild — gör antingen om den till en Om oss-sektion med bild bredvid (behåll rubrik och text) om det passar, eller förklara kort i "summary" att det inte går och föreslå det. Skriv ALDRIG att en bild lagts till om den inte syns med den layout sektionen nu har.
+
 VIKTIGT — tätare/luftigare på EN sektion och textjustering: ber kunden om tätare eller luftigare avstånd (mindre/mer luft) på en enskild sektion ("gör den här sektionen tajtare"), sätt "spacing" på just den sektionen — compact = tätare, airy = luftigare, normal = tillbaka till sajtens vanliga. Pekar kunden ut en markerad sektion, ändra just den; annars den som beskrivs. Rör ALDRIG theme.sectionSpacing för en enskild sektion, och inga andra sektioner. Hero-sektionen har inget justerbart avstånd — förklara det kort i "summary" om kunden ber om det. Ber kunden om vänster-, höger- eller mittjusterad text ("centrera texten", "vänsterställ rubriken och texten", "högerjustera"), sätt "textAlign" (left/center/right) på sektionen/sektionerna det gäller; "på hela sidan" = alla den sidans sektioner, "på hela sajten" = "theme.textAlign" (auto tar bort). Texten, bilderna och allt annat i sektionen lämnas oförändrat. Skriver du om en sektion av annan anledning ska redan satta "spacing"/"textAlign" följa med oförändrade. Nuvarande sajtinställning för text: ${content.theme.textAlign ?? "mallens egen"}.
 
 VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt "seoTitle" (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och "seoDescription" (120-155 tecken, sann och lockande) på sidan/sidorna det gäller i changedPages — och skriv ut resten av sidan oförändrad. Gäller önskemålet "alla sidor", gör det för alla sidor (det är en liten ändring). Hitta inte på fakta om verksamheten, utgå från sidans egen text.
@@ -341,6 +343,17 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
         const old = oldById.get(sec.id);
         if (sec.spacing === undefined && old?.spacing) sec.spacing = old.spacing;
         if (sec.spacing !== undefined && sec.spacing !== "compact" && sec.spacing !== "airy") delete sec.spacing;
+        // En NY bild på en Om oss-sektion vars layout inte kan visa någon
+        // bild (t.ex. "centered") skulle annars sparas men aldrig synas —
+        // byt då till layouten med bilden bredvid texten.
+        if (
+          sec.type === "about" &&
+          sec.imageUrl &&
+          sec.imageUrl !== old?.imageUrl &&
+          !["image-full", "image-stats", "image-left", "image-right"].includes(sec.layout)
+        ) {
+          sec.layout = "image-right";
+        }
         if (sec.textAlign === undefined && old?.textAlign) sec.textAlign = old.textAlign;
         if (sec.textAlign !== undefined && !["left", "center", "right"].includes(sec.textAlign)) delete sec.textAlign;
       }

@@ -2646,6 +2646,55 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "image-left" || layout === "image-right") {
+        // En vanlig, inramad bild BREDVID texten (till vänster eller höger)
+        // — det kunden menar med "lägg en bild bredvid textrutan". Till
+        // skillnad från "image-full" täcker bilden inte hela sektionens höjd.
+        // Bilden (imageUrl) går att markera och redigera precis som en hero-bild.
+        const imageFirst = layout === "image-left";
+        const imageSel: (ImageSelection & { key: string }) | undefined =
+          editable && pagePath
+            ? { key: heroKey, pagePath, sectionId: section.id, kind: "hero", label: `bilden bredvid texten i "${snippet(section.heading, 30)}"` }
+            : undefined;
+        return (
+          <div style={{ background: sectionBg }}>
+            <div className="grid @3xl:grid-cols-2 gap-10 @3xl:gap-14 items-center px-8 @3xl:px-14 py-14 @3xl:py-20 max-w-[1040px] mx-auto">
+              <div className={`relative h-[260px] @3xl:h-[360px] rounded-xl overflow-hidden ${imageFirst ? "" : "@3xl:order-2"}`}>
+                <ImageOrArt
+                  imageUrl={section.imageUrl}
+                  art={art}
+                  fill
+                  selectable={!!imageSel}
+                  selected={!!imageSel && selectedImageKey === imageSel.key}
+                  onSelect={() => imageSel && onSelectImage?.(imageSel)}
+                />
+              </div>
+              <div>
+                <Field
+                  editable={editable}
+                  as="h2"
+                  className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] @3xl:text-[length:calc(34px*var(--ycs-ts,1))] leading-[1.1] mb-4"
+                  selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                  onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+                >
+                  {section.heading}
+                </Field>
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="text-[15px] leading-relaxed"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                  onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.body}
+                </Field>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "stats-split") {
         // Kundens "Atelier"-referenskod hade en "results"-sektion: två
         // foton i OLIKA höjd sida vid sida (ett kort, ett högt) till

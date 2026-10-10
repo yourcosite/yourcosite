@@ -54,7 +54,7 @@ export function assignUploadedImages(
           // Samma princip som hero collageImageUrls — se contentModel.ts
           // AboutSection.collageImageUrls (två foton i olika höjd).
           section.collageImageUrls = [next(), next()];
-        } else if (section.type === "about" && (section.layout === "image-full" || section.layout === "image-stats")) {
+        } else if (section.type === "about" && (section.layout === "image-full" || section.layout === "image-stats" || section.layout === "image-left" || section.layout === "image-right")) {
           // Samma princip som hero imageUrl — se contentModel.ts
           // AboutSection.imageUrl (en bild som täcker hela sektionshöjden).
           section.imageUrl = next();
