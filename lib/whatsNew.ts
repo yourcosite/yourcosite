@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-11-frilagg",
+    date: "2026-10-11",
+    icon: "✨",
+    title: "Frilägg bilder",
+    text: "I bildredigeraren finns nu knappen Frilägg motivet, som tar bort bakgrunden. Du kan välja vit, ljusgrå eller genomskinlig bakgrund. Fungerar bäst på personer.",
+  },
+  {
     id: "2026-10-11-redigera-vid-uppladdning",
     date: "2026-10-11",
     icon: "✂️",

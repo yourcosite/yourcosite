@@ -16,6 +16,16 @@ const ASPECTS: { id: string; label: string; ratio: number | null }[] = [
   { id: "3:4", label: "Stående", ratio: 3 / 4 },
 ];
 
+// Friläggning sker i webbläsaren med en öppen AI-modell (MODNet, Apache 2.0)
+// som hämtas först när kunden trycker på knappen. Biblioteket läses in från
+// CDN vid behov så att det inte väger ner resten av sajten.
+const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
+const CUTOUT_MODEL = "Xenova/modnet";
+const CUTOUT_MAX = 1280; // längsta sidan som skickas in i modellen
+
+type BgChoice = "white" | "gray" | "clear";
+const BG_FILL: Record<BgChoice, string | null> = { white: "#FFFFFF", gray: "#EDEDED", clear: null };
+
 const MAX_OUTPUT = 2000; // längsta sidan i pixlar på den sparade bilden
 const PREVIEW_MAX_W = 560;
 const PREVIEW_MAX_H = 380;
@@ -90,6 +100,11 @@ export default function ImageEditorModal({
   const [bright, setBright] = useState(0);
   const [contrast, setContrast] = useState(0);
   const [sat, setSat] = useState(0);
+  const [cutBusy, setCutBusy] = useState(false);
+  const [cutDone, setCutDone] = useState(false);
+  const [cutError, setCutError] = useState<string | null>(null);
+  const [bg, setBg] = useState<BgChoice>("white");
+  const origImgRef = useRef<HTMLImageElement | null>(null);
 
   const baseRef = useRef<HTMLCanvasElement | null>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -105,6 +120,10 @@ export default function ImageEditorModal({
     setBright(0);
     setContrast(0);
     setSat(0);
+    setCutDone(false);
+    setCutError(null);
+    setBg("white");
+    if (origImgRef.current) setImg(origImgRef.current);
   };
 
   // Läs in bilden varje gång dialogen öppnas.
@@ -115,7 +134,10 @@ export default function ImageEditorModal({
     setError(null);
     const im = new Image();
     im.crossOrigin = "anonymous";
-    im.onload = () => setImg(im);
+    im.onload = () => {
+      origImgRef.current = im;
+      setImg(im);
+    };
     im.onerror = () => setError("Det gick inte att öppna bilden för redigering. Prova att ladda upp bilden igen.");
     const [base] = src.split("#");
     // En ny parameter gör att webbläsaren inte återanvänder en tidigare
@@ -134,15 +156,67 @@ export default function ImageEditorModal({
     c.width = w;
     c.height = h;
     const ctx = c.getContext("2d")!;
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(0, 0, w, h);
+    const fill = BG_FILL[bg];
+    if (fill) {
+      ctx.fillStyle = fill;
+      ctx.fillRect(0, 0, w, h);
+    }
     ctx.translate(w / 2, h / 2);
     ctx.rotate((rot * Math.PI) / 2);
     if (flip) ctx.scale(-1, 1);
     ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
     baseRef.current = c;
     setBaseVersion((v) => v + 1);
-  }, [img, rot, flip]);
+  }, [img, rot, flip, bg]);
+
+  const removeBackground = async () => {
+    if (!img || cutBusy) return;
+    setCutBusy(true);
+    setCutError(null);
+    try {
+      const k = Math.min(1, CUTOUT_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+      const w = Math.max(1, Math.round(img.naturalWidth * k));
+      const h = Math.max(1, Math.round(img.naturalHeight * k));
+      const src = document.createElement("canvas");
+      src.width = w;
+      src.height = h;
+      const sctx = src.getContext("2d")!;
+      sctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = src.toDataURL("image/png");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const lib: any = await import(/* webpackIgnore: true */ TRANSFORMERS_URL);
+      const segmenter = await lib.pipeline("background-removal", CUTOUT_MODEL);
+      const result = await segmenter(dataUrl);
+      const out = Array.isArray(result) ? result[0] : result;
+      if (!out || !out.data) throw new Error("tomt svar");
+      const c = document.createElement("canvas");
+      c.width = out.width;
+      c.height = out.height;
+      const cctx = c.getContext("2d")!;
+      const rgba = new Uint8ClampedArray(out.width * out.height * 4);
+      const ch: number = out.channels;
+      for (let i = 0; i < out.width * out.height; i++) {
+        rgba[i * 4] = out.data[i * ch];
+        rgba[i * 4 + 1] = out.data[i * ch + 1];
+        rgba[i * 4 + 2] = out.data[i * ch + 2];
+        rgba[i * 4 + 3] = ch === 4 ? out.data[i * ch + 3] : 255;
+      }
+      cctx.putImageData(new ImageData(rgba, out.width, out.height), 0, 0);
+      const cut = new Image();
+      await new Promise<void>((resolve, reject) => {
+        cut.onload = () => resolve();
+        cut.onerror = () => reject(new Error("bild"));
+        cut.src = c.toDataURL("image/png");
+      });
+      setImg(cut);
+      setCutDone(true);
+    } catch (e) {
+      console.error("Friläggning misslyckades", e);
+      setCutError("Det gick inte att frilägga bilden just nu. Kontrollera din uppkoppling och prova igen.");
+    } finally {
+      setCutBusy(false);
+    }
+  };
 
   const ratio = ASPECTS.find((a) => a.id === aspect)?.ratio ?? null;
 
@@ -199,12 +273,13 @@ export default function ImageEditorModal({
     const outW = Math.min(r.w, r.w >= r.h ? MAX_OUTPUT : (MAX_OUTPUT * r.w) / r.h);
     const out = document.createElement("canvas");
     draw(out, outW);
+    const asPng = cutDone && bg === "clear";
     out.toBlob(
       (blob) => {
         if (blob) onSave(blob);
         else setError("Det gick inte att spara bilden. Försök igen.");
       },
-      "image/jpeg",
+      asPng ? "image/png" : "image/jpeg",
       0.9
     );
   };
@@ -259,7 +334,18 @@ export default function ImageEditorModal({
                   onPointerUp={onPointerUp}
                   onPointerCancel={onPointerUp}
                   className="max-w-full rounded-lg cursor-grab active:cursor-grabbing touch-none"
-                  style={{ touchAction: "none" }}
+                  style={
+                    cutDone && bg === "clear"
+                      ? {
+                          touchAction: "none",
+                          backgroundColor: "#fff",
+                          backgroundImage:
+                            "linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%),linear-gradient(45deg,#ddd 25%,transparent 25%,transparent 75%,#ddd 75%)",
+                          backgroundSize: "16px 16px",
+                          backgroundPosition: "0 0,8px 8px",
+                        }
+                      : { touchAction: "none" }
+                  }
                 />
               </div>
               <p className="text-[12px] text-ink-dim -mt-2">Zooma med reglaget och dra i bilden för att välja vilken del som ska synas.</p>
@@ -287,6 +373,35 @@ export default function ImageEditorModal({
                 {slider("Ljusstyrka", bright, setBright)}
                 {slider("Kontrast", contrast, setContrast)}
                 {slider("Färgstyrka", sat, setSat)}
+              </div>
+
+              <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button type="button" className={btn} onClick={removeBackground} disabled={cutBusy || !img}>
+                    {cutBusy ? "Friläggar … (kan ta en stund första gången)" : cutDone ? "✨ Frilägg igen" : "✨ Frilägg motivet"}
+                  </button>
+                  {cutDone && (
+                    <span className="flex items-center gap-1.5 text-[12px] text-ink-dim">
+                      Bakgrund:
+                      {(["white", "gray", "clear"] as BgChoice[]).map((b) => (
+                        <button
+                          key={b}
+                          type="button"
+                          onClick={() => setBg(b)}
+                          className={`text-[12px] font-semibold rounded-full px-2.5 py-0.5 border ${
+                            bg === b ? "bg-accent text-accent-ink border-accent" : "bg-surface border-line text-ink"
+                          }`}
+                        >
+                          {b === "white" ? "Vit" : b === "gray" ? "Ljusgrå" : "Genomskinlig"}
+                        </button>
+                      ))}
+                    </span>
+                  )}
+                </div>
+                <p className="text-[11.5px] text-ink-dim">
+                  Tar bort bakgrunden. Fungerar bäst på personer; på föremål kan kanterna bli ojämna.
+                </p>
+                {cutError && <p className="text-[12px] text-red-600">{cutError}</p>}
               </div>
 
               <div className="flex flex-wrap gap-2">

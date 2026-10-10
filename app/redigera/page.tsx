@@ -714,8 +714,9 @@ export default function EditorPage() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
-      const path = `${user.id}/edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
-      const { error: uploadError } = await supabase.storage.from("uploads").upload(path, blob, { contentType: "image/jpeg" });
+      const isPng = blob.type === "image/png";
+      const path = `${user.id}/edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${isPng ? "png" : "jpg"}`;
+      const { error: uploadError } = await supabase.storage.from("uploads").upload(path, blob, { contentType: isPng ? "image/png" : "image/jpeg" });
       if (uploadError) throw new Error(`Gick inte att ladda upp bilden: ${uploadError.message}`);
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       const res = await fetch("/api/sites/replace-image", {
@@ -1409,7 +1410,8 @@ export default function EditorPage() {
           onSkip={{ label: "Använd utan ändringar", run: () => uploadQueued(editQueue[0].file) }}
           onSave={(blob) => {
             const base = editQueue[0].file.name.replace(/\.[^.]+$/, "") || "bild";
-            uploadQueued(new File([blob], `${base}.jpg`, { type: "image/jpeg" }));
+            const png = blob.type === "image/png";
+            uploadQueued(new File([blob], `${base}.${png ? "png" : "jpg"}`, { type: png ? "image/png" : "image/jpeg" }));
           }}
         />
       )}
