@@ -13,6 +13,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-10-nyhetsforhandsvisning",
+    date: "2026-10-10",
+    icon: "👀",
+    title: "Förhandsgranska nyheter direkt",
+    text: "När Millie skrivit en nyhet öppnas den i ett eget fönster så du ser hur den ser ut. Därifrån kan du publicera direkt eller behålla den som utkast.",
+    try: "Skriv en nyhet om att vi har nytt öppethållande",
+  },
+  {
     id: "2026-10-10-nyhetsvarning",
     date: "2026-10-10",
     icon: "📰",

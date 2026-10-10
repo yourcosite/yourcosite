@@ -15,6 +15,7 @@ import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpMo
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
+import NewsPreviewModal from "@/components/NewsPreviewModal";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -177,6 +178,7 @@ export default function EditorPage() {
   const [activePath, setActivePath] = useState("/");
   const [loadError, setLoadError] = useState("");
   const [newsArticles, setNewsArticles] = useState<NewsArticle[]>([]);
+  const [previewNewsId, setPreviewNewsId] = useState<string | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -756,6 +758,7 @@ export default function EditorPage() {
       // "newsList"-sektion i förhandsvisningen visar den utan omladdning.
       if (data.newsArticle) {
         setNewsArticles((prev) => [data.newsArticle, ...prev.filter((a) => a.id !== data.newsArticle.id)]);
+        setPreviewNewsId(data.newsArticle.id);
       }
       setMessages((m) => [
         ...m,
@@ -1293,6 +1296,19 @@ export default function EditorPage() {
         </div>
       </div>
 
+      {content && (
+        <NewsPreviewModal
+          article={newsArticles.find((a) => a.id === previewNewsId) || null}
+          content={content}
+          siteName={site?.name}
+          siteId={site?.id}
+          onClose={() => setPreviewNewsId(null)}
+          onPublished={(a) => {
+            setNewsArticles((prev) => prev.map((x) => (x.id === a.id ? a : x)));
+            setMessages((m) => [...m, { from: "bot", text: "Nyheten är publicerad! 🎉" }]);
+          }}
+        />
+      )}
       <WhatsNewModal
         open={newsOpen}
         onClose={() => setNewsOpen(false)}

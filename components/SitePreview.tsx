@@ -164,6 +164,7 @@ export default function SitePreview({
   privacyPolicyFileUrl,
   privacyPolicyText,
   newsArticles,
+  previewArticle,
   editable,
   selectedImageKey,
   onSelectImage,
@@ -228,6 +229,9 @@ export default function SitePreview({
   // egen läsvy (se newsDetailMatch nedan). Saknas den (t.ex. i
   // /forslag-miniatyrerna) visas "newsList"-sektionen bara tom.
   newsArticles?: NewsArticle[];
+  // Visar just den här artikeln i läsvyn, även om den är ett utkast —
+  // används av förhandsgranskningsfönstret i chattredigeraren.
+  previewArticle?: NewsArticle;
   // Satt av chattredigeraren (/redigera) ENDAST — låter kunden klicka på
   // en bild i förhandsvisningen istället för att beskriva vilken bild de
   // menar i ord (se ImageOrArt/SectionBlock ovan). Aldrig satt från
@@ -256,6 +260,10 @@ export default function SitePreview({
   // och en PUBLICERAD artikel med den slugen, visar vi artikeln istället
   // för sidans vanliga sektioner (se renderingen nedan).
   const newsDetailMatch = (() => {
+    if (previewArticle) {
+      const pg = content.pages.find((p) => p.sections.some((s) => s.type === "newsList")) || content.pages[0];
+      return { page: pg, article: previewArticle };
+    }
     if (!activePath || activePath === "/" || isPrivacyPolicyPage) return null;
     for (const p of content.pages) {
       if (!p.sections.some((s) => s.type === "newsList")) continue;
