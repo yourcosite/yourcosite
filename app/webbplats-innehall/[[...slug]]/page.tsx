@@ -23,10 +23,21 @@ export default async function WebsiteRawContent({
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const site = await getCurrentPublishedSite(supabase, user.id);
+  // Första delen av adressen kan vara "s_<sajt-id>" — då visas just den
+  // sajten (och alla länkar inne i den behåller prefixet via basePath), så
+  // att ett konto med flera sajter inte råkar visa "senaste sajten".
+  let slug = params.slug ?? [];
+  let siteId: string | null = null;
+  if (slug[0] && /^s_[0-9a-fA-F-]{36}$/.test(slug[0])) {
+    siteId = slug[0].slice(2);
+    slug = slug.slice(1);
+  }
+  const basePath = siteId ? `/webbplats-innehall/s_${siteId}` : "/webbplats-innehall";
+
+  const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site || !isValidSiteContent(site.content)) return null;
 
-  const requestedPath = "/" + (params.slug?.join("/") || "");
+  const requestedPath = "/" + (slug.join("/") || "");
   const newsArticles = await getSiteNewsArticles(supabase, site.id);
 
   return (
@@ -35,7 +46,7 @@ export default async function WebsiteRawContent({
       siteName={site.name}
       siteId={site.id}
       activePath={requestedPath}
-      basePath="/webbplats-innehall"
+      basePath={basePath}
       privacyPolicyMode={site.privacy_policy_mode}
       privacyPolicyFileUrl={site.privacy_policy_file_url}
       privacyPolicyText={site.privacy_policy_text}

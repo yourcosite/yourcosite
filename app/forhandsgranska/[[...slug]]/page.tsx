@@ -69,7 +69,7 @@ export default async function EditorPreviewPage({
       <WebsitePreviewFrame
         siteName={site.name}
         domainLabel={domainLabel}
-        contentPath={`/webbplats-innehall${requestedPath}`}
+        contentPath={`/webbplats-innehall/s_${site.id}${requestedPath === "/" ? "" : requestedPath}`}
       />
     </div>
   );
