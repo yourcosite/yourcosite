@@ -877,8 +877,6 @@ export default function EditorPage() {
           </Link>
           <Link
             href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
-            target="_blank"
-            rel="noopener noreferrer"
             className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
           >
             Förhandsgranska
@@ -936,8 +934,6 @@ export default function EditorPage() {
             </Link>
             <Link
               href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
-              target="_blank"
-              rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
