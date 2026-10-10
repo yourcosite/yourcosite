@@ -100,7 +100,6 @@ const THINKING_PHRASES = [
   "Millie uppdaterar sidan",
   "Millie finslipar detaljerna",
   "Millie sorterar pixlarna",
-  "Millie nosar på lösningen",
   "Millie debuggar designen",
   "Millie rätar ut raderna",
   "Millie hittar rätt ord",
