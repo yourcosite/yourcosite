@@ -450,7 +450,34 @@ export default function EditorPage() {
   // ett nytt bildgalleri) — laddar upp dem i tur och ordning och lägger till
   // dem i samma bilage-lista. En fil som misslyckas stoppar inte de andra;
   // felet visas, men det som faktiskt gick bra läggs ändå till.
+  // Bilder (utom GIF) går först genom bildredigeraren, en i taget, så kunden
+  // kan beskära/justera innan de laddas upp. Övriga filer laddas upp direkt.
+  const [editQueue, setEditQueue] = useState<{ file: File; url: string }[]>([]);
+  const [uploadingEdited, setUploadingEdited] = useState(false);
   const handleFiles = async (files: File[]) => {
+    const editable = files.filter((f) => ["image/png", "image/jpeg", "image/webp"].includes(f.type));
+    const rest = files.filter((f) => !editable.includes(f));
+    if (editable.length > 0) {
+      setEditQueue((q) => [...q, ...editable.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
+    }
+    if (rest.length > 0) await uploadFiles(rest);
+  };
+  const nextInQueue = () => {
+    setEditQueue((q) => {
+      if (q[0]) URL.revokeObjectURL(q[0].url);
+      return q.slice(1);
+    });
+  };
+  const uploadQueued = async (file: File) => {
+    setUploadingEdited(true);
+    try {
+      await uploadFiles([file]);
+    } finally {
+      setUploadingEdited(false);
+      nextInQueue();
+    }
+  };
+  const uploadFiles = async (files: File[]) => {
     setAttachError("");
     const room = MAX_ATTACHMENTS - attachments.length;
     if (room <= 0) {
@@ -1366,6 +1393,24 @@ export default function EditorPage() {
           saving={savingImage}
           onClose={() => setImageEditorOpen(false)}
           onSave={saveEditedImage}
+        />
+      )}
+      {editQueue[0] && (
+        <ImageEditorModal
+          open
+          src={editQueue[0].url}
+          saving={uploadingEdited}
+          title={editQueue.length > 1 ? `Redigera bild (${editQueue.length} kvar)` : "Redigera bild innan uppladdning"}
+          saveLabel="Använd bilden"
+          onClose={() => {
+            editQueue.forEach((q) => URL.revokeObjectURL(q.url));
+            setEditQueue([]);
+          }}
+          onSkip={{ label: "Använd utan ändringar", run: () => uploadQueued(editQueue[0].file) }}
+          onSave={(blob) => {
+            const base = editQueue[0].file.name.replace(/\.[^.]+$/, "") || "bild";
+            uploadQueued(new File([blob], `${base}.jpg`, { type: "image/jpeg" }));
+          }}
         />
       )}
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />

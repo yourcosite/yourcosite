@@ -66,12 +66,19 @@ export default function ImageEditorModal({
   saving,
   onClose,
   onSave,
+  onSkip,
+  saveLabel,
+  title,
 }: {
   open: boolean;
   src: string;
   saving: boolean;
   onClose: () => void;
   onSave: (blob: Blob) => void;
+  // Visas som en extra knapp, t.ex. "Använd utan ändringar" vid uppladdning.
+  onSkip?: { label: string; run: () => void };
+  saveLabel?: string;
+  title?: string;
 }) {
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -113,7 +120,8 @@ export default function ImageEditorModal({
     const [base] = src.split("#");
     // En ny parameter gör att webbläsaren inte återanvänder en tidigare
     // cachad kopia utan rätt tillåtelse (CORS) för redigering.
-    im.src = base + (base.includes("?") ? "&" : "?") + "ycs=edit";
+    const local = base.startsWith("blob:") || base.startsWith("data:");
+    im.src = local ? base : base + (base.includes("?") ? "&" : "?") + "ycs=edit";
   }, [open, src]);
 
   // Bygg basbilden (vriden/speglad) när något av det ändras.
@@ -230,7 +238,7 @@ export default function ImageEditorModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-line">
-          <h2 className="text-[17px] font-medium">Redigera bild</h2>
+          <h2 className="text-[17px] font-medium">{title ?? "Redigera bild"}</h2>
           <button type="button" onClick={onClose} disabled={saving} aria-label="Stäng" className="text-[22px] leading-none text-ink-dim px-1">
             ×
           </button>
@@ -303,13 +311,18 @@ export default function ImageEditorModal({
           <button type="button" className={btn} onClick={onClose} disabled={saving}>
             Avbryt
           </button>
+          {onSkip && (
+            <button type="button" className={btn} onClick={onSkip.run} disabled={saving}>
+              {onSkip.label}
+            </button>
+          )}
           <button
             type="button"
             onClick={save}
             disabled={saving || !img}
             className="text-[13px] font-bold rounded-lg px-4 py-1.5 bg-accent text-accent-ink disabled:opacity-60"
           >
-            {saving ? "Sparar …" : "Spara bilden"}
+            {saving ? "Sparar …" : saveLabel ?? "Spara bilden"}
           </button>
         </div>
       </div>

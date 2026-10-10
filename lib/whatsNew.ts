@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-11-redigera-vid-uppladdning",
+    date: "2026-10-11",
+    icon: "✂️",
+    title: "Redigera bilden innan du laddar upp den",
+    text: "När du bifogar en bild med gemet öppnas den i bildredigeraren först. Beskär, vrid eller justera färgerna, eller välj Använd utan ändringar.",
+  },
+  {
     id: "2026-10-10-nyhetsforhandsvisning",
     date: "2026-10-10",
     icon: "👀",
