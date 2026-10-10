@@ -99,7 +99,39 @@ const THINKING_PHRASES = [
   "Millie gör sin magi",
   "Millie uppdaterar sidan",
   "Millie finslipar detaljerna",
+  "Millie sorterar pixlarna",
+  "Millie nosar på lösningen",
+  "Millie vässar pennan",
+  "Millie rätar ut raderna",
+  "Millie hittar rätt ord",
+  "Millie pysslar lite",
+  "Millie lyssnar noga",
+  "Millie läser ritningen",
+  "Millie mixar färgerna",
+  "Millie flyttar på saker",
+  "Millie polerar rubrikerna",
+  "Millie viftar på svansen",
+  "Millie dubbelkollar",
+  "Millie fixar till det",
+  "Millie sätter på kaffet",
+  "Millie snurrar ett varv",
+  "Millie trollar med koden",
+  "Millie tänker extra noga",
+  "Millie sträcker på sig",
+  "Millie knådar texten",
 ];
+
+// Slumpad ordning varje gång Millie börjar jobba, så det inte blir samma
+// fraser i samma följd. Håll fraserna korta (max ca 25 tecken) — de får
+// plats på en rad i den fasta chattbubblan.
+function shuffledPhraseOrder(): number[] {
+  const order = THINKING_PHRASES.map((_, i) => i);
+  for (let i = order.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [order[i], order[j]] = [order[j], order[i]];
+  }
+  return order;
+}
 
 type SiteMeta = {
   id: string;
@@ -215,11 +247,14 @@ export default function EditorPage() {
   // inte känns som samma stillastående text hela vägen — se Millie röra sig
   // i components/Millie.tsx (animate-millie-bounce/-hair, "active"-läget).
   const [phraseIndex, setPhraseIndex] = useState(0);
+  const [phraseOrder, setPhraseOrder] = useState<number[]>(() => THINKING_PHRASES.map((_, i) => i));
+  const thinkingPhrase = THINKING_PHRASES[phraseOrder[phraseIndex % phraseOrder.length]];
   useEffect(() => {
     if (!sending) {
       setPhraseIndex(0);
       return;
     }
+    setPhraseOrder(shuffledPhraseOrder());
     const id = setInterval(() => setPhraseIndex((i) => (i + 1) % THINKING_PHRASES.length), 1600);
     return () => clearInterval(id);
   }, [sending]);
@@ -887,7 +922,7 @@ export default function EditorPage() {
                     <div className="bg-ink text-white text-[12.5px] font-semibold pl-2 pr-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
                       <Millie active size={26} />
                       <div className="w-[230px]">
-                        <div className="truncate">{THINKING_PHRASES[phraseIndex]}</div>
+                        <div className="truncate">{thinkingPhrase}</div>
                         <div className="mt-1.5 h-1 w-full rounded-full bg-white/25 overflow-hidden">
                           <div className="h-full bg-white rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
                         </div>
@@ -1020,7 +1055,7 @@ export default function EditorPage() {
                 <Millie active size={22} />
                 <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5 w-[250px]">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="truncate">{THINKING_PHRASES[phraseIndex]}</span>
+                    <span className="truncate">{thinkingPhrase}</span>
                     <span className="text-[12px] font-semibold tabular-nums w-9 text-right flex-shrink-0">{Math.round(progress * 100)}%</span>
                   </div>
                   <div className="mt-2 h-1.5 rounded-full bg-line overflow-hidden">
