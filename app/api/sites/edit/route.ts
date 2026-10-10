@@ -705,13 +705,19 @@ export async function POST(request: Request) {
   // Varningar kunden ska få veta om direkt: en nyhet som inte syns någonstans,
   // en nyhet som inte gick att spara, eller en borttagen nyhetslista.
   const hasNewsList = (c: SiteContent) => c.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList"));
+  // En befintlig sida som heter något med "nyhet" (t.ex. "Nyheter") — då
+  // erbjuds nyhetslistan där i stället för att skapa en ny sida.
+  const newsPage = updatedContent.pages.find((pg) => /nyhet/i.test(pg.label) || /nyhet/i.test(pg.path));
   let warning: string | undefined;
   let followUp: string[] | undefined;
   if (newsSaveFailed) {
     warning = "Nyheten gick inte att spara just nu, så den finns inte med. Försök igen om en stund, eller skriv den under Nyheter i panelen.";
   } else if (newsArticle && !hasNewsList(updatedContent)) {
     warning = `Nyheten "${newsArticle.title}" är sparad som ${newsArticle.published ? "publicerad" : "utkast"}, men ingen sida på sajten har en nyhetslista, så den syns inte för besökarna än. Vill du att jag lägger till en?`;
-    followUp = ["Skapa en ny sida som heter Nyheter med nyhetslistan", "Lägg till en nyhetslista längst ner på startsidan"];
+    followUp = [
+      newsPage ? `Lägg till nyhetslistan på sidan ${newsPage.label}` : "Skapa en ny sida som heter Nyheter med nyhetslistan",
+      "Lägg till en nyhetslista längst ner på startsidan",
+    ];
   } else if (hasNewsList(site.content) && !hasNewsList(updatedContent)) {
     const { count } = await supabase
       .from("site_news_articles")
@@ -719,7 +725,15 @@ export async function POST(request: Request) {
       .eq("site_id", site.id);
     if (count && count > 0) {
       warning = `Nyhetslistan är borttagen från sajten, så dina ${count} nyheter syns inte längre för besökarna. Vill du ha tillbaka den?`;
-      followUp = ["Lägg tillbaka nyhetslistan på sidan Nyheter", "Nej, låt den vara borta"];
+      // Sidan som tidigare hade listan, annars en sida som heter något med "nyhet".
+      const formerPage = site.content.pages.find(
+        (pg) => pg.sections.some((sec) => sec.type === "newsList") && updatedContent.pages.some((u) => u.path === pg.path)
+      );
+      const target = formerPage || newsPage;
+      followUp = [
+        target ? `Lägg tillbaka nyhetslistan på sidan ${target.label}` : "Skapa en ny sida som heter Nyheter med nyhetslistan",
+        "Nej, låt den vara borta",
+      ];
     }
   }
 
