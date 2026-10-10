@@ -35,6 +35,86 @@ const PREVIEW_MAX_H = 380;
 
 type Pos = { x: number; y: number };
 
+// Ett steg som kan ångras: bilden med bakgrunden borttagen (null = ingen
+// friläggning ännu) och, vid markeringar, de målade ytorna.
+type UndoEntry = { cut: ImageData | null; keep?: ImageData; sub?: ImageData };
+
+// Gör om en målad yta till ett grovt rutnät (för att hitta vad som ligger
+// innanför en målad kontur och välja ut några representativa punkter).
+function gridOf(c: HTMLCanvasElement, maxSide: number) {
+  const k = Math.min(1, maxSide / Math.max(c.width, c.height));
+  const gw = Math.max(1, Math.round(c.width * k));
+  const gh = Math.max(1, Math.round(c.height * k));
+  const t = document.createElement("canvas");
+  t.width = gw;
+  t.height = gh;
+  const x = t.getContext("2d", { willReadFrequently: true })!;
+  x.drawImage(c, 0, 0, gw, gh);
+  const d = x.getImageData(0, 0, gw, gh).data;
+  const on = new Uint8Array(gw * gh);
+  for (let i = 0; i < gw * gh; i++) on[i] = d[i * 4 + 3] > 60 ? 1 : 0;
+  return { gw, gh, on };
+}
+
+// Celler som är helt omslutna av målade streck (t.ex. insidan av en målad
+// kontur runt ett föremål).
+function enclosedCells(on: Uint8Array, gw: number, gh: number): number[] {
+  const outside = new Uint8Array(gw * gh);
+  const stack: number[] = [];
+  const push = (i: number) => {
+    if (!on[i] && !outside[i]) {
+      outside[i] = 1;
+      stack.push(i);
+    }
+  };
+  for (let x = 0; x < gw; x++) {
+    push(x);
+    push((gh - 1) * gw + x);
+  }
+  for (let y = 0; y < gh; y++) {
+    push(y * gw);
+    push(y * gw + gw - 1);
+  }
+  while (stack.length) {
+    const i = stack.pop()!;
+    const x = i % gw;
+    const y = (i - x) / gw;
+    if (x > 0) push(i - 1);
+    if (x < gw - 1) push(i + 1);
+    if (y > 0) push(i - gw);
+    if (y < gh - 1) push(i + gw);
+  }
+  const out: number[] = [];
+  for (let i = 0; i < gw * gh; i++) if (!on[i] && !outside[i]) out.push(i);
+  return out;
+}
+
+// Väljer n punkter som ligger så utspridda som möjligt.
+function spreadOut(cells: number[], gw: number, n: number): number[] {
+  if (cells.length <= n) return cells;
+  const out = [cells[Math.floor(cells.length / 2)]];
+  const dist = new Float32Array(cells.length).fill(Infinity);
+  while (out.length < n) {
+    const last = out[out.length - 1];
+    const lx = last % gw;
+    const ly = Math.floor(last / gw);
+    let best = 0;
+    let bd = -1;
+    for (let i = 0; i < cells.length; i++) {
+      const dx = (cells[i] % gw) - lx;
+      const dy = Math.floor(cells[i] / gw) - ly;
+      const d = dx * dx + dy * dy;
+      if (d < dist[i]) dist[i] = d;
+      if (dist[i] > bd) {
+        bd = dist[i];
+        best = i;
+      }
+    }
+    out.push(cells[best]);
+  }
+  return out;
+}
+
 function cropRect(baseW: number, baseH: number, ratio: number | null, zoom: number, pos: Pos) {
   const r = ratio ?? baseW / baseH;
   let w: number;
@@ -113,12 +193,15 @@ export default function ImageEditorModal({
   // ska behållas). Penseln arbetar direkt på cutRef.
   const cutRef = useRef<HTMLCanvasElement | null>(null);
   const origCutRef = useRef<HTMLCanvasElement | null>(null);
-  const undoRef = useRef<ImageData[]>([]);
+  const undoRef = useRef<UndoEntry[]>([]);
   const strokeRef = useRef<{ x: number; y: number } | null>(null);
   const [maskVersion, setMaskVersion] = useState(0);
   const [tool, setTool] = useState<"move" | "keep" | "erase" | "add" | "sub">("move");
-  // Klickpunkter (i den inskalade bildens pixlar) för "Markera själv".
-  const [points, setPoints] = useState<{ x: number; y: number; label: 0 | 1 }[]>([]);
+  // Markera själv: man målar grönt över det som ska vara med (eller runt
+  // kanterna) och rött över det som ska bort. hintVersion ritar om förhandsvisningen.
+  const [hintVersion, setHintVersion] = useState(0);
+  const hintingRef = useRef(false);
+  const hintLast = useRef<{ x: number; y: number } | null>(null);
   const [pointBusy, setPointBusy] = useState<string | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const samRef = useRef<any>(null);
@@ -148,7 +231,6 @@ export default function ImageEditorModal({
     undoRef.current = [];
     setCanUndo(false);
     setTool("move");
-    setPoints([]);
     samRef.current = null;
   };
 
@@ -236,10 +318,9 @@ export default function ImageEditorModal({
       oc.width = out.width;
       oc.height = out.height;
       oc.getContext("2d")!.drawImage(src, 0, 0, out.width, out.height);
+      pushUndo(true);
       origCutRef.current = oc;
       cutRef.current = c;
-      undoRef.current = [];
-      setCanUndo(false);
       setCutDone(true);
       setMaskVersion((v) => v + 1);
     } catch (e) {
@@ -280,7 +361,7 @@ export default function ImageEditorModal({
     const w = Math.min(PREVIEW_MAX_W, (PREVIEW_MAX_H * r.w) / r.h);
     draw(canvas, w);
     if (pointing && samRef.current) {
-      // Rita ut klickpunkterna (grön = behåll, röd = ta bort).
+      // Lägg de målade ytorna ovanpå bilden (grönt = behåll, rött = ta bort).
       const sam = samRef.current;
       const cutC = cutDone ? cutRef.current : null;
       const dw = cutC ? cutC.width : img!.naturalWidth;
@@ -288,25 +369,41 @@ export default function ImageEditorModal({
       const ctx = canvas.getContext("2d")!;
       const swap = rot % 2 === 1;
       const bw = swap ? dh : dw;
-      const bh = swap ? dw : dh;
-      const th = (rot * Math.PI) / 2;
-      for (const pt of points) {
-        let x = (pt.x / sam.w) * dw - dw / 2;
-        const y0 = (pt.y / sam.h) * dh - dh / 2;
-        if (flip) x = -x;
-        const bx = x * Math.cos(th) - y0 * Math.sin(th) + bw / 2;
-        const by = x * Math.sin(th) + y0 * Math.cos(th) + bh / 2;
-        ctx.beginPath();
-        ctx.arc((bx / bw) * canvas.width, (by / bh) * canvas.height, 6, 0, Math.PI * 2);
-        ctx.fillStyle = pt.label === 1 ? "#16a34a" : "#dc2626";
-        ctx.fill();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#fff";
-        ctx.stroke();
-      }
+      const sc = canvas.width / bw;
+      const tint = (src: HTMLCanvasElement, color: string) => {
+        const t = document.createElement("canvas");
+        t.width = src.width;
+        t.height = src.height;
+        const x = t.getContext("2d")!;
+        x.fillStyle = color;
+        x.fillRect(0, 0, t.width, t.height);
+        x.globalCompositeOperation = "destination-in";
+        x.drawImage(src, 0, 0);
+        return t;
+      };
+      ctx.save();
+      ctx.globalAlpha = 0.55;
+      ctx.setTransform(sc, 0, 0, sc, 0, 0);
+      ctx.translate((swap ? dh : dw) / 2, (swap ? dw : dh) / 2);
+      ctx.rotate((rot * Math.PI) / 2);
+      if (flip) ctx.scale(-1, 1);
+      ctx.drawImage(tint(sam.hintKeep, "#16a34a"), -dw / 2, -dh / 2, dw, dh);
+      ctx.drawImage(tint(sam.hintSub, "#dc2626"), -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseVersion, ratio, zoom, pos, bright, contrast, sat, fullView, points]);
+  }, [baseVersion, ratio, zoom, pos, bright, contrast, sat, fullView, hintVersion]);
+
+  // När man går in i "Markera" förbereds modellen direkt (tar en stund första gången).
+  useEffect(() => {
+    if (!open || !pointing || samRef.current || !img) return;
+    ensureSam().catch((err) => {
+      console.error("Kunde inte starta markeringsverktyget", err);
+      setPointBusy(null);
+      setCutError("Det gick inte att starta markeringsverktyget. Kontrollera din uppkoppling och prova igen.");
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, pointing, img]);
 
   if (!open) return null;
 
@@ -386,7 +483,16 @@ export default function ImageEditorModal({
     const imageInputs = await processor(raw);
     setPointBusy("Läser in bilden …");
     const embeddings = await model.get_image_embeddings(imageInputs);
-    samRef.current = { lib, model, processor, imageInputs, embeddings, src, w, h };
+    const hk = Math.min(1, 512 / Math.max(w, h));
+    const hw = Math.max(1, Math.round(w * hk));
+    const hh = Math.max(1, Math.round(h * hk));
+    const hintKeep = document.createElement("canvas");
+    const hintSub = document.createElement("canvas");
+    hintKeep.width = hintSub.width = hw;
+    hintKeep.height = hintSub.height = hh;
+    samRef.current = { lib, model, processor, imageInputs, embeddings, src, w, h, hw, hh, hintKeep, hintSub };
+    setPointBusy(null);
+    setHintVersion((v) => v + 1);
     return samRef.current;
   };
 
@@ -432,8 +538,6 @@ export default function ImageEditorModal({
       oc.getContext("2d")!.drawImage(sam.src, 0, 0);
       origCutRef.current = oc;
       cutRef.current = c;
-      undoRef.current = [];
-      setCanUndo(false);
       setCutDone(true);
       setMaskVersion((v) => v + 1);
       setCutError(null);
@@ -445,47 +549,126 @@ export default function ImageEditorModal({
     }
   };
 
-  const addPoint = async (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const pt = toSource(e);
-    if (!pt) return;
-    let sam = samRef.current;
-    if (!sam) {
-      try {
-        sam = await ensureSam();
-      } catch (err) {
-        console.error("Kunde inte starta markeringsverktyget", err);
-        setPointBusy(null);
-        setCutError("Det gick inte att starta markeringsverktyget. Kontrollera din uppkoppling och prova igen.");
-        return;
-      }
+  // ---- Ångra ----
+  const pushUndo = (withHints: boolean) => {
+    const cutC = cutDone ? cutRef.current : null;
+    const entry: UndoEntry = {
+      cut: cutC ? cutC.getContext("2d")!.getImageData(0, 0, cutC.width, cutC.height) : null,
+    };
+    const sam = samRef.current;
+    if (withHints && sam) {
+      entry.keep = sam.hintKeep.getContext("2d")!.getImageData(0, 0, sam.hw, sam.hh);
+      entry.sub = sam.hintSub.getContext("2d")!.getImageData(0, 0, sam.hw, sam.hh);
     }
-    const next = [...points, { x: (pt.x / pt.dw) * sam.w, y: (pt.y / pt.dh) * sam.h, label: (tool === "add" ? 1 : 0) as 0 | 1 }];
-    setPoints(next);
-    decode(next);
+    undoRef.current.push(entry);
+    if (undoRef.current.length > 10) undoRef.current.shift();
+    setCanUndo(true);
   };
-
-  const undoStroke = () => {
-    const cutC = cutRef.current;
-    const snap = undoRef.current.pop();
-    if (!cutC || !snap) return;
-    cutC.getContext("2d")!.putImageData(snap, 0, 0);
+  const undoLast = () => {
+    const entry = undoRef.current.pop();
+    if (!entry) return;
+    decodeSeq.current++; // avbryt en pågående uträkning
+    setPointBusy(null);
+    if (entry.cut) {
+      let c = cutRef.current;
+      if (!c || c.width !== entry.cut.width || c.height !== entry.cut.height) {
+        c = document.createElement("canvas");
+        c.width = entry.cut.width;
+        c.height = entry.cut.height;
+        cutRef.current = c;
+      }
+      c.getContext("2d")!.putImageData(entry.cut, 0, 0);
+      setCutDone(true);
+    } else {
+      setCutDone(false);
+    }
+    const sam = samRef.current;
+    if (sam && entry.keep && entry.sub) {
+      sam.hintKeep.getContext("2d")!.putImageData(entry.keep, 0, 0);
+      sam.hintSub.getContext("2d")!.putImageData(entry.sub, 0, 0);
+    }
     setCanUndo(undoRef.current.length > 0);
     setMaskVersion((v) => v + 1);
+    setHintVersion((v) => v + 1);
+  };
+
+  // ---- Markera själv: måla grönt/rött, systemet hittar motivet ----
+  const hintStroke = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const sam = samRef.current;
+    const pt = toSource(e);
+    if (!sam || !pt) return;
+    const hx = (pt.x / pt.dw) * sam.hw;
+    const hy = (pt.y / pt.dh) * sam.hh;
+    const r = Math.max(1, (brush / 2) * pt.k * (sam.hw / pt.dw));
+    const last = hintLast.current ?? { x: hx, y: hy };
+    const draw = (c: HTMLCanvasElement, erase: boolean) => {
+      const x = c.getContext("2d")!;
+      x.save();
+      x.globalCompositeOperation = erase ? "destination-out" : "source-over";
+      x.lineCap = "round";
+      x.lineJoin = "round";
+      x.lineWidth = 2 * r;
+      x.strokeStyle = "#000";
+      x.beginPath();
+      x.moveTo(last.x, last.y);
+      x.lineTo(hx + 0.01, hy);
+      x.stroke();
+      x.restore();
+    };
+    draw(tool === "add" ? sam.hintKeep : sam.hintSub, false);
+    draw(tool === "add" ? sam.hintSub : sam.hintKeep, true);
+    hintLast.current = { x: hx, y: hy };
+    setHintVersion((v) => v + 1);
+  };
+  // Läser av målningen: punkter inuti det gröna (och innanför en målad
+  // kontur), och punkter i det röda — och låter modellen hitta motivet.
+  const runHints = () => {
+    const sam = samRef.current;
+    if (!sam) return;
+    const keep = gridOf(sam.hintKeep, 128);
+    const sub = gridOf(sam.hintSub, 128);
+    const keepCells: number[] = [];
+    keep.on.forEach((v, i) => v && keepCells.push(i));
+    const subCells: number[] = [];
+    sub.on.forEach((v, i) => v && subCells.push(i));
+    if (keepCells.length === 0) {
+      setCutError(subCells.length > 0 ? "Måla med grönt över det som ska vara med – då kan jag hitta motivet." : null);
+      return;
+    }
+    const inside = enclosedCells(keep.on, keep.gw, keep.gh);
+    const pos =
+      inside.length >= 6
+        ? [...spreadOut(inside, keep.gw, 6), ...spreadOut(keepCells, keep.gw, 2)]
+        : spreadOut(keepCells, keep.gw, 8);
+    const neg = spreadOut(subCells, sub.gw, 8);
+    const toPt = (cell: number, g: { gw: number; gh: number }, label: 0 | 1) => ({
+      x: (((cell % g.gw) + 0.5) / g.gw) * sam.w,
+      y: ((Math.floor(cell / g.gw) + 0.5) / g.gh) * sam.h,
+      label,
+    });
+    decode([...pos.map((c) => toPt(c, keep, 1)), ...neg.map((c) => toPt(c, sub, 0))]);
+  };
+  const clearHints = () => {
+    const sam = samRef.current;
+    if (!sam) return;
+    pushUndo(true);
+    sam.hintKeep.getContext("2d")!.clearRect(0, 0, sam.hw, sam.hh);
+    sam.hintSub.getContext("2d")!.clearRect(0, 0, sam.hw, sam.hh);
+    setHintVersion((v) => v + 1);
   };
 
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
     if (pointing) {
-      addPoint(e);
+      if (!samRef.current) return; // verktyget laddas fortfarande
+      pushUndo(true);
+      hintingRef.current = true;
+      hintLast.current = null;
+      hintStroke(e);
       return;
     }
     if (painting) {
-      const cutC = cutRef.current;
-      if (cutC) {
-        undoRef.current.push(cutC.getContext("2d")!.getImageData(0, 0, cutC.width, cutC.height));
-        if (undoRef.current.length > 8) undoRef.current.shift();
-        setCanUndo(true);
-      }
+      pushUndo(false);
       strokeRef.current = null;
       strokeTo(e);
       return;
@@ -493,6 +676,10 @@ export default function ImageEditorModal({
     dragRef.current = { x: e.clientX, y: e.clientY, pos };
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (pointing) {
+      if (hintingRef.current) hintStroke(e);
+      return;
+    }
     if (painting) {
       if (e.buttons || e.pointerType === "touch") {
         if (strokeRef.current) strokeTo(e);
@@ -514,6 +701,11 @@ export default function ImageEditorModal({
   const onPointerUp = () => {
     dragRef.current = null;
     strokeRef.current = null;
+    if (hintingRef.current) {
+      hintingRef.current = false;
+      hintLast.current = null;
+      runHints();
+    }
   };
 
   const save = () => {
@@ -661,10 +853,10 @@ export default function ImageEditorModal({
                     <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
                       <span className="text-ink-dim">Finjustera:</span>
                       {([
-                        ["add", "➕ Klicka: behåll"],
-                        ["sub", "➖ Klicka: ta bort"],
-                        ["keep", "🖌️ Måla: behåll"],
-                        ["erase", "🧽 Måla: ta bort"],
+                        ["add", "🟢 Markera: behåll"],
+                        ["sub", "🔴 Markera: ta bort"],
+                        ["keep", "🖌️ Finpensel: behåll"],
+                        ["erase", "🧽 Finpensel: ta bort"],
                         ["move", "✋ Flytta bilden"],
                       ] as const)
                         .filter(([t]) => cutDone || t === "add" || t === "sub" || t === "move")
@@ -680,28 +872,22 @@ export default function ImageEditorModal({
                           {label}
                         </button>
                       ))}
-                      <button type="button" className={btn} onClick={undoStroke} disabled={!canUndo}>
-                        ↩ Ångra penseldrag
+                      <button type="button" className={btn} onClick={undoLast} disabled={!canUndo}>
+                        ↩ Ångra senaste
                       </button>
                     </div>
                     {pointing && (
-                      <p className="text-[11.5px] text-ink-dim">
-                        {pointBusy ? `${pointBusy} ` : ""}
-                        Klicka på det som ska vara med (➕). Följer något oönskat med, välj ➖ och klicka på det. Fler
-                        klick ger bättre träff.{" "}
-                        {points.length > 0 && (
-                          <button
-                            type="button"
-                            className="underline"
-                            onClick={() => {
-                              decodeSeq.current++;
-                              setPoints([]);
-                            }}
-                          >
+                      <>
+                        {slider("Penselstorlek", brush, setBrush, 6, 80)}
+                        <p className="text-[11.5px] text-ink-dim">
+                          {pointBusy ? `${pointBusy} ` : ""}
+                          Måla med 🟢 över motivet, eller rita en ring runt dess kanter – jag hittar det som ligger
+                          innanför. Följer något oönskat med, måla över det med 🔴. Du kan måla flera gånger.{" "}
+                          <button type="button" className="underline" onClick={clearHints}>
                             Rensa markeringar
                           </button>
-                        )}
-                      </p>
+                        </p>
+                      </>
                     )}
                     {(tool === "keep" || tool === "erase") && (
                       <>
