@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import {
+  IMPERSONATION_COOKIE,
+  IMPERSONATION_FLAG_COOKIE,
+  IMPERSONATION_MAX_AGE,
+  makeImpersonationToken,
+} from "@/lib/impersonation";
 
 // Genererar en engångslänk som loggar in webbläsaren som kunden.
 // Bara superadmin, eftersom det här är den känsligaste admin-åtgärden
@@ -41,5 +47,16 @@ export async function POST(request: Request, { params }: { params: { id: string 
     targetLabel: profile.full_name || profile.email,
   });
 
-  return NextResponse.json({ actionLink: data.properties?.action_link });
+  const res = NextResponse.json({ actionLink: data.properties?.action_link });
+  const secure = process.env.NODE_ENV === "production";
+  // Så att adminen kan ta sig tillbaka med en knapp (se /api/admin/impersonation).
+  res.cookies.set(IMPERSONATION_COOKIE, makeImpersonationToken(check.user.id, params.id), {
+    httpOnly: true,
+    sameSite: "lax",
+    secure,
+    path: "/",
+    maxAge: IMPERSONATION_MAX_AGE,
+  });
+  res.cookies.set(IMPERSONATION_FLAG_COOKIE, "1", { sameSite: "lax", secure, path: "/", maxAge: IMPERSONATION_MAX_AGE });
+  return res;
 }

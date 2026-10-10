@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ImpersonationBanner from "@/components/ImpersonationBanner";
 // Typsnitt för sajt-skinsen (lib/skins.ts), självhostade via npm så de
 // fungerar utan externa anrop. Webbläsaren hämtar bara de som faktiskt används.
 import "@fontsource-variable/bricolage-grotesque/wght.css";
@@ -36,7 +37,10 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        {children}
+        <ImpersonationBanner />
+      </body>
     </html>
   );
 }

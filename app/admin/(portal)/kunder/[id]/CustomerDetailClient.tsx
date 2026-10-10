@@ -115,7 +115,7 @@ export default function CustomerDetailClient({
   };
 
   const handleImpersonate = async () => {
-    if (!confirm("Det här loggar ut dig från ditt eget adminkonto i den här fliken och loggar in dig som kunden. Fortsätta?")) {
+    if (!confirm("Det här loggar in dig som kunden i den här fliken. Längst ner på sidan finns en knapp för att gå tillbaka till adminvyn. Fortsätta?")) {
       return;
     }
     setBusy("impersonate");
