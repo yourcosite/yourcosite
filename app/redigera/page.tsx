@@ -8,6 +8,7 @@ import SitePreview from "@/components/SitePreview";
 import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
+import ImageEditorModal from "@/components/ImageEditorModal";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
@@ -559,6 +560,53 @@ export default function EditorPage() {
     }
   };
 
+  // Bildredigeraren: öppnas för den markerade bilden. Resultatet laddas upp
+  // till kundens egen mapp och byts in på exakt den bilden — utan AI.
+  const [imageEditorOpen, setImageEditorOpen] = useState(false);
+  const [savingImage, setSavingImage] = useState(false);
+  const selectedImageUrl = (() => {
+    if (!content || selection?.target !== "image") return null;
+    const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any;
+    if (!section) return null;
+    if (selection.kind === "hero") return (section.imageUrl as string | undefined) || null;
+    return (section.items?.[selection.itemIndex ?? -1]?.imageUrl as string | undefined) || null;
+  })();
+  const saveEditedImage = async (blob: Blob) => {
+    if (selection?.target !== "image" || !content) return;
+    const sel = selection;
+    setSavingImage(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      const path = `${user.id}/edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+      const { error: uploadError } = await supabase.storage.from("uploads").upload(path, blob, { contentType: "image/jpeg" });
+      if (uploadError) throw new Error(`Gick inte att ladda upp bilden: ${uploadError.message}`);
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+      const res = await fetch("/api/sites/replace-image", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteId: site?.id,
+          imageUrl: pub.publicUrl,
+          selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, kind: sel.kind, itemIndex: sel.itemIndex },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setImageEditorOpen(false);
+      setSelection(null);
+      setMessages((m) => [...m, { from: "bot", text: `Klart! Jag har sparat den redigerade bilden (${sel.label}). Du kan ångra med knappen om du ändrar dig.` }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: `Bilden kunde inte sparas: ${e.message}` }]);
+      setImageEditorOpen(false);
+    } finally {
+      setSavingImage(false);
+    }
+  };
+
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -1003,6 +1051,16 @@ export default function EditorPage() {
                 <span className="text-[12.5px] truncate flex-1">
                   Vald: {selection.label}
                 </span>
+                {selection.target === "image" && selectedImageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageEditorOpen(true)}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
+                  >
+                    ✂️ Redigera bild
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSelection(null)}
@@ -1143,6 +1201,15 @@ export default function EditorPage() {
           draftInputRef.current?.focus();
         }}
       />
+      {selectedImageUrl && (
+        <ImageEditorModal
+          open={imageEditorOpen}
+          src={selectedImageUrl}
+          saving={savingImage}
+          onClose={() => setImageEditorOpen(false)}
+          onSave={saveEditedImage}
+        />
+      )}
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />
 
       <ContactSupportModal

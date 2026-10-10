@@ -56,7 +56,7 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
   {
     icon: "🖼️",
     title: "Bilder",
-    hint: "Bifoga en bild med gem-knappen eller sök gratis stockbilder med bildknappen.",
+    hint: "Bifoga en bild med gem-knappen eller sök gratis stockbilder med bildknappen. Klicka på en bild i förhandsvisningen och välj \"Redigera bild\" för att beskära, vrida eller göra den ljusare.",
     examples: ["Använd den bifogade bilden som bild på startsidan", "Byt bilden här (markera den först)"],
   },
   {
