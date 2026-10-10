@@ -9,6 +9,8 @@ import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import ImageEditorModal from "@/components/ImageEditorModal";
+import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
+import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
@@ -301,6 +303,25 @@ export default function EditorPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [stockOpen, setStockOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [newsOpen, setNewsOpen] = useState(false);
+  // Prick på "Nytt"-knappen tills kunden öppnat rutan efter senaste nyheten.
+  const [hasUnseenNews, setHasUnseenNews] = useState(false);
+  useEffect(() => {
+    try {
+      setHasUnseenNews(localStorage.getItem(WHATS_NEW_SEEN_KEY) !== WHATS_NEW[0]?.id);
+    } catch {
+      setHasUnseenNews(false);
+    }
+  }, []);
+  const openNews = () => {
+    setNewsOpen(true);
+    setHasUnseenNews(false);
+    try {
+      localStorage.setItem(WHATS_NEW_SEEN_KEY, WHATS_NEW[0]?.id || "");
+    } catch {
+      // localStorage kan vara blockerat — pricken visas då igen nästa gång.
+    }
+  };
   const [attaching, setAttaching] = useState(false);
   const [attachError, setAttachError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1000,18 +1021,31 @@ export default function EditorPage() {
         >
           <div className="px-5 py-4 border-b border-line flex items-center gap-2.5">
             <Millie size={28} />
-            <div>
+            <div className="min-w-0">
               <div className="font-semibold text-[14.5px]">Chatta med Millie</div>
               <div className="text-[12px] text-ink-dim mt-0.5">Säg vilken sida du menar, och vad du vill ändra eller lägga till.</div>
             </div>
-            <button
-              type="button"
-              onClick={() => setHelpOpen(true)}
-              title="Se vad du kan be Millie om"
-              className="ml-auto flex-shrink-0 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
-            >
-              💡 Tips
-            </button>
+            <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
+              <button
+                type="button"
+                onClick={openNews}
+                title="Se vad som är nytt"
+                className="relative text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
+              >
+                ✨ Nytt
+                {hasUnseenNews && (
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" aria-label="Nya nyheter" />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setHelpOpen(true)}
+                title="Se vad du kan be Millie om"
+                className="text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
+              >
+                💡 Tips
+              </button>
+            </div>
           </div>
 
           <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4.5 flex flex-col gap-4">
@@ -1258,6 +1292,14 @@ export default function EditorPage() {
         </div>
       </div>
 
+      <WhatsNewModal
+        open={newsOpen}
+        onClose={() => setNewsOpen(false)}
+        onTry={(text) => {
+          setDraft(text);
+          draftInputRef.current?.focus();
+        }}
+      />
       <MillieHelpModal
         open={helpOpen}
         onClose={() => setHelpOpen(false)}
