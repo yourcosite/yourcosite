@@ -503,6 +503,8 @@ export default function EditorPage() {
   // (en av tio, aldrig samma två gånger i rad) i stället för presentationen.
   const chatKey = site?.id ? `yourcosite-chat-${site.id}` : null;
   const chatRestored = useRef(false);
+  // Förra besökets sista "sedd"-tid, läst innan den här sidan hunnit skriva över den.
+  const prevSeenRef = useRef(0);
   useEffect(() => {
     if (!chatKey || !content || chatRestored.current || !site?.id) return;
     let cancelled = false;
@@ -524,6 +526,11 @@ export default function EditorPage() {
       }
       let lastGreeting = -1;
       let hintSeen = false;
+      // Var kunden här alldeles nyss (t.ex. tillbaka från Nyheter-fliken)?
+      // Då visas bara historiken, utan ny hälsning.
+      let justBack = false;
+      const last = prevSeenRef.current;
+      justBack = last > 0 && Date.now() - last < 30 * 60 * 1000;
       try {
         // 2) Webbläsarens kopia, om servern inte hade något (eller saknar kolumnen)
         if (stored.length === 0) {
@@ -539,12 +546,15 @@ export default function EditorPage() {
       chatRestored.current = true;
       const next: ChatMessage[] = [];
       if (stored.length > 0) {
-        let g = Math.floor(Math.random() * WELCOME_BACK.length);
-        if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
-        try {
-          localStorage.setItem(`${chatKey}-greeting`, String(g));
-        } catch {}
-        next.push(...stored, { from: "bot", text: WELCOME_BACK[g], transient: true });
+        next.push(...stored);
+        if (!justBack) {
+          let g = Math.floor(Math.random() * WELCOME_BACK.length);
+          if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
+          try {
+            localStorage.setItem(`${chatKey}-greeting`, String(g));
+          } catch {}
+          next.push({ from: "bot", text: WELCOME_BACK[g], transient: true });
+        }
       }
       // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
       // nämner det en enda gång per sajt.
@@ -575,6 +585,27 @@ export default function EditorPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatKey, !!content]);
+
+  // Håller koll på när kunden senast var i redigeraren (se justBack ovan).
+  useEffect(() => {
+    if (!chatKey) return;
+    try {
+      prevSeenRef.current = Number(localStorage.getItem(`${chatKey}-lastseen`) ?? 0);
+    } catch {}
+    const mark = () => {
+      try {
+        localStorage.setItem(`${chatKey}-lastseen`, String(Date.now()));
+      } catch {}
+    };
+    mark();
+    const t = setInterval(mark, 20000);
+    window.addEventListener("pagehide", mark);
+    return () => {
+      clearInterval(t);
+      window.removeEventListener("pagehide", mark);
+      mark();
+    };
+  }, [chatKey]);
 
   useEffect(() => {
     if (!chatKey || !chatRestored.current) return;
