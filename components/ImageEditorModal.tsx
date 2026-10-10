@@ -21,6 +21,9 @@ const ASPECTS: { id: string; label: string; ratio: number | null }[] = [
 // CDN vid behov så att det inte väger ner resten av sajten.
 const TRANSFORMERS_URL = "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.8.1";
 const CUTOUT_MODEL = "Xenova/modnet";
+// "Markera själv": en öppen modell (SlimSAM, Apache 2.0) som utifrån klick på
+// "det här ska vara med" och "det här ska bort" hittar rätt motiv.
+const POINT_MODEL = "Xenova/slimsam-77-uniform";
 const CUTOUT_MAX = 1280; // längsta sidan som skickas in i modellen
 
 type BgChoice = "white" | "gray" | "clear";
@@ -113,7 +116,13 @@ export default function ImageEditorModal({
   const undoRef = useRef<ImageData[]>([]);
   const strokeRef = useRef<{ x: number; y: number } | null>(null);
   const [maskVersion, setMaskVersion] = useState(0);
-  const [tool, setTool] = useState<"move" | "keep" | "erase">("move");
+  const [tool, setTool] = useState<"move" | "keep" | "erase" | "add" | "sub">("move");
+  // Klickpunkter (i den inskalade bildens pixlar) för "Markera själv".
+  const [points, setPoints] = useState<{ x: number; y: number; label: 0 | 1 }[]>([]);
+  const [pointBusy, setPointBusy] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const samRef = useRef<any>(null);
+  const decodeSeq = useRef(0);
   const [brush, setBrush] = useState(24);
   const [canUndo, setCanUndo] = useState(false);
 
@@ -139,6 +148,8 @@ export default function ImageEditorModal({
     undoRef.current = [];
     setCanUndo(false);
     setTool("move");
+    setPoints([]);
+    samRef.current = null;
   };
 
   // Läs in bilden varje gång dialogen öppnas.
@@ -243,8 +254,10 @@ export default function ImageEditorModal({
 
   // Medan man penslar visas hela bilden (ingen beskärning), så att varje
   // punkt på skärmen går att översätta till en punkt i bilden.
-  const painting = cutDone && tool !== "move";
-  const view = painting ? { ratio: null as number | null, zoom: 1, pos: { x: 0.5, y: 0.5 } } : { ratio, zoom, pos };
+  const pointing = tool === "add" || tool === "sub";
+  const painting = cutDone && (tool === "keep" || tool === "erase");
+  const fullView = painting || pointing;
+  const view = fullView ? { ratio: null as number | null, zoom: 1, pos: { x: 0.5, y: 0.5 } } : { ratio, zoom, pos };
 
   const draw = (target: HTMLCanvasElement, outW: number, v: { ratio: number | null; zoom: number; pos: Pos } = view) => {
     const base = baseRef.current;
@@ -266,8 +279,34 @@ export default function ImageEditorModal({
     const r = cropRect(base.width, base.height, view.ratio, view.zoom, view.pos);
     const w = Math.min(PREVIEW_MAX_W, (PREVIEW_MAX_H * r.w) / r.h);
     draw(canvas, w);
+    if (pointing && samRef.current) {
+      // Rita ut klickpunkterna (grön = behåll, röd = ta bort).
+      const sam = samRef.current;
+      const cutC = cutDone ? cutRef.current : null;
+      const dw = cutC ? cutC.width : img!.naturalWidth;
+      const dh = cutC ? cutC.height : img!.naturalHeight;
+      const ctx = canvas.getContext("2d")!;
+      const swap = rot % 2 === 1;
+      const bw = swap ? dh : dw;
+      const bh = swap ? dw : dh;
+      const th = (rot * Math.PI) / 2;
+      for (const pt of points) {
+        let x = (pt.x / sam.w) * dw - dw / 2;
+        const y0 = (pt.y / sam.h) * dh - dh / 2;
+        if (flip) x = -x;
+        const bx = x * Math.cos(th) - y0 * Math.sin(th) + bw / 2;
+        const by = x * Math.sin(th) + y0 * Math.cos(th) + bh / 2;
+        ctx.beginPath();
+        ctx.arc((bx / bw) * canvas.width, (by / bh) * canvas.height, 6, 0, Math.PI * 2);
+        ctx.fillStyle = pt.label === 1 ? "#16a34a" : "#dc2626";
+        ctx.fill();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#fff";
+        ctx.stroke();
+      }
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseVersion, ratio, zoom, pos, bright, contrast, sat, painting]);
+  }, [baseVersion, ratio, zoom, pos, bright, contrast, sat, fullView, points]);
 
   if (!open) return null;
 
@@ -275,9 +314,11 @@ export default function ImageEditorModal({
   // frilagda bilden (tar hänsyn till vridning och spegling).
   const toSource = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const base = baseRef.current;
-    const cutC = cutRef.current;
+    const cutC = cutDone ? cutRef.current : null;
     const canvas = previewRef.current;
-    if (!base || !cutC || !canvas) return null;
+    if (!base || !canvas || !img) return null;
+    const dw = cutC ? cutC.width : img.naturalWidth;
+    const dh = cutC ? cutC.height : img.naturalHeight;
     const rect = canvas.getBoundingClientRect();
     const bx = ((e.clientX - rect.left) / rect.width) * base.width;
     const by = ((e.clientY - rect.top) / rect.height) * base.height;
@@ -287,7 +328,7 @@ export default function ImageEditorModal({
     let x = px * Math.cos(th) - py * Math.sin(th);
     const y = px * Math.sin(th) + py * Math.cos(th);
     if (flip) x = -x;
-    return { x: x + cutC.width / 2, y: y + cutC.height / 2, k: base.width / rect.width };
+    return { x: x + dw / 2, y: y + dh / 2, k: base.width / rect.width, dw, dh };
   };
   const paintAt = (x: number, y: number, radius: number) => {
     const cutC = cutRef.current;
@@ -324,6 +365,105 @@ export default function ImageEditorModal({
     strokeRef.current = { x: pt.x, y: pt.y };
     setMaskVersion((v) => v + 1);
   };
+  // Förbereder SlimSAM för den här bilden (hämtar modellen första gången och
+  // läser in bilden en gång — sedan går varje klick fort).
+  const ensureSam = async () => {
+    if (samRef.current) return samRef.current;
+    if (!img) throw new Error("ingen bild");
+    setPointBusy("Hämtar verktyget … kan ta en stund första gången.");
+    const k = Math.min(1, CUTOUT_MAX / Math.max(img.naturalWidth, img.naturalHeight));
+    const w = Math.max(1, Math.round(img.naturalWidth * k));
+    const h = Math.max(1, Math.round(img.naturalHeight * k));
+    const src = document.createElement("canvas");
+    src.width = w;
+    src.height = h;
+    src.getContext("2d")!.drawImage(img, 0, 0, w, h);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const lib: any = await import(/* webpackIgnore: true */ TRANSFORMERS_URL);
+    const model = await lib.SamModel.from_pretrained(POINT_MODEL);
+    const processor = await lib.AutoProcessor.from_pretrained(POINT_MODEL);
+    const raw = await lib.RawImage.fromURL(src.toDataURL("image/png"));
+    const imageInputs = await processor(raw);
+    setPointBusy("Läser in bilden …");
+    const embeddings = await model.get_image_embeddings(imageInputs);
+    samRef.current = { lib, model, processor, imageInputs, embeddings, src, w, h };
+    return samRef.current;
+  };
+
+  // Räknar ut motivet utifrån alla klickpunkter och lägger det som friläggning.
+  const decode = async (pts: { x: number; y: number; label: 0 | 1 }[]) => {
+    const seq = ++decodeSeq.current;
+    if (pts.length === 0) return;
+    try {
+      const sam = await ensureSam();
+      setPointBusy("Markerar …");
+      const { Tensor } = sam.lib;
+      const reshaped = sam.imageInputs.reshaped_input_sizes[0]; // [h, w]
+      const flat: number[] = [];
+      for (const pt of pts) flat.push((pt.x / sam.w) * reshaped[1], (pt.y / sam.h) * reshaped[0]);
+      const inputPoints = new Tensor("float32", flat, [1, 1, pts.length, 2]);
+      const inputLabels = new Tensor("int64", pts.map((pt) => BigInt(pt.label)), [1, 1, pts.length]);
+      const outputs = await sam.model({ ...sam.embeddings, input_points: inputPoints, input_labels: inputLabels });
+      const masks = await sam.processor.post_process_masks(
+        outputs.pred_masks,
+        sam.imageInputs.original_sizes,
+        sam.imageInputs.reshaped_input_sizes
+      );
+      if (seq !== decodeSeq.current) return;
+      const m = masks[0];
+      const dims: number[] = m.dims; // [1, 3, H, W]
+      const mh = dims[dims.length - 2];
+      const mw = dims[dims.length - 1];
+      const scores = Array.from(outputs.iou_scores.data as ArrayLike<number>);
+      let best = 0;
+      for (let i = 1; i < scores.length; i++) if (scores[i] > scores[best]) best = i;
+      const off = best * mh * mw;
+      const c = document.createElement("canvas");
+      c.width = sam.w;
+      c.height = sam.h;
+      const cctx = c.getContext("2d")!;
+      cctx.drawImage(sam.src, 0, 0);
+      const id = cctx.getImageData(0, 0, sam.w, sam.h);
+      for (let i = 0; i < sam.w * sam.h; i++) id.data[i * 4 + 3] = m.data[off + i] ? 255 : 0;
+      cctx.putImageData(id, 0, 0);
+      const oc = document.createElement("canvas");
+      oc.width = sam.w;
+      oc.height = sam.h;
+      oc.getContext("2d")!.drawImage(sam.src, 0, 0);
+      origCutRef.current = oc;
+      cutRef.current = c;
+      undoRef.current = [];
+      setCanUndo(false);
+      setCutDone(true);
+      setMaskVersion((v) => v + 1);
+      setCutError(null);
+    } catch (err) {
+      console.error("Markering misslyckades", err);
+      setCutError("Det gick inte att markera just nu. Kontrollera din uppkoppling och prova igen.");
+    } finally {
+      if (seq === decodeSeq.current) setPointBusy(null);
+    }
+  };
+
+  const addPoint = async (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const pt = toSource(e);
+    if (!pt) return;
+    let sam = samRef.current;
+    if (!sam) {
+      try {
+        sam = await ensureSam();
+      } catch (err) {
+        console.error("Kunde inte starta markeringsverktyget", err);
+        setPointBusy(null);
+        setCutError("Det gick inte att starta markeringsverktyget. Kontrollera din uppkoppling och prova igen.");
+        return;
+      }
+    }
+    const next = [...points, { x: (pt.x / pt.dw) * sam.w, y: (pt.y / pt.dh) * sam.h, label: (tool === "add" ? 1 : 0) as 0 | 1 }];
+    setPoints(next);
+    decode(next);
+  };
+
   const undoStroke = () => {
     const cutC = cutRef.current;
     const snap = undoRef.current.pop();
@@ -335,6 +475,10 @@ export default function ImageEditorModal({
 
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
+    if (pointing) {
+      addPoint(e);
+      return;
+    }
     if (painting) {
       const cutC = cutRef.current;
       if (cutC) {
@@ -439,7 +583,7 @@ export default function ImageEditorModal({
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onPointerCancel={onPointerUp}
-                  className={`max-w-full rounded-lg touch-none ${painting ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
+                  className={`max-w-full rounded-lg touch-none ${fullView ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
                   style={
                     cutDone && bg === "clear"
                       ? {
@@ -484,7 +628,15 @@ export default function ImageEditorModal({
               <div className="flex flex-col gap-2 rounded-lg border border-line p-3">
                 <div className="flex flex-wrap items-center gap-2">
                   <button type="button" className={btn} onClick={removeBackground} disabled={cutBusy || !img}>
-                    {cutBusy ? "Friläggar … (kan ta en stund första gången)" : cutDone ? "✨ Frilägg igen" : "✨ Frilägg motivet"}
+                    {cutBusy ? "Friläggar … (kan ta en stund första gången)" : cutDone ? "✨ Frilägg automatiskt igen" : "✨ Frilägg automatiskt"}
+                  </button>
+                  <button
+                    type="button"
+                    className={btn}
+                    onClick={() => setTool("add")}
+                    disabled={!img || (pointBusy !== null && !pointing)}
+                  >
+                    🎯 Markera motivet själv
                   </button>
                   {cutDone && (
                     <span className="flex items-center gap-1.5 text-[12px] text-ink-dim">
@@ -504,15 +656,19 @@ export default function ImageEditorModal({
                     </span>
                   )}
                 </div>
-                {cutDone ? (
+                {cutDone || pointing ? (
                   <div className="flex flex-col gap-2 border-t border-line pt-2">
                     <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
                       <span className="text-ink-dim">Finjustera:</span>
                       {([
+                        ["add", "➕ Klicka: behåll"],
+                        ["sub", "➖ Klicka: ta bort"],
+                        ["keep", "🖌️ Måla: behåll"],
+                        ["erase", "🧽 Måla: ta bort"],
                         ["move", "✋ Flytta bilden"],
-                        ["keep", "🖌️ Behåll"],
-                        ["erase", "🧽 Ta bort"],
-                      ] as const).map(([t, label]) => (
+                      ] as const)
+                        .filter(([t]) => cutDone || t === "add" || t === "sub" || t === "move")
+                        .map(([t, label]) => (
                         <button
                           key={t}
                           type="button"
@@ -528,7 +684,26 @@ export default function ImageEditorModal({
                         ↩ Ångra penseldrag
                       </button>
                     </div>
-                    {tool !== "move" && (
+                    {pointing && (
+                      <p className="text-[11.5px] text-ink-dim">
+                        {pointBusy ? `${pointBusy} ` : ""}
+                        Klicka på det som ska vara med (➕). Följer något oönskat med, välj ➖ och klicka på det. Fler
+                        klick ger bättre träff.{" "}
+                        {points.length > 0 && (
+                          <button
+                            type="button"
+                            className="underline"
+                            onClick={() => {
+                              decodeSeq.current++;
+                              setPoints([]);
+                            }}
+                          >
+                            Rensa markeringar
+                          </button>
+                        )}
+                      </p>
+                    )}
+                    {(tool === "keep" || tool === "erase") && (
                       <>
                         {slider("Penselstorlek", brush, setBrush, 6, 80)}
                         <p className="text-[11.5px] text-ink-dim">
