@@ -152,17 +152,25 @@ function buildEditPrompt(
   const currentPageNote = currentPage
     ? `\nKunden tittar just nu på sidan "${currentPage.path}" ("${currentPage.label}") i förhandsvisningen. Är önskemålet oklart om VILKEN sida det gäller (t.ex. "byt rubriken" utan att nämna sida), anta med STOR sannolikhet att det är den här sidan, inte en annan.\n`
     : "";
+  // Vad den markerade sektionen faktiskt ÄR (typ + layout), så Millie inte
+  // behöver gissa vilken sektion "den här" syftar på.
+  const selSection = selection
+    ? (content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any)
+    : undefined;
+  const selSectionInfo = selSection
+    ? ` Sektionen är av typen "${selSection.type}"${selSection.layout ? ` med layouten "${selSection.layout}"` : ""}${selSection.heading ? ` och rubriken "${selSection.heading}"` : ""}.`
+    : "";
   const selectionNote =
     selection?.target === "image"
       ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en specifik bild i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"${
           selection.kind === "gridItem" || selection.kind === "galleryItem"
             ? `, rutan med index ${selection.itemIndex} i den sektionens "items"-lista`
             : ""
-        }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.\n`
+        }). Handlar önskemålet om att byta, ta bort eller ändra "bilden"/"bilden ovan" utan att tydligt peka ut en annan bild, syftar kunden med STOR sannolikhet på just DEN markerade bilden — gör då ändringen på exakt den noden, inte på en annan bild på sidan.${selSectionInfo}\n`
       : selection?.target === "field"
-      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT ETT SPECIFIKT textfält i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}", fältet "${selection.field}" — matchar exakt den egenskapen i innehållsmodellen, t.ex. "headline" eller "items.1.title" för rad 2 i en lista). Önskemålet gäller med STOR sannolikhet att ändra EXAKT det fältet (hela dess nya text, inte bara en del), inte något annat fält i samma eller en annan sektion — gör då ändringen bara där.\n`
+      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT ETT SPECIFIKT textfält i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}", fältet "${selection.field}" — matchar exakt den egenskapen i innehållsmodellen, t.ex. "headline" eller "items.1.title" för rad 2 i en lista). Önskemålet gäller med STOR sannolikhet att ändra EXAKT det fältet (hela dess nya text, inte bara en del), inte något annat fält i samma eller en annan sektion — gör då ändringen bara där.${selSectionInfo}\n`
       : selection?.target === "section"
-      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en hel sektion i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"). Är önskemålet oklart om VILKEN rubrik/text/sektion det gäller, syftar kunden med STOR sannolikhet på just DEN markerade sektionen — gör då ändringen där, inte i en annan sektion på sidan.\n`
+      ? `\nVIKTIGT — kunden har KLICKAT OCH MARKERAT en hel sektion i förhandsvisningen innan de skrev sitt meddelande: ${selection.label} (sidan "${selection.pagePath}", sektion med id "${selection.sectionId}"). ${selSectionInfo} Kunden har valt den för att det är DÄR ändringen ska göras: alla önskemål som inte uttryckligen nämner ett annat ställe ("lägg en bild bredvid texten", "gör den större", "byt färg", "lägg till en knapp") gäller DEN markerade sektionen — rör ALDRIG en annan sektion (t.ex. hero) när något är markerat, om inte kunden uttryckligen nämner den. Passar önskemålet inte sektionens typ (t.ex. bild bredvid text i en sektion som inte kan visa bild), följ regeln om bild bredvid en textruta nedan: gör om just DEN sektionen eller förklara i "summary" — flytta aldrig ändringen till en annan sektion.\n`
       : "";
   return `Du redigerar en BEFINTLIG kundwebbplats hos YourCoSite. Nedan är sajtens NUVARANDE innehåll som JSON, bara som underlag för dig — du skriver INTE ut det igen (innehållsmodellen i lib/contentModel.ts):
 
