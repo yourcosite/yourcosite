@@ -129,6 +129,16 @@ const THINKING_PHRASES = [
   "Millie uppdaterar databasen",
   "Millie validerar sidan",
   "Millie deployar glädje",
+  "Millie gör det åt dig",
+  "Millie tar hand om det",
+  "Millie ger det kärlek",
+  "Millie gör det fint",
+  "Millie håller tummarna",
+  "Millie tänker på dig",
+  "Millie satsar helhjärtat",
+  "Millie älskar det här",
+  "Millie ordnar det snart",
+  "Millie fixar det här",
 ];
 
 // Slumpad ordning varje gång Millie börjar jobba, så det inte blir samma
