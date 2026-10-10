@@ -745,6 +745,17 @@ export default function EditorPage() {
           options: isQuestion ? data.options : undefined,
           requestText: text || currentAttachments.map((a) => a.name).join(", "),
         },
+        // Varning från servern (t.ex. en nyhet utan nyhetslista att visas i)
+        // kommer som ett eget meddelande, med klickbara förslag.
+        ...(data.warning
+          ? [
+              {
+                from: "bot" as const,
+                text: `⚠️ ${data.warning}`,
+                options: Array.isArray(data.followUp) && data.followUp.length > 0 ? data.followUp : undefined,
+              },
+            ]
+          : []),
       ]);
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: `Det gick inte: ${e.message}` }]);

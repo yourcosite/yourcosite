@@ -224,7 +224,7 @@ VIKTIGT — sektioner läggs ALLTID under varandra, ALDRIG bredvid varandra, oav
 
 VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
 
-VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik får ALDRIG hittas på — se fältbeskrivningen. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället. Sajtens befintliga kategorier just nu: ${existingNewsCategories.join(", ")} — matcha en av dessa EXAKT om kunden syftar på samma sak, annars kan du sätta en ny kategori med kundens egen benämning (lista då gärna de befintliga som förslag om du istället behöver fråga). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. Schemalagd publicering går INTE att be om här i chatten än — vill kunden schemalägga, hänvisa till Nyheter-sidan i panelen istället. Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också.
+VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik får ALDRIG hittas på — se fältbeskrivningen. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället. Sajtens befintliga kategorier just nu: ${existingNewsCategories.join(", ")} — matcha en av dessa EXAKT om kunden syftar på samma sak, annars kan du sätta en ny kategori med kundens egen benämning (lista då gärna de befintliga som förslag om du istället behöver fråga). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. Schemalagd publicering går INTE att be om här i chatten än — vill kunden schemalägga, hänvisa till Nyheter-sidan i panelen istället. Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också. ${content.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList")) ? "Sajten HAR en nyhetslista." : "Sajten har just nu INGEN nyhetslista — skapar du en artikel MÅSTE du i samma svar lägga till en \"newsList\"-sektion (på en befintlig nyhetssida om en finns, annars på en ny sida \"Nyheter\" med path \"/nyheter\"), annars syns artikeln inte för besökarna."} Ta ALDRIG bort en befintlig "newsList"-sektion eller nyhetssida om inte kunden uttryckligen ber om det — skriver du om en sida som innehåller en, ska den följa med oförändrad.
 
 VIKTIGT — Google Analytics/Meta Pixel: ber kunden att koppla på Google Analytics eller Meta (Facebook) Pixel och GER dig ett ID i samma meddelande, sätt det i "gaMeasurementId" respektive "metaPixelId". Ber kunden om det men utan att ange något ID, svara i "summary" och be om ID:t istället — hitta aldrig på ett. Vill kunden koppla BORT en redan kopplad tagg, sätt motsvarande fält till en tom sträng. Scripten laddas bara in på sajten efter att besökaren godkänt "Alla cookies" i cookiebannern — nämn det kort om kunden undrar varför de inte ser något direkt i förhandsvisningen utan att godkänna den.
 
@@ -666,6 +666,7 @@ export async function POST(request: Request) {
   // den FÖRSTA bifogade bilden i det här meddelandet, om någon — Claude
   // ombeds aldrig ange en bild-URL själv (se verktygets fältbeskrivning).
   let newsArticle: NewsArticle | null = null;
+  let newsSaveFailed = false;
   const newsCategory = patch.newsArticle ? normalizeCategory(patch.newsArticle.category) : null;
   if (patch.newsArticle && newsCategory && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
     const title = patch.newsArticle.title.trim().slice(0, 120);
@@ -698,6 +699,28 @@ export async function POST(request: Request) {
     // sparats ovan) att se ut som att den misslyckades för kunden — bara
     // artikeln uteblir, resten av svaret går igenom som vanligt.
     if (!newsError) newsArticle = inserted as NewsArticle;
+    else newsSaveFailed = true;
+  }
+
+  // Varningar kunden ska få veta om direkt: en nyhet som inte syns någonstans,
+  // en nyhet som inte gick att spara, eller en borttagen nyhetslista.
+  const hasNewsList = (c: SiteContent) => c.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList"));
+  let warning: string | undefined;
+  let followUp: string[] | undefined;
+  if (newsSaveFailed) {
+    warning = "Nyheten gick inte att spara just nu, så den finns inte med. Försök igen om en stund, eller skriv den under Nyheter i panelen.";
+  } else if (newsArticle && !hasNewsList(updatedContent)) {
+    warning = `Nyheten "${newsArticle.title}" är sparad som ${newsArticle.published ? "publicerad" : "utkast"}, men ingen sida på sajten har en nyhetslista, så den syns inte för besökarna än. Vill du att jag lägger till en?`;
+    followUp = ["Skapa en ny sida som heter Nyheter med nyhetslistan", "Lägg till en nyhetslista längst ner på startsidan"];
+  } else if (hasNewsList(site.content) && !hasNewsList(updatedContent)) {
+    const { count } = await supabase
+      .from("site_news_articles")
+      .select("id", { count: "exact", head: true })
+      .eq("site_id", site.id);
+    if (count && count > 0) {
+      warning = `Nyhetslistan är borttagen från sajten, så dina ${count} nyheter syns inte längre för besökarna. Vill du ha tillbaka den?`;
+      followUp = ["Lägg tillbaka nyhetslistan på sidan Nyheter", "Nej, låt den vara borta"];
+    }
   }
 
   return NextResponse.json({
@@ -705,5 +728,7 @@ export async function POST(request: Request) {
     summary: patch.summary,
     unsupported: patch.unsupported === true,
     newsArticle,
+    warning,
+    followUp,
   });
 }
