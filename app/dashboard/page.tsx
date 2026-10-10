@@ -23,6 +23,10 @@ export default async function DashboardPage() {
     const { data: siteRows } = await supabase
       .from("sites")
       .select("id, name, domain, status, content")
+      // Personalen (admin/support) får läsa ALLA sajter via RLS — utan det
+      // här filtret listades därför andras sajter i deras egen kundzon, och
+      // ett klick på dem hittade inte sajten (redigeraren hämtar bara egna).
+      .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
     sites = (siteRows ?? []).map((s) => ({
       id: s.id,
