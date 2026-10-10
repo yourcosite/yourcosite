@@ -114,7 +114,7 @@ export default function MillieHelpModal({
             <h2 className="text-[19px] font-medium">Hej, jag är Millie! 👋</h2>
             <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">
               Jag är din digitala assistent och hjälper dig med allt som rör din hemsida. Så här kan du be mig om hjälp:
-              skriv som du pratar. Klicka på ett exempel nedan så hamnar det i meddelanderutan – ändra sedan texten så den
+              skriv som du pratar – eller tryck på mikrofonen vid skrivrutan och prata in det (finns i Chrome, Edge och Safari). Klicka på ett exempel nedan så hamnar det i meddelanderutan – ändra sedan texten så den
               passar dig. Du kan alltid ångra med knappen i chatten.
             </p>
           </div>

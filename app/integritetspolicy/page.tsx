@@ -9,7 +9,7 @@ export default function Page() {
   return (
     <LegalLayout
       title="Integritetspolicy"
-      updated="2026-10-07"
+      updated="2026-10-10"
       intro={
         <>
           Detta är mallar baserade på svensk och EU-rättslig standardpraxis
@@ -138,6 +138,14 @@ export default function Page() {
         anonymiseras inom 12 månader efter avslutad prenumeration, om
         inte bokföringslagen kräver längre lagring (7 år för
         bokföringsunderlag).
+      </p>
+
+      <p>
+        Mikrofonknappen i redigeraren är valfri. När Kunden använder den
+        sköts taligenkänningen av webbläsaren (t.ex. Google i Chrome, Apple
+        i Safari, Microsoft i Edge), som kan skicka ljudet till sin egen
+        leverantör för att göra om det till text. Vi tar inte emot eller
+        sparar något ljud, bara den text som hamnar i meddelanderutan.
       </p>
 
       <p>

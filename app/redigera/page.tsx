@@ -139,6 +139,67 @@ export default function EditorPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const draftInputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Diktering: mikrofonknappen låter kunden prata in meddelandet på svenska.
+  // Webbläsarens egen taligenkänning (Web Speech API) — gratis, men saknas i
+  // t.ex. Firefox; då visas ingen knapp. Texten fylls i rutan så kunden kan
+  // läsa igenom och ändra innan hen skickar.
+  const [micSupported, setMicSupported] = useState(false);
+  const [listening, setListening] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+  useEffect(() => {
+    const w = window as any;
+    setMicSupported(!!(w.SpeechRecognition || w.webkitSpeechRecognition));
+    return () => recognitionRef.current?.abort?.();
+  }, []);
+  const stopListening = () => {
+    recognitionRef.current?.stop?.();
+  };
+  const toggleListening = () => {
+    if (listening) return stopListening();
+    const w = window as any;
+    const Rec = w.SpeechRecognition || w.webkitSpeechRecognition;
+    if (!Rec) return;
+    setMicError(null);
+    const rec = new Rec();
+    rec.lang = "sv-SE";
+    rec.continuous = true;
+    rec.interimResults = true;
+    // Det som redan står i rutan behålls; det som sägs läggs till efter.
+    const base = draft && !/\s$/.test(draft) ? draft + " " : draft;
+    let finalText = "";
+    rec.onresult = (e: any) => {
+      let interim = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const r = e.results[i];
+        if (r.isFinal) finalText += r[0].transcript;
+        else interim += r[0].transcript;
+      }
+      setDraft((base + finalText + interim).replace(/\s+/g, " ").trimStart());
+    };
+    rec.onerror = (e: any) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        setMicError("Webbläsaren fick inte använda mikrofonen. Tillåt den i adressfältet och försök igen.");
+      } else if (e.error === "no-speech") {
+        setMicError("Jag hörde inget. Försök igen och prata nära mikrofonen.");
+      } else if (e.error !== "aborted") {
+        setMicError("Mikrofonen fungerade inte just nu. Du kan skriva istället.");
+      }
+    };
+    rec.onend = () => {
+      setListening(false);
+      recognitionRef.current = null;
+      draftInputRef.current?.focus();
+    };
+    recognitionRef.current = rec;
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      setListening(false);
+    }
+  };
+
   // Låter chattrutan växa med texten (upp till max-h i klassen på
   // textarean) istället för att gömma det mesta av ett längre meddelande
   // bakom en enda rad.
@@ -501,6 +562,9 @@ export default function EditorPage() {
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
+    recognitionRef.current?.abort?.();
+    setListening(false);
+    setMicError(null);
     const history = messages.filter((m) => !m.transient);
     const currentAttachments = attachments;
     const currentSelection = selection;
@@ -949,6 +1013,11 @@ export default function EditorPage() {
                 </button>
               </div>
             )}
+            {micError && (
+              <div className="text-[12px] text-red-600 px-1 pb-1.5" role="status">
+                {micError}
+              </div>
+            )}
             {attachments.length > 0 && (
               <div className="flex flex-col gap-1.5 mb-2">
                 {attachments.map((a, i) => (
@@ -1014,6 +1083,25 @@ export default function EditorPage() {
                   <polyline points="21 15 16 10 5 21" />
                 </svg>
               </button>
+              {micSupported && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  disabled={sending || attaching || !content}
+                  aria-label={listening ? "Sluta lyssna" : "Prata in meddelandet"}
+                  aria-pressed={listening}
+                  title={listening ? "Tryck för att sluta lyssna" : "Prata in ditt meddelande (svenska)"}
+                  className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px] ${
+                    listening ? "bg-red-500 text-white animate-pulse" : "text-ink-dim"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 11a7 7 0 0014 0" />
+                    <line x1="12" y1="18" x2="12" y2="22" />
+                  </svg>
+                </button>
+              )}
               <textarea
                 ref={draftInputRef}
                 value={draft}
@@ -1026,7 +1114,7 @@ export default function EditorPage() {
                     send();
                   }
                 }}
-                placeholder="Skriv till Millie …"
+                placeholder={listening ? "Jag lyssnar … prata på" : "Skriv till Millie …"}
                 disabled={sending || !content}
                 rows={1}
                 className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60 resize-none py-1.5 leading-[1.4] max-h-[160px] overflow-y-auto"
