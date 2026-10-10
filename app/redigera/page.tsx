@@ -329,7 +329,7 @@ export default function EditorPage() {
   // "Skicka önskemål till oss"-rutan som dyker upp när Millie stöter på
   // ett önskemål innehållsmodellen inte stöder (se unsupported ovan).
   const [supportOpen, setSupportOpen] = useState(false);
-  const [supportDraft, setSupportDraft] = useState({ message: "", context: "" });
+  const [supportDraft, setSupportDraft] = useState({ message: "", context: "", wish: false });
   const [trackingOpen, setTrackingOpen] = useState(false);
 
   // Under md-brytpunkten får förhandsvisningen och chatten inte plats sida
@@ -1103,6 +1103,7 @@ export default function EditorPage() {
                         setSupportDraft({
                           message: m.requestText ? `Jag vill kunna: ${m.requestText}` : "",
                           context: `Önskemål i chattredigeraren: "${m.requestText || ""}"\nMillies svar: "${m.text}"`,
+                          wish: false,
                         });
                         setSupportOpen(true);
                       }}
@@ -1299,6 +1300,10 @@ export default function EditorPage() {
           setDraft(text);
           draftInputRef.current?.focus();
         }}
+        onWish={() => {
+          setSupportDraft({ message: "", context: "Önskemål om ny funktion (från Nytt-rutan i redigeraren)", wish: true });
+          setSupportOpen(true);
+        }}
       />
       <MillieHelpModal
         open={helpOpen}
@@ -1320,14 +1325,19 @@ export default function EditorPage() {
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />
 
       <ContactSupportModal
+        key={`${supportDraft.wish}-${supportDraft.context}`}
         open={supportOpen}
         onClose={() => setSupportOpen(false)}
         source="chattredigerare"
         context={supportDraft.context}
         defaultMessage={supportDraft.message}
         siteId={site?.id}
-        title="Skicka önskemål till oss"
-        intro="Millie kan inte fixa det här själv än, men vi läser alla önskemål — skriv gärna lite mer om vad du vill kunna göra."
+        title={supportDraft.wish ? "Önska en ny funktion" : "Skicka önskemål till oss"}
+        intro={
+          supportDraft.wish
+            ? "Vad skulle du vilja kunna göra på din sajt som du inte kan idag? Beskriv gärna så konkret du kan – vi läser alla förslag."
+            : "Millie kan inte fixa det här själv än, men vi läser alla önskemål — skriv gärna lite mer om vad du vill kunna göra."
+        }
       />
 
       <TrackingSettingsModal
