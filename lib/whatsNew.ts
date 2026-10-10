@@ -17,7 +17,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-11",
     icon: "✨",
     title: "Frilägg bilder",
-    text: "I bildredigeraren finns nu knappen Frilägg motivet, som tar bort bakgrunden. Du kan välja vit, ljusgrå eller genomskinlig bakgrund. Fungerar bäst på personer.",
+    text: "I bildredigeraren finns nu knappen Frilägg motivet, som tar bort bakgrunden. Du kan välja vit, ljusgrå eller genomskinlig bakgrund, och med penslarna Behåll och Ta bort finjusterar du själv vad som ska vara kvar.",
   },
   {
     id: "2026-10-11-redigera-vid-uppladdning",

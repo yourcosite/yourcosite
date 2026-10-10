@@ -105,6 +105,17 @@ export default function ImageEditorModal({
   const [cutError, setCutError] = useState<string | null>(null);
   const [bg, setBg] = useState<BgChoice>("white");
   const origImgRef = useRef<HTMLImageElement | null>(null);
+  // Friläggningen: cutRef är bilden med bakgrunden borttagen, origCutRef är
+  // originalet i samma storlek (används när kunden penslar tillbaka det som
+  // ska behållas). Penseln arbetar direkt på cutRef.
+  const cutRef = useRef<HTMLCanvasElement | null>(null);
+  const origCutRef = useRef<HTMLCanvasElement | null>(null);
+  const undoRef = useRef<ImageData[]>([]);
+  const strokeRef = useRef<{ x: number; y: number } | null>(null);
+  const [maskVersion, setMaskVersion] = useState(0);
+  const [tool, setTool] = useState<"move" | "keep" | "erase">("move");
+  const [brush, setBrush] = useState(24);
+  const [canUndo, setCanUndo] = useState(false);
 
   const baseRef = useRef<HTMLCanvasElement | null>(null);
   const previewRef = useRef<HTMLCanvasElement>(null);
@@ -123,7 +134,11 @@ export default function ImageEditorModal({
     setCutDone(false);
     setCutError(null);
     setBg("white");
-    if (origImgRef.current) setImg(origImgRef.current);
+    cutRef.current = null;
+    origCutRef.current = null;
+    undoRef.current = [];
+    setCanUndo(false);
+    setTool("move");
   };
 
   // Läs in bilden varje gång dialogen öppnas.
@@ -149,9 +164,12 @@ export default function ImageEditorModal({
   // Bygg basbilden (vriden/speglad) när något av det ändras.
   useEffect(() => {
     if (!img) return;
+    const cutC = cutDone ? cutRef.current : null;
+    const sw = cutC ? cutC.width : img.naturalWidth;
+    const sh = cutC ? cutC.height : img.naturalHeight;
     const swap = rot % 2 === 1;
-    const w = swap ? img.naturalHeight : img.naturalWidth;
-    const h = swap ? img.naturalWidth : img.naturalHeight;
+    const w = swap ? sh : sw;
+    const h = swap ? sw : sh;
     const c = document.createElement("canvas");
     c.width = w;
     c.height = h;
@@ -164,10 +182,10 @@ export default function ImageEditorModal({
     ctx.translate(w / 2, h / 2);
     ctx.rotate((rot * Math.PI) / 2);
     if (flip) ctx.scale(-1, 1);
-    ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+    ctx.drawImage(cutC ?? img, -sw / 2, -sh / 2);
     baseRef.current = c;
     setBaseVersion((v) => v + 1);
-  }, [img, rot, flip, bg]);
+  }, [img, rot, flip, bg, cutDone, maskVersion]);
 
   const removeBackground = async () => {
     if (!img || cutBusy) return;
@@ -202,14 +220,17 @@ export default function ImageEditorModal({
         rgba[i * 4 + 3] = ch === 4 ? out.data[i * ch + 3] : 255;
       }
       cctx.putImageData(new ImageData(rgba, out.width, out.height), 0, 0);
-      const cut = new Image();
-      await new Promise<void>((resolve, reject) => {
-        cut.onload = () => resolve();
-        cut.onerror = () => reject(new Error("bild"));
-        cut.src = c.toDataURL("image/png");
-      });
-      setImg(cut);
+      // Originalet i exakt samma storlek som friläggningen, för "Behåll"-penseln.
+      const oc = document.createElement("canvas");
+      oc.width = out.width;
+      oc.height = out.height;
+      oc.getContext("2d")!.drawImage(src, 0, 0, out.width, out.height);
+      origCutRef.current = oc;
+      cutRef.current = c;
+      undoRef.current = [];
+      setCanUndo(false);
       setCutDone(true);
+      setMaskVersion((v) => v + 1);
     } catch (e) {
       console.error("Friläggning misslyckades", e);
       setCutError("Det gick inte att frilägga bilden just nu. Kontrollera din uppkoppling och prova igen.");
@@ -220,10 +241,15 @@ export default function ImageEditorModal({
 
   const ratio = ASPECTS.find((a) => a.id === aspect)?.ratio ?? null;
 
-  const draw = (target: HTMLCanvasElement, outW: number) => {
+  // Medan man penslar visas hela bilden (ingen beskärning), så att varje
+  // punkt på skärmen går att översätta till en punkt i bilden.
+  const painting = cutDone && tool !== "move";
+  const view = painting ? { ratio: null as number | null, zoom: 1, pos: { x: 0.5, y: 0.5 } } : { ratio, zoom, pos };
+
+  const draw = (target: HTMLCanvasElement, outW: number, v: { ratio: number | null; zoom: number; pos: Pos } = view) => {
     const base = baseRef.current;
     if (!base) return;
-    const r = cropRect(base.width, base.height, ratio, zoom, pos);
+    const r = cropRect(base.width, base.height, v.ratio, v.zoom, v.pos);
     const outH = Math.max(1, Math.round((outW * r.h) / r.w));
     target.width = Math.max(1, Math.round(outW));
     target.height = outH;
@@ -237,19 +263,98 @@ export default function ImageEditorModal({
     const base = baseRef.current;
     const canvas = previewRef.current;
     if (!base || !canvas) return;
-    const r = cropRect(base.width, base.height, ratio, zoom, pos);
+    const r = cropRect(base.width, base.height, view.ratio, view.zoom, view.pos);
     const w = Math.min(PREVIEW_MAX_W, (PREVIEW_MAX_H * r.w) / r.h);
     draw(canvas, w);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [baseVersion, ratio, zoom, pos, bright, contrast, sat]);
+  }, [baseVersion, ratio, zoom, pos, bright, contrast, sat, painting]);
 
   if (!open) return null;
 
+  // Översätter en pekarposition i förhandsvisningen till en punkt i den
+  // frilagda bilden (tar hänsyn till vridning och spegling).
+  const toSource = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const base = baseRef.current;
+    const cutC = cutRef.current;
+    const canvas = previewRef.current;
+    if (!base || !cutC || !canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const bx = ((e.clientX - rect.left) / rect.width) * base.width;
+    const by = ((e.clientY - rect.top) / rect.height) * base.height;
+    const th = (-rot * Math.PI) / 2;
+    const px = bx - base.width / 2;
+    const py = by - base.height / 2;
+    let x = px * Math.cos(th) - py * Math.sin(th);
+    const y = px * Math.sin(th) + py * Math.cos(th);
+    if (flip) x = -x;
+    return { x: x + cutC.width / 2, y: y + cutC.height / 2, k: base.width / rect.width };
+  };
+  const paintAt = (x: number, y: number, radius: number) => {
+    const cutC = cutRef.current;
+    const orig = origCutRef.current;
+    if (!cutC || !orig) return;
+    const ctx = cutC.getContext("2d")!;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    if (tool === "erase") {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fill();
+    } else {
+      ctx.clip();
+      // Ta först bort det som finns i cirkeln så att halvgenomskinliga
+      // kanter inte blandas med originalet, och lägg sedan tillbaka det.
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      ctx.drawImage(orig, 0, 0);
+    }
+    ctx.restore();
+  };
+  const strokeTo = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const pt = toSource(e);
+    if (!pt) return;
+    const radius = Math.max(1, (brush / 2) * pt.k);
+    const last = strokeRef.current ?? { x: pt.x, y: pt.y };
+    const dist = Math.hypot(pt.x - last.x, pt.y - last.y);
+    const steps = Math.max(1, Math.ceil(dist / Math.max(1, radius / 3)));
+    for (let i = 1; i <= steps; i++) {
+      paintAt(last.x + ((pt.x - last.x) * i) / steps, last.y + ((pt.y - last.y) * i) / steps, radius);
+    }
+    strokeRef.current = { x: pt.x, y: pt.y };
+    setMaskVersion((v) => v + 1);
+  };
+  const undoStroke = () => {
+    const cutC = cutRef.current;
+    const snap = undoRef.current.pop();
+    if (!cutC || !snap) return;
+    cutC.getContext("2d")!.putImageData(snap, 0, 0);
+    setCanUndo(undoRef.current.length > 0);
+    setMaskVersion((v) => v + 1);
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     (e.currentTarget as HTMLCanvasElement).setPointerCapture(e.pointerId);
+    if (painting) {
+      const cutC = cutRef.current;
+      if (cutC) {
+        undoRef.current.push(cutC.getContext("2d")!.getImageData(0, 0, cutC.width, cutC.height));
+        if (undoRef.current.length > 8) undoRef.current.shift();
+        setCanUndo(true);
+      }
+      strokeRef.current = null;
+      strokeTo(e);
+      return;
+    }
     dragRef.current = { x: e.clientX, y: e.clientY, pos };
   };
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    if (painting) {
+      if (e.buttons || e.pointerType === "touch") {
+        if (strokeRef.current) strokeTo(e);
+      }
+      return;
+    }
     const drag = dragRef.current;
     const base = baseRef.current;
     const canvas = previewRef.current;
@@ -264,6 +369,7 @@ export default function ImageEditorModal({
   };
   const onPointerUp = () => {
     dragRef.current = null;
+    strokeRef.current = null;
   };
 
   const save = () => {
@@ -272,7 +378,7 @@ export default function ImageEditorModal({
     const r = cropRect(base.width, base.height, ratio, zoom, pos);
     const outW = Math.min(r.w, r.w >= r.h ? MAX_OUTPUT : (MAX_OUTPUT * r.w) / r.h);
     const out = document.createElement("canvas");
-    draw(out, outW);
+    draw(out, outW, { ratio, zoom, pos });
     const asPng = cutDone && bg === "clear";
     out.toBlob(
       (blob) => {
@@ -333,7 +439,7 @@ export default function ImageEditorModal({
                   onPointerMove={onPointerMove}
                   onPointerUp={onPointerUp}
                   onPointerCancel={onPointerUp}
-                  className="max-w-full rounded-lg cursor-grab active:cursor-grabbing touch-none"
+                  className={`max-w-full rounded-lg touch-none ${painting ? "cursor-crosshair" : "cursor-grab active:cursor-grabbing"}`}
                   style={
                     cutDone && bg === "clear"
                       ? {
@@ -398,9 +504,48 @@ export default function ImageEditorModal({
                     </span>
                   )}
                 </div>
-                <p className="text-[11.5px] text-ink-dim">
-                  Tar bort bakgrunden. Fungerar bäst på personer; på föremål kan kanterna bli ojämna.
-                </p>
+                {cutDone ? (
+                  <div className="flex flex-col gap-2 border-t border-line pt-2">
+                    <div className="flex flex-wrap items-center gap-1.5 text-[12px]">
+                      <span className="text-ink-dim">Finjustera:</span>
+                      {([
+                        ["move", "✋ Flytta bilden"],
+                        ["keep", "🖌️ Behåll"],
+                        ["erase", "🧽 Ta bort"],
+                      ] as const).map(([t, label]) => (
+                        <button
+                          key={t}
+                          type="button"
+                          onClick={() => setTool(t)}
+                          className={`text-[12px] font-semibold rounded-full px-2.5 py-1 border ${
+                            tool === t ? "bg-accent text-accent-ink border-accent" : "bg-surface border-line text-ink"
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                      <button type="button" className={btn} onClick={undoStroke} disabled={!canUndo}>
+                        ↩ Ångra penseldrag
+                      </button>
+                    </div>
+                    {tool !== "move" && (
+                      <>
+                        {slider("Penselstorlek", brush, setBrush, 6, 80)}
+                        <p className="text-[11.5px] text-ink-dim">
+                          {tool === "keep"
+                            ? "Måla över det som ska vara med – bakgrunden där tas tillbaka."
+                            : "Måla över det som ska bort."}{" "}
+                          Hela bilden visas medan du penslar. Byt till Flytta bilden för att beskära.
+                        </p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-[11.5px] text-ink-dim">
+                    Tar bort bakgrunden. Fungerar bäst på personer – på föremål kan du efteråt måla över det som ska
+                    behållas eller tas bort.
+                  </p>
+                )}
                 {cutError && <p className="text-[12px] text-red-600">{cutError}</p>}
               </div>
 
