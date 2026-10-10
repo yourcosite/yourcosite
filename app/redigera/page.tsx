@@ -1186,10 +1186,13 @@ export default function EditorPage() {
                     type="button"
                     onClick={() => setImageEditorOpen(true)}
                     disabled={sending}
-                    className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     ✂️ Redigera bild
                   </button>
+                )}
+                {selection.target === "image" && !selectedImageUrl && (
+                  <span className="text-[11.5px] text-ink-dim flex-shrink-0">Ingen bild att redigera ännu</span>
                 )}
                 <button
                   type="button"
