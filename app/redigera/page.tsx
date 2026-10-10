@@ -450,34 +450,39 @@ export default function EditorPage() {
   // ett nytt bildgalleri) — laddar upp dem i tur och ordning och lägger till
   // dem i samma bilage-lista. En fil som misslyckas stoppar inte de andra;
   // felet visas, men det som faktiskt gick bra läggs ändå till.
-  // Bilder (utom GIF) går först genom bildredigeraren, en i taget, så kunden
-  // kan beskära/justera innan de laddas upp. Övriga filer laddas upp direkt.
-  const [editQueue, setEditQueue] = useState<{ file: File; url: string }[]>([]);
-  const [uploadingEdited, setUploadingEdited] = useState(false);
-  const handleFiles = async (files: File[]) => {
-    const editable = files.filter((f) => ["image/png", "image/jpeg", "image/webp"].includes(f.type));
-    const rest = files.filter((f) => !editable.includes(f));
-    if (editable.length > 0) {
-      setEditQueue((q) => [...q, ...editable.map((file) => ({ file, url: URL.createObjectURL(file) }))]);
-    }
-    if (rest.length > 0) await uploadFiles(rest);
-  };
-  const nextInQueue = () => {
-    setEditQueue((q) => {
-      if (q[0]) URL.revokeObjectURL(q[0].url);
-      return q.slice(1);
-    });
-  };
-  const uploadQueued = async (file: File) => {
-    setUploadingEdited(true);
+  // Bilder kan redigeras efter uppladdning via knappen "Redigera" bredvid
+  // filnamnet (se editAtt nedan) — ingen ruta öppnas av sig själv.
+  const [editAtt, setEditAtt] = useState<number | null>(null);
+  const [savingAtt, setSavingAtt] = useState(false);
+  const saveEditedAttachment = async (blob: Blob) => {
+    const i = editAtt;
+    if (i === null || !attachments[i]) return;
+    setSavingAtt(true);
     try {
-      await uploadFiles([file]);
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      const png = blob.type === "image/png";
+      const path = `${user.id}/chat-edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${png ? "png" : "jpg"}`;
+      const { error: upErr } = await supabase.storage.from("uploads").upload(path, blob, { contentType: png ? "image/png" : "image/jpeg" });
+      if (upErr) throw new Error(`Gick inte att ladda upp bilden: ${upErr.message}`);
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+      setAttachments((prev) =>
+        prev.map((a, j) =>
+          j === i
+            ? { ...a, url: pub.publicUrl, mimeType: png ? "image/png" : "image/jpeg", name: a.name.replace(/\.[^.]+$/, "") + (png ? ".png" : ".jpg") }
+            : a
+        )
+      );
+      setEditAtt(null);
+    } catch (e: any) {
+      setAttachError(e.message || "Det gick inte att spara bilden.");
+      setEditAtt(null);
     } finally {
-      setUploadingEdited(false);
-      nextInQueue();
+      setSavingAtt(false);
     }
   };
-  const uploadFiles = async (files: File[]) => {
+  const handleFiles = async (files: File[]) => {
     setAttachError("");
     const room = MAX_ATTACHMENTS - attachments.length;
     if (room <= 0) {
@@ -1248,6 +1253,16 @@ export default function EditorPage() {
                       <span className="text-[14px] flex-shrink-0">📄</span>
                     )}
                     <span className="text-[12.5px] truncate flex-1">{a.name}</span>
+                    {a.kind === "image" && !a.credit && (
+                      <button
+                        type="button"
+                        onClick={() => setEditAtt(i)}
+                        disabled={sending}
+                        className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
+                      >
+                        ✂️ Redigera
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
@@ -1396,23 +1411,15 @@ export default function EditorPage() {
           onSave={saveEditedImage}
         />
       )}
-      {editQueue[0] && (
+      {editAtt !== null && attachments[editAtt] && (
         <ImageEditorModal
           open
-          src={editQueue[0].url}
-          saving={uploadingEdited}
-          title={editQueue.length > 1 ? `Redigera bild (${editQueue.length} kvar)` : "Redigera bild innan uppladdning"}
-          saveLabel="Använd bilden"
-          onClose={() => {
-            editQueue.forEach((q) => URL.revokeObjectURL(q.url));
-            setEditQueue([]);
-          }}
-          onSkip={{ label: "Använd utan ändringar", run: () => uploadQueued(editQueue[0].file) }}
-          onSave={(blob) => {
-            const base = editQueue[0].file.name.replace(/\.[^.]+$/, "") || "bild";
-            const png = blob.type === "image/png";
-            uploadQueued(new File([blob], `${base}.${png ? "png" : "jpg"}`, { type: png ? "image/png" : "image/jpeg" }));
-          }}
+          src={attachments[editAtt].url}
+          saving={savingAtt}
+          title="Redigera bilden"
+          saveLabel="Använd den redigerade bilden"
+          onClose={() => setEditAtt(null)}
+          onSave={saveEditedAttachment}
         />
       )}
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />

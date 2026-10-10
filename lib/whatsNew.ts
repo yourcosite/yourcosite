@@ -13,18 +13,11 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
-    id: "2026-10-11-frilagg",
-    date: "2026-10-11",
-    icon: "✨",
-    title: "Frilägg bilder",
-    text: "I bildredigeraren finns nu knappen Frilägg motivet, som tar bort bakgrunden. Du kan välja vit, ljusgrå eller genomskinlig bakgrund, och med Markera motivet själv målar du grönt över det som ska vara kvar (eller en ring runt kanterna) och rött över det som ska bort. Du kan alltid ångra senaste ändringen.",
-  },
-  {
     id: "2026-10-11-redigera-vid-uppladdning",
     date: "2026-10-11",
     icon: "✂️",
     title: "Redigera bilden innan du laddar upp den",
-    text: "När du bifogar en bild med gemet öppnas den i bildredigeraren först. Beskär, vrid eller justera färgerna, eller välj Använd utan ändringar.",
+    text: "När du bifogar en bild visas knappen ✂️ Redigera bredvid filnamnet. Klicka på den för att beskära, vrida eller justera färgerna innan du skickar.",
   },
   {
     id: "2026-10-10-nyhetsforhandsvisning",
