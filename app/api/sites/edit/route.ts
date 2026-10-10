@@ -82,6 +82,11 @@ const EDIT_TOOL = {
         description:
           "Använd när kundens önskemål är så pass otydligt att du annars skulle behöva gissa (t.ex. \"gör den snyggare\", flera sektioner passar in, eller flera rimliga tolkningar finns). Då gör du INGA ändringar (utelämna changedPages/theme helt) och ställer din fråga i \"summary\", plus 2-4 korta, tydliga svarsalternativ här som kunden kan klicka på. Varje alternativ ska vara ett KOMPLETT önskemål som går att skicka som det är, skrivet som kunden själv skulle skriva det (t.ex. \"Gör rubriken större på startsidan\"), inte \"Alternativ 1\". Sätt det mest sannolika först. Använd det sparsamt — bara när en gissning riskerar att bli fel, aldrig när önskemålet är tydligt.",
       },
+      answerOnly: {
+        type: "boolean",
+        description:
+          "Sätt till true när du INTE har ändrat något på sajten med flit — t.ex. kunden ställde en fråga, eller det inte behövdes någon ändring. Då får din \"summary\" vara ett vanligt svar. Sätt ALDRIG answerOnly om du i \"summary\" säger att du har ändrat, bytt, lagt till eller tagit bort något — i så fall MÅSTE ändringen finnas i det du returnerar. Kan du inte göra det kunden ber om, sätt \"unsupported\" istället för att låtsas.",
+      },
       logoAction: {
         type: "string",
         enum: ["set", "remove"],
@@ -116,6 +121,7 @@ type EditPatch = {
   clarifyOptions?: string[];
   exampleContentResolved?: boolean;
   logoAction?: "set" | "remove";
+  answerOnly?: boolean;
   unsupported?: boolean;
 };
 
@@ -211,6 +217,7 @@ VIKTIGT — bild BREDVID en textruta ("lägg en bild bredvid texten", "bild till
 
 VIKTIGT — tätare/luftigare på EN sektion och textjustering: ber kunden om tätare eller luftigare avstånd (mindre/mer luft) på en enskild sektion ("gör den här sektionen tajtare"), sätt "spacing" på just den sektionen — compact = tätare, airy = luftigare, normal = tillbaka till sajtens vanliga. Pekar kunden ut en markerad sektion, ändra just den; annars den som beskrivs. Rör ALDRIG theme.sectionSpacing för en enskild sektion, och inga andra sektioner. Hero-sektionen har inget justerbart avstånd — förklara det kort i "summary" om kunden ber om det. Ber kunden om vänster-, höger- eller mittjusterad text ("centrera texten", "vänsterställ rubriken och texten", "högerjustera"), sätt "textAlign" (left/center/right) på sektionen/sektionerna det gäller; "på hela sidan" = alla den sidans sektioner, "på hela sajten" = "theme.textAlign" (auto tar bort). Texten, bilderna och allt annat i sektionen lämnas oförändrat. Har ett rutnät färre rutor än kolumner (t.ex. två rutor kvar i en rad om tre) centreras rutorna automatiskt; "textAlign" left/right på den sektionen lägger dem istället till vänster/höger. Skriver du om en sektion av annan anledning ska redan satta "spacing"/"textAlign" följa med oförändrade. Nuvarande sajtinställning för text: ${content.theme.textAlign ?? "mallens egen"}.
 
+VIKTIGT — ärlighet: skriv aldrig i "summary" att du har ändrat något som du inte faktiskt har ändrat i det du returnerar. Kan du inte göra det kunden ber om (saknar stöd, eller kräver något du inte har), sätt "unsupported" och förklara kort — låtsas aldrig. Svarar du bara på en fråga eller behövde inget ändras, sätt "answerOnly": true.
 VIKTIGT — logga: ber kunden dig byta/lägga in/ta bort sajtens logga (i sidhuvudet) — och har bifogat en bild — sätt "logoAction" till "set" (den första bifogade bilden blir loggan) eller "remove". Har kunden inte bifogat någon bild, be dem bifoga loggan med gemet (svara i "summary", ändra inget). Påstå ALDRIG att loggan är bytt utan att ha satt "logoAction" — annars händer ingenting.
 VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt "seoTitle" (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och "seoDescription" (120-155 tecken, sann och lockande) på sidan/sidorna det gäller i changedPages — och skriv ut resten av sidan oförändrad. Gäller önskemålet "alla sidor", gör det för alla sidor (det är en liten ändring). Hitta inte på fakta om verksamheten, utgå från sidans egen text.
 
@@ -660,6 +667,25 @@ export async function POST(request: Request) {
     }
   } else if (patch.logoAction === "remove") {
     newLogoUrl = null;
+  }
+  // Kontroll mot "låtsas-ändringar": påstår Millie att hon gjort något men
+  // sajten är oförändrad (och ingen nyhet/logga/ändring i övrigt gjordes),
+  // sparar vi inget och säger det ärligt till kunden — med möjlighet att
+  // skicka önskemålet till oss.
+  const baseline = dedupeMaps(applyPatch(site.content, { summary: "" } as EditPatch), "flatten-form");
+  const contentChanged = JSON.stringify(updatedContent) !== JSON.stringify(baseline);
+  const hasNews = !!(patch.newsArticle && normalizeCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim());
+  const didSomething = contentChanged || hasNews || newLogoUrl !== undefined || patch.exampleContentResolved === true;
+  if (!didSomething && patch.answerOnly !== true && patch.unsupported !== true) {
+    return NextResponse.json({
+      content: site.content,
+      summary:
+        logoNote ||
+        "Det där fick jag inte till – inget har ändrats på sajten. Skicka gärna önskemålet till oss, så tittar vi på om vi kan lära mig det.",
+      unsupported: true,
+      noChange: true,
+      newsArticle: null,
+    });
   }
   const effectiveLogo = newLogoUrl === undefined ? site.logo_url : newLogoUrl;
   if (effectiveLogo) updatedContent.logoUrl = effectiveLogo;

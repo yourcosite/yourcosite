@@ -813,7 +813,7 @@ export default function EditorPage() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
       const isQuestion = Array.isArray(data.options) && data.options.length >= 2;
-      if (!isQuestion) {
+      if (!isQuestion && !data.noChange) {
         if (content) setUndoStack((st) => [...st.slice(-9), content]);
         setContent(data.content);
       }
