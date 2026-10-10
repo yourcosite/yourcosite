@@ -1334,9 +1334,9 @@ export default function EditorPage() {
           siteName={site?.name}
           siteId={site?.id}
           onClose={() => setPreviewNewsId(null)}
-          onPublished={(a) => {
+          onPublished={(a, published) => {
             setNewsArticles((prev) => prev.map((x) => (x.id === a.id ? a : x)));
-            setMessages((m) => [...m, { from: "bot", text: "Nyheten är publicerad! 🎉" }]);
+            if (published) setMessages((m) => [...m, { from: "bot", text: "Nyheten är publicerad! 🎉" }]);
           }}
         />
       )}

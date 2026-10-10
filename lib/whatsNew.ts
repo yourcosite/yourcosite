@@ -17,7 +17,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-10",
     icon: "👀",
     title: "Förhandsgranska nyheter direkt",
-    text: "När Millie skrivit en nyhet öppnas den i ett eget fönster så du ser hur den ser ut. Därifrån kan du publicera direkt eller behålla den som utkast.",
+    text: "När Millie skrivit en nyhet öppnas den i ett eget fönster så du ser hur den ser ut. Därifrån kan du ändra rubrik och text själv, be Millie skriva om den, och sedan publicera direkt eller behålla den som utkast.",
     try: "Skriv en nyhet om att vi har nytt öppethållande",
   },
   {
