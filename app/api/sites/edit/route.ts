@@ -82,6 +82,12 @@ const EDIT_TOOL = {
         description:
           "Använd när kundens önskemål är så pass otydligt att du annars skulle behöva gissa (t.ex. \"gör den snyggare\", flera sektioner passar in, eller flera rimliga tolkningar finns). Då gör du INGA ändringar (utelämna changedPages/theme helt) och ställer din fråga i \"summary\", plus 2-4 korta, tydliga svarsalternativ här som kunden kan klicka på. Varje alternativ ska vara ett KOMPLETT önskemål som går att skicka som det är, skrivet som kunden själv skulle skriva det (t.ex. \"Gör rubriken större på startsidan\"), inte \"Alternativ 1\". Sätt det mest sannolika först. Använd det sparsamt — bara när en gissning riskerar att bli fel, aldrig när önskemålet är tydligt.",
       },
+      logoAction: {
+        type: "string",
+        enum: ["set", "remove"],
+        description:
+          "Sajtens logga i sidhuvudet. \"set\" = kunden vill BYTA/lägga in loggan och har bifogat en bild i det här meddelandet — den FÖRSTA bifogade bilden blir loggan (du anger aldrig någon URL). \"remove\" = kunden vill ta bort loggan. Utelämna annars. Sätt ALDRIG \"set\" utan en bifogad bild.",
+      },
       unsupported: {
         type: "boolean",
         description:
@@ -109,6 +115,7 @@ type EditPatch = {
   summary: string;
   clarifyOptions?: string[];
   exampleContentResolved?: boolean;
+  logoAction?: "set" | "remove";
   unsupported?: boolean;
 };
 
@@ -204,6 +211,7 @@ VIKTIGT — bild BREDVID en textruta ("lägg en bild bredvid texten", "bild till
 
 VIKTIGT — tätare/luftigare på EN sektion och textjustering: ber kunden om tätare eller luftigare avstånd (mindre/mer luft) på en enskild sektion ("gör den här sektionen tajtare"), sätt "spacing" på just den sektionen — compact = tätare, airy = luftigare, normal = tillbaka till sajtens vanliga. Pekar kunden ut en markerad sektion, ändra just den; annars den som beskrivs. Rör ALDRIG theme.sectionSpacing för en enskild sektion, och inga andra sektioner. Hero-sektionen har inget justerbart avstånd — förklara det kort i "summary" om kunden ber om det. Ber kunden om vänster-, höger- eller mittjusterad text ("centrera texten", "vänsterställ rubriken och texten", "högerjustera"), sätt "textAlign" (left/center/right) på sektionen/sektionerna det gäller; "på hela sidan" = alla den sidans sektioner, "på hela sajten" = "theme.textAlign" (auto tar bort). Texten, bilderna och allt annat i sektionen lämnas oförändrat. Har ett rutnät färre rutor än kolumner (t.ex. två rutor kvar i en rad om tre) centreras rutorna automatiskt; "textAlign" left/right på den sektionen lägger dem istället till vänster/höger. Skriver du om en sektion av annan anledning ska redan satta "spacing"/"textAlign" följa med oförändrade. Nuvarande sajtinställning för text: ${content.theme.textAlign ?? "mallens egen"}.
 
+VIKTIGT — logga: ber kunden dig byta/lägga in/ta bort sajtens logga (i sidhuvudet) — och har bifogat en bild — sätt "logoAction" till "set" (den första bifogade bilden blir loggan) eller "remove". Har kunden inte bifogat någon bild, be dem bifoga loggan med gemet (svara i "summary", ändra inget). Påstå ALDRIG att loggan är bytt utan att ha satt "logoAction" — annars händer ingenting.
 VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt "seoTitle" (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och "seoDescription" (120-155 tecken, sann och lockande) på sidan/sidorna det gäller i changedPages — och skriv ut resten av sidan oförändrad. Gäller önskemålet "alla sidor", gör det för alla sidor (det är en liten ändring). Hitta inte på fakta om verksamheten, utgå från sidans egen text.
 
 VIKTIGT — ton och omskrivning, EN SIDA I TAGET: ber kunden dig skriva om texten i en annan ton ("mer personligt", "kortare", "mer formellt") — gör det BARA på en sida per svar: den sida kunden pekar ut, annars sidan de tittar på just nu (se ovan). Rör aldrig fler sidor med en tonändring, även om kunden skriver "hela sajten". Avsluta "summary" med en vänlig fråga om vilken sida du ska ta härnäst (nämn gärna nästa sida vid namn). Bevara fakta, namn, siffror, länkar, bilder och struktur — bara formuleringarna ändras.
@@ -639,7 +647,23 @@ export async function POST(request: Request) {
       updatedContent.photoCredits = { ...(updatedContent.photoCredits || {}), [key]: a.credit };
     }
   }
-  if (site.logo_url) updatedContent.logoUrl = site.logo_url;
+  // Logga: byts bara när kunden uttryckligen bett om det OCH bifogat en bild
+  // (se logoAction i verktyget) — annars behålls onboardingens logga.
+  let newLogoUrl: string | null | undefined = undefined; // undefined = oförändrad
+  let logoNote = "";
+  if (patch.logoAction === "set") {
+    const first = imageAttachments[0];
+    if (first) {
+      newLogoUrl = first.url;
+    } else {
+      logoNote = "Jag kunde inte byta loggan eftersom ingen bild var bifogad. Bifoga loggan med gemet och be mig igen.";
+    }
+  } else if (patch.logoAction === "remove") {
+    newLogoUrl = null;
+  }
+  const effectiveLogo = newLogoUrl === undefined ? site.logo_url : newLogoUrl;
+  if (effectiveLogo) updatedContent.logoUrl = effectiveLogo;
+  else delete updatedContent.logoUrl;
   if (Array.isArray(site.social_links) && site.social_links.length > 0) {
     updatedContent.socialLinks = site.social_links;
   }
@@ -654,6 +678,7 @@ export async function POST(request: Request) {
       // senare, orelaterat chattmeddelande.
       accent_color: updatedContent.theme.accentColor,
       secondary_colors: updatedContent.theme.secondaryColors,
+      ...(newLogoUrl !== undefined ? { logo_url: newLogoUrl } : {}),
     })
     .eq("id", site.id);
 
@@ -739,7 +764,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     content: updatedContent,
-    summary: patch.summary,
+    summary: logoNote ? logoNote : patch.summary,
     unsupported: patch.unsupported === true,
     newsArticle,
     warning,
