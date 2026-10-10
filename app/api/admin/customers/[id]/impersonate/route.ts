@@ -47,7 +47,11 @@ export async function POST(request: Request, { params }: { params: { id: string 
     targetLabel: profile.full_name || profile.email,
   });
 
-  const res = NextResponse.json({ actionLink: data.properties?.action_link });
+  const hashed = data.properties?.hashed_token;
+  if (!hashed) return NextResponse.json({ error: "Kunde inte skapa inloggningslänken." }, { status: 500 });
+  const res = NextResponse.json({
+    actionLink: `${origin}/auth/confirm?token_hash=${encodeURIComponent(hashed)}&next=${encodeURIComponent("/dashboard")}`,
+  });
   const secure = process.env.NODE_ENV === "production";
   // Så att adminen kan ta sig tillbaka med en knapp (se /api/admin/impersonation).
   res.cookies.set(IMPERSONATION_COOKIE, makeImpersonationToken(check.user.id, params.id), {

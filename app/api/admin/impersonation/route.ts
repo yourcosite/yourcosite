@@ -54,7 +54,11 @@ export async function POST(request: Request) {
     targetLabel: "",
   });
 
-  const res = NextResponse.json({ actionLink: data.properties?.action_link });
+  const hashed = data.properties?.hashed_token;
+  if (!hashed) return NextResponse.json({ error: "Kunde inte skapa inloggningslänken." }, { status: 500 });
+  const res = NextResponse.json({
+    actionLink: `${origin}/auth/confirm?token_hash=${encodeURIComponent(hashed)}&next=${encodeURIComponent(`/admin/kunder/${info.customerId}`)}`,
+  });
   res.cookies.delete(IMPERSONATION_COOKIE);
   res.cookies.delete(IMPERSONATION_FLAG_COOKIE);
   return res;
