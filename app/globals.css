@@ -171,3 +171,18 @@ h1, h2, h3 {
     margin-right: 0;
   }
 }
+
+/* Skrollbara rader (galleri-karusell m.fl.) med få bilder: centreras i stället
+   för att ligga till vänster med ett tomt hål. Auto-marginalerna försvinner
+   av sig själva när raden är bredare än skärmen, så skrollen fungerar som förut. */
+.ycs-sec [class*="overflow-x-auto"][class*="flex"] > :first-child { margin-left: auto; }
+.ycs-sec [class*="overflow-x-auto"][class*="flex"] > :last-child { margin-right: auto; }
+.ycs-blk[data-ycs-align="left"] [class*="overflow-x-auto"][class*="flex"] > :first-child { margin-left: 0; }
+.ycs-blk[data-ycs-align="right"] [class*="overflow-x-auto"][class*="flex"] > :last-child { margin-right: 0; }
+
+/* "intro-divided": en egen introkolumn + tre kort. Med färre kort krymper
+   kolumnantalet så det inte blir tomma kolumner till höger. */
+@container (min-width: 48rem) {
+  .ycs-sec [class*="@3xl:grid-cols-[1.2fr_1fr_1fr_1fr]"]:has(> :nth-child(3):last-child) { grid-template-columns: 1.2fr 1fr 1fr; }
+  .ycs-sec [class*="@3xl:grid-cols-[1.2fr_1fr_1fr_1fr]"]:has(> :nth-child(2):last-child) { grid-template-columns: 1.2fr 1fr; }
+}
