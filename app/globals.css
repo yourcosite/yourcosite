@@ -128,3 +128,46 @@ h1, h2, h3 {
 /* Smala textblock som centrerats med mx-auto följer med. */
 .ycs-blk[data-ycs-align="left"] :is(p, h1, h2, h3, blockquote).mx-auto { margin-left: 0 !important; margin-right: auto !important; }
 .ycs-blk[data-ycs-align="right"] :is(p, h1, h2, h3, blockquote).mx-auto { margin-left: auto !important; margin-right: 0 !important; }
+
+/* Rutnät med färre rutor än kolumner (t.ex. två rutor kvar i ett rad-av-tre
+   efter att en tagits bort): rutorna behåller sin bredd och centreras i
+   stället för att ligga kvar till vänster med ett tomt hål. Följer
+   textjusteringen (vänster/höger) om kunden valt det. Gäller bara på bred
+   skärm — på smal visas rutorna ändå under varandra. */
+@container (min-width: 48rem) {
+  .ycs-sec [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :nth-child(2):last-child),
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(2):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ycs-sec [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :nth-child(1):last-child),
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(1):last-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(3):last-child) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  /* Bredd = så många av kolumnerna som rutorna upptar. */
+  .ycs-sec [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :nth-child(2):last-child) { width: 66.667%; }
+  .ycs-sec [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :nth-child(1):last-child) { width: 33.333%; }
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(3):last-child) { width: 75%; }
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(2):last-child) { width: 50%; }
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(1):last-child) { width: 25%; }
+  .ycs-sec [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :nth-child(2):last-child),
+  .ycs-sec [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :nth-child(1):last-child),
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(3):last-child),
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(2):last-child),
+  .ycs-sec [class*="@3xl:grid-cols-4"]:has(> :nth-child(1):last-child) {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .ycs-blk[data-ycs-align="left"] [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :last-child:not(:nth-child(3))),
+  .ycs-blk[data-ycs-align="left"] [class*="@3xl:grid-cols-4"]:has(> :last-child:not(:nth-child(4))) {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  .ycs-blk[data-ycs-align="right"] [class*="@3xl:grid-cols-3"]:not([class*="auto-rows"]):has(> :last-child:not(:nth-child(3))),
+  .ycs-blk[data-ycs-align="right"] [class*="@3xl:grid-cols-4"]:has(> :last-child:not(:nth-child(4))) {
+    margin-left: auto;
+    margin-right: 0;
+  }
+}
