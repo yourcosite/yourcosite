@@ -726,7 +726,7 @@ export async function POST(request: Request) {
     if (count && count > 0) {
       warning = `Nyhetslistan är borttagen från sajten, så dina ${count} nyheter syns inte längre för besökarna. Vill du ha tillbaka den?`;
       // Sidan som tidigare hade listan, annars en sida som heter något med "nyhet".
-      const formerPage = site.content.pages.find(
+      const formerPage = (site.content as SiteContent).pages.find(
         (pg) => pg.sections.some((sec) => sec.type === "newsList") && updatedContent.pages.some((u) => u.path === pg.path)
       );
       const target = formerPage || newsPage;
