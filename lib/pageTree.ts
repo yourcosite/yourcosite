@@ -35,3 +35,27 @@ export function pagesInTreeOrder<T extends PageLike>(pages: T[]): T[] {
   }
   return out;
 }
+
+// Flyttar en sida ett steg upp eller ner bland sina syskon (huvudsidor bland
+// huvudsidor, undersidor bland samma huvudsidas undersidor). Startsidan "/"
+// ligger alltid först och kan inte flyttas. Returnerar null om sidan inte
+// kan flyttas åt det hållet.
+export function movePage<T extends PageLike>(pages: T[], path: string, dir: "up" | "down"): T[] | null {
+  if (path === "/") return null;
+  const parent = parentPathOf(path, pages);
+  const group = parent ? childPagesOf(parent, pages) : topLevelPages(pages).filter((p) => p.path !== "/");
+  const i = group.findIndex((p) => p.path === path);
+  const j = dir === "up" ? i - 1 : i + 1;
+  if (i < 0 || j < 0 || j >= group.length) return null;
+  const reordered = group.slice();
+  [reordered[i], reordered[j]] = [reordered[j], reordered[i]];
+
+  if (parent) {
+    return topLevelPages(pages).flatMap((t) =>
+      t.path === parent ? [t, ...reordered] : [t, ...childPagesOf(t.path, pages)]
+    );
+  }
+  const home = pages.find((p) => p.path === "/");
+  const tops = home ? [home, ...reordered] : reordered;
+  return tops.flatMap((t) => [t, ...childPagesOf(t.path, pages)]);
+}

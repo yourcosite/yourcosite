@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-12-flytta-sidor",
+    date: "2026-10-12",
+    icon: "↕️",
+    title: "Byt plats på sidorna i menyn",
+    text: "Under Sidor finns nu pilar ↑ och ↓ vid varje sida. Med dem flyttar du sidan i menyn. Undersidor flyttas inom sin huvudsida. Startsidan ligger alltid först. Du kan också be Millie att flytta en sida.",
+  },
+  {
     id: "2026-10-12-lanka-dokument",
     date: "2026-10-12",
     icon: "📄",

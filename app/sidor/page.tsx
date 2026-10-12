@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import type { SiteContent } from "@/lib/contentModel";
-import { pagesInTreeOrder, parentPathOf, childPagesOf } from "@/lib/pageTree";
+import { pagesInTreeOrder, parentPathOf, childPagesOf, movePage } from "@/lib/pageTree";
 
 type Site = { id: string; name?: string; content: SiteContent };
 
@@ -104,6 +104,32 @@ export default function PagesManagePage() {
     }
   };
 
+  const [moving, setMoving] = useState(false);
+  const move = async (path: string, direction: "up" | "down") => {
+    if (!site || moving) return;
+    setMoving(true);
+    setAddError("");
+    try {
+      const res = await fetch(`/api/sites/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "move", path, direction }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddError(data.error || "Kunde inte flytta sidan.");
+        return;
+      }
+      setSite({ ...site, content: data.content });
+      setJustAdded(null);
+      setJustRemoved(null);
+    } catch {
+      setAddError("Kunde inte flytta sidan just nu.");
+    } finally {
+      setMoving(false);
+    }
+  };
+
   const confirmRemove = async (path: string) => {
     if (!site) return;
     setRemoving(true);
@@ -152,7 +178,8 @@ export default function PagesManagePage() {
         <div className="w-full max-w-[680px]">
           <h1 className="text-[27px] font-medium mb-1.5">Sidor</h1>
           <p className="text-[13.5px] text-ink-dim mb-5.5">
-            Hantera sidorna på er live-sajt. En borttagen sida slutar genast
+            Hantera sidorna på er live-sajt. Med pilarna ↑ och ↓ bestämmer du
+            i vilken ordning de står i menyn. En borttagen sida slutar genast
             visas för besökare. En ny sida skapas tom — berätta för Millie i
             redigeraren vad den ska innehålla.
           </p>
@@ -197,6 +224,24 @@ export default function PagesManagePage() {
                         )}
                         {!locked && !confirming && (
                           <div className="flex items-center gap-1 flex-shrink-0">
+                            <button
+                              onClick={() => move(p.path, "up")}
+                              disabled={moving || !movePage(allPages, p.path, "up")}
+                              aria-label={`Flytta ${p.label} uppåt i menyn`}
+                              title="Flytta uppåt i menyn"
+                              className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink-dim disabled:opacity-30"
+                            >
+                              ↑
+                            </button>
+                            <button
+                              onClick={() => move(p.path, "down")}
+                              disabled={moving || !movePage(allPages, p.path, "down")}
+                              aria-label={`Flytta ${p.label} nedåt i menyn`}
+                              title="Flytta nedåt i menyn"
+                              className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink-dim disabled:opacity-30"
+                            >
+                              ↓
+                            </button>
                             {!isChild && (
                               <button
                                 onClick={() => startAdd(p.path)}

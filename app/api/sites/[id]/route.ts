@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, uniquePagePath, type SiteContent } from "@/lib/contentModel";
-import { parentPathOf } from "@/lib/pageTree";
+import { parentPathOf, movePage } from "@/lib/pageTree";
 
 // Lägger till, döper om eller tar bort en SIDA direkt — till skillnad från
 // /api/sites/edit (Millie i chatten, som tolkar fri text och kan ändra
@@ -63,6 +63,15 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const exists = content.pages.some((p) => p.path === path);
     if (!exists) return NextResponse.json({ error: "Hittade ingen sida med den sökvägen." }, { status: 404 });
     updatedPages = content.pages.map((p) => (p.path === path ? { ...p, label } : p));
+  } else if (action === "move") {
+    const path = typeof body.path === "string" ? body.path : "";
+    const dir = body.direction === "up" || body.direction === "down" ? body.direction : null;
+    if (!dir) return NextResponse.json({ error: "Okänd riktning." }, { status: 400 });
+    const moved = movePage(content.pages, path, dir);
+    if (!moved || moved.length !== content.pages.length) {
+      return NextResponse.json({ error: "Sidan går inte att flytta åt det hållet." }, { status: 400 });
+    }
+    updatedPages = moved;
   } else if (action === "delete") {
     const path = typeof body.path === "string" ? body.path : "";
     if (path === "/") return NextResponse.json({ error: "Startsidan går inte att ta bort." }, { status: 400 });
