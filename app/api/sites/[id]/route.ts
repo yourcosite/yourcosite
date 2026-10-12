@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, uniquePagePath, type SiteContent } from "@/lib/contentModel";
-import { parentPathOf, movePage, reparentPage } from "@/lib/pageTree";
+import { parentPathOf, movePage, reparentPage, placePage } from "@/lib/pageTree";
 
 // Lägger till, döper om eller tar bort en SIDA direkt — till skillnad från
 // /api/sites/edit (Millie i chatten, som tolkar fri text och kan ändra
@@ -77,6 +77,16 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     const parentPath = typeof body.parentPath === "string" && body.parentPath ? body.parentPath : null;
     const res = reparentPage(content.pages, path, parentPath);
     if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+    updatedPages = res.pages;
+    newPath = res.newPath;
+  } else if (action === "place") {
+    const path = typeof body.path === "string" ? body.path : "";
+    const target = typeof body.targetPath === "string" ? body.targetPath : "";
+    const pos = body.position === "before" || body.position === "after" || body.position === "into" ? body.position : null;
+    if (!pos) return NextResponse.json({ error: "Okänd placering." }, { status: 400 });
+    const res = placePage(content.pages, path, target, pos);
+    if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+    if (res.pages.length !== content.pages.length) return NextResponse.json({ error: "Något gick fel vid flytten." }, { status: 500 });
     updatedPages = res.pages;
     newPath = res.newPath;
   } else if (action === "delete") {

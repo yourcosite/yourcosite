@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-13-dra-och-slapp",
+    date: "2026-10-13",
+    icon: "✋",
+    title: "Dra och släpp sidorna",
+    text: "Under Sidor kan du nu ta tag i en sida och dra den dit du vill ha den i menyn. Släpper du den mitt på en annan sida blir den en undersida. Pilarna och knappen Flytta finns kvar, bra på mobilen.",
+  },
+  {
     id: "2026-10-13-flytta-till-undersida",
     date: "2026-10-13",
     icon: "🗂️",

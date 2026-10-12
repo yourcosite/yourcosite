@@ -120,3 +120,53 @@ export function reparentPage<T extends PageLike & { sections: any[] }>(
   // Säkerställ trädordning (undersidor direkt efter sin huvudsida).
   return { pages: newParent === null ? pagesInTreeOrder(result) : result, newPath };
 }
+
+// Drag och släpp: placerar en sida före/efter en annan sida (på den sidans
+// nivå) eller "into" (blir undersida under den). Byter sidan nivå används
+// reparentPage, så adress och länkar uppdateras på samma sätt.
+export function placePage<T extends PageLike & { sections: any[] }>(
+  pages: T[],
+  path: string,
+  targetPath: string,
+  position: "before" | "after" | "into"
+): { pages: T[]; newPath: string } | { error: string } {
+  if (path === "/") return { error: "Startsidan går inte att flytta." };
+  if (path === targetPath) return { error: "Släpp sidan på en annan sida." };
+  if (!pages.some((p) => p.path === path) || !pages.some((p) => p.path === targetPath)) {
+    return { error: "Hittade ingen sida med den sökvägen." };
+  }
+  if (position === "into") {
+    if (parentPathOf(path, pages) === targetPath) return { error: "Sidan är redan en undersida där." };
+    return reparentPage(pages, path, targetPath);
+  }
+  if (targetPath === "/" && position === "before") return { error: "Startsidan ligger alltid först." };
+
+  const desiredParent = targetPath === "/" ? null : parentPathOf(targetPath, pages);
+  let list = pages;
+  let newPath = path;
+  if (parentPathOf(path, pages) !== desiredParent) {
+    const res = reparentPage(pages, path, desiredParent);
+    if ("error" in res) return res;
+    list = res.pages;
+    newPath = res.newPath;
+  }
+
+  const insertRel = (group: T[]): T[] => {
+    const moved = group.find((p) => p.path === newPath)!;
+    const rest = group.filter((p) => p.path !== newPath);
+    const ti = rest.findIndex((p) => p.path === targetPath);
+    const at = targetPath === "/" ? 0 : ti < 0 ? rest.length : position === "before" ? ti : ti + 1;
+    return [...rest.slice(0, at), moved, ...rest.slice(at)];
+  };
+
+  const tops = topLevelPages(list);
+  if (desiredParent === null) {
+    const home = tops.find((p) => p.path === "/");
+    const others = insertRel(tops.filter((p) => p.path !== "/"));
+    return { pages: [...(home ? [home] : []), ...others].flatMap((t) => [t, ...childPagesOf(t.path, list)]), newPath };
+  }
+  return {
+    pages: tops.flatMap((t) => [t, ...(t.path === desiredParent ? insertRel(childPagesOf(t.path, list)) : childPagesOf(t.path, list))]),
+    newPath,
+  };
+}

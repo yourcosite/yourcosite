@@ -168,6 +168,49 @@ export default function PagesManagePage() {
     }
   };
 
+  // Drag och släpp. Överkant/underkant av en rad = före/efter den sidan,
+  // mitten = bli undersida under den (bara för huvudsidor).
+  const [dragPath, setDragPath] = useState<string | null>(null);
+  const [dropAt, setDropAt] = useState<{ path: string; pos: "before" | "after" | "into" } | null>(null);
+  const zoneFor = (e: React.DragEvent<HTMLDivElement>, targetPath: string): "before" | "after" | "into" => {
+    if (targetPath === "/") return "after";
+    const r = e.currentTarget.getBoundingClientRect();
+    const y = (e.clientY - r.top) / r.height;
+    const canNest = parentPathOf(targetPath, allPages) === null;
+    if (!canNest) return y < 0.5 ? "before" : "after";
+    return y < 0.28 ? "before" : y > 0.72 ? "after" : "into";
+  };
+  const dropOn = async (targetPath: string, position: "before" | "after" | "into") => {
+    const path = dragPath;
+    setDragPath(null);
+    setDropAt(null);
+    if (!site || !path || path === targetPath || moving) return;
+    setMoving(true);
+    setAddError("");
+    try {
+      const res = await fetch(`/api/sites/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "place", path, targetPath, position }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddError(data.error || "Kunde inte flytta sidan.");
+        return;
+      }
+      const label = allPages.find((p) => p.path === path)?.label || path;
+      setSite({ ...site, content: data.content });
+      setJustAdded(null);
+      setJustRemoved(null);
+      setReparenting(null);
+      setReparentNotice(data.newPath !== path ? `"${label}" har flyttats. Dess nya adress är ${data.newPath}.` : "");
+    } catch {
+      setAddError("Kunde inte flytta sidan just nu.");
+    } finally {
+      setMoving(false);
+    }
+  };
+
   const confirmRemove = async (path: string) => {
     if (!site) return;
     setRemoving(true);
@@ -216,9 +259,10 @@ export default function PagesManagePage() {
         <div className="w-full max-w-[680px]">
           <h1 className="text-[27px] font-medium mb-1.5">Sidor</h1>
           <p className="text-[13.5px] text-ink-dim mb-5.5">
-            Hantera sidorna på er live-sajt. Med pilarna ↑ och ↓ bestämmer du
-            i vilken ordning de står i menyn, och med Flytta gör du en sida
-            till undersida (eller tillbaka till egen sida i menyn). En borttagen sida slutar genast
+            Hantera sidorna på er live-sajt. Dra en sida till rätt plats för att
+            ändra ordningen i menyn. Släpp den mitt på en annan sida för att
+            göra den till undersida. På mobil eller surfplatta använder du
+            pilarna ↑ och ↓ och knappen Flytta. En borttagen sida slutar genast
             visas för besökare. En ny sida skapas tom — berätta för Millie i
             redigeraren vad den ska innehålla.
           </p>
@@ -245,8 +289,48 @@ export default function PagesManagePage() {
                   const isChild = parentPathOf(p.path, allPages) !== null;
                   const childCount = childPagesOf(p.path, allPages).length;
                   return (
-                    <div key={p.path} className={`border border-line rounded-xl px-4 py-3.5 bg-surface ${isChild ? "ml-8" : ""}`}>
+                    <div
+                      key={p.path}
+                      draggable={!locked && !confirming && !moving}
+                      onDragStart={(e) => {
+                        e.dataTransfer.effectAllowed = "move";
+                        e.dataTransfer.setData("text/plain", p.path);
+                        setDragPath(p.path);
+                      }}
+                      onDragEnd={() => {
+                        setDragPath(null);
+                        setDropAt(null);
+                      }}
+                      onDragOver={(e) => {
+                        if (!dragPath || dragPath === p.path) return;
+                        e.preventDefault();
+                        const pos = zoneFor(e, p.path);
+                        if (dropAt?.path !== p.path || dropAt.pos !== pos) setDropAt({ path: p.path, pos });
+                      }}
+                      onDragLeave={() => setDropAt((d) => (d?.path === p.path ? null : d))}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        if (dragPath) dropOn(p.path, zoneFor(e, p.path));
+                      }}
+                      className={`relative border rounded-xl px-4 py-3.5 bg-surface ${isChild ? "ml-8" : ""} ${
+                        dropAt?.path === p.path && dropAt.pos === "into" ? "border-accent bg-accent-soft" : "border-line"
+                      } ${dragPath === p.path ? "opacity-40" : ""}`}
+                    >
+                      {dropAt?.path === p.path && dropAt.pos !== "into" && (
+                        <div
+                          className={`absolute left-2 right-2 h-[3px] rounded-full bg-accent pointer-events-none ${dropAt.pos === "before" ? "-top-[7px]" : "-bottom-[7px]"}`}
+                        />
+                      )}
                       <div className="flex items-center gap-3">
+                        {!locked && (
+                          <span
+                            className="text-ink-dim text-[15px] leading-none cursor-grab select-none -mr-1"
+                            title="Dra för att flytta sidan"
+                            aria-hidden="true"
+                          >
+                            ⋮⋮
+                          </span>
+                        )}
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6B6A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                           <rect x="4" y="3" width="16" height="18" rx="2" />
                           <line x1="8" y1="8" x2="16" y2="8" />
