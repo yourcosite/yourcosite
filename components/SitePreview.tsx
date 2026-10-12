@@ -885,6 +885,15 @@ function Header({
   // footerns gräns nedan). Bara huvudsidor ligger i toppnivån; undersidor
   // visas i en rullgardin under sin huvudsida.
   const topPages = topLevelPages(pages).slice(0, 8);
+  // Många menyval ger trångt bredvid loggan. Ju fler huvudsidor, desto
+  // bredare ruta krävs innan hela menyn visas — annars ersätts den av
+  // hamburgarmenyn. Klasserna skrivs ut i sin helhet (Tailwind hittar dem
+  // bara så).
+  const navCount = topPages.length;
+  const showNav =
+    navCount <= 4 ? "hidden @3xl:flex" : navCount <= 6 ? "hidden @4xl:flex" : "hidden @5xl:flex";
+  const hideBurger = navCount <= 4 ? "@3xl:hidden" : navCount <= 6 ? "@4xl:hidden" : "@5xl:hidden";
+  const navGap = navCount <= 4 ? "gap-7" : "gap-5";
   const navLinksEl = topPages.map((p) => {
     const children = childPagesOf(p.path, pages);
     const activeHere = p.path === activePath || children.some((c) => c.path === activePath);
@@ -918,7 +927,7 @@ function Header({
       onClick={() => setMenuOpen((v) => !v)}
       aria-label={menuOpen ? "Stäng meny" : "Öppna meny"}
       aria-expanded={menuOpen}
-      className="@3xl:hidden flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0"
+      className={`${hideBurger} flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0`}
     >
       <span
         className="block w-[18px] h-[2px] rounded-full transition-transform"
@@ -937,7 +946,7 @@ function Header({
   // rader.
   const mobileMenuEl = menuOpen && (
     <div
-      className="@3xl:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
+      className={`${hideBurger} absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]`}
       style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
     >
       {topPages.map((p) => (
@@ -981,7 +990,7 @@ function Header({
           <div className="justify-self-center">{logoEl}</div>
           <div className="justify-self-end">{hamburgerBtn}</div>
         </div>
-        <nav className="hidden @3xl:flex items-center justify-center gap-7 text-[13px] font-semibold mt-3">
+        <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-2 text-[13px] font-semibold mt-3`}>
           {navLinksEl}
         </nav>
         {mobileMenuEl}
@@ -994,9 +1003,9 @@ function Header({
     // "left") — samma symmetriska 1fr/auto/1fr-grid som ovan, fast på en
     // enda rad.
     return (
-      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
         <div className="flex items-center gap-2.5">{logoEl}</div>
-        <nav className="hidden @3xl:flex items-center gap-7 text-[13px] font-semibold justify-self-center">
+        <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold justify-self-center`}>
           {navLinksEl}
         </nav>
         <div className="flex justify-end">{hamburgerBtn}</div>
@@ -1008,9 +1017,9 @@ function Header({
   // "left" (standard) — logga vänster, meny höger, som innan den här
   // stilaxeln fanns.
   return (
-    <div className={`${outerBase} flex items-center justify-between px-8 @3xl:px-12 py-4`} style={outerStyle}>
-      <div className="flex items-center gap-2.5">{logoEl}</div>
-      <nav className="hidden @3xl:flex items-center gap-7 text-[13px] font-semibold">{navLinksEl}</nav>
+    <div className={`${outerBase} flex items-center justify-between gap-10 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className="flex items-center gap-2.5 flex-shrink-0">{logoEl}</div>
+      <nav className={`${showNav} items-center justify-end flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold min-w-0`}>{navLinksEl}</nav>
       {hamburgerBtn}
       {mobileMenuEl}
     </div>
