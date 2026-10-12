@@ -125,6 +125,17 @@ h1, h2, h3 {
 .ycs-blk[data-ycs-align="right"] [class*="flex-col"][class*="items-center"],
 .ycs-blk[data-ycs-align="right"] [class*="flex-col"][class*="items-start"] { align-items: flex-end !important; }
 
+/* Centrera hela textdelen, inte bara raderna: smala textrutor (max-w) som
+   annars ligger förankrade till vänster (t.ex. i hero-layouterna) hamnar mitt
+   på sidan, och rader med knappar/chips som saknar egen justering följer med. */
+.ycs-blk[data-ycs-align="center"] :is(div, p, h1, h2, h3, blockquote)[class*="max-w-"]:not([class*="max-w-full"]):not([class*="max-w-none"]) {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+.ycs-blk[data-ycs-align="center"] .flex:not(.flex-col):not([class*="justify-"]):not([class*="overflow-x"]) {
+  justify-content: center !important;
+}
+
 /* Smala textblock som centrerats med mx-auto följer med. */
 .ycs-blk[data-ycs-align="left"] :is(p, h1, h2, h3, blockquote).mx-auto { margin-left: 0 !important; margin-right: auto !important; }
 .ycs-blk[data-ycs-align="right"] :is(p, h1, h2, h3, blockquote).mx-auto { margin-left: auto !important; margin-right: 0 !important; }
