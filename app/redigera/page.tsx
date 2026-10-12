@@ -840,6 +840,55 @@ export default function EditorPage() {
     }
   };
 
+  // Testa länken: i redigeraren markeras en knapp när man klickar på den,
+  // så länken följs bara när kunden uttryckligen ber om det.
+  const selectedLinkValue = (() => {
+    if (!content || selection?.target !== "field" || !selectedLinkField) return "";
+    const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId);
+    return section ? getLinkValue(section, selectedLinkField) : "";
+  })();
+  const testLink = () => {
+    if (!selectedLinkValue) return;
+    if (/^(https?:\/\/|mailto:|tel:)/i.test(selectedLinkValue)) {
+      window.open(selectedLinkValue, "_blank", "noopener,noreferrer");
+    } else {
+      setSelection(null);
+      setActivePath(selectedLinkValue);
+    }
+  };
+
+  // Delningslänk till förhandsvisningen.
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [shareBusy, setShareBusy] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
+  const [shareError, setShareError] = useState("");
+  const createShare = async () => {
+    if (!site?.id) return;
+    setShareBusy(true);
+    setShareError("");
+    try {
+      const res = await fetch("/api/sites/share", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      setShareUrl(data.url);
+      try {
+        await navigator.clipboard.writeText(data.url);
+        setShareCopied(true);
+        setTimeout(() => setShareCopied(false), 2500);
+      } catch {
+        // Kopieringen kan nekas av webbläsaren — länken visas ändå i rutan.
+      }
+    } catch (e: any) {
+      setShareError(e.message);
+    } finally {
+      setShareBusy(false);
+    }
+  };
+
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -1142,6 +1191,8 @@ export default function EditorPage() {
                     onEditText: openTextEditor,
                     canEditLink: !!selectedLinkField,
                     onEditLink: openLinkEditor,
+                    canTestLink: selectedLinkValue !== "",
+                    onTestLink: testLink,
                   }}
                 >
                 <SitePreview
@@ -1175,6 +1226,42 @@ export default function EditorPage() {
                   }
                 />
                 </FieldEditContext.Provider>
+              </div>
+              <div className="flex-shrink-0 flex items-center gap-2 flex-wrap px-3.5 py-2 border-t border-line bg-[#F1EFE9] text-[12px]">
+                {!shareUrl ? (
+                  <button
+                    type="button"
+                    onClick={createShare}
+                    disabled={shareBusy}
+                    className="font-semibold text-ink bg-white border border-line rounded-full px-3 py-1 disabled:opacity-60"
+                  >
+                    {shareBusy ? "Skapar länk …" : "🔗 Dela förhandsvisning"}
+                  </button>
+                ) : (
+                  <>
+                    <input
+                      readOnly
+                      value={shareUrl}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="flex-1 min-w-[160px] bg-white border border-line rounded-full px-3 py-1 text-ink"
+                    />
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await navigator.clipboard.writeText(shareUrl);
+                          setShareCopied(true);
+                          setTimeout(() => setShareCopied(false), 2500);
+                        } catch {}
+                      }}
+                      className="font-semibold text-ink bg-white border border-line rounded-full px-3 py-1"
+                    >
+                      {shareCopied ? "Kopierad ✓" : "Kopiera"}
+                    </button>
+                    <span className="text-ink-dim">Gäller i 14 dagar. Den som har länken kan titta men inte ändra.</span>
+                  </>
+                )}
+                {shareError && <span className="text-red-600">{shareError}</span>}
               </div>
             </div>
           )}

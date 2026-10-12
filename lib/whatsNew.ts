@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-12-dela-forhandsvisning",
+    date: "2026-10-12",
+    icon: "📤",
+    title: "Dela förhandsvisningen",
+    text: "Under förhandsvisningen finns knappen Dela förhandsvisning. Du får en länk som du kan skicka till kollegor och kunder. De kan titta på sajten utan att logga in, men inte ändra något. Länken gäller i 14 dagar. Du kan också prova en knapp med Testa länken när du klickar på den.",
+  },
+  {
     id: "2026-10-12-byt-lank",
     date: "2026-10-12",
     icon: "🔗",

@@ -1418,6 +1418,8 @@ export type FieldEditActions = {
   onEditText: () => void;
   canEditLink: boolean;
   onEditLink: () => void;
+  canTestLink: boolean;
+  onTestLink: () => void;
 };
 export const FieldEditContext = createContext<FieldEditActions | null>(null);
 
@@ -1537,7 +1539,7 @@ function FieldBadge({
         }`}
         style={{ outline: selected ? "2px solid #4A90D9" : "2px dashed #4A90D9", outlineOffset: "2px" }}
       />
-      {selected && (edit?.canEditText || edit?.canEditLink) && (
+      {selected && (edit?.canEditText || edit?.canEditLink || edit?.canTestLink) && (
         <span data-fieldedit className="absolute left-1/2 -translate-x-1/2 top-full mt-2.5 z-10 flex gap-1.5 whitespace-nowrap">
           {edit?.canEditText && (
             <button
@@ -1557,6 +1559,16 @@ function FieldBadge({
               style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
             >
               🔗 Länk
+            </button>
+          )}
+          {edit?.canTestLink && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); edit.onTestLink(); }}
+              className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
+              style={{ background: "#FFFFFF", color: "#17171A", border: "2px solid #4A90D9" }}
+            >
+              ↗ Testa länken
             </button>
           )}
         </span>

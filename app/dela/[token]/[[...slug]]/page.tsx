@@ -1,0 +1,59 @@
+import type { Metadata } from "next";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { verifyShareToken } from "@/lib/shareToken";
+import { getSiteNewsArticles } from "@/lib/newsArticles";
+import { isValidSiteContent } from "@/lib/contentModel";
+import SitePreview from "@/components/SitePreview";
+
+// Delad förhandsvisning: vem som helst med den signerade länken kan titta
+// på sajten, men inte ändra något. Aldrig indexerad av sökmotorer.
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const metadata: Metadata = { robots: { index: false, follow: false } };
+
+export default async function SharedPreview({
+  params,
+}: {
+  params: { token: string; slug?: string[] };
+}) {
+  const siteId = verifyShareToken(params.token);
+  if (!siteId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center px-6 text-[15px] text-ink-dim">
+        Den här länken fungerar inte längre. Be avsändaren skapa en ny.
+      </div>
+    );
+  }
+
+  const admin = createAdminClient();
+  const { data: site } = await admin.from("sites").select("*").eq("id", siteId).not("content", "is", null).maybeSingle();
+  if (!site || !isValidSiteContent(site.content)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-center px-6 text-[15px] text-ink-dim">
+        Sajten finns inte längre.
+      </div>
+    );
+  }
+
+  const requestedPath = "/" + (params.slug?.join("/") || "");
+  const newsArticles = await getSiteNewsArticles(admin, site.id);
+
+  return (
+    <div>
+      <div className="bg-[#17171A] text-white text-[12.5px] text-center px-4 py-2">
+        Delad förhandsvisning av {site.name}. Sajten är inte publicerad ännu och ingenting kan ändras här.
+      </div>
+      {/* siteId skickas medvetet inte med: ett testinskick i kontaktformuläret ska inte sparas hos kunden. */}
+      <SitePreview
+        content={site.content}
+        siteName={site.name}
+        activePath={requestedPath}
+        basePath={`/dela/${params.token}`}
+        privacyPolicyMode={site.privacy_policy_mode}
+        privacyPolicyFileUrl={site.privacy_policy_file_url}
+        privacyPolicyText={site.privacy_policy_text}
+        newsArticles={newsArticles}
+      />
+    </div>
+  );
+}
