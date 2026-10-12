@@ -17,7 +17,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-12",
     icon: "🔗",
     title: "Byt länk på knappar",
-    text: "Klicka på en knapp eller en Läs mer-rad i förhandsvisningen och tryck på 🔗 Ändra länk. Där väljer du en av dina sidor eller skriver en egen webbadress.",
+    text: "Tryck på den lilla pennan vid en knapp eller en Läs mer-rad i förhandsvisningen och välj 🔗 Länk. Där väljer du en av dina sidor eller skriver en egen webbadress.",
   },
   {
     id: "2026-10-12-undersidor",
@@ -32,7 +32,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-12",
     icon: "✏️",
     title: "Ändra texten själv",
-    text: "Klicka på en text i förhandsvisningen och tryck på ✏️ Ändra text själv. Då skriver du in den nya texten direkt, utan Millie. Du kan ångra med knappen.",
+    text: "Klicka på en text i förhandsvisningen så dyker en liten penna ✎ upp på den. Tryck på pennan och skriv in den nya texten direkt, utan Millie. Du kan ångra med knappen.",
   },
   {
     id: "2026-10-11-redigera-vid-uppladdning",

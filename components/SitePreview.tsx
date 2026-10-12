@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
@@ -1410,6 +1410,17 @@ function snippet(text: string, max = 44): string {
   return t.length > max ? `${t.slice(0, max)}…` : t;
 }
 
+// Gör att den markerade texten/knappen får små redigeringsknappar (penna,
+// länk) direkt i förhandsvisningen. Sätts bara av chattredigeraren
+// (/redigera); överallt annars är den null och inget extra visas.
+export type FieldEditActions = {
+  canEditText: boolean;
+  onEditText: () => void;
+  canEditLink: boolean;
+  onEditLink: () => void;
+};
+export const FieldEditContext = createContext<FieldEditActions | null>(null);
+
 // Tunt klickbart omslag runt ETT textfält — samma grundmönster som
 // ImageOrArt (hover visar "Klicka för att välja", vald visar en bock),
 // fast ritat som en ram runt texten istället för ovanpå en bild. "as"
@@ -1437,6 +1448,7 @@ function Field({
     return <Plain className={className} style={style}>{children}</Plain>;
   }
   const Inner = Tag;
+  const edit = useContext(FieldEditContext);
   return (
     <div
       className="relative group/fld cursor-pointer"
@@ -1454,6 +1466,22 @@ function Field({
         }`}
         style={{ outline: selected ? "2px solid #4A90D9" : "2px dashed #4A90D9", outlineOffset: "1px" }}
       />
+      {selected && edit?.canEditText && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            edit.onEditText();
+          }}
+          aria-label="Ändra texten"
+          title="Ändra texten själv"
+          className="absolute -top-4 -right-4 z-10 w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold shadow-md"
+          style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
+        >
+          ✎
+        </button>
+      )}
     </div>
   );
 }
@@ -1478,6 +1506,7 @@ function FieldBadge({
   onSelect?: () => void;
   children: React.ReactNode;
 }) {
+  const edit = useContext(FieldEditContext);
   if (!editable) return <>{children}</>;
   return (
     // onClick (utan stopPropagation) på själva KNAPPEN (CtaPill/CtaLink)
@@ -1512,6 +1541,30 @@ function FieldBadge({
       >
         ✎
       </button>
+      {selected && (edit?.canEditText || edit?.canEditLink) && (
+        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2.5 z-10 flex gap-1.5 whitespace-nowrap">
+          {edit?.canEditText && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); edit.onEditText(); }}
+              className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
+              style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
+            >
+              ✎ Text
+            </button>
+          )}
+          {edit?.canEditLink && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); e.preventDefault(); edit.onEditLink(); }}
+              className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
+              style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
+            >
+              🔗 Länk
+            </button>
+          )}
+        </span>
+      )}
     </span>
   );
 }

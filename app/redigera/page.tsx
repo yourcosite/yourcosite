@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import Millie from "@/components/Millie";
-import SitePreview from "@/components/SitePreview";
+import SitePreview, { FieldEditContext } from "@/components/SitePreview";
 import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
@@ -1135,6 +1135,14 @@ export default function EditorPage() {
                     </div>
                   </div>
                 )}
+                <FieldEditContext.Provider
+                  value={{
+                    canEditText: selection?.target === "field" && selectedFieldText !== null,
+                    onEditText: openTextEditor,
+                    canEditLink: !!selectedLinkField,
+                    onEditLink: openLinkEditor,
+                  }}
+                >
                 <SitePreview
                   content={content}
                   siteName={site?.name}
@@ -1165,6 +1173,7 @@ export default function EditorPage() {
                     setSelection((prev) => (prev?.key === sel.key ? null : { target: "field", ...sel }))
                   }
                 />
+                </FieldEditContext.Provider>
               </div>
             </div>
           )}
@@ -1381,26 +1390,6 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     ✂️ Redigera bild
-                  </button>
-                )}
-                {selection.target === "field" && selectedLinkField && (
-                  <button
-                    type="button"
-                    onClick={openLinkEditor}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    🔗 Ändra länk
-                  </button>
-                )}
-                {selection.target === "field" && selectedFieldText !== null && (
-                  <button
-                    type="button"
-                    onClick={openTextEditor}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    ✏️ Ändra text själv
                   </button>
                 )}
                 {selection.target === "image" && !selectedImageUrl && (
