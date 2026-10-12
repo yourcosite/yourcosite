@@ -466,3 +466,26 @@ create trigger on_auth_user_created
 --
 --   update profiles set role = 'superadmin' where email = 'hej@cskb.se';
 -- ============================================================
+
+
+-- ============================================================
+-- Delningslänkar till förhandsvisningen (kan stängas av)
+-- ============================================================
+create table if not exists share_links (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  owner_id uuid not null references profiles (id) on delete cascade,
+  created_at timestamptz not null default now(),
+  expires_at timestamptz not null,
+  revoked_at timestamptz
+);
+alter table share_links enable row level security;
+drop policy if exists "Ägare kan läsa sina delningslänkar" on share_links;
+create policy "Ägare kan läsa sina delningslänkar"
+  on share_links for select using (auth.uid() = owner_id);
+drop policy if exists "Ägare kan skapa delningslänkar" on share_links;
+create policy "Ägare kan skapa delningslänkar"
+  on share_links for insert with check (auth.uid() = owner_id);
+drop policy if exists "Ägare kan stänga av delningslänkar" on share_links;
+create policy "Ägare kan stänga av delningslänkar"
+  on share_links for update using (auth.uid() = owner_id);

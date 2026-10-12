@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
-import { getFieldText, getLinkValue, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
+import { getFieldText, getLinkValue, getNewTab, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -799,6 +799,7 @@ export default function EditorPage() {
   const [linkEditOpen, setLinkEditOpen] = useState(false);
   const [linkChoice, setLinkChoice] = useState(""); // "", en sidväg eller "__egen"
   const [linkCustom, setLinkCustom] = useState("");
+  const [linkNewTab, setLinkNewTab] = useState(false);
   const selectedLinkField = selection?.target === "field" ? linkFieldFor(selection.field) : null;
   const openLinkEditor = () => {
     if (selection?.target !== "field" || !selectedLinkField || !content) return;
@@ -807,6 +808,8 @@ export default function EditorPage() {
     const isPage = content.pages.some((p) => p.path === current);
     setLinkChoice(current === "" ? "" : isPage ? current : "__egen");
     setLinkCustom(current !== "" && !isPage ? current : "https://");
+    // Utan eget val: externa adresser öppnas i ett nytt fönster, egna sidor i samma.
+    setLinkNewTab((section ? getNewTab(section, selectedLinkField) : undefined) ?? (current !== "" && !isPage));
     setLinkEditOpen(true);
   };
   const saveLink = async () => {
@@ -822,6 +825,7 @@ export default function EditorPage() {
           siteId: site?.id,
           kind: "link",
           text: value,
+          newTab: linkNewTab,
           selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, field: selectedLinkField },
         }),
       });
@@ -857,11 +861,37 @@ export default function EditorPage() {
     }
   };
 
-  // Delningslänk till förhandsvisningen.
-  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  // Delningslänkar till förhandsvisningen (kan stängas av).
+  type ShareLink = { id: string; url: string; createdAt: string; expiresAt: string };
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
   const [shareBusy, setShareBusy] = useState(false);
-  const [shareCopied, setShareCopied] = useState(false);
+  const [shareCopiedId, setShareCopiedId] = useState<string | null>(null);
   const [shareError, setShareError] = useState("");
+  const copyShare = async (l: ShareLink) => {
+    try {
+      await navigator.clipboard.writeText(l.url);
+      setShareCopiedId(l.id);
+      setTimeout(() => setShareCopiedId((cur) => (cur === l.id ? null : cur)), 2500);
+    } catch {
+      // Kopieringen kan nekas av webbläsaren — länken syns ändå i rutan.
+    }
+  };
+  const openShare = async () => {
+    if (!site?.id) return;
+    const willOpen = !shareOpen;
+    setShareOpen(willOpen);
+    setShareError("");
+    if (!willOpen) return;
+    try {
+      const res = await fetch(`/api/sites/share?siteId=${encodeURIComponent(site.id)}`);
+      const data = await res.json();
+      setShareLinks(data.links || []);
+      if (data.error) setShareError(data.error);
+    } catch {
+      setShareError("Kunde inte hämta dina delade länkar.");
+    }
+  };
   const createShare = async () => {
     if (!site?.id) return;
     setShareBusy(true);
@@ -874,18 +904,26 @@ export default function EditorPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Något gick fel.");
-      setShareUrl(data.url);
-      try {
-        await navigator.clipboard.writeText(data.url);
-        setShareCopied(true);
-        setTimeout(() => setShareCopied(false), 2500);
-      } catch {
-        // Kopieringen kan nekas av webbläsaren — länken visas ändå i rutan.
-      }
+      setShareLinks((ls) => [data.link, ...ls]);
+      copyShare(data.link);
     } catch (e: any) {
       setShareError(e.message);
     } finally {
       setShareBusy(false);
+    }
+  };
+  const revokeShare = async (id: string) => {
+    setShareError("");
+    try {
+      const res = await fetch("/api/sites/share", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      if (!res.ok) throw new Error("Kunde inte stänga av länken.");
+      setShareLinks((ls) => ls.filter((l) => l.id !== id));
+    } catch (e: any) {
+      setShareError(e.message);
     }
   };
 
@@ -1227,41 +1265,53 @@ export default function EditorPage() {
                 />
                 </FieldEditContext.Provider>
               </div>
-              <div className="flex-shrink-0 flex items-center gap-2 flex-wrap px-3.5 py-2 border-t border-line bg-[#F1EFE9] text-[12px]">
-                {!shareUrl ? (
-                  <button
-                    type="button"
-                    onClick={createShare}
-                    disabled={shareBusy}
-                    className="font-semibold text-ink bg-white border border-line rounded-full px-3 py-1 disabled:opacity-60"
-                  >
-                    {shareBusy ? "Skapar länk …" : "🔗 Dela förhandsvisning"}
-                  </button>
-                ) : (
-                  <>
-                    <input
-                      readOnly
-                      value={shareUrl}
-                      onFocus={(e) => e.currentTarget.select()}
-                      className="flex-1 min-w-[160px] bg-white border border-line rounded-full px-3 py-1 text-ink"
-                    />
+              <div className="relative flex-shrink-0 flex items-center gap-2 flex-wrap px-3.5 py-2 border-t border-line bg-[#F1EFE9] text-[12px]">
+                <button
+                  type="button"
+                  onClick={openShare}
+                  className="font-semibold text-ink bg-white border border-line rounded-full px-3 py-1"
+                >
+                  🔗 Dela förhandsvisning
+                </button>
+                {shareOpen && (
+                  <div className="absolute bottom-full left-3 mb-2 z-40 w-[min(460px,calc(100%-24px))] bg-white border border-line rounded-xl shadow-xl p-3.5">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="font-semibold text-[13px]">Delade länkar</div>
+                      <button type="button" onClick={() => setShareOpen(false)} aria-label="Stäng" className="text-ink-dim font-bold px-1">×</button>
+                    </div>
+                    <p className="text-ink-dim mb-2.5">
+                      Den som har en länk kan titta på sajten men inte ändra något. Varje länk gäller i 14 dagar, och du kan stänga av den när du vill.
+                    </p>
+                    {shareLinks.length === 0 && <div className="text-ink-dim mb-2.5">Du har inga aktiva länkar just nu.</div>}
+                    <div className="flex flex-col gap-2 mb-2.5 max-h-[180px] overflow-y-auto">
+                      {shareLinks.map((l) => (
+                        <div key={l.id} className="flex items-center gap-2">
+                          <input
+                            readOnly
+                            value={l.url}
+                            onFocus={(e) => e.currentTarget.select()}
+                            className="flex-1 min-w-0 bg-bg border border-line rounded-full px-3 py-1 text-ink"
+                          />
+                          <button type="button" onClick={() => copyShare(l)} className="font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0">
+                            {shareCopiedId === l.id ? "Kopierad ✓" : "Kopiera"}
+                          </button>
+                          <button type="button" onClick={() => revokeShare(l.id)} className="font-semibold text-red-600 border border-line rounded-full px-2.5 py-1 flex-shrink-0">
+                            Stäng av
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                     <button
                       type="button"
-                      onClick={async () => {
-                        try {
-                          await navigator.clipboard.writeText(shareUrl);
-                          setShareCopied(true);
-                          setTimeout(() => setShareCopied(false), 2500);
-                        } catch {}
-                      }}
-                      className="font-semibold text-ink bg-white border border-line rounded-full px-3 py-1"
+                      onClick={createShare}
+                      disabled={shareBusy}
+                      className="font-semibold bg-accent text-accent-ink rounded-full px-3.5 py-1.5 disabled:opacity-60"
                     >
-                      {shareCopied ? "Kopierad ✓" : "Kopiera"}
+                      {shareBusy ? "Skapar …" : "+ Skapa ny länk"}
                     </button>
-                    <span className="text-ink-dim">Gäller i 14 dagar. Den som har länken kan titta men inte ändra.</span>
-                  </>
+                    {shareError && <div className="text-red-600 mt-2">{shareError}</div>}
+                  </div>
                 )}
-                {shareError && <span className="text-red-600">{shareError}</span>}
               </div>
             </div>
           )}
@@ -1417,6 +1467,19 @@ export default function EditorPage() {
                       placeholder="https://"
                       className="w-full mt-2 bg-bg border border-line rounded-lg p-2 text-[14px] outline-none"
                     />
+                  )}
+                  {linkChoice !== "" && (
+                    <div className="mt-3">
+                      <div className="text-[12px] font-semibold text-ink-dim mb-1.5">Hur ska länken öppnas?</div>
+                      <label className="flex items-center gap-2 text-[13.5px] py-1 cursor-pointer">
+                        <input type="radio" name="linkTarget" checked={!linkNewTab} onChange={() => setLinkNewTab(false)} />
+                        I samma fönster
+                      </label>
+                      <label className="flex items-center gap-2 text-[13.5px] py-1 cursor-pointer">
+                        <input type="radio" name="linkTarget" checked={linkNewTab} onChange={() => setLinkNewTab(true)} />
+                        I ett nytt fönster
+                      </label>
+                    </div>
                   )}
                   <div className="flex justify-end gap-2 mt-3">
                     <button type="button" onClick={() => setLinkEditOpen(false)} disabled={savingText} className="text-[13px] px-3 py-1.5 rounded-full border border-line">

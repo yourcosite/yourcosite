@@ -39,7 +39,7 @@ export async function POST(request: Request) {
     if (!isAllowedLink(value, content.pages.map((p) => p.path))) {
       return NextResponse.json({ error: "Länken måste vara en sida på sajten eller börja med https://." }, { status: 400 });
     }
-    if (!setLinkValue(section, sel.field, value)) {
+    if (!setLinkValue(section, sel.field, value, typeof body.newTab === "boolean" ? body.newTab : undefined)) {
       return NextResponse.json({ error: "Det går inte att ändra länken här." }, { status: 400 });
     }
   } else if (!setFieldText(section, sel.field, text)) {

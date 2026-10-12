@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { verifyShareToken } from "@/lib/shareToken";
 import { getSiteNewsArticles } from "@/lib/newsArticles";
 import { isValidSiteContent } from "@/lib/contentModel";
 import SitePreview from "@/components/SitePreview";
@@ -16,16 +15,21 @@ export default async function SharedPreview({
 }: {
   params: { token: string; slug?: string[] };
 }) {
-  const siteId = verifyShareToken(params.token);
-  if (!siteId) {
+  const admin = createAdminClient();
+  // Länken är id:t på en rad i share_links — giltig bara om den inte
+  // stängts av och inte gått ut.
+  const { data: link } = /^[0-9a-fA-F-]{36}$/.test(params.token)
+    ? await admin.from("share_links").select("site_id, expires_at, revoked_at").eq("id", params.token).maybeSingle()
+    : { data: null };
+  if (!link || link.revoked_at || new Date(link.expires_at).getTime() < Date.now()) {
     return (
       <div className="min-h-screen flex items-center justify-center text-center px-6 text-[15px] text-ink-dim">
         Den här länken fungerar inte längre. Be avsändaren skapa en ny.
       </div>
     );
   }
+  const siteId = link.site_id;
 
-  const admin = createAdminClient();
   const { data: site } = await admin.from("sites").select("*").eq("id", siteId).not("content", "is", null).maybeSingle();
   if (!site || !isValidSiteContent(site.content)) {
     return (

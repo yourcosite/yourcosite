@@ -105,6 +105,9 @@ export interface HeroSection {
   // URL ("https://..."). Saknas den är knappen bara dekorativ text, precis
   // som innan det här fältet fanns.
   ctaLink?: string;
+  // true = öppna länken i ett nytt fönster, false = i samma. Saknas fältet:
+  // egna sidor i samma fönster, externa adresser i ett nytt.
+  ctaNewTab?: boolean;
   // Fri hex-färg på JUST DEN HÄR knappen, satt av Millie — oberoende av
   // sajtens vanliga accentfärg (SiteTheme.accentColor). Samma princip som
   // bgColor ovan (fri hex, kontrastsäker text räknas ut automatiskt — se
@@ -189,6 +192,9 @@ export interface AboutSection {
   // samma princip som HeroSection.ctaLink. Saknas den är raden bara
   // dekorativ text, som förut.
   ctaLink?: string;
+  // true = öppna länken i ett nytt fönster, false = i samma. Saknas fältet:
+  // egna sidor i samma fönster, externa adresser i ett nytt.
+  ctaNewTab?: boolean;
   // Texten på "Läs mer →"-raden. Saknas den står det "Läs mer".
   linkLabel?: string;
 }
@@ -211,6 +217,8 @@ export interface GridItem {
   // "intro-divided") leder — samma princip som HeroSection.ctaLink.
   // Saknas den är raden bara dekorativ text, som förut.
   link?: string;
+  // Se ctaNewTab ovan.
+  newTab?: boolean;
   // Texten på rutans "Läs mer →"-rad. Saknas den står det "Läs mer".
   linkLabel?: string;
 }
@@ -230,6 +238,9 @@ export interface GridSection {
   ctaLabel?: string;
   // Se HeroSection.ctaLink ovan — samma princip.
   ctaLink?: string;
+  // true = öppna länken i ett nytt fönster, false = i samma. Saknas fältet:
+  // egna sidor i samma fönster, externa adresser i ett nytt.
+  ctaNewTab?: boolean;
   // Se HeroSection.ctaColor — samma princip. Bara meningsfullt tillsammans
   // med ctaLabel/layout "intro-divided" (enda grid-layouten med en egen
   // knapp).
@@ -267,6 +278,9 @@ export interface CtaSection {
   ctaLabel: string;
   // Se HeroSection.ctaLink ovan — samma princip.
   ctaLink?: string;
+  // true = öppna länken i ett nytt fönster, false = i samma. Saknas fältet:
+  // egna sidor i samma fönster, externa adresser i ett nytt.
+  ctaNewTab?: boolean;
   // Se HeroSection.ctaColor — samma princip.
   ctaColor?: string;
   // Bara använd av layout "image-bleed" — en riktig bild som täcker hela

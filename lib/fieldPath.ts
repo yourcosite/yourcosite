@@ -96,11 +96,29 @@ export function getLinkValue(section: any, field: string): string {
   return typeof v === "string" ? v : "";
 }
 
-export function setLinkValue(section: any, field: string, value: string): boolean {
+// Fältet som håller "nytt fönster"-valet till en länk.
+function newTabKey(key: string): string {
+  return key === "link" ? "newTab" : "ctaNewTab";
+}
+
+export function getNewTab(section: any, field: string): boolean | undefined {
+  const h = linkHolder(section, field);
+  const v = h?.holder?.[newTabKey(h.key)];
+  return typeof v === "boolean" ? v : undefined;
+}
+
+// newTab: true/false = kundens val, undefined = rör inte valet.
+export function setLinkValue(section: any, field: string, value: string, newTab?: boolean): boolean {
   const h = linkHolder(section, field);
   if (!h) return false;
-  if (value) h.holder[h.key] = value;
-  else delete h.holder[h.key];
+  const nk = newTabKey(h.key);
+  if (value) {
+    h.holder[h.key] = value;
+    if (typeof newTab === "boolean") h.holder[nk] = newTab;
+  } else {
+    delete h.holder[h.key];
+    delete h.holder[nk];
+  }
   return true;
 }
 

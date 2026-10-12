@@ -1273,6 +1273,7 @@ function ImageOrArt({
 // publicerad sida), annars en ren <span> — exakt som innan ctaLink fanns.
 function CtaLink({
   link,
+  newTab,
   basePath,
   onNavigate,
   className,
@@ -1280,6 +1281,9 @@ function CtaLink({
   children,
 }: {
   link?: string;
+  // Kundens val: true = nytt fönster, false = samma. Saknas det gäller
+  // som förut: egna sidor i samma fönster, externa adresser i ett nytt.
+  newTab?: boolean;
   basePath?: string;
   onNavigate?: (path: string) => void;
   className: string;
@@ -1290,6 +1294,7 @@ function CtaLink({
     return <span className={className} style={style}>{children}</span>;
   }
   const isExternal = /^https?:\/\//i.test(link);
+  const opensNew = newTab ?? isExternal;
   if (onNavigate && !isExternal) {
     return (
       <button type="button" onClick={() => onNavigate(link)} className={className} style={style}>
@@ -1299,7 +1304,7 @@ function CtaLink({
   }
   const href = isExternal ? link : basePath ? `${basePath}${link === "/" ? "" : link}` : "#";
   return (
-    <a href={href} target={isExternal ? "_blank" : undefined} rel={isExternal ? "noopener noreferrer" : undefined} className={className} style={style}>
+    <a href={href} target={opensNew ? "_blank" : undefined} rel={opensNew ? "noopener noreferrer" : undefined} className={className} style={style}>
       {children}
     </a>
   );
@@ -1316,6 +1321,7 @@ function CtaPill({
   accent,
   children,
   link,
+  newTab,
   basePath,
   onNavigate,
   shape = "pill",
@@ -1325,6 +1331,7 @@ function CtaPill({
   accent: string;
   children: React.ReactNode;
   link?: string;
+  newTab?: boolean;
   basePath?: string;
   onNavigate?: (path: string) => void;
   shape?: ButtonStyle;
@@ -1350,6 +1357,7 @@ function CtaPill({
     return (
       <CtaLink
         link={link}
+        newTab={newTab}
         basePath={basePath}
         onNavigate={onNavigate}
         className="inline-flex items-center font-semibold text-[13.5px] uppercase tracking-[0.07em] pb-1 border-b-2"
@@ -1362,6 +1370,7 @@ function CtaPill({
   return (
     <CtaLink
       link={link}
+      newTab={newTab}
       basePath={basePath}
       onNavigate={onNavigate}
       className={`inline-block font-semibold text-[14px] px-7 py-3.5 ${shape === "square" ? "rounded-md" : "rounded-full"}`}
@@ -2017,7 +2026,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -2098,7 +2107,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -2242,7 +2251,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -2332,7 +2341,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -2446,7 +2455,7 @@ function SectionBlockInner({
                     selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                     onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                   >
-                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
+                    <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
                       {section.ctaLabel}
                     </CtaPill>
                   </FieldBadge>
@@ -2534,7 +2543,7 @@ function SectionBlockInner({
                 {/* Fast vitt här, inte palette.text — den här knappen ligger
                     alltid ovanpå en mörk gradient/bild (text-white-lagret
                     ovan), oavsett om sajtens läge är ljust/varmt/mörkt. */}
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
+                <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -2613,7 +2622,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                   onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                 >
-                  <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                  <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                     {section.ctaLabel}
                   </CtaPill>
                 </FieldBadge>
@@ -2685,7 +2694,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -2870,7 +2879,7 @@ function SectionBlockInner({
               </Field>
               <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"", undefined, (section as any).linkLabel)}>
               <CtaLink
-                link={section.ctaLink}
+                link={section.ctaLink} newTab={(section as any).ctaNewTab}
                 basePath={basePath}
                 onNavigate={onNavigate}
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
@@ -2933,7 +2942,7 @@ function SectionBlockInner({
               </Field>
               <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"", undefined, (section as any).linkLabel)}>
               <CtaLink
-                link={section.ctaLink}
+                link={section.ctaLink} newTab={(section as any).ctaNewTab}
                 basePath={basePath}
                 onNavigate={onNavigate}
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
@@ -3263,7 +3272,7 @@ function SectionBlockInner({
                     </Field>
                     <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i, (item as any).linkLabel)}>
                     <CtaLink
-                      link={item.link}
+                      link={item.link} newTab={(item as any).newTab}
                       basePath={basePath}
                       onNavigate={onNavigate}
                       className="mt-4 inline-block text-[12px] font-medium"
@@ -3331,7 +3340,7 @@ function SectionBlockInner({
                     selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                     onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
                   >
-                    <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                    <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
                       {section.ctaLabel}
                     </CtaPill>
                   </FieldBadge>
@@ -3370,7 +3379,7 @@ function SectionBlockInner({
                     </Field>
                     <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i, (item as any).linkLabel)}>
                     <CtaLink
-                      link={item.link}
+                      link={item.link} newTab={(item as any).newTab}
                       basePath={basePath}
                       onNavigate={onNavigate}
                       className="mt-4 inline-block text-[12px] font-medium"
@@ -3871,7 +3880,7 @@ function SectionBlockInner({
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
                 <CtaLink
-                  link={section.ctaLink}
+                  link={section.ctaLink} newTab={(section as any).ctaNewTab}
                   basePath={basePath}
                   onNavigate={onNavigate}
                   className="font-semibold text-[15px] text-[#17171A] text-center"
@@ -3922,7 +3931,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
+                <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -3963,7 +3972,7 @@ function SectionBlockInner({
                 selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
                 onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
               >
-                <CtaPill accent="#FFFFFF" link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#171511">
+                <CtaPill accent="#FFFFFF" link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#171511">
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
@@ -4013,7 +4022,7 @@ function SectionBlockInner({
             selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
             onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
           >
-            <CtaPill accent={accent} link={section.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={centeredTextColor}>
+            <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={centeredTextColor}>
               {section.ctaLabel}
             </CtaPill>
           </FieldBadge>

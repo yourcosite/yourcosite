@@ -52,6 +52,7 @@ const RAW_SECTION_SCHEMA = {
         },
         body: { type: "string" },
         ctaLabel: { type: "string" },
+        ctaNewTab: { type: "boolean", description: "true = länken öppnas i ett nytt fönster, false = i samma fönster. Rör bara om kunden ber om det; annars behåll värdet som det är." },
         ctaLink: {
           type: "string",
           description:
@@ -100,6 +101,7 @@ const RAW_SECTION_SCHEMA = {
             "Fyll i det här fältet OAVSETT vilken \"layout\" du själv väljer för den här about-sektionen (samma princip som hero-sektionens stats) — layouten kan bytas till \"stats-split\" i efterhand i kod, och då behövs fältet redan vara ifyllt. ENDAST sådant kunden faktiskt skrivit i sin brief (grundat år, antal orter, certifiering etc) — ALDRIG påhittade kund-/omdömessiffror. Saknas tydliga fakta i briefen, utelämna fältet helt.",
         },
         bgColor: BG_COLOR_SCHEMA,
+        ctaNewTab: { type: "boolean", description: "true = länken öppnas i ett nytt fönster, false = i samma fönster. Rör bara om kunden ber om det; annars behåll värdet som det är." },
         ctaLink: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
         linkLabel: { type: "string", description: "Texten på \"Läs mer →\"-raden (utan pilen), t.ex. \"Se alla tjänster\". Utelämna för att behålla \"Läs mer\"." },
       },
@@ -130,6 +132,7 @@ const RAW_SECTION_SCHEMA = {
           type: "string",
           description: "Samma regel som eyebrow precis ovan — fyll för startsidans FÖRSTA grid-sektion oavsett egen layout, utelämna annars.",
         },
+        ctaNewTab: { type: "boolean", description: "true = länken öppnas i ett nytt fönster, false = i samma fönster. Rör bara om kunden ber om det; annars behåll värdet som det är." },
         ctaLink: {
           type: "string",
           description:
@@ -148,6 +151,7 @@ const RAW_SECTION_SCHEMA = {
               title: { type: "string" },
               body: { type: "string" },
               imageUrl: { type: "string" },
+              newTab: { type: "boolean", description: "true = länken öppnas i ett nytt fönster, false = i samma. Rör bara om kunden ber om det; annars behåll värdet." },
               link: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
               linkLabel: { type: "string", description: "Texten på rutans \"Läs mer →\"-rad (utan pilen). Utelämna för att behålla \"Läs mer\"." },
               bgColor: {
@@ -201,6 +205,7 @@ const RAW_SECTION_SCHEMA = {
         heading: { type: "string" },
         body: { type: "string" },
         ctaLabel: { type: "string" },
+        ctaNewTab: { type: "boolean", description: "true = länken öppnas i ett nytt fönster, false = i samma fönster. Rör bara om kunden ber om det; annars behåll värdet som det är." },
         ctaLink: {
           type: "string",
           description:

@@ -17,7 +17,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-12",
     icon: "📤",
     title: "Dela förhandsvisningen",
-    text: "Under förhandsvisningen finns knappen Dela förhandsvisning. Du får en länk som du kan skicka till kollegor och kunder. De kan titta på sajten utan att logga in, men inte ändra något. Länken gäller i 14 dagar. Du kan också prova en knapp med Testa länken när du klickar på den.",
+    text: "Under förhandsvisningen finns knappen Dela förhandsvisning. Du får en länk som du kan skicka till kollegor och kunder. De kan titta på sajten utan att logga in, men inte ändra något. Länken gäller i 14 dagar, och du kan stänga av den när du vill. Du väljer också om en knapp ska öppnas i samma eller ett nytt fönster, och kan prova den med Testa länken.",
   },
   {
     id: "2026-10-12-byt-lank",
