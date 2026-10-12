@@ -17,6 +17,9 @@ type Page = {
   included: boolean;
   removable: boolean;
   isNew?: boolean;
+  // Id på huvudsidan om det här är en undersida (t.ex. en produkt under
+  // "Produkter"). Saknas = en vanlig sida i huvudmenyn.
+  parentId?: string;
 };
 
 const defaultPages: Page[] = [
@@ -68,14 +71,20 @@ export default function OnboardingStep3() {
         }
         if (data.pages && data.pages.length > 0) {
           setPages(
-            data.pages.map((p: any) => ({
-              id: p.path === "/" ? "start" : p.path.replace(/^\//, ""),
-              label: p.label,
-              menuName: p.label,
-              brief: p.brief || "",
-              included: true,
-              removable: p.path !== "/",
-            }))
+            data.pages.map((p: any) => {
+              // En undersida har huvudsidans sökväg som prefix, se lib/pageTree.ts.
+              const parent = p.path.slice(0, p.path.lastIndexOf("/"));
+              const parentExists = parent !== "" && data.pages.some((q: any) => q.path === parent);
+              return {
+                id: p.path === "/" ? "start" : p.path.replace(/^\//, ""),
+                label: p.label,
+                menuName: p.label,
+                brief: p.brief || "",
+                included: true,
+                removable: p.path !== "/",
+                parentId: parentExists ? parent.replace(/^\//, "") : undefined,
+              };
+            })
           );
         }
       })
@@ -84,7 +93,26 @@ export default function OnboardingStep3() {
 
   const toggle = (id: string) =>
     setPages((ps) => ps.map((p) => (p.id === id ? { ...p, included: !p.included } : p)));
-  const remove = (id: string) => setPages((ps) => ps.filter((p) => p.id !== id));
+  // Tar man bort en huvudsida blir dess undersidor vanliga sidor i menyn.
+  const remove = (id: string) =>
+    setPages((ps) => ps.filter((p) => p.id !== id).map((p) => (p.parentId === id ? { ...p, parentId: undefined } : p)));
+  const setParent = (id: string, parentId: string) =>
+    setPages((ps) => ps.map((p) => (p.id === id ? { ...p, parentId: parentId || undefined } : p)));
+  const addSubPage = (parentId: string) => {
+    const n = customCount + 1;
+    setPages((ps) => [
+      ...ps,
+      { id: `custom-${n}`, label: `Ny undersida ${n}`, menuName: `Ny undersida ${n}`, brief: "", included: true, removable: true, parentId },
+    ]);
+    setCustomCount(n);
+  };
+  // Visningsordning: varje undersida direkt efter sin huvudsida.
+  const orderedPages = (() => {
+    const tops = pages.filter((p) => !p.parentId || !pages.some((q) => q.id === p.parentId));
+    return tops.flatMap((t) => [t, ...pages.filter((c) => c.parentId === t.id)]);
+  })();
+  const possibleParentsFor = (p: Page) =>
+    pages.filter((q) => q.id !== "start" && q.id !== p.id && !q.parentId && !pages.some((c) => c.parentId === p.id));
   const addPage = () => {
     const n = customCount + 1;
     setPages((ps) => [
@@ -97,7 +125,7 @@ export default function OnboardingStep3() {
     setPages((ps) => ps.map((p) => (p.id === id ? { ...p, [field]: value } : p)));
 
   const next = async () => {
-    const included = pages.filter((p) => p.included);
+    const included = orderedPages.filter((p) => p.included);
     if (included.length === 0) {
       setError("Välj minst en sida.");
       return;
@@ -113,11 +141,18 @@ export default function OnboardingStep3() {
     setError("");
     try {
       const body = {
-        pages: included.map((p) => ({
-          label: p.menuName || p.label,
-          path: p.id === "start" ? "/" : "/" + slugify(p.menuName || p.label),
-          brief: p.brief,
-        })),
+        pages: included.map((p) => {
+          // Undersidan får huvudsidans sökväg som prefix. Är huvudsidan
+          // bortkryssad blir den en vanlig sida i menyn.
+          const parent = p.parentId ? included.find((q) => q.id === p.parentId) : undefined;
+          const own = slugify(p.menuName || p.label);
+          const parentSlug = parent ? slugify(parent.menuName || parent.label) : "";
+          return {
+            label: p.menuName || p.label,
+            path: p.id === "start" ? "/" : parent ? `/${parentSlug}/${own}` : "/" + own,
+            brief: p.brief,
+          };
+        }),
         allowAiTextFill,
         socialLinks: Object.entries(socialLinks).map(([platform, url]) => ({ platform, url })),
       };
@@ -144,13 +179,17 @@ export default function OnboardingStep3() {
         <p className="text-[15.5px] text-ink-dim mb-5">
           Kryssa för de sidor du vill ha med, bestäm vad de ska heta i
           menyn, och skriv en kort brief om vad varje sida ska innehålla.
+          Vill du ha en huvudsida med flera undersidor under, till exempel
+          &ldquo;Produkter&rdquo; med en sida per produkt, väljer du
+          placering på undersidan eller trycker på &ldquo;Lägg till
+          undersida&rdquo;.
         </p>
 
         <div className="flex flex-col gap-2.5 mb-3.5">
-          {pages.map((p) => (
+          {orderedPages.map((p) => (
             <div
               key={p.id}
-              className={`rounded-xl px-4 py-3.5 border ${
+              className={`rounded-xl px-4 py-3.5 border ${p.parentId && pages.some((q) => q.id === p.parentId) ? "ml-8 " : ""}${
                 p.included ? "border-line bg-surface" : "border-dashed border-line bg-bg"
               }`}
             >
@@ -215,6 +254,32 @@ export default function OnboardingStep3() {
                   />
                 </div>
               </div>
+              {p.id !== "start" && (
+                <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[11px] font-semibold text-ink-dim tracking-wide">PLACERING</label>
+                    <select
+                      value={p.parentId || ""}
+                      onChange={(e) => setParent(p.id, e.target.value)}
+                      className="px-2.5 py-1.5 border border-line rounded-lg text-[13px] bg-surface"
+                    >
+                      <option value="">Egen sida i menyn</option>
+                      {possibleParentsFor(p).map((q) => (
+                        <option key={q.id} value={q.id}>Undersida under &ldquo;{q.menuName || q.label}&rdquo;</option>
+                      ))}
+                    </select>
+                  </div>
+                  {!p.parentId && (
+                    <button
+                      type="button"
+                      onClick={() => addSubPage(p.id)}
+                      className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
+                    >
+                      + Lägg till undersida
+                    </button>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

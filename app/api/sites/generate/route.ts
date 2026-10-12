@@ -167,11 +167,16 @@ function buildPrompt(
   inspirationImageCount: number
 ) {
   const pagesDesc = pages
-    .map(
-      (p) =>
-        `- "${p.label}" (path: ${p.path})${p.brief ? ` — kundens brief: ${p.brief}` : ""}`
-    )
+    .map((p) => {
+      // En undersida har huvudsidans path som prefix (se lib/pageTree.ts).
+      const parent = pages.find((q) => q.path !== p.path && p.path.startsWith(`${q.path}/`));
+      return `- "${p.label}" (path: ${p.path})${parent ? ` — UNDERSIDA till "${parent.label}"` : ""}${p.brief ? ` — kundens brief: ${p.brief}` : ""}`;
+    })
     .join("\n");
+  const hasSubPages = pages.some((p) => pages.some((q) => q.path !== p.path && p.path.startsWith(`${q.path}/`)));
+  const subPagesInstruction = hasSubPages
+    ? `\nVIKTIGT — vissa sidor är UNDERSIDOR till en huvudsida (markerade ovan). Använd exakt de angivna sökvägarna. Huvudsidan ska fungera som en översikt: ge den en "grid"-sektion med en ruta per undersida, där varje rutas "link" är undersidans exakta path. Varje undersida får sitt eget, specifika innehåll (t.ex. en produkt eller tjänst) och ska inte upprepa huvudsidans text.\n`
+    : "";
   const inspirationText = inspiration.promptText;
 
   // Prioritetsordning för startsidans hero-layout: (1) uppladdade
@@ -224,7 +229,7 @@ ${inspirationText}
 ${inspirationImageCount > 0 ? `\nKunden har också bifogat ${inspirationImageCount} egna inspirationsbild${inspirationImageCount === 1 ? "" : "er"} till det här meddelandet (skärmdumpar/foton av sajter eller stilar de gillar) — titta på dem för KÄNSLA, TON och STRUKTUR precis som referenslänkarna ovan, kopiera aldrig text eller exakta formuleringar.\n` : ""}
 Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
-
+${subPagesInstruction}
 ${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact/gallery/faq/map/contactForm där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer. "gallery" (bildspel/galleri), "faq" (vanliga frågor), "map" (inbäddad karta) och "contactForm" (ett riktigt ifyllbart kontaktformulär) är valfria extrasektioner — lägg bara in dem där de faktiskt passar innehållet, inte på varje sajt.
 
 VIKTIGT — en sida vars syfte (se briefen ovan) är att visa kundens EGNA nyheter/erbjudanden/uppdateringar (typiskt en sida som heter "Nyheter"): lägg till EXAKT EN "newsList"-sektion där (bara en rubrik, t.ex. "Senaste nytt") — hitta ALDRIG på enskilda nyheter/erbjudanden/inlägg som grid-rutor, testimonials eller annat innehåll på en sådan sida, även om det skulle fylla sidan bättre. Kunden har inga publicerade artiklar än vid det här laget (de skrivs och publiceras senare av kunden själv, se "newsList" i verktygets fältbeskrivning) — sidan ska bara ha en kort introduktion (t.ex. en hero/about-sektion) plus "newsList"-sektionen, och visar automatiskt "inga publicerade nyheter än" tills kunden skrivit sin första. Gäller INTE andra sidor — lägg ALDRIG till "newsList" på en sida vars syfte inte är just detta.

@@ -13,6 +13,21 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-12-undersidor",
+    date: "2026-10-12",
+    icon: "🗂️",
+    title: "Undersidor under en huvudsida",
+    text: "Nu kan du ha en huvudsida, till exempel Produkter, med egna undersidor under, en per produkt. De visas som en rullgardin i menyn. Du lägger till dem när du bygger sajten, under Sidor eller genom att be Millie.",
+    try: "Lägg till en undersida under Tjänster som heter Konsultation",
+  },
+  {
+    id: "2026-10-12-skriv-sjalv",
+    date: "2026-10-12",
+    icon: "✏️",
+    title: "Ändra texten själv",
+    text: "Klicka på en text i förhandsvisningen och tryck på ✏️ Ändra text själv. Då skriver du in den nya texten direkt, utan Millie. Du kan ångra med knappen.",
+  },
+  {
     id: "2026-10-11-redigera-vid-uppladdning",
     date: "2026-10-11",
     icon: "✂️",

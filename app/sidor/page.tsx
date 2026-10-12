@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import type { SiteContent } from "@/lib/contentModel";
+import { pagesInTreeOrder, parentPathOf, childPagesOf } from "@/lib/pageTree";
 
 type Site = { id: string; name?: string; content: SiteContent };
 
@@ -20,6 +21,8 @@ export default function PagesManagePage() {
   // sparar sidan på den faktiska sajten med samma.
   const [adding, setAdding] = useState(false);
   const [newLabel, setNewLabel] = useState("");
+  // Tom sträng = en vanlig sida i huvudmenyn, annars sökvägen till huvudsidan.
+  const [newParent, setNewParent] = useState("");
   const [addError, setAddError] = useState("");
   const [saving, setSaving] = useState(false);
   const [justAdded, setJustAdded] = useState<{ label: string; path: string } | null>(null);
@@ -59,10 +62,13 @@ export default function PagesManagePage() {
     return `/redigera${qs ? `?${qs}` : ""}`;
   };
 
-  const pages = site?.content.pages || [];
+  const allPages = site?.content.pages || [];
+  const pages = pagesInTreeOrder(allPages);
+  const possibleParents = allPages.filter((p) => p.path !== "/" && parentPathOf(p.path, allPages) === null);
 
-  const startAdd = () => {
+  const startAdd = (parent = "") => {
     setAdding(true);
+    setNewParent(parent);
     setNewLabel("");
     setAddError("");
   };
@@ -80,7 +86,7 @@ export default function PagesManagePage() {
       const res = await fetch(`/api/sites/${site.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", label }),
+        body: JSON.stringify({ action: "add", label, parentPath: newParent || undefined }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -112,7 +118,7 @@ export default function PagesManagePage() {
         setAddError(data.error || "Kunde inte ta bort sidan.");
         return;
       }
-      const removedLabel = pages.find((p) => p.path === path)?.label || path;
+      const removedLabel = allPages.find((p) => p.path === path)?.label || path;
       setSite({ ...site, content: data.content });
       setPendingRemovePath(null);
       setJustRemoved(removedLabel);
@@ -170,8 +176,10 @@ export default function PagesManagePage() {
                   const locked = p.path === "/";
                   const confirming = pendingRemovePath === p.path;
                   const empty = p.sections.length === 0;
+                  const isChild = parentPathOf(p.path, allPages) !== null;
+                  const childCount = childPagesOf(p.path, allPages).length;
                   return (
-                    <div key={p.path} className="border border-line rounded-xl px-4 py-3.5 bg-surface">
+                    <div key={p.path} className={`border border-line rounded-xl px-4 py-3.5 bg-surface ${isChild ? "ml-8" : ""}`}>
                       <div className="flex items-center gap-3">
                         <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="#6B6A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
                           <rect x="4" y="3" width="16" height="18" rx="2" />
@@ -181,7 +189,7 @@ export default function PagesManagePage() {
                         <div className="flex-1">
                           <div className="font-semibold text-[14.5px]">{p.label}</div>
                           <div className="text-[12px] text-ink-dim mt-0.5">
-                            {p.path} · {empty ? "Inget innehåll än" : `${p.sections.length} ${p.sections.length === 1 ? "sektion" : "sektioner"}`}
+                            {isChild ? "Undersida · " : childCount > 0 ? `Huvudsida med ${childCount} ${childCount === 1 ? "undersida" : "undersidor"} · ` : ""}{p.path} · {empty ? "Inget innehåll än" : `${p.sections.length} ${p.sections.length === 1 ? "sektion" : "sektioner"}`}
                           </div>
                         </div>
                         {locked && (
@@ -189,6 +197,14 @@ export default function PagesManagePage() {
                         )}
                         {!locked && !confirming && (
                           <div className="flex items-center gap-1 flex-shrink-0">
+                            {!isChild && (
+                              <button
+                                onClick={() => startAdd(p.path)}
+                                className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
+                              >
+                                + Undersida
+                              </button>
+                            )}
                             <Link
                               href={redigeraHref(p.path)}
                               className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
@@ -227,7 +243,7 @@ export default function PagesManagePage() {
                       </div>
                       {confirming && (
                         <div className="mt-2.5 pt-2.5 border-t border-line text-[12.5px] text-warm font-semibold">
-                          Detta tar bort sidan permanent från den publicerade sajten. Går inte att ångra.
+                          Detta tar bort sidan permanent från den publicerade sajten{childCount > 0 ? `, tillsammans med dess ${childCount} ${childCount === 1 ? "undersida" : "undersidor"}` : ""}. Går inte att ångra.
                         </div>
                       )}
                     </div>
@@ -254,7 +270,7 @@ export default function PagesManagePage() {
               )}
 
               {!adding ? (
-                <button onClick={startAdd} className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5">
+                <button onClick={() => startAdd()} className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5">
                   <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
@@ -264,6 +280,19 @@ export default function PagesManagePage() {
               ) : (
                 <div className="border border-line rounded-xl px-4 py-3.5 bg-surface">
                   <div className="text-[12.5px] font-semibold text-ink-dim mb-2">Namn på den nya sidan</div>
+                  <div className="mb-2.5">
+                    <label className="block text-[11.5px] font-semibold text-ink-dim mb-1">Placering</label>
+                    <select
+                      value={newParent}
+                      onChange={(e) => setNewParent(e.target.value)}
+                      className="w-full border border-line rounded-lg px-3 py-2 text-[13.5px] bg-surface"
+                    >
+                      <option value="">Egen sida i huvudmenyn</option>
+                      {possibleParents.map((pp) => (
+                        <option key={pp.path} value={pp.path}>Undersida under &ldquo;{pp.label}&rdquo;</option>
+                      ))}
+                    </select>
+                  </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <input
                       type="text"
@@ -271,7 +300,7 @@ export default function PagesManagePage() {
                       value={newLabel}
                       onChange={(e) => setNewLabel(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && confirmAdd()}
-                      placeholder="t.ex. Vårt team"
+                      placeholder={newParent ? "t.ex. Produkt A" : "t.ex. Vårt team"}
                       className="flex-1 min-w-[160px] border border-line rounded-lg px-3 py-2 text-[13.5px]"
                     />
                     <button

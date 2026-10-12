@@ -581,8 +581,9 @@ export function slugifyPagePath(label: string): string {
 
 // Hittar en sökväg som inte redan finns bland sajtens sidor — lägger på
 // "-2", "-3" osv. vid en krock (t.ex. två sidor som båda heter "Kontakt").
-export function uniquePagePath(pages: SitePageContent[], label: string, excludePath?: string): string {
-  const base = slugifyPagePath(label);
+export function uniquePagePath(pages: SitePageContent[], label: string, excludePath?: string, parentPath?: string): string {
+  // En undersida får sin huvudsidas sökväg som prefix (se lib/pageTree.ts).
+  const base = `${parentPath && parentPath !== "/" ? parentPath : ""}${slugifyPagePath(label)}`;
   const taken = new Set(pages.filter((p) => p.path !== excludePath).map((p) => p.path));
   if (!taken.has(base)) return base;
   let n = 2;

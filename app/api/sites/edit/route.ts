@@ -1,3 +1,4 @@
+import { childPagesOf } from "@/lib/pageTree";
 import { NextResponse } from "next/server";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
@@ -190,6 +191,7 @@ function buildEditPrompt(
 ${JSON.stringify(content, null, 2)}
 
 Sajtens sidor just nu: ${pagePaths}
+Huvudsidor och undersidor: en undersida har sin huvudsidas sökväg som prefix ("/produkter/stol" är en undersida till "/produkter") och visas i en rullgardin under huvudsidan i menyn. Bara en nivå stöds och startsidan "/" kan inte vara huvudsida. Ber kunden om en ny undersida under en befintlig sida: skapa den med en path som börjar med huvudsidans path + "/" + ett kort, korrekt slug (a-z, 0-9, bindestreck), och ge huvudsidan gärna en grid-sektion med en ruta per undersida vars "link" pekar på undersidans exakta path. Byter du path på en huvudsida, byt även prefixet på alla dess undersidor.
 ${currentPageNote}${selectionNote}${attachmentNote}
 Kundens önskemål just nu: "${message}"
 
@@ -279,6 +281,11 @@ function buildAttachmentNote(attachments: Attachment[]): string {
 // allt annat lämnas exakt som det var, orört av den här ändringen.
 function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
   const removed = new Set(patch.removedPagePaths || []);
+  // Tas en huvudsida bort följer dess undersidor med — annars blir de
+  // föräldralösa och dyker upp som egna menyval.
+  for (const rp of Array.from(removed)) {
+    for (const child of childPagesOf(rp, content.pages)) removed.add(child.path);
+  }
   const changedByPath = new Map((patch.changedPages || []).map((p) => [p.path, p]));
 
   const pages: SitePageContent[] = [];

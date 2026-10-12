@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
+import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
@@ -852,33 +853,59 @@ function Header({
   // Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
   // footerns gräns nedan) så en nytillagd sida inte "försvinner" ur
   // menyn bara därför att sajten redan hade fem sidor sedan onboardingen.
-  const navLinksEl = pages.slice(0, 8).map((p) =>
+  // En menylänk, samma tre-vägs logik som innan: knapp i chattredigeraren,
+  // riktig <a> på en publicerad sida, annars bara text (miniatyrerna).
+  // Vanlig <a> istället för next/link — ett klick ska alltid ge en helt
+  // färsk sidladdning (next/link kunde återanvända en cachad navigering).
+  const renderNavLink = (p: SiteContent["pages"][number], style: React.CSSProperties, className?: string, afterClick?: () => void) =>
     onNavigate ? (
       <button
         key={p.path}
         type="button"
-        onClick={() => onNavigate(p.path)}
-        style={{ color: linkColor(p.path === activePath) }}
+        className={className}
+        onClick={() => {
+          onNavigate(p.path);
+          afterClick?.();
+        }}
+        style={style}
       >
         {p.label}
       </button>
     ) : basePath ? (
-      // Vanlig <a> istället för next/link — denna förhandsvisning är
-      // bara en lekstuga-webbläsare, ingen riktig SPA, och ett klick
-      // ska alltid ge en helt färsk sidladdning. next/link kunde i
-      // vissa fall återanvända en cachad klient-navigering även med
-      // staleTimes satt till 0 (känt Next.js-beteende), vilket var
-      // orsaken till att en del undersidors bilder bara syntes efter
-      // en manuell omladdning.
-      <a key={p.path} href={homeHref(p.path)} style={{ color: linkColor(p.path === activePath) }}>
+      <a key={p.path} href={homeHref(p.path)} className={className} onClick={afterClick} style={style}>
         {p.label}
       </a>
     ) : (
-      <span key={p.path} style={{ color: linkColor(p.path === activePath) }}>
+      <span key={p.path} className={className} style={style}>
         {p.label}
       </span>
-    )
-  );
+    );
+
+  // Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
+  // footerns gräns nedan). Bara huvudsidor ligger i toppnivån; undersidor
+  // visas i en rullgardin under sin huvudsida.
+  const topPages = topLevelPages(pages).slice(0, 8);
+  const navLinksEl = topPages.map((p) => {
+    const children = childPagesOf(p.path, pages);
+    const activeHere = p.path === activePath || children.some((c) => c.path === activePath);
+    if (children.length === 0) return renderNavLink(p, { color: linkColor(activeHere) });
+    return (
+      <span key={p.path} className="relative group inline-flex items-center">
+        {renderNavLink(p, { color: linkColor(activeHere) })}
+        <span className="ml-1 text-[9px]" style={{ color: linkColor(activeHere) }} aria-hidden="true">▾</span>
+        <span className="absolute left-0 top-full pt-3 hidden group-hover:block group-focus-within:block z-30">
+          <span
+            className="flex flex-col min-w-[180px] rounded-lg py-2 shadow-[0_12px_24px_rgba(0,0,0,0.15)]"
+            style={{ background: palette.cardBg, border: `1px solid ${palette.cardBorder}` }}
+          >
+            {children.map((c) =>
+              renderNavLink(c, { color: c.path === activePath ? palette.text : palette.textDim }, "px-4 py-2 text-left whitespace-nowrap")
+            )}
+          </span>
+        </span>
+      </span>
+    );
+  });
 
   // Hamburgarmeny — syns bara under brytpunkten, fäller ut en enkel lista
   // med sidorna. Container-query (@3xl, se tailwind.config.ts) istället
@@ -913,40 +940,24 @@ function Header({
       className="@3xl:hidden absolute top-full left-0 right-0 z-20 flex flex-col py-2 shadow-[0_12px_24px_rgba(0,0,0,0.12)]"
       style={{ background: palette.cardBg, borderBottom: `1px solid ${palette.cardBorder}` }}
     >
-      {pages.slice(0, 8).map((p) =>
-        onNavigate ? (
-          <button
-            key={p.path}
-            type="button"
-            onClick={() => {
-              onNavigate(p.path);
-              setMenuOpen(false);
-            }}
-            className="px-8 py-3 text-[14px] font-semibold text-left"
-            style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-          >
-            {p.label}
-          </button>
-        ) : basePath ? (
-          <a
-            key={p.path}
-            href={homeHref(p.path)}
-            onClick={() => setMenuOpen(false)}
-            className="px-8 py-3 text-[14px] font-semibold"
-            style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-          >
-            {p.label}
-          </a>
-        ) : (
-          <span
-            key={p.path}
-            className="px-8 py-3 text-[14px] font-semibold"
-            style={{ color: p.path === activePath ? palette.text : palette.textDim }}
-          >
-            {p.label}
-          </span>
-        )
-      )}
+      {topPages.map((p) => (
+        <div key={p.path} className="flex flex-col">
+          {renderNavLink(
+            p,
+            { color: p.path === activePath ? palette.text : palette.textDim },
+            "px-8 py-3 text-[14px] font-semibold text-left",
+            () => setMenuOpen(false)
+          )}
+          {childPagesOf(p.path, pages).map((c) =>
+            renderNavLink(
+              c,
+              { color: c.path === activePath ? palette.text : palette.textDim },
+              "pl-12 pr-8 py-2 text-[13px] font-semibold text-left",
+              () => setMenuOpen(false)
+            )
+          )}
+        </div>
+      ))}
     </div>
   );
 
@@ -1053,7 +1064,7 @@ function Footer({
           huvudmenyn (onNavigate i chattredigeraren, riktig <a href> på en
           publicerad sida, annars bara text i /forslag-miniatyrerna). */}
       <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-8 @3xl:px-12 py-5 text-[12.5px]">
-        {pages.slice(0, 8).map((p) =>
+        {topLevelPages(pages).slice(0, 8).map((p) =>
           onNavigate ? (
             <button
               key={p.path}

@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
+import { getFieldText } from "@/lib/fieldPath";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -748,6 +749,51 @@ export default function EditorPage() {
     }
   };
 
+  // Manuell textredigering: kunden skriver om den markerade texten själv,
+  // utan Millie. Sparas via /api/sites/edit-text och går att ångra.
+  const [textEditOpen, setTextEditOpen] = useState(false);
+  const [textDraft, setTextDraft] = useState("");
+  const [savingText, setSavingText] = useState(false);
+  const selectedFieldText = (() => {
+    if (!content || selection?.target !== "field") return null;
+    const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId);
+    if (!section) return null;
+    return getFieldText(section, selection.field);
+  })();
+  const openTextEditor = () => {
+    if (selectedFieldText === null) return;
+    setTextDraft(selectedFieldText);
+    setTextEditOpen(true);
+  };
+  const saveEditedText = async () => {
+    if (selection?.target !== "field" || !content) return;
+    const sel = selection;
+    setSavingText(true);
+    try {
+      const res = await fetch("/api/sites/edit-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteId: site?.id,
+          text: textDraft,
+          selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, field: sel.field },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setTextEditOpen(false);
+      setSelection(null);
+      setMessages((m) => [...m, { from: "bot", text: "Klart! Din text är sparad. Du kan ångra med knappen om du ändrar dig." }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: `Texten kunde inte sparas: ${e.message}` }]);
+      setTextEditOpen(false);
+    } finally {
+      setSavingText(false);
+    }
+  };
+
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -1206,6 +1252,39 @@ export default function EditorPage() {
                 {undoing ? "Ångrar …" : "↩ Ångra senaste ändringen"}
               </button>
             )}
+            {textEditOpen && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
+                  <div className="text-[14px] font-semibold mb-2">Ändra text</div>
+                  <div className="text-[12px] text-ink-dim mb-2 truncate">{selection?.label}</div>
+                  <textarea
+                    value={textDraft}
+                    onChange={(e) => setTextDraft(e.target.value)}
+                    rows={6}
+                    autoFocus
+                    className="w-full bg-bg border border-line rounded-lg p-2 text-[14px] outline-none"
+                  />
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setTextEditOpen(false)}
+                      disabled={savingText}
+                      className="text-[13px] px-3 py-1.5 rounded-full border border-line"
+                    >
+                      Avbryt
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveEditedText}
+                      disabled={savingText || textDraft.trim() === ""}
+                      className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60"
+                    >
+                      {savingText ? "Sparar …" : "Spara"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {selection && (
               <div className="flex items-center gap-2 bg-accent-soft border border-line rounded-lg px-3 py-2 mb-2">
                 <span className="text-[14px] flex-shrink-0">
@@ -1222,6 +1301,16 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     ✂️ Redigera bild
+                  </button>
+                )}
+                {selection.target === "field" && selectedFieldText !== null && (
+                  <button
+                    type="button"
+                    onClick={openTextEditor}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    ✏️ Ändra text själv
                   </button>
                 )}
                 {selection.target === "image" && !selectedImageUrl && (
