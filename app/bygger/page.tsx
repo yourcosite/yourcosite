@@ -15,6 +15,7 @@ export default function GeneratingPage() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [percent, setPercent] = useState(0);
+  const [pageInfo, setPageInfo] = useState<{ page: number; pages: number } | null>(null);
   const [error, setError] = useState("");
   // Ingen fallback-text som "din" — hellre visa rubriken en stund senare
   // än att blinka till en felaktig/konstig text innan det riktiga namnet
@@ -24,18 +25,6 @@ export default function GeneratingPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // Procenten är en UPPSKATTNING utifrån hur lång tid som gått — det
-    // riktiga arbetet är ett enda anrop till /api/sites/generate som inte
-    // rapporterar hur långt det kommit. Kurvan går snabbt i början och
-    // saktar in, och stannar under 97 % tills bygget faktiskt är klart.
-    const startedAt = Date.now();
-    const stepTimer = setInterval(() => {
-      const t = (Date.now() - startedAt) / 1000;
-      const p = Math.min(97, 97 * (1 - Math.exp(-t / 45)));
-      setPercent(p);
-      setActiveStep(Math.min(steps.length - 1, Math.floor((p / 100) * steps.length * 1.15)));
-    }, 250);
-
     fetch("/api/onboarding/current")
       .then((r) => r.json())
       .then((data) => {
@@ -43,23 +32,48 @@ export default function GeneratingPage() {
       })
       .catch(() => {});
 
-    fetch("/api/sites/generate", { method: "POST" })
+    // Servern strömmar riktiga framsteg (rader med JSON, se
+    // app/api/sites/generate/route.ts): först "progress"-rader medan sajten
+    // skrivs, sist en "result"-rad med själva resultatet.
+    const failText =
+      "Bygget avbröts innan det blev klart, troligen för att det tog för lång tid. Inget har gått förlorat, tryck på Försök igen.";
+    fetch("/api/sites/generate", { method: "POST", headers: { "x-progress": "1" } })
       .then(async (res) => {
-        // Tar servern för lång tid eller kraschar kommer ingen JSON tillbaka
-        // (bara en textsida med ett felmeddelande) — visa då ett begripligt
-        // meddelande istället för ett tekniskt parsningsfel.
-        const raw = await res.text();
-        let data: any = null;
-        try {
-          data = JSON.parse(raw);
-        } catch {
-          throw new Error(
-            "Bygget avbröts innan det blev klart, troligen för att det tog för lång tid. Inget har gått förlorat, tryck på Försök igen."
-          );
+        if (!res.body) throw new Error(failText);
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        let result: { status: number; body: any } | null = null;
+        const handle = (line: string) => {
+          if (!line.trim()) return;
+          let msg: any;
+          try {
+            msg = JSON.parse(line);
+          } catch {
+            return;
+          }
+          if (msg.type === "progress" && !cancelled) {
+            setPercent((cur) => Math.max(cur, msg.value * 100));
+            setPageInfo(msg.page > 0 ? { page: msg.page, pages: msg.pages } : null);
+            setActiveStep(msg.value < 0.1 ? 0 : msg.value < 0.88 ? 1 : 2);
+          } else if (msg.type === "result") {
+            result = { status: msg.status, body: msg.body };
+          }
+        };
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop() || "";
+          lines.forEach(handle);
         }
-        if (!res.ok) throw new Error(data.error || "Något gick fel.");
+        handle(buf);
+        // Ingen resultatrad = servern avbröts mitt i (t.ex. tidsgränsen).
+        if (!result) throw new Error(failText);
+        const r = result as { status: number; body: any };
+        if (r.status < 200 || r.status >= 300) throw new Error(r.body?.error || "Något gick fel.");
         if (!cancelled) {
-          clearInterval(stepTimer);
           setActiveStep(steps.length - 1);
           setPercent(100);
           // En kort stund på 100 % så man hinner se att det blev klart.
@@ -68,14 +82,12 @@ export default function GeneratingPage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          clearInterval(stepTimer);
           setError(e.message);
         }
       });
 
     return () => {
       cancelled = true;
-      clearInterval(stepTimer);
     };
   }, [router]);
 
@@ -113,7 +125,7 @@ export default function GeneratingPage() {
       {!error && siteName && (
         <div className="w-full max-w-[420px] mb-9">
           <div className="flex items-center justify-between text-[13px] mb-2">
-            <span className="text-[#9E9C97]">Byggs just nu</span>
+            <span className="text-[#9E9C97]">{percent >= 100 ? "Klart!" : pageInfo ? `Skriver sidan ${pageInfo.page} av ${pageInfo.pages}` : "Förbereder"}</span>
             <span className="font-semibold tabular-nums">{Math.round(percent)} %</span>
           </div>
           <div
@@ -128,8 +140,7 @@ export default function GeneratingPage() {
               style={{ width: `${percent}%` }}
             />
           </div>
-          <div className="text-[11.5px] text-[#6E6C68] mt-2">Procenten är en uppskattning. Större sajter kan ta lite längre tid.</div>
-        </div>
+                  </div>
       )}
 
       {!error && (

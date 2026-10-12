@@ -251,7 +251,62 @@ VIKTIGT — EXEMPELINNEHÅLL (medvetet beslut): kunden vet ofta inte vilka sekti
 Anropa verktyget "generate_site" med hela resultatet.`;
 }
 
-export async function POST() {
+// Framsteg som skickas till bygg-sidan medan sajten skrivs: ett tal 0–1 plus
+// vilken sida som skrivs just nu. Räknas ut från den JSON som strömmas in
+// från AI:n — hur många sidor som är klara och hur långt den pågående sidan
+// kommit jämfört med de redan färdiga sidornas längd.
+type Progress = { value: number; page: number; pages: number };
+
+function estimateProgress(acc: string, totalPages: number): Progress {
+  const starts: number[] = [];
+  const re = /"path"\s*:/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(acc))) starts.push(m.index);
+  const n = starts.length;
+  if (n === 0) {
+    // Temat och övrigt som skrivs före sidorna.
+    return { value: Math.min(0.03, acc.length / 40000), page: 0, pages: totalPages };
+  }
+  const completed = n - 1;
+  let avg = 4500;
+  if (completed > 0) {
+    let sum = 0;
+    for (let i = 0; i < completed; i++) sum += starts[i + 1] - starts[i];
+    avg = Math.max(1500, sum / completed);
+  }
+  const frac = Math.min(0.95, (acc.length - starts[n - 1]) / avg);
+  const value = Math.min(0.97, (completed + frac) / Math.max(totalPages, n));
+  return { value, page: Math.min(n, totalPages), pages: totalPages };
+}
+
+// Med rubriken "x-progress: 1" strömmas framstegen som rader med JSON
+// (NDJSON) och sist en rad med själva resultatet. Utan rubriken fungerar
+// anropet som förut.
+export async function POST(request: Request) {
+  if (request.headers.get("x-progress") !== "1") {
+    return generateSite(() => {});
+  }
+  const enc = new TextEncoder();
+  const stream = new ReadableStream({
+    async start(controller) {
+      const send = (o: unknown) => controller.enqueue(enc.encode(JSON.stringify(o) + "\n"));
+      try {
+        const res = await generateSite((p) => send({ type: "progress", ...p }));
+        const body = await res.json();
+        send({ type: "result", status: res.status, body });
+      } catch (e: any) {
+        send({ type: "result", status: 500, body: { error: e?.message || "Okänt fel." } });
+      } finally {
+        controller.close();
+      }
+    },
+  });
+  return new Response(stream, {
+    headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" },
+  });
+}
+
+async function generateSite(emit: (p: Progress) => void) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
@@ -309,13 +364,27 @@ export async function POST() {
 
   let message;
   try {
-    message = await client.messages.create({
+    emit({ value: 0.02, page: 0, pages: pages.length });
+    const stream = client.messages.stream({
       model: CLAUDE_MODEL,
       max_tokens: 8000,
       tools: [GENERATE_TOOL],
       tool_choice: { type: "tool", name: "generate_site" },
       messages: [{ role: "user", content: promptContent }],
     });
+    let acc = "";
+    let lastValue = 0;
+    stream.on("inputJson", (partial: string) => {
+      acc += partial;
+      const p = estimateProgress(acc, pages.length);
+      // Aldrig bakåt, och bara när det hänt minst en halv procent.
+      if (p.value > lastValue + 0.005) {
+        lastValue = p.value;
+        emit({ ...p, value: 0.05 + 0.87 * p.value });
+      }
+    });
+    message = await stream.finalMessage();
+    emit({ value: 0.94, page: pages.length, pages: pages.length });
   } catch (e: any) {
     return NextResponse.json(
       { error: "Kunde inte generera sajten just nu: " + (e?.message || "okänt fel") },
