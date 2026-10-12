@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-12-lanka-dokument",
+    date: "2026-10-12",
+    icon: "📄",
+    title: "Länka till dokument",
+    text: "Du kan nu ladda upp en PDF, ett Word-dokument eller en Excel-fil och låta en knapp eller Läs mer-rad leda till den. Klicka på knappen, välj 🔗 Länk och sedan Dokument. Besökaren kan öppna eller ladda ner filen.",
+  },
+  {
     id: "2026-10-12-dela-forhandsvisning",
     date: "2026-10-12",
     icon: "📤",

@@ -800,14 +800,59 @@ export default function EditorPage() {
   const [linkChoice, setLinkChoice] = useState(""); // "", en sidväg eller "__egen"
   const [linkCustom, setLinkCustom] = useState("");
   const [linkNewTab, setLinkNewTab] = useState(false);
+  // Uppladdat dokument som länkmål (PDF, Word, Excel …).
+  const [linkDocUrl, setLinkDocUrl] = useState("");
+  const [linkDocName, setLinkDocName] = useState("");
+  const [linkDocBusy, setLinkDocBusy] = useState(false);
+  const [linkDocError, setLinkDocError] = useState("");
+  const isUploadedDoc = (url: string) => /^https:\/\/.+\/uploads\/[^/]+\/doc-/.test(url);
+  const docNameFromUrl = (url: string) => {
+    const last = decodeURIComponent(url.split("/").pop() || "");
+    return last.replace(/^doc-\d+-[a-z0-9]+-/, "");
+  };
+  const uploadLinkDoc = async (file: File) => {
+    setLinkDocError("");
+    if (file.size > MAX_DOC_BYTES) {
+      setLinkDocError("Filen är för stor. Max 10 MB.");
+      return;
+    }
+    if (!/\.(pdf|docx?|xlsx?|pptx?|txt|csv|zip)$/i.test(file.name)) {
+      setLinkDocError("Den filtypen går inte att länka till. Välj PDF, Word, Excel, PowerPoint, text, CSV eller zip.");
+      return;
+    }
+    setLinkDocBusy(true);
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      const dot = file.name.lastIndexOf(".");
+      const ext = file.name.slice(dot + 1).toLowerCase();
+      const base = file.name.slice(0, dot).toLowerCase().replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "dokument";
+      const path = `${user.id}/doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("uploads").upload(path, file, { contentType: file.type || "application/octet-stream" });
+      if (upErr) throw new Error(`Gick inte att ladda upp filen: ${upErr.message}`);
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+      setLinkDocUrl(pub.publicUrl);
+      setLinkDocName(file.name);
+      setLinkNewTab(true);
+    } catch (e: any) {
+      setLinkDocError(e.message);
+    } finally {
+      setLinkDocBusy(false);
+    }
+  };
   const selectedLinkField = selection?.target === "field" ? linkFieldFor(selection.field) : null;
   const openLinkEditor = () => {
     if (selection?.target !== "field" || !selectedLinkField || !content) return;
     const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId);
     const current = section ? getLinkValue(section, selectedLinkField) : "";
     const isPage = content.pages.some((p) => p.path === current);
-    setLinkChoice(current === "" ? "" : isPage ? current : "__egen");
-    setLinkCustom(current !== "" && !isPage ? current : "https://");
+    const isDoc = isUploadedDoc(current);
+    setLinkChoice(current === "" ? "" : isPage ? current : isDoc ? "__doc" : "__egen");
+    setLinkCustom(current !== "" && !isPage && !isDoc ? current : "https://");
+    setLinkDocUrl(isDoc ? current : "");
+    setLinkDocName(isDoc ? docNameFromUrl(current) : "");
+    setLinkDocError("");
     // Utan eget val: externa adresser öppnas i ett nytt fönster, egna sidor i samma.
     setLinkNewTab((section ? getNewTab(section, selectedLinkField) : undefined) ?? (current !== "" && !isPage));
     setLinkEditOpen(true);
@@ -815,7 +860,11 @@ export default function EditorPage() {
   const saveLink = async () => {
     if (selection?.target !== "field" || !selectedLinkField || !content) return;
     const sel = selection;
-    const value = linkChoice === "__egen" ? linkCustom.trim() : linkChoice;
+    const value = linkChoice === "__egen" ? linkCustom.trim() : linkChoice === "__doc" ? linkDocUrl : linkChoice;
+    if (linkChoice === "__doc" && !linkDocUrl) {
+      setLinkDocError("Välj en fil att ladda upp först.");
+      return;
+    }
     setSavingText(true);
     try {
       const res = await fetch("/api/sites/edit-text", {
@@ -1345,7 +1394,34 @@ export default function EditorPage() {
                       <option key={p.path} value={p.path}>Sidan &ldquo;{p.label}&rdquo;</option>
                     ))}
                     <option value="__egen">Egen webbadress …</option>
+                    <option value="__doc">Dokument (PDF, Word, Excel …)</option>
                   </select>
+                  {linkChoice === "__doc" && (
+                    <div className="mt-2">
+                      {linkDocUrl && (
+                        <div className="text-[13px] mb-1.5 flex items-center gap-2">
+                          <span>📄</span>
+                          <span className="truncate">{linkDocName}</span>
+                        </div>
+                      )}
+                      <label className="inline-block text-[13px] font-semibold border border-line rounded-full px-3.5 py-1.5 cursor-pointer bg-bg">
+                        {linkDocBusy ? "Laddar upp …" : linkDocUrl ? "Byt dokument" : "Välj dokument att ladda upp"}
+                        <input
+                          type="file"
+                          className="hidden"
+                          disabled={linkDocBusy}
+                          accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.zip"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            e.target.value = "";
+                            if (f) uploadLinkDoc(f);
+                          }}
+                        />
+                      </label>
+                      <div className="text-[11.5px] text-ink-dim mt-1">Max 10 MB. Besökaren kan öppna eller ladda ner filen.</div>
+                      {linkDocError && <div className="text-[12px] text-red-600 mt-1">{linkDocError}</div>}
+                    </div>
+                  )}
                   {linkChoice === "__egen" && (
                     <input
                       value={linkCustom}
@@ -1371,7 +1447,7 @@ export default function EditorPage() {
                     <button type="button" onClick={() => setLinkEditOpen(false)} disabled={savingText} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
                       Avbryt
                     </button>
-                    <button type="button" onClick={saveLink} disabled={savingText} className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60">
+                    <button type="button" onClick={saveLink} disabled={savingText || linkDocBusy} className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60">
                       {savingText ? "Sparar …" : "Spara"}
                     </button>
                   </div>
