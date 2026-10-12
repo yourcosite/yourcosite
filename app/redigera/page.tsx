@@ -16,7 +16,6 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
-import ShareLinksButton from "@/components/ShareLinksButton";
 import { getFieldText, getLinkValue, getNewTab, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
@@ -1028,7 +1027,6 @@ export default function EditorPage() {
           >
             Förhandsgranska
           </Link>
-          <ShareLinksButton siteId={site?.id} />
           <button
             type="button"
             disabled
@@ -1200,9 +1198,6 @@ export default function EditorPage() {
                   }
                 />
                 </FieldEditContext.Provider>
-              </div>
-              <div className="flex-shrink-0 flex items-center gap-2 px-3.5 py-2 border-t border-line bg-[#F1EFE9]">
-                <ShareLinksButton siteId={site?.id} popoverDirection="up" align="left" />
               </div>
             </div>
           )}
