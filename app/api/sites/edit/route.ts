@@ -23,7 +23,7 @@ import { dedupeMaps } from "@/lib/ensureImageSlots";
 // "patch": bara de sidor som ändringen faktiskt rörde (se
 // lib/siteContentSchema.ts, EDIT_PATCH_PROPERTIES), och klistrar in dem i
 // den befintliga sajten här på servern — se applyPatch() nedan.
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const EDIT_TOOL = {
   name: "edit_site",

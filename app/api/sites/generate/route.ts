@@ -12,7 +12,7 @@ import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteConten
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 // JSON-schemat för verktyget vi tvingar Claude att svara med (delat med
 // /api/sites/edit — se lib/siteContentSchema.ts). Genom att låta AI:n
