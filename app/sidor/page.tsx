@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import type { SiteContent } from "@/lib/contentModel";
@@ -172,13 +172,21 @@ export default function PagesManagePage() {
   // mitten = bli undersida under den (bara för huvudsidor).
   const [dragPath, setDragPath] = useState<string | null>(null);
   const [dropAt, setDropAt] = useState<{ path: string; pos: "before" | "after" | "into" } | null>(null);
+  // Kan den dragna sidan bli undersida under target? (Inte om den har egna
+  // undersidor, om målet själv är en undersida eller om den redan ligger där.)
+  const canNestInto = (targetPath: string) =>
+    !!dragPath &&
+    dragPath !== targetPath &&
+    targetPath !== "/" &&
+    parentPathOf(targetPath, allPages) === null &&
+    parentPathOf(dragPath, allPages) !== targetPath &&
+    childPagesOf(dragPath, allPages).length === 0;
   const zoneFor = (e: React.DragEvent<HTMLDivElement>, targetPath: string): "before" | "after" | "into" => {
     if (targetPath === "/") return "after";
     const r = e.currentTarget.getBoundingClientRect();
     const y = (e.clientY - r.top) / r.height;
-    const canNest = parentPathOf(targetPath, allPages) === null;
-    if (!canNest) return y < 0.5 ? "before" : "after";
-    return y < 0.28 ? "before" : y > 0.72 ? "after" : "into";
+    if (!canNestInto(targetPath)) return y < 0.5 ? "before" : "after";
+    return y < 0.3 ? "before" : y > 0.8 ? "after" : "into";
   };
   const dropOn = async (targetPath: string, position: "before" | "after" | "into") => {
     const path = dragPath;
@@ -260,8 +268,8 @@ export default function PagesManagePage() {
           <h1 className="text-[27px] font-medium mb-1.5">Sidor</h1>
           <p className="text-[13.5px] text-ink-dim mb-5.5">
             Hantera sidorna på er live-sajt. Dra en sida till rätt plats för att
-            ändra ordningen i menyn. Släpp den mitt på en annan sida för att
-            göra den till undersida. På mobil eller surfplatta använder du
+            ändra ordningen i menyn. Håll den över en annan sida så öppnas en
+            plats under den där du kan släppa för att göra den till undersida. På mobil eller surfplatta använder du
             pilarna ↑ och ↓ och knappen Flytta. En borttagen sida slutar genast
             visas för besökare. En ny sida skapas tom — berätta för Millie i
             redigeraren vad den ska innehålla.
@@ -281,16 +289,27 @@ export default function PagesManagePage() {
 
           {site && (
             <>
-              <div className="flex flex-col gap-2.5 mb-4.5">
+              <div
+                className="flex flex-col gap-2.5 mb-4.5"
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setDropAt(null);
+                }}
+              >
                 {pages.map((p) => {
                   const locked = p.path === "/";
                   const confirming = pendingRemovePath === p.path;
                   const empty = p.sections.length === 0;
                   const isChild = parentPathOf(p.path, allPages) !== null;
                   const childCount = childPagesOf(p.path, allPages).length;
+                  const intoTarget = dropAt?.pos === "into" ? dropAt.path : null;
+                  const kids = intoTarget ? childPagesOf(intoTarget, allPages) : [];
+                  const showSlot =
+                    !!intoTarget &&
+                    (kids.length > 0 ? kids[kids.length - 1].path === p.path : p.path === intoTarget);
+                  const intoLabel = intoTarget ? allPages.find((x) => x.path === intoTarget)?.label : "";
                   return (
+                    <Fragment key={p.path}>
                     <div
-                      key={p.path}
                       draggable={!locked && !confirming && !moving}
                       onDragStart={(e) => {
                         e.dataTransfer.effectAllowed = "move";
@@ -307,13 +326,12 @@ export default function PagesManagePage() {
                         const pos = zoneFor(e, p.path);
                         if (dropAt?.path !== p.path || dropAt.pos !== pos) setDropAt({ path: p.path, pos });
                       }}
-                      onDragLeave={() => setDropAt((d) => (d?.path === p.path ? null : d))}
                       onDrop={(e) => {
                         e.preventDefault();
                         if (dragPath) dropOn(p.path, zoneFor(e, p.path));
                       }}
                       className={`relative border rounded-xl px-4 py-3.5 bg-surface ${isChild ? "ml-8" : ""} ${
-                        dropAt?.path === p.path && dropAt.pos === "into" ? "border-accent bg-accent-soft" : "border-line"
+                        dropAt?.path === p.path && dropAt.pos === "into" ? "border-accent" : "border-line"
                       } ${dragPath === p.path ? "opacity-40" : ""}`}
                     >
                       {dropAt?.path === p.path && dropAt.pos !== "into" && (
@@ -464,6 +482,23 @@ export default function PagesManagePage() {
                         </div>
                       )}
                     </div>
+                    {showSlot && (
+                      <div
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          if (intoTarget && (dropAt?.path !== intoTarget || dropAt.pos !== "into")) setDropAt({ path: intoTarget, pos: "into" });
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          if (intoTarget) dropOn(intoTarget, "into");
+                        }}
+                        className="ml-8 rounded-xl border-2 border-dashed border-accent bg-accent-soft px-4 py-3.5 text-[13px] font-semibold text-ink flex items-center gap-2"
+                      >
+                        <span aria-hidden="true">↳</span>
+                        Släpp här så blir sidan en undersida under &ldquo;{intoLabel}&rdquo;
+                      </div>
+                    )}
+                    </Fragment>
                   );
                 })}
               </div>

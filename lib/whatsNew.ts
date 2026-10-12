@@ -17,7 +17,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-13",
     icon: "✋",
     title: "Dra och släpp sidorna",
-    text: "Under Sidor kan du nu ta tag i en sida och dra den dit du vill ha den i menyn. Släpper du den mitt på en annan sida blir den en undersida. Pilarna och knappen Flytta finns kvar, bra på mobilen.",
+    text: "Under Sidor kan du nu ta tag i en sida och dra den dit du vill ha den i menyn. Håller du den över en annan sida öppnas en plats under den. Släpper du där blir den en undersida. Pilarna och knappen Flytta finns kvar, bra på mobilen.",
   },
   {
     id: "2026-10-13-flytta-till-undersida",
