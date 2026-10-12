@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-13-flytta-till-undersida",
+    date: "2026-10-13",
+    icon: "🗂️",
+    title: "Gör en befintlig sida till undersida",
+    text: "Under Sidor finns nu en knapp Flytta vid varje sida. Med den gör du sidan till undersida under en annan sida, eller tar ut den till huvudmenyn igen. Knappar som leder till sidan uppdateras automatiskt. Menyn visar också alla dina sidor nu, även om du har många.",
+  },
+  {
     id: "2026-10-12-flytta-sidor",
     date: "2026-10-12",
     icon: "↕️",

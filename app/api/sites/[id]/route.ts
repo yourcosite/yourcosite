@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, uniquePagePath, type SiteContent } from "@/lib/contentModel";
-import { parentPathOf, movePage } from "@/lib/pageTree";
+import { parentPathOf, movePage, reparentPage } from "@/lib/pageTree";
 
 // Lägger till, döper om eller tar bort en SIDA direkt — till skillnad från
 // /api/sites/edit (Millie i chatten, som tolkar fri text och kan ändra
@@ -72,6 +72,13 @@ export async function PATCH(request: Request, { params }: { params: { id: string
       return NextResponse.json({ error: "Sidan går inte att flytta åt det hållet." }, { status: 400 });
     }
     updatedPages = moved;
+  } else if (action === "reparent") {
+    const path = typeof body.path === "string" ? body.path : "";
+    const parentPath = typeof body.parentPath === "string" && body.parentPath ? body.parentPath : null;
+    const res = reparentPage(content.pages, path, parentPath);
+    if ("error" in res) return NextResponse.json({ error: res.error }, { status: 400 });
+    updatedPages = res.pages;
+    newPath = res.newPath;
   } else if (action === "delete") {
     const path = typeof body.path === "string" ? body.path : "";
     if (path === "/") return NextResponse.json({ error: "Startsidan går inte att ta bort." }, { status: 400 });

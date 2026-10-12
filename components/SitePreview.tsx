@@ -881,18 +881,18 @@ function Header({
       </span>
     );
 
-  // Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
-  // footerns gräns nedan). Bara huvudsidor ligger i toppnivån; undersidor
-  // visas i en rullgardin under sin huvudsida.
-  const topPages = topLevelPages(pages).slice(0, 8);
+  // Alla huvudsidor visas (inget tak) — många val flyttar menyn till
+  // hamburgaren, se nedan. Undersidor visas i en rullgardin under sin
+  // huvudsida.
+  const topPages = topLevelPages(pages);
   // Många menyval ger trångt bredvid loggan. Ju fler huvudsidor, desto
   // bredare ruta krävs innan hela menyn visas — annars ersätts den av
   // hamburgarmenyn. Klasserna skrivs ut i sin helhet (Tailwind hittar dem
   // bara så).
   const navCount = topPages.length;
   const showNav =
-    navCount <= 4 ? "hidden @3xl:flex" : navCount <= 6 ? "hidden @4xl:flex" : "hidden @5xl:flex";
-  const hideBurger = navCount <= 4 ? "@3xl:hidden" : navCount <= 6 ? "@4xl:hidden" : "@5xl:hidden";
+    navCount <= 4 ? "hidden @3xl:flex" : navCount <= 6 ? "hidden @4xl:flex" : navCount <= 9 ? "hidden @5xl:flex" : "hidden";
+  const hideBurger = navCount <= 4 ? "@3xl:hidden" : navCount <= 6 ? "@4xl:hidden" : navCount <= 9 ? "@5xl:hidden" : "";
   const navGap = navCount <= 4 ? "gap-7" : "gap-5";
   const navLinksEl = topPages.map((p) => {
     const children = childPagesOf(p.path, pages);
@@ -1073,7 +1073,7 @@ function Footer({
           huvudmenyn (onNavigate i chattredigeraren, riktig <a href> på en
           publicerad sida, annars bara text i /forslag-miniatyrerna). */}
       <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-8 @3xl:px-12 py-5 text-[12.5px]">
-        {topLevelPages(pages).slice(0, 8).map((p) =>
+        {topLevelPages(pages).map((p) =>
           onNavigate ? (
             <button
               key={p.path}

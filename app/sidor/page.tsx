@@ -130,6 +130,44 @@ export default function PagesManagePage() {
     }
   };
 
+  // Byt nivå: gör en befintlig sida till undersida (parentPath) eller
+  // tillbaka till huvudsida (parentPath = ""). Adressen ändras och länkar
+  // till sidan uppdateras på servern.
+  const [reparenting, setReparenting] = useState<string | null>(null);
+  const [reparentTarget, setReparentTarget] = useState("");
+  const [reparentNotice, setReparentNotice] = useState("");
+  const confirmReparent = async (path: string, parentPath: string) => {
+    if (!site || moving) return;
+    setMoving(true);
+    setAddError("");
+    try {
+      const res = await fetch(`/api/sites/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "reparent", path, parentPath }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setAddError(data.error || "Kunde inte flytta sidan.");
+        return;
+      }
+      const label = allPages.find((p) => p.path === path)?.label || path;
+      setSite({ ...site, content: data.content });
+      setReparenting(null);
+      setReparentNotice(
+        parentPath
+          ? `"${label}" är nu en undersida. Dess adress är ${data.newPath}.`
+          : `"${label}" är nu en egen sida i huvudmenyn. Dess adress är ${data.newPath}.`
+      );
+      setJustAdded(null);
+      setJustRemoved(null);
+    } catch {
+      setAddError("Kunde inte flytta sidan just nu.");
+    } finally {
+      setMoving(false);
+    }
+  };
+
   const confirmRemove = async (path: string) => {
     if (!site) return;
     setRemoving(true);
@@ -179,7 +217,8 @@ export default function PagesManagePage() {
           <h1 className="text-[27px] font-medium mb-1.5">Sidor</h1>
           <p className="text-[13.5px] text-ink-dim mb-5.5">
             Hantera sidorna på er live-sajt. Med pilarna ↑ och ↓ bestämmer du
-            i vilken ordning de står i menyn. En borttagen sida slutar genast
+            i vilken ordning de står i menyn, och med Flytta gör du en sida
+            till undersida (eller tillbaka till egen sida i menyn). En borttagen sida slutar genast
             visas för besökare. En ny sida skapas tom — berätta för Millie i
             redigeraren vad den ska innehålla.
           </p>
@@ -242,6 +281,19 @@ export default function PagesManagePage() {
                             >
                               ↓
                             </button>
+                            {childCount === 0 && (isChild || possibleParents.some((pp) => pp.path !== p.path)) && (
+                              <button
+                                onClick={() => {
+                                  setReparenting(reparenting === p.path ? null : p.path);
+                                  setReparentTarget("");
+                                  setReparentNotice("");
+                                  setAddError("");
+                                }}
+                                className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
+                              >
+                                Flytta
+                              </button>
+                            )}
                             {!isChild && (
                               <button
                                 onClick={() => startAdd(p.path)}
@@ -286,6 +338,42 @@ export default function PagesManagePage() {
                           </div>
                         )}
                       </div>
+                      {reparenting === p.path && !confirming && (
+                        <div className="mt-2.5 pt-2.5 border-t border-line">
+                          <label className="block text-[11.5px] font-semibold text-ink-dim mb-1">Var ska &ldquo;{p.label}&rdquo; ligga?</label>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <select
+                              value={reparentTarget}
+                              onChange={(e) => setReparentTarget(e.target.value)}
+                              className="flex-1 min-w-[200px] border border-line rounded-lg px-3 py-2 text-[13.5px] bg-surface"
+                            >
+                              <option value="">Välj plats …</option>
+                              {isChild && <option value="__top">Egen sida i huvudmenyn</option>}
+                              {possibleParents
+                                .filter((pp) => pp.path !== p.path && pp.path !== parentPathOf(p.path, allPages))
+                                .map((pp) => (
+                                  <option key={pp.path} value={pp.path}>Undersida under &ldquo;{pp.label}&rdquo;</option>
+                                ))}
+                            </select>
+                            <button
+                              onClick={() => confirmReparent(p.path, reparentTarget === "__top" ? "" : reparentTarget)}
+                              disabled={!reparentTarget || moving}
+                              className="text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60"
+                            >
+                              {moving ? "Flyttar …" : "Flytta"}
+                            </button>
+                            <button
+                              onClick={() => setReparenting(null)}
+                              className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg"
+                            >
+                              Avbryt
+                            </button>
+                          </div>
+                          <div className="text-[12px] text-ink-dim mt-2">
+                            Sidans webbadress ändras när den flyttas. Knappar på sajten som leder till sidan uppdateras automatiskt, men länkar ni skickat ut utanför sajten slutar fungera.
+                          </div>
+                        </div>
+                      )}
                       {confirming && (
                         <div className="mt-2.5 pt-2.5 border-t border-line text-[12.5px] text-warm font-semibold">
                           Detta tar bort sidan permanent från den publicerade sajten{childCount > 0 ? `, tillsammans med dess ${childCount} ${childCount === 1 ? "undersida" : "undersidor"}` : ""}. Går inte att ångra.
@@ -295,6 +383,14 @@ export default function PagesManagePage() {
                   );
                 })}
               </div>
+
+              {addError && !adding && (
+                <div className="bg-white border border-line rounded-lg px-4 py-3 mb-4.5 text-[13px] text-warm font-semibold">{addError}</div>
+              )}
+
+              {reparentNotice && (
+                <div className="bg-accent-soft rounded-lg px-4 py-3 mb-4.5 text-[13px] text-ink font-semibold">{reparentNotice}</div>
+              )}
 
               {justRemoved && (
                 <div className="flex items-center gap-2.5 bg-accent-soft rounded-lg px-4 py-3 mb-4.5 text-[13px] text-ink font-semibold">
