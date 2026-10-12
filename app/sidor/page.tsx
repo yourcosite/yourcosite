@@ -186,6 +186,9 @@ export default function PagesManagePage() {
     const r = e.currentTarget.getBoundingClientRect();
     const y = (e.clientY - r.top) / r.height;
     if (!canNestInto(targetPath)) return y < 0.5 ? "before" : "after";
+    // Redan i "undersida"-läge på den här raden: stanna kvar där (ingen
+    // "efter"-zon) så rutan inte stänger sig medan man drar ner mot den.
+    if (dropAt?.path === targetPath && dropAt.pos === "into") return y < 0.3 ? "before" : "into";
     return y < 0.3 ? "before" : y > 0.8 ? "after" : "into";
   };
   const dropOn = async (targetPath: string, position: "before" | "after" | "into") => {
