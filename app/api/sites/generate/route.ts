@@ -22,6 +22,9 @@ export const maxDuration = 300;
 const GENERATE_TOOL = {
   name: "generate_site",
   description: "Skapar det strukturerade innehållet för en helt ny kundsajt.",
+  // Utan det här skickas ett stort fält som "pages" först när det är helt
+  // färdigt — då kan inga framsteg visas medan sajten skrivs.
+  eager_input_streaming: true,
   input_schema: {
     type: "object" as const,
     properties: SITE_CONTENT_PROPERTIES,
@@ -373,17 +376,34 @@ async function generateSite(emit: (p: Progress) => void) {
       messages: [{ role: "user", content: promptContent }],
     });
     let acc = "";
-    let lastValue = 0;
+    let shown = 0;
+    let pageNow = 0;
+    const push = (value: number, page: number) => {
+      // Aldrig bakåt, och bara när det hänt minst en halv procent.
+      if (value > shown + 0.005) {
+        shown = value;
+        emit({ value, page, pages: pages.length });
+      }
+    };
     stream.on("inputJson", (partial: string) => {
       acc += partial;
       const p = estimateProgress(acc, pages.length);
-      // Aldrig bakåt, och bara när det hänt minst en halv procent.
-      if (p.value > lastValue + 0.005) {
-        lastValue = p.value;
-        emit({ ...p, value: 0.05 + 0.87 * p.value });
-      }
+      pageNow = p.page;
+      push(0.05 + 0.87 * p.value, p.page);
     });
-    message = await stream.finalMessage();
+    // Reservlinje: kommer inga framsteg på en stund (AI:n skriver ibland i
+    // stora klumpar) kryper mätaren långsamt upp till högst 35 % så att den
+    // inte ser fastfrusen ut. Verkliga framsteg tar över så fort de kommer.
+    const startedAt = Date.now();
+    const heartbeat = setInterval(() => {
+      const t = (Date.now() - startedAt) / 1000;
+      push(Math.min(0.35, 0.05 + 0.3 * (1 - Math.exp(-t / 60))), pageNow);
+    }, 1500);
+    try {
+      message = await stream.finalMessage();
+    } finally {
+      clearInterval(heartbeat);
+    }
     emit({ value: 0.94, page: pages.length, pages: pages.length });
   } catch (e: any) {
     return NextResponse.json(
