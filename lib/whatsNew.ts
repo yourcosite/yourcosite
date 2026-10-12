@@ -13,6 +13,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-12-byt-lank",
+    date: "2026-10-12",
+    icon: "🔗",
+    title: "Byt länk på knappar",
+    text: "Klicka på en knapp eller en Läs mer-rad i förhandsvisningen och tryck på 🔗 Ändra länk. Där väljer du en av dina sidor eller skriver en egen webbadress.",
+  },
+  {
     id: "2026-10-12-undersidor",
     date: "2026-10-12",
     icon: "🗂️",

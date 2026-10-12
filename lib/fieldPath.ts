@@ -64,3 +64,43 @@ export function setFieldText(section: any, field: string, text: string): boolean
   holder[parsed.name] = text;
   return true;
 }
+
+// ---- Länkar (knappar och "Läs mer"-rader) ----
+// Markeras en knapptext ("ctaLabel") är det knappens länk ("ctaLink") som
+// ändras. "Läs mer"-rader är markerade som "ctaLink" eller "items.N.link".
+export function linkFieldFor(field: string): string | null {
+  if (field === "ctaLabel" || field === "ctaLink") return "ctaLink";
+  const m = /^items\.(\d+)\.(link|ctaLabel|ctaLink)$/.exec(field);
+  if (m) return `items.${m[1]}.${m[2] === "ctaLabel" ? "link" : m[2]}`;
+  return null;
+}
+
+function linkHolder(section: any, field: string): { holder: any; key: string } | null {
+  const m = /^items\.(\d+)\.(link|ctaLink)$/.exec(field);
+  if (m) {
+    const item = section?.items?.[Number(m[1])];
+    return item ? { holder: item, key: m[2] } : null;
+  }
+  return field === "ctaLink" ? { holder: section, key: "ctaLink" } : null;
+}
+
+export function getLinkValue(section: any, field: string): string {
+  const h = linkHolder(section, field);
+  const v = h?.holder?.[h.key];
+  return typeof v === "string" ? v : "";
+}
+
+export function setLinkValue(section: any, field: string, value: string): boolean {
+  const h = linkHolder(section, field);
+  if (!h) return false;
+  if (value) h.holder[h.key] = value;
+  else delete h.holder[h.key];
+  return true;
+}
+
+// Tillåtet mål: en sida på sajten, en webbadress eller e-post/telefon.
+export function isAllowedLink(value: string, pagePaths: string[]): boolean {
+  if (value === "") return true;
+  if (pagePaths.includes(value)) return true;
+  return /^(https:\/\/|http:\/\/|mailto:|tel:)\S+$/i.test(value) && value.length <= 500;
+}

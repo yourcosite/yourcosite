@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { setFieldText } from "@/lib/fieldPath";
+import { setFieldText, setLinkValue, isAllowedLink } from "@/lib/fieldPath";
 
 // Manuell textredigering i chattredigeraren: kunden skriver om en enskild
 // text själv. Inget går via AI:n.
@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   const siteId = typeof body.siteId === "string" ? body.siteId : null;
   const sel = body.selection;
   const text = typeof body.text === "string" ? body.text : null;
+  const isLink = body.kind === "link";
   if (text === null || text.length > 5000) {
     return NextResponse.json({ error: "Texten saknas eller är för lång." }, { status: 400 });
   }
@@ -33,7 +34,15 @@ export async function POST(request: Request) {
   const page = content.pages.find((p) => p.path === sel.pagePath);
   const section = page?.sections.find((s) => s.id === sel.sectionId) as any;
   if (!section) return NextResponse.json({ error: "Hittade inte texten på sidan." }, { status: 400 });
-  if (!setFieldText(section, sel.field, text)) {
+  if (isLink) {
+    const value = text.trim();
+    if (!isAllowedLink(value, content.pages.map((p) => p.path))) {
+      return NextResponse.json({ error: "Länken måste vara en sida på sajten eller börja med https://." }, { status: 400 });
+    }
+    if (!setLinkValue(section, sel.field, value)) {
+      return NextResponse.json({ error: "Det går inte att ändra länken här." }, { status: 400 });
+    }
+  } else if (!setFieldText(section, sel.field, text)) {
     return NextResponse.json({ error: "Den här texten går inte att ändra för hand." }, { status: 400 });
   }
   if (!isValidSiteContent(content)) {

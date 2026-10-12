@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
-import { getFieldText } from "@/lib/fieldPath";
+import { getFieldText, getLinkValue, linkFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -794,6 +794,51 @@ export default function EditorPage() {
     }
   };
 
+  // Byta länk för en knapp eller "Läs mer"-rad — samma flöde som texten.
+  const [linkEditOpen, setLinkEditOpen] = useState(false);
+  const [linkChoice, setLinkChoice] = useState(""); // "", en sidväg eller "__egen"
+  const [linkCustom, setLinkCustom] = useState("");
+  const selectedLinkField = selection?.target === "field" ? linkFieldFor(selection.field) : null;
+  const openLinkEditor = () => {
+    if (selection?.target !== "field" || !selectedLinkField || !content) return;
+    const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId);
+    const current = section ? getLinkValue(section, selectedLinkField) : "";
+    const isPage = content.pages.some((p) => p.path === current);
+    setLinkChoice(current === "" ? "" : isPage ? current : "__egen");
+    setLinkCustom(current !== "" && !isPage ? current : "https://");
+    setLinkEditOpen(true);
+  };
+  const saveLink = async () => {
+    if (selection?.target !== "field" || !selectedLinkField || !content) return;
+    const sel = selection;
+    const value = linkChoice === "__egen" ? linkCustom.trim() : linkChoice;
+    setSavingText(true);
+    try {
+      const res = await fetch("/api/sites/edit-text", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          siteId: site?.id,
+          kind: "link",
+          text: value,
+          selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, field: selectedLinkField },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setLinkEditOpen(false);
+      setSelection(null);
+      setMessages((m) => [...m, { from: "bot", text: "Klart! Länken är sparad. Du kan ångra med knappen om du ändrar dig." }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: `Länken kunde inte sparas: ${e.message}` }]);
+      setLinkEditOpen(false);
+    } finally {
+      setSavingText(false);
+    }
+  };
+
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -1252,6 +1297,41 @@ export default function EditorPage() {
                 {undoing ? "Ångrar …" : "↩ Ångra senaste ändringen"}
               </button>
             )}
+            {linkEditOpen && content && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
+                  <div className="text-[14px] font-semibold mb-2">Ändra länk</div>
+                  <div className="text-[12px] text-ink-dim mb-2 truncate">{selection?.label}</div>
+                  <select
+                    value={linkChoice}
+                    onChange={(e) => setLinkChoice(e.target.value)}
+                    className="w-full bg-bg border border-line rounded-lg p-2 text-[14px]"
+                  >
+                    <option value="">Ingen länk</option>
+                    {content.pages.map((p) => (
+                      <option key={p.path} value={p.path}>Sidan &ldquo;{p.label}&rdquo;</option>
+                    ))}
+                    <option value="__egen">Egen webbadress …</option>
+                  </select>
+                  {linkChoice === "__egen" && (
+                    <input
+                      value={linkCustom}
+                      onChange={(e) => setLinkCustom(e.target.value)}
+                      placeholder="https://"
+                      className="w-full mt-2 bg-bg border border-line rounded-lg p-2 text-[14px] outline-none"
+                    />
+                  )}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button type="button" onClick={() => setLinkEditOpen(false)} disabled={savingText} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      Avbryt
+                    </button>
+                    <button type="button" onClick={saveLink} disabled={savingText} className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60">
+                      {savingText ? "Sparar …" : "Spara"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {textEditOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
@@ -1301,6 +1381,16 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     ✂️ Redigera bild
+                  </button>
+                )}
+                {selection.target === "field" && selectedLinkField && (
+                  <button
+                    type="button"
+                    onClick={openLinkEditor}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    🔗 Ändra länk
                   </button>
                 )}
                 {selection.target === "field" && selectedFieldText !== null && (
