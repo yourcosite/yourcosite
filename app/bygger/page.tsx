@@ -14,6 +14,7 @@ const steps = [
 export default function GeneratingPage() {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
+  const [percent, setPercent] = useState(0);
   const [error, setError] = useState("");
   // Ingen fallback-text som "din" — hellre visa rubriken en stund senare
   // än att blinka till en felaktig/konstig text innan det riktiga namnet
@@ -23,13 +24,17 @@ export default function GeneratingPage() {
   useEffect(() => {
     let cancelled = false;
 
-    // De här stegen är bara en visuell indikation på att något pågår — det
-    // riktiga arbetet är det enda anropet till /api/sites/generate, som kan
-    // ta allt från några sekunder till över en minut beroende på hur mycket
-    // innehåll som ska skrivas.
+    // Procenten är en UPPSKATTNING utifrån hur lång tid som gått — det
+    // riktiga arbetet är ett enda anrop till /api/sites/generate som inte
+    // rapporterar hur långt det kommit. Kurvan går snabbt i början och
+    // saktar in, och stannar under 97 % tills bygget faktiskt är klart.
+    const startedAt = Date.now();
     const stepTimer = setInterval(() => {
-      setActiveStep((s) => Math.min(s + 1, steps.length - 1));
-    }, 4000);
+      const t = (Date.now() - startedAt) / 1000;
+      const p = Math.min(97, 97 * (1 - Math.exp(-t / 45)));
+      setPercent(p);
+      setActiveStep(Math.min(steps.length - 1, Math.floor((p / 100) * steps.length * 1.15)));
+    }, 250);
 
     fetch("/api/onboarding/current")
       .then((r) => r.json())
@@ -56,7 +61,9 @@ export default function GeneratingPage() {
         if (!cancelled) {
           clearInterval(stepTimer);
           setActiveStep(steps.length - 1);
-          router.push("/forslag");
+          setPercent(100);
+          // En kort stund på 100 % så man hinner se att det blev klart.
+          setTimeout(() => router.push("/forslag"), 600);
         }
       })
       .catch((e) => {
@@ -101,6 +108,28 @@ export default function GeneratingPage() {
         >
           Försök igen
         </button>
+      )}
+
+      {!error && siteName && (
+        <div className="w-full max-w-[420px] mb-9">
+          <div className="flex items-center justify-between text-[13px] mb-2">
+            <span className="text-[#9E9C97]">Byggs just nu</span>
+            <span className="font-semibold tabular-nums">{Math.round(percent)} %</span>
+          </div>
+          <div
+            className="h-2 w-full rounded-full bg-[#2A2A2E] overflow-hidden"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(percent)}
+          >
+            <div
+              className="h-full rounded-full bg-accent transition-[width] duration-300 ease-out"
+              style={{ width: `${percent}%` }}
+            />
+          </div>
+          <div className="text-[11.5px] text-[#6E6C68] mt-2">Procenten är en uppskattning. Större sajter kan ta lite längre tid.</div>
+        </div>
       )}
 
       {!error && (
