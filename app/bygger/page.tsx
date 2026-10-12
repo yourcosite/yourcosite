@@ -40,7 +40,18 @@ export default function GeneratingPage() {
 
     fetch("/api/sites/generate", { method: "POST" })
       .then(async (res) => {
-        const data = await res.json();
+        // Tar servern för lång tid eller kraschar kommer ingen JSON tillbaka
+        // (bara en textsida med ett felmeddelande) — visa då ett begripligt
+        // meddelande istället för ett tekniskt parsningsfel.
+        const raw = await res.text();
+        let data: any = null;
+        try {
+          data = JSON.parse(raw);
+        } catch {
+          throw new Error(
+            "Bygget avbröts innan det blev klart, troligen för att det tog för lång tid. Inget har gått förlorat, tryck på Försök igen."
+          );
+        }
         if (!res.ok) throw new Error(data.error || "Något gick fel.");
         if (!cancelled) {
           clearInterval(stepTimer);
@@ -81,6 +92,16 @@ export default function GeneratingPage() {
       <p className="text-[15px] text-[#9E9C97] mb-11">
         {error ? error : siteName ? "Det här brukar ta under en minut." : " "}
       </p>
+
+      {error && (
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="bg-accent text-accent-ink font-semibold text-[14.5px] px-6 py-3 rounded-[10px]"
+        >
+          Försök igen
+        </button>
+      )}
 
       {!error && (
         <div className="w-full max-w-[420px] flex flex-col gap-4">
