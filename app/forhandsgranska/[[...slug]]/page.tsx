@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { isValidSiteContent } from "@/lib/contentModel";
 import WebsitePreviewFrame from "@/components/WebsitePreviewFrame";
+import ShareLinksButton from "@/components/ShareLinksButton";
 
 // Alltid färskt innehåll — ingen cachning av det här utkastet, som annars
 // kan visas kort efter att sajten precis byggts om (se next.config.mjs).
@@ -64,6 +65,7 @@ export default async function EditorPreviewPage({
         >
           ← Tillbaka till redigeraren
         </Link>
+        <ShareLinksButton siteId={site.id} />
       </div>
 
       <WebsitePreviewFrame

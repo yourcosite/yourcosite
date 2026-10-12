@@ -16,6 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
+import ShareLinksButton from "@/components/ShareLinksButton";
 import { getFieldText, getLinkValue, getNewTab, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
@@ -861,72 +862,6 @@ export default function EditorPage() {
     }
   };
 
-  // Delningslänkar till förhandsvisningen (kan stängas av).
-  type ShareLink = { id: string; url: string; createdAt: string; expiresAt: string };
-  const [shareOpen, setShareOpen] = useState(false);
-  const [shareLinks, setShareLinks] = useState<ShareLink[]>([]);
-  const [shareBusy, setShareBusy] = useState(false);
-  const [shareCopiedId, setShareCopiedId] = useState<string | null>(null);
-  const [shareError, setShareError] = useState("");
-  const copyShare = async (l: ShareLink) => {
-    try {
-      await navigator.clipboard.writeText(l.url);
-      setShareCopiedId(l.id);
-      setTimeout(() => setShareCopiedId((cur) => (cur === l.id ? null : cur)), 2500);
-    } catch {
-      // Kopieringen kan nekas av webbläsaren — länken syns ändå i rutan.
-    }
-  };
-  const openShare = async () => {
-    if (!site?.id) return;
-    const willOpen = !shareOpen;
-    setShareOpen(willOpen);
-    setShareError("");
-    if (!willOpen) return;
-    try {
-      const res = await fetch(`/api/sites/share?siteId=${encodeURIComponent(site.id)}`);
-      const data = await res.json();
-      setShareLinks(data.links || []);
-      if (data.error) setShareError(data.error);
-    } catch {
-      setShareError("Kunde inte hämta dina delade länkar.");
-    }
-  };
-  const createShare = async () => {
-    if (!site?.id) return;
-    setShareBusy(true);
-    setShareError("");
-    try {
-      const res = await fetch("/api/sites/share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId: site.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
-      setShareLinks((ls) => [data.link, ...ls]);
-      copyShare(data.link);
-    } catch (e: any) {
-      setShareError(e.message);
-    } finally {
-      setShareBusy(false);
-    }
-  };
-  const revokeShare = async (id: string) => {
-    setShareError("");
-    try {
-      const res = await fetch("/api/sites/share", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      if (!res.ok) throw new Error("Kunde inte stänga av länken.");
-      setShareLinks((ls) => ls.filter((l) => l.id !== id));
-    } catch (e: any) {
-      setShareError(e.message);
-    }
-  };
-
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -1093,6 +1028,7 @@ export default function EditorPage() {
           >
             Förhandsgranska
           </Link>
+          <ShareLinksButton siteId={site?.id} />
           <button
             type="button"
             disabled
@@ -1265,53 +1201,8 @@ export default function EditorPage() {
                 />
                 </FieldEditContext.Provider>
               </div>
-              <div className="relative flex-shrink-0 flex items-center gap-2 flex-wrap px-3.5 py-2 border-t border-line bg-[#F1EFE9] text-[12px]">
-                <button
-                  type="button"
-                  onClick={openShare}
-                  className="font-semibold text-ink bg-white border border-line rounded-full px-3 py-1"
-                >
-                  🔗 Dela förhandsvisning
-                </button>
-                {shareOpen && (
-                  <div className="absolute bottom-full left-3 mb-2 z-40 w-[min(460px,calc(100%-24px))] bg-white border border-line rounded-xl shadow-xl p-3.5">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="font-semibold text-[13px]">Delade länkar</div>
-                      <button type="button" onClick={() => setShareOpen(false)} aria-label="Stäng" className="text-ink-dim font-bold px-1">×</button>
-                    </div>
-                    <p className="text-ink-dim mb-2.5">
-                      Den som har en länk kan titta på sajten men inte ändra något. Varje länk gäller i 14 dagar, och du kan stänga av den när du vill.
-                    </p>
-                    {shareLinks.length === 0 && <div className="text-ink-dim mb-2.5">Du har inga aktiva länkar just nu.</div>}
-                    <div className="flex flex-col gap-2 mb-2.5 max-h-[180px] overflow-y-auto">
-                      {shareLinks.map((l) => (
-                        <div key={l.id} className="flex items-center gap-2">
-                          <input
-                            readOnly
-                            value={l.url}
-                            onFocus={(e) => e.currentTarget.select()}
-                            className="flex-1 min-w-0 bg-bg border border-line rounded-full px-3 py-1 text-ink"
-                          />
-                          <button type="button" onClick={() => copyShare(l)} className="font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0">
-                            {shareCopiedId === l.id ? "Kopierad ✓" : "Kopiera"}
-                          </button>
-                          <button type="button" onClick={() => revokeShare(l.id)} className="font-semibold text-red-600 border border-line rounded-full px-2.5 py-1 flex-shrink-0">
-                            Stäng av
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={createShare}
-                      disabled={shareBusy}
-                      className="font-semibold bg-accent text-accent-ink rounded-full px-3.5 py-1.5 disabled:opacity-60"
-                    >
-                      {shareBusy ? "Skapar …" : "+ Skapa ny länk"}
-                    </button>
-                    {shareError && <div className="text-red-600 mt-2">{shareError}</div>}
-                  </div>
-                )}
+              <div className="flex-shrink-0 flex items-center gap-2 px-3.5 py-2 border-t border-line bg-[#F1EFE9]">
+                <ShareLinksButton siteId={site?.id} popoverDirection="up" align="left" />
               </div>
             </div>
           )}
