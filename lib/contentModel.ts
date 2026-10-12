@@ -189,6 +189,8 @@ export interface AboutSection {
   // samma princip som HeroSection.ctaLink. Saknas den är raden bara
   // dekorativ text, som förut.
   ctaLink?: string;
+  // Texten på "Läs mer →"-raden. Saknas den står det "Läs mer".
+  linkLabel?: string;
 }
 
 export interface GridItem {
@@ -209,6 +211,8 @@ export interface GridItem {
   // "intro-divided") leder — samma princip som HeroSection.ctaLink.
   // Saknas den är raden bara dekorativ text, som förut.
   link?: string;
+  // Texten på rutans "Läs mer →"-rad. Saknas den står det "Läs mer".
+  linkLabel?: string;
 }
 
 export interface GridSection {

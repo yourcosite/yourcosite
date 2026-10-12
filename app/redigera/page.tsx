@@ -16,7 +16,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
-import { getFieldText, getLinkValue, linkFieldFor } from "@/lib/fieldPath";
+import { getFieldText, getLinkValue, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -758,7 +758,8 @@ export default function EditorPage() {
     if (!content || selection?.target !== "field") return null;
     const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId);
     if (!section) return null;
-    return getFieldText(section, selection.field);
+    const tf = textFieldFor(selection.field);
+    return tf ? getFieldText(section, tf) : null;
   })();
   const openTextEditor = () => {
     if (selectedFieldText === null) return;
@@ -776,7 +777,7 @@ export default function EditorPage() {
         body: JSON.stringify({
           siteId: site?.id,
           text: textDraft,
-          selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, field: sel.field },
+          selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, field: textFieldFor(sel.field) || sel.field },
         }),
       });
       const data = await res.json();

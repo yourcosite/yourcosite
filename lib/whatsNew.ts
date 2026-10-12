@@ -16,8 +16,8 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     id: "2026-10-12-byt-lank",
     date: "2026-10-12",
     icon: "🔗",
-    title: "Byt länk på knappar",
-    text: "Tryck på den lilla pennan vid en knapp eller en Läs mer-rad i förhandsvisningen och välj 🔗 Länk. Där väljer du en av dina sidor eller skriver en egen webbadress.",
+    title: "Byt länk och text på knappar",
+    text: "Klicka på en knapp eller en Läs mer-rad i förhandsvisningen. Då dyker två små knappar upp: ✎ Text för att byta vad det står, och 🔗 Länk för att välja en av dina sidor eller skriva en egen webbadress.",
   },
   {
     id: "2026-10-12-undersidor",

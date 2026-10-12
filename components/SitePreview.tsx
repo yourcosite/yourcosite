@@ -1517,7 +1517,19 @@ function FieldBadge({
     // skulle, men satt kvar med en spökmarkering på den gamla sidan.
     // Stoppar bubblingen här, oavsett om klicket landade på knappen eller
     // pennan.
-    <span className="relative inline-block group/ctafld" onClick={(e) => e.stopPropagation()}>
+    <span
+      className="relative inline-block group/ctafld"
+      onClick={(e) => e.stopPropagation()}
+      // Ett klick på själva knappen/länken markerar den (istället för att
+      // följa länken) — precis som en vanlig text. Redigeringsknapparna
+      // under den markerade knappen undantas.
+      onClickCapture={(e) => {
+        if ((e.target as HTMLElement).closest?.("[data-fieldedit]")) return;
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect?.();
+      }}
+    >
       {children}
       <span
         className={`pointer-events-none absolute -inset-1.5 rounded-full transition-opacity ${
@@ -1525,24 +1537,8 @@ function FieldBadge({
         }`}
         style={{ outline: selected ? "2px solid #4A90D9" : "2px dashed #4A90D9", outlineOffset: "2px" }}
       />
-      <button
-        type="button"
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-          onSelect?.();
-        }}
-        aria-label="Markera knapptexten"
-        title="Markera knapptexten (utan att klicka på knappen)"
-        className={`absolute -top-2.5 -right-2.5 w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold shadow transition-opacity ${
-          selected ? "opacity-100" : "opacity-45"
-        }`}
-        style={{ background: selected ? "#C6FF5E" : "#FFFFFF", color: "#0C1004", border: "1px solid rgba(0,0,0,0.15)" }}
-      >
-        ✎
-      </button>
       {selected && (edit?.canEditText || edit?.canEditLink) && (
-        <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2.5 z-10 flex gap-1.5 whitespace-nowrap">
+        <span data-fieldedit className="absolute left-1/2 -translate-x-1/2 top-full mt-2.5 z-10 flex gap-1.5 whitespace-nowrap">
           {edit?.canEditText && (
             <button
               type="button"
@@ -1848,8 +1844,8 @@ function SectionBlockInner({
     };
   };
   // "Läs mer →"-länken (about image-full/image-stats: ctaLink, grid-rutor: link).
-  const readMoreField = (field: string, desc: string, itemIndex?: number) => {
-    const sel = fieldSel(field, "Läs mer →", desc, itemIndex);
+  const readMoreField = (field: string, desc: string, itemIndex?: number, label?: string) => {
+    const sel = fieldSel(field, `${label || "Läs mer"} →`, desc, itemIndex);
     return {
       editable,
       selected: !!sel && selectedFieldKey === sel.key,
@@ -2860,7 +2856,7 @@ function SectionBlockInner({
               >
                 {section.body}
               </Field>
-              <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"")}>
+              <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"", undefined, (section as any).linkLabel)}>
               <CtaLink
                 link={section.ctaLink}
                 basePath={basePath}
@@ -2868,7 +2864,7 @@ function SectionBlockInner({
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
                 style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
               >
-                Läs mer →
+                {(section as any).linkLabel || "Läs mer"} →
               </CtaLink>
               </FieldBadge>
             </div>
@@ -2923,7 +2919,7 @@ function SectionBlockInner({
               >
                 {section.body}
               </Field>
-              <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"")}>
+              <FieldBadge {...readMoreField("ctaLink", "länken \"Läs mer\"", undefined, (section as any).linkLabel)}>
               <CtaLink
                 link={section.ctaLink}
                 basePath={basePath}
@@ -2931,7 +2927,7 @@ function SectionBlockInner({
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
                 style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
               >
-                Läs mer →
+                {(section as any).linkLabel || "Läs mer"} →
               </CtaLink>
               </FieldBadge>
             </div>
@@ -3253,7 +3249,7 @@ function SectionBlockInner({
                     >
                       {item.body}
                     </Field>
-                    <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i)}>
+                    <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i, (item as any).linkLabel)}>
                     <CtaLink
                       link={item.link}
                       basePath={basePath}
@@ -3261,7 +3257,7 @@ function SectionBlockInner({
                       className="mt-4 inline-block text-[12px] font-medium"
                       style={{ color: ip.text }}
                     >
-                      Läs mer →
+                      {(item as any).linkLabel || "Läs mer"} →
                     </CtaLink>
                     </FieldBadge>
                   </div>
@@ -3360,7 +3356,7 @@ function SectionBlockInner({
                     >
                       {item.body}
                     </Field>
-                    <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i)}>
+                    <FieldBadge {...readMoreField("link", "länken \"Läs mer\" i rutan", i, (item as any).linkLabel)}>
                     <CtaLink
                       link={item.link}
                       basePath={basePath}
@@ -3368,7 +3364,7 @@ function SectionBlockInner({
                       className="mt-4 inline-block text-[12px] font-medium"
                       style={{ color: ip.text }}
                     >
-                      Läs mer →
+                      {(item as any).linkLabel || "Läs mer"} →
                     </CtaLink>
                     </FieldBadge>
                   </div>

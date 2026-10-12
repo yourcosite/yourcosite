@@ -21,6 +21,7 @@ const TEXT_FIELDS = new Set([
   "email",
   "phone",
   "address",
+  "linkLabel",
 ]);
 
 export type ParsedField = { itemIndex?: number; name: string };
@@ -37,13 +38,16 @@ export function parseFieldPath(field: string): ParsedField | null {
 // "items" — vi letar därför i de vanliga listorna.
 const LIST_KEYS = ["items", "testimonials", "quotes", "faqs", "questions"];
 
+// "Läs mer"-texten är valfri och saknas ofta i sparad data — då gäller
+// standardtexten och fältet får skapas när kunden skriver en egen.
+const DEFAULT_LINK_LABEL = "Läs mer";
+
 function findHolder(section: any, parsed: ParsedField): any | null {
   if (parsed.itemIndex === undefined) return section;
   for (const key of LIST_KEYS) {
     const list = section?.[key];
-    if (Array.isArray(list) && list[parsed.itemIndex] && typeof list[parsed.itemIndex][parsed.name] === "string") {
-      return list[parsed.itemIndex];
-    }
+    const item = Array.isArray(list) ? list[parsed.itemIndex] : undefined;
+    if (item && (typeof item[parsed.name] === "string" || parsed.name === "linkLabel")) return item;
   }
   return null;
 }
@@ -53,14 +57,16 @@ export function getFieldText(section: any, field: string): string | null {
   if (!parsed) return null;
   const holder = findHolder(section, parsed);
   const v = holder?.[parsed.name];
-  return typeof v === "string" ? v : null;
+  if (typeof v === "string") return v;
+  return holder && parsed.name === "linkLabel" ? DEFAULT_LINK_LABEL : null;
 }
 
 export function setFieldText(section: any, field: string, text: string): boolean {
   const parsed = parseFieldPath(field);
   if (!parsed) return false;
   const holder = findHolder(section, parsed);
-  if (!holder || typeof holder[parsed.name] !== "string") return false;
+  if (!holder) return false;
+  if (typeof holder[parsed.name] !== "string" && parsed.name !== "linkLabel") return false;
   holder[parsed.name] = text;
   return true;
 }
@@ -103,4 +109,14 @@ export function isAllowedLink(value: string, pagePaths: string[]): boolean {
   if (value === "") return true;
   if (pagePaths.includes(value)) return true;
   return /^(https:\/\/|http:\/\/|mailto:|tel:)\S+$/i.test(value) && value.length <= 500;
+}
+
+// Vilket textfält som hör till det markerade fältet: ett vanligt textfält är
+// sig självt, en "Läs mer"-rad (ctaLink / items.N.link) har sin text i
+// linkLabel / items.N.linkLabel.
+export function textFieldFor(field: string): string | null {
+  if (parseFieldPath(field)) return field;
+  if (field === "ctaLink") return "linkLabel";
+  const m = /^items\.(\d+)\.link$/.exec(field);
+  return m ? `items.${m[1]}.linkLabel` : null;
 }

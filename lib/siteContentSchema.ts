@@ -101,6 +101,7 @@ const RAW_SECTION_SCHEMA = {
         },
         bgColor: BG_COLOR_SCHEMA,
         ctaLink: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
+        linkLabel: { type: "string", description: "Texten på \"Läs mer →\"-raden (utan pilen), t.ex. \"Se alla tjänster\". Utelämna för att behålla \"Läs mer\"." },
       },
       required: ["id", "type", "layout", "heading", "body"],
     },
@@ -148,6 +149,7 @@ const RAW_SECTION_SCHEMA = {
               body: { type: "string" },
               imageUrl: { type: "string" },
               link: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
+              linkLabel: { type: "string", description: "Texten på rutans \"Läs mer →\"-rad (utan pilen). Utelämna för att behålla \"Läs mer\"." },
               bgColor: {
                 type: "string",
                 description:
