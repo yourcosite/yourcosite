@@ -28,6 +28,7 @@ const defaultPages: Page[] = [
   { id: "tjanster", label: "Tjänster", menuName: "Vad vi gör", brief: "Lista över tjänster/produkter, med en kort beskrivning av varje.", included: true, removable: true },
   { id: "inspiration", label: "Inspiration / Portfolio", menuName: "Inspiration", brief: "Bildgalleri med tidigare projekt eller referensjobb.", included: false, removable: true },
   { id: "nyheter", label: "Nyheter", menuName: "Nyheter", brief: "Visar era publicerade nyheter och erbjudanden. Tom tills ni skriver och publicerar den första artikeln själva i panelen — inget AI-påhittat innehåll här.", included: false, removable: true, isNew: true },
+  { id: "bokning", label: "Boka tid", menuName: "Boka tid", brief: "Besökarna bokar tid själva: väljer tjänst, dag och tid och får en bekräftelse på mejl. Ni lägger upp paket, priser och tider under Bokningar när sajten är klar — inget AI-påhittat innehåll här.", included: false, removable: true, isNew: true },
   { id: "kontakt", label: "Kontakt", menuName: "Kontakt", brief: "Adress, telefon, e-post, karta och ett kontaktformulär.", included: true, removable: true },
 ];
 
