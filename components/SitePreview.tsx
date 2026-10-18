@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, createContext, useContext } from "react";
+import { useState, useEffect, createContext, useContext, createElement } from "react";
 import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
@@ -9,6 +9,7 @@ import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { parseYouTubeId } from "@/lib/youtube";
+import { parseSocialEmbed } from "@/lib/socialEmbed";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
 
 // Varje stilvariant bygger en gradient-"bild" av kundens egna färger istället
@@ -435,7 +436,20 @@ export default function SitePreview({
       // Se kommentaren ovan — valet gäller då bara den här sidvisningen.
     }
     setCookieChoice(value);
+    // Låter sektioner som bäddar in tredjepartsflöden (SocialFeedBlock) reagera direkt.
+    try { window.dispatchEvent(new Event("yc-cookie-consent")); } catch {}
   };
+  useEffect(() => {
+    if (!showCookieBanner) return;
+    const onChange = () => {
+      try {
+        const saved = window.localStorage.getItem("yc_cookie_consent");
+        if (saved === "all" || saved === "necessary") setCookieChoice(saved);
+      } catch {}
+    };
+    window.addEventListener("yc-cookie-consent", onChange);
+    return () => window.removeEventListener("yc-cookie-consent", onChange);
+  }, [showCookieBanner]);
 
   return (
     // "@container": gör att alla @3xl:-klasser nedan (ersätter de gamla
@@ -2011,6 +2025,153 @@ function ContactFormBlock({
 // brödtexten i en sektion ("Om oss", en hero osv.) istället för att behöva
 // beskriva i ord vilken del av sidan de menar — samma grundidé som
 // bild-markeringen ovan, fast för text/hela sektionen.
+// Facebook-flöde, Instagram-inlägg eller flödestjänst (Behold, Elfsight,
+// SnapWidget) — se lib/socialEmbed.ts för vad som får visas. Allt detta
+// sätter tredjepartscookies hos besökaren, så på den RIKTIGA sajten
+// (gated = true) visas det först när besökaren godkänt "Alla cookies" i
+// cookiebannern; tills dess en snygg platshållare. I redigeraren och
+// förhandsvisningar visas flödet direkt så kunden ser vad besökarna får.
+function loadScriptOnce(src: string, module = false) {
+  if (typeof document === "undefined") return;
+  if (document.querySelector(`script[src="${src}"]`)) return;
+  const el = document.createElement("script");
+  el.src = src;
+  el.async = true;
+  if (module) el.type = "module";
+  document.head.appendChild(el);
+}
+
+function SocialFeedBlock({
+  source,
+  height,
+  title,
+  palette,
+  gated,
+}: {
+  source: string;
+  height?: number;
+  title: string;
+  palette: Palette;
+  gated: boolean;
+}) {
+  const embed = parseSocialEmbed(source);
+  const [consent, setConsent] = useState(!gated);
+  useEffect(() => {
+    if (!gated) {
+      setConsent(true);
+      return;
+    }
+    const read = () => {
+      try {
+        setConsent(window.localStorage.getItem("yc_cookie_consent") === "all");
+      } catch {
+        setConsent(false);
+      }
+    };
+    read();
+    window.addEventListener("yc-cookie-consent", read);
+    return () => window.removeEventListener("yc-cookie-consent", read);
+  }, [gated]);
+
+  useEffect(() => {
+    if (!consent || !embed) return;
+    if (embed.kind === "behold") loadScriptOnce("https://w.behold.so/widget.js", true);
+    if (embed.kind === "elfsight") loadScriptOnce("https://elfsightcdn.com/platform.js");
+  }, [consent, embed?.kind]);
+
+  const box = (children: React.ReactNode) => (
+    <div className="mx-auto w-full flex flex-col items-center gap-4">{children}</div>
+  );
+  const note = (text: string) => (
+    <div className="text-[13px] text-center rounded-2xl border px-6 py-8 w-full" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+      {text}
+    </div>
+  );
+
+  if (!embed) return note("Länken eller koden känns inte igen. Be Millie om hjälp att lägga in Facebook eller Instagram.");
+  if (embed.kind === "instagramProfile") {
+    return note("Ett helt Instagram-flöde kräver en flödestjänst, till exempel Behold, Elfsight eller SnapWidget. Klistra in koden därifrån, eller länka till enskilda inlägg.");
+  }
+
+  const kindLabel = embed.kind === "facebook" ? "Facebook" : "Instagram";
+  if (!consent) {
+    return (
+      <div className="text-center rounded-2xl border px-6 py-9 w-full" style={{ borderColor: palette.cardBorder, background: palette.cardBg }}>
+        <div className="text-[14px] font-semibold mb-1.5" style={{ color: palette.text }}>{kindLabel}-flödet visas när du godkänt cookies</div>
+        <div className="text-[12.5px] mb-4 max-w-[420px] mx-auto" style={{ color: palette.textDim }}>
+          Flödet hämtas från {kindLabel} och sätter deras cookies. Godkänn alla cookies för att se det direkt.
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            try { window.localStorage.setItem("yc_cookie_consent", "all"); } catch {}
+            try { window.dispatchEvent(new Event("yc-cookie-consent")); } catch {}
+            setConsent(true);
+          }}
+          className="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-accent text-accent-ink"
+        >
+          Godkänn och visa
+        </button>
+      </div>
+    );
+  }
+
+  if (embed.kind === "facebook") {
+    const h = Math.min(1000, Math.max(300, Math.round(height || 700)));
+    const src =
+      "https://www.facebook.com/plugins/page.php?href=" +
+      encodeURIComponent(embed.pageUrl) +
+      `&tabs=timeline&width=500&height=${h}&small_header=true&adapt_container_width=true&hide_cover=false&show_facepile=false`;
+    return box(
+      <iframe
+        src={src}
+        title={title}
+        width="500"
+        height={h}
+        style={{ border: "none", overflow: "hidden", maxWidth: "100%", width: 500, background: "#fff", borderRadius: 12 }}
+        loading="lazy"
+        allow="encrypted-media"
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+    );
+  }
+  if (embed.kind === "instagramPosts") {
+    return box(
+      <div className="flex flex-wrap justify-center gap-5 w-full">
+        {embed.codes.map((c) => (
+          <iframe
+            key={c}
+            src={`https://www.instagram.com/p/${c}/embed`}
+            title={`${title} ${c}`}
+            width="400"
+            height="520"
+            style={{ border: "1px solid " + palette.cardBorder, maxWidth: "100%", width: 400, background: "#fff", borderRadius: 12 }}
+            loading="lazy"
+            referrerPolicy="strict-origin-when-cross-origin"
+          />
+        ))}
+      </div>
+    );
+  }
+  if (embed.kind === "snapwidget") {
+    return box(
+      <iframe
+        src={`https://snapwidget.com/embed/${embed.widgetId}`}
+        title={title}
+        className="snapwidget-widget"
+        style={{ border: "none", overflow: "hidden", width: "100%", height: 480 }}
+        loading="lazy"
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
+    );
+  }
+  if (embed.kind === "behold") {
+    return box(<div className="w-full">{createElement("behold-widget", { "feed-id": embed.feedId })}</div>);
+  }
+  // elfsight
+  return box(<div className="w-full">{createElement("div", { className: `elfsight-app-${embed.appId}`, "data-elfsight-app-lazy": "" })}</div>);
+}
+
 function sectionLabel(section: Section): string {
   switch (section.type) {
     case "hero":
@@ -2033,6 +2194,8 @@ function sectionLabel(section: Section): string {
       return section.heading ? `kartsektionen "${section.heading}"` : "kartsektionen";
     case "video":
       return section.heading ? `videosektionen "${section.heading}"` : "videosektionen";
+    case "social":
+      return section.heading ? `flödessektionen "${section.heading}"` : "flödessektionen";
     case "contactForm":
       return `sektionen "${section.heading}"`;
     case "newsList":
@@ -4810,6 +4973,43 @@ function SectionBlockInner({
           {heading}
           {frame}
           {caption}
+        </div>
+      );
+    }
+
+    case "social": {
+      return (
+        <div className="px-10 py-16 max-w-[880px] mx-auto" style={{ background: sectionBg }}>
+          {section.heading && (
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+          )}
+          {section.body && (
+            <Field
+              editable={editable}
+              as="p"
+              className="text-[15px] leading-relaxed mb-6 text-center max-w-[560px] mx-auto"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "texten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "texten"); s && onSelectField?.(s); }}
+            >
+              {section.body}
+            </Field>
+          )}
+          <SocialFeedBlock
+            source={section.source}
+            height={section.height}
+            title={section.heading || "Sociala medier"}
+            palette={palette}
+            gated={!!basePath}
+          />
         </div>
       );
     }

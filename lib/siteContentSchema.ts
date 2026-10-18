@@ -317,6 +317,23 @@ const RAW_SECTION_SCHEMA = {
       type: "object",
       properties: {
         id: { type: "string" },
+        type: { const: "social" },
+        heading: { type: "string" },
+        body: { type: "string", description: "Valfri kort text under rubriken." },
+        source: {
+          type: "string",
+          description:
+            "Det kunden gett, EXAKT som det var: en Facebook-sidas länk (t.ex. \"https://www.facebook.com/foretaget\"), en eller flera länkar till Instagram-inlägg, eller hela inbäddningskoden från Behold, Elfsight eller SnapWidget. Hitta ALDRIG på en länk eller ett id.",
+        },
+        height: { type: "number", description: "Valfri höjd i pixlar på Facebook-rutan, 300 till 1000. Utelämna för standard (700)." },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "source"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
         type: { const: "contactForm" },
         layout: {
           type: "string",

@@ -380,6 +380,23 @@ export interface VideoSection {
   bgColor?: string;
 }
 
+// Facebook-flöde, Instagram-inlägg eller Instagram-flöde via en
+// flödestjänst (Behold, Elfsight, SnapWidget). "source" är det kunden
+// klistrat in, EXAKT som det var; renderingen plockar bara ut kända,
+// säkra id:n ur det (lib/socialEmbed.ts) och visar aldrig råkoden.
+export interface SocialSection {
+  id: string;
+  type: "social";
+  heading?: string;
+  // Kort text under rubriken.
+  body?: string;
+  source: string;
+  // Valfri höjd i pixlar för Facebook-rutan (300 till 1000).
+  height?: number;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
+}
+
 export type ContactFormLayout = "centered" | "split-map";
 
 // Ett RIKTIGT, ifyllbart kontaktformulär (namn/e-post/meddelande) — till
@@ -464,6 +481,7 @@ export type Section = (
   | FaqSection
   | MapSection
   | VideoSection
+  | SocialSection
   | ContactFormSection
   | NewsListSection
   | BookingSection
@@ -568,6 +586,7 @@ const VALID_SECTION_TYPES = [
   "faq",
   "map",
   "video",
+  "social",
   "contactForm",
   "newsList",
   "booking",

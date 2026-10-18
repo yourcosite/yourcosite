@@ -42,5 +42,5 @@ Du har rätt att begära tillgång till, rättelse av eller radering av dina per
 
 ## Cookies
 
-Vi använder cookies enligt kategorierna som visas i cookiebannern på webbplatsen. Nödvändiga cookies kan inte stängas av; övriga kräver ditt aktiva samtycke.`;
+Vi använder cookies enligt kategorierna som visas i cookiebannern på webbplatsen. Nödvändiga cookies kan inte stängas av; övriga kräver ditt aktiva samtycke. Om webbplatsen visar flöden eller inlägg från Facebook eller Instagram laddas de först när du har godkänt alla cookies, och då gäller även Metas egna villkor och integritetspolicy.`;
 }
