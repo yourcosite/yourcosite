@@ -74,7 +74,7 @@ export default async function SettingsPage() {
     <div className="min-h-screen bg-bg font-sans flex flex-col">
       <AccountHeader active="/installningar" userName={fullName || email} userEmail={email} />
 
-      <div className="flex-1 px-6 md:px-12 py-10 flex gap-10">
+      <div className="flex-1 px-6 md:px-12 py-10 flex flex-col md:flex-row gap-6 md:gap-10">
         <SettingsTabs
           fullName={fullName}
           email={email}

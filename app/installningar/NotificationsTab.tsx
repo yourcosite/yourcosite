@@ -1,12 +1,8 @@
 "use client";
 
-import { useT, useLocale } from "@/components/I18nProvider";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { LOCALES, LOCALE_COOKIE, LOCALE_NAMES, type Locale } from "@/lib/i18n/config";
 import { createClient } from "@/lib/supabase/client";
-
-type Lang = Locale;
 
 // Språk + e-postnotiser — tidigare två block som satt mitt i
 // SettingsForm.tsx men bara ändrade lokal React-state och aldrig sparades
@@ -15,26 +11,15 @@ type Lang = Locale;
 // notify_tips), laddade från databasen i page.tsx och sparade här precis
 // som kontouppgifterna i AccountTab.tsx.
 export default function NotificationsTab({
-  language,
   notifyChangesPublished,
   notifyBilling,
   notifyTips,
 }: {
-  language: Lang;
   notifyChangesPublished: boolean;
   notifyBilling: boolean;
   notifyTips: boolean;
 }) {
   const t = useT();
-  const router = useRouter();
-  const currentLocale = useLocale();
-  const [lang, setLang] = useState<Lang>(currentLocale || language);
-  // Språket byts direkt för hela verktyget (kakan), och sparas på kontot när man trycker Spara.
-  const changeLang = (l: Locale) => {
-    setLang(l);
-    document.cookie = `${LOCALE_COOKIE}=${l}; path=/; max-age=31536000; samesite=lax`;
-    router.refresh();
-  };
   const [toggles, setToggles] = useState([
     { id: "changes", label: t("Ändringar publicerade"), desc: t("Mejl varje gång en ändring går live"), on: notifyChangesPublished },
     { id: "billing", label: t("Fakturering"), desc: t("Kvitton och betalpåminnelser"), on: notifyBilling },
@@ -65,7 +50,6 @@ export default function NotificationsTab({
     const { error: updateError } = await supabase
       .from("profiles")
       .update({
-        language: lang,
         notify_changes_published: byId("changes"),
         notify_billing: byId("billing"),
         notify_tips: byId("tips"),
@@ -83,23 +67,6 @@ export default function NotificationsTab({
   return (
     <div className="flex-1 max-w-[560px]">
       <h1 className="text-[28px] font-medium mb-6.5">{t("Notiser")}</h1>
-
-      <div className="bg-surface border border-line rounded-2xl p-6 mb-5">
-        <div className="font-semibold text-[15px] mb-4">{t("Språk")}</div>
-        <div className="flex gap-2.5 flex-wrap">
-          {LOCALES.map((l) => (
-            <button
-              key={l}
-              onClick={() => changeLang(l)}
-              className={`px-4.5 py-2 rounded-full text-[13.5px] font-semibold ${
-                lang === l ? "bg-accent text-accent-ink" : "border border-line text-ink-dim"
-              }`}
-            >
-              {LOCALE_NAMES[l]}
-            </button>
-          ))}
-        </div>
-      </div>
 
       <div className="bg-surface border border-line rounded-2xl p-6 mb-6">
         <div className="font-semibold text-[15px] mb-4">{t("E-postnotiser")}</div>

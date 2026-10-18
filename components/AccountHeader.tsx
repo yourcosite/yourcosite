@@ -54,7 +54,7 @@ export default function AccountHeader({
       <Link href="/dashboard">
         <Logo light={false} />
       </Link>
-      <div className="flex items-center gap-8 text-[14.5px] text-ink-dim relative">
+      <div className="flex items-center gap-4 md:gap-8 text-[14.5px] text-ink-dim relative">
         {/* Navlänkarna får inte plats bredvid kontoknappen under md — där
             visas de istället överst i kontomenyn (se nedan), så all
             navigering fortfarande nås via EN knapp istället för att klämma
@@ -68,6 +68,12 @@ export default function AccountHeader({
             {t(l.label)}
           </Link>
         ))}
+        <button
+          onClick={() => setContactOpen(true)}
+          className="text-[13.5px] font-semibold text-ink border border-line rounded-full px-3.5 py-1.5"
+        >
+          {t("Support")}
+        </button>
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={t("Kontomeny")}

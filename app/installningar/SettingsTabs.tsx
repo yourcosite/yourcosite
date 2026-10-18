@@ -5,13 +5,15 @@ import { msg, type Locale } from "@/lib/i18n/config";
 import { useState } from "react";
 import AccountTab from "./AccountTab";
 import NotificationsTab from "./NotificationsTab";
+import LanguageTab from "./LanguageTab";
 import PasswordTab from "./PasswordTab";
 import DeleteAccountTab from "./DeleteAccountTab";
 
-type Tab = "konto" | "losenord" | "notiser" | "radera";
+type Tab = "konto" | "sprak" | "losenord" | "notiser" | "radera";
 
 const TABS: { id: Tab; label: string; danger?: boolean }[] = [
   { id: "konto", label: msg("Konto") },
+  { id: "sprak", label: msg("Språk") },
   { id: "losenord", label: msg("Lösenord") },
   { id: "notiser", label: msg("Notiser") },
   { id: "radera", label: msg("Ta bort konto"), danger: true },
@@ -61,13 +63,13 @@ export default function SettingsTabs({
 
   return (
     <>
-      <div className="w-[170px] flex-shrink-0 hidden md:flex flex-col gap-1">
+      <div className="md:w-[170px] flex-shrink-0 flex md:flex-col gap-1 overflow-x-auto">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActive(tab.id)}
-            className={`text-left px-3 py-2 rounded-lg text-[13.5px] font-semibold ${tab.danger ? "mt-3.5" : ""} ${
+            className={`text-left px-3 py-2 rounded-lg text-[13.5px] font-semibold whitespace-nowrap ${tab.danger ? "md:mt-3.5" : ""} ${
               active === tab.id
                 ? tab.danger
                   ? "bg-warm/10 text-warm"
@@ -97,10 +99,10 @@ export default function SettingsTabs({
           billingEmail={billingEmail}
         />
       )}
+      {active === "sprak" && <LanguageTab />}
       {active === "losenord" && <PasswordTab />}
       {active === "notiser" && (
         <NotificationsTab
-          language={language}
           notifyChangesPublished={notifyChangesPublished}
           notifyBilling={notifyBilling}
           notifyTips={notifyTips}
