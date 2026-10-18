@@ -1,7 +1,7 @@
 "use client";
 
 import { useT } from "@/components/I18nProvider";
-import { msg } from "@/lib/i18n/config";
+import { msg, type Locale } from "@/lib/i18n/config";
 import { useState } from "react";
 import AccountTab from "./AccountTab";
 import NotificationsTab from "./NotificationsTab";
@@ -50,7 +50,7 @@ export default function SettingsTabs({
   addressPostalCode: string;
   addressCity: string;
   billingEmail: string;
-  language: "sv" | "en";
+  language: Locale;
   notifyChangesPublished: boolean;
   notifyBilling: boolean;
   notifyTips: boolean;

@@ -26,6 +26,31 @@ const META: Record<string, { title: string; description: string }> = {
     description:
       "Describe your business, show us what you like, and let YourCoSite build your website. Then just keep asking for changes.",
   },
+  da: {
+    title: "YourCoSite — din hjemmeside, bygget gennem en samtale",
+    description:
+      "Beskriv virksomheden, vis os, hvad I kan lide, og lad YourCoSite bygge jeres hjemmeside. Derefter fortsætter I bare med at bede om ændringer.",
+  },
+  fi: {
+    title: "YourCoSite — kotisivusi, rakennettu keskustelun avulla",
+    description:
+      "Kuvaile yritystänne, näytä meille, mistä pidätte, ja anna YourCoSiten rakentaa kotisivunne. Sen jälkeen pyydätte vain muutoksia.",
+  },
+  de: {
+    title: "YourCoSite — deine Website, gebaut durch ein Gespräch",
+    description:
+      "Beschreibt euer Unternehmen, zeigt uns, was euch gefällt, und lasst YourCoSite eure Website bauen. Danach bittet ihr einfach um Änderungen.",
+  },
+  fr: {
+    title: "YourCoSite — votre site web, créé grâce à une conversation",
+    description:
+      "Décrivez votre activité, montrez-nous ce que vous aimez, et laissez YourCoSite créer votre site web. Ensuite, vous n’avez plus qu’à demander des modifications.",
+  },
+  es: {
+    title: "YourCoSite — tu web, creada mediante una conversación",
+    description:
+      "Describid vuestro negocio, mostradnos lo que os gusta y dejad que YourCoSite cree vuestra web. Después solo tenéis que pedir cambios.",
+  },
 };
 
 export function generateMetadata(): Metadata {

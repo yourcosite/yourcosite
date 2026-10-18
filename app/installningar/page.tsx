@@ -1,4 +1,5 @@
 import AccountHeader from "@/components/AccountHeader";
+import { isLocale, type Locale } from "@/lib/i18n/config";
 import SettingsTabs from "./SettingsTabs";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,7 +15,7 @@ export default async function SettingsPage() {
   let addressPostalCode = "";
   let addressCity = "";
   let billingEmail = "";
-  let language: "sv" | "en" = "sv";
+  let language: Locale = "sv";
   let notifyChangesPublished = true;
   let notifyBilling = true;
   let notifyTips = false;
@@ -39,7 +40,7 @@ export default async function SettingsPage() {
     addressPostalCode = profile?.address_postal_code ?? "";
     addressCity = profile?.address_city ?? "";
     billingEmail = profile?.billing_email ?? "";
-    language = profile?.language === "en" ? "en" : "sv";
+    language = isLocale(profile?.language) ? profile.language : "sv";
     notifyChangesPublished = profile?.notify_changes_published ?? true;
     notifyBilling = profile?.notify_billing ?? true;
     notifyTips = profile?.notify_tips ?? false;

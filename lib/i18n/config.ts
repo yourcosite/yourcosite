@@ -2,7 +2,7 @@
 // är förlagan: texterna i koden ÄR de svenska, och för övriga språk finns en
 // ordlista (lib/i18n/<språk>.json) där den svenska texten är nyckeln.
 // Saknas en översättning visas den svenska, så inget går sönder.
-export const LOCALES = ["sv", "en"] as const;
+export const LOCALES = ["sv", "en", "da", "fi", "de", "fr", "es"] as const;
 export type Locale = (typeof LOCALES)[number];
 export const DEFAULT_LOCALE: Locale = "sv";
 export const LOCALE_COOKIE = "ycs_lang";
@@ -11,6 +11,11 @@ export const LOCALE_HEADER = "x-ycs-lang";
 export const LOCALE_NAMES: Record<Locale, string> = {
   sv: "Svenska",
   en: "English",
+  da: "Dansk",
+  fi: "Suomi",
+  de: "Deutsch",
+  fr: "Français",
+  es: "Español",
 };
 
 // Språkens namn på engelska — används i instruktioner till AI:n.
