@@ -469,7 +469,7 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
-  if (await rateLimited(`edit:user:${user.id}`, 300, 86400)) {
+  if (await rateLimited(`edit:user:${user.id}`, 100, 86400)) {
     return NextResponse.json({ error: "Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten." }, { status: 429 });
   }
 
