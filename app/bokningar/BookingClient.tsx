@@ -1,7 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { formatPrice, formatSwedish } from "@/lib/booking";
+import {
+  DEFAULT_CANCEL_INTRO_CUSTOMER,
+  DEFAULT_CONFIRM_INTRO,
+  DEFAULT_CONFIRM_SUBJECT,
+  MAIL_PLACEHOLDERS,
+  applyMailTemplate,
+  formatPrice,
+  formatSwedish,
+} from "@/lib/booking";
 import { createClient } from "@/lib/supabase/client";
 
 type Pkg = { id: string; name: string; description: string | null; duration_min: number; price_sek: number | null; image_url?: string | null; active: boolean };
@@ -13,7 +21,8 @@ type Booking = {
   customer_name: string; customer_email: string; customer_phone: string | null; message: string | null; status: string;
 };
 type Data = {
-  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string };
+  siteName?: string;
+  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string };
   packages: Pkg[]; rules: Rule[]; slots: Slot[]; blocks: Block[]; bookings: Booking[]; mailConfigured: boolean;
 };
 
@@ -430,23 +439,101 @@ function TimesTab({ data, tz, busy, act, pkgName }: { data: Data; tz: string; bu
 }
 
 function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act }) {
-  const [s, setS] = useState({ notify_email: data.settings.notify_email, min_notice_hours: String(data.settings.min_notice_hours), max_days_ahead: String(data.settings.max_days_ahead) });
+  const st = data.settings;
+  const [s, setS] = useState({
+    notify_email: st.notify_email,
+    min_notice_hours: String(st.min_notice_hours),
+    max_days_ahead: String(st.max_days_ahead),
+    confirm_subject: st.confirm_subject || "",
+    confirm_intro: st.confirm_intro || "",
+    confirm_extra: st.confirm_extra || "",
+    cancel_intro: st.cancel_intro || "",
+  });
+  const example = { namn: "Anna", tjänst: data.packages[0]?.name || "Konsultation", tid: "tisdag 3 november 2026 kl 10:00", längd: `${data.packages[0]?.duration_min || 60} minuter`, pris: data.packages[0]?.price_sek != null ? formatPrice(data.packages[0].price_sek) : "", sajt: data.siteName || "din sajt" };
+  const fill = (custom: string, fallback: string) => applyMailTemplate(custom.trim() || fallback, example);
+  const label = "block text-[11.5px] font-semibold text-ink-dim mb-1";
+
   return (
-    <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[520px]">
-      <label className="block mb-3">
-        <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">Mejla nya bokningar till</span>
-        <input type="email" className={`${input} w-full`} value={s.notify_email} onChange={(e) => setS({ ...s, notify_email: e.target.value })} placeholder="Lämna tomt för att använda din inloggningsadress" />
-      </label>
-      <label className="block mb-3">
-        <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">Tidigast bokning (timmar i förväg)</span>
-        <input type="number" min={0} className={`${input} w-full`} value={s.min_notice_hours} onChange={(e) => setS({ ...s, min_notice_hours: e.target.value })} />
-      </label>
-      <label className="block mb-4">
-        <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">Hur många dagar framåt man kan boka</span>
-        <input type="number" min={1} className={`${input} w-full`} value={s.max_days_ahead} onChange={(e) => setS({ ...s, max_days_ahead: e.target.value })} />
-      </label>
-      <button className={btnPrimary} disabled={busy} onClick={() => act({ action: "saveSettings", ...s }, "Inställningarna är sparade.")}>{busy ? "Sparar …" : "Spara"}</button>
-      <p className="text-[12px] text-ink-dim mt-3">Tider räknas i svensk tid ({data.settings.timezone}).</p>
+    <div className="flex flex-col gap-6">
+      <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[560px]">
+        <label className="block mb-3">
+          <span className={label}>Mejla nya bokningar till</span>
+          <input type="email" className={`${input} w-full`} value={s.notify_email} onChange={(e) => setS({ ...s, notify_email: e.target.value })} placeholder="Lämna tomt för att använda din inloggningsadress" />
+        </label>
+        <label className="block mb-3">
+          <span className={label}>Tidigast bokning (timmar i förväg)</span>
+          <input type="number" min={0} className={`${input} w-full`} value={s.min_notice_hours} onChange={(e) => setS({ ...s, min_notice_hours: e.target.value })} />
+        </label>
+        <label className="block">
+          <span className={label}>Hur många dagar framåt man kan boka</span>
+          <input type="number" min={1} className={`${input} w-full`} value={s.max_days_ahead} onChange={(e) => setS({ ...s, max_days_ahead: e.target.value })} />
+        </label>
+        <p className="text-[12px] text-ink-dim mt-3">Tider räknas i svensk tid ({data.settings.timezone}).</p>
+      </div>
+
+      <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[760px]">
+        <h2 className="text-[15px] font-semibold mb-1">Mejl till kunden</h2>
+        <p className="text-[13px] text-ink-dim mb-4">
+          Skriv egna texter, eller lämna fälten tomma så används standardtexten. Du kan använda{" "}
+          {MAIL_PLACEHOLDERS.map((p) => (
+            <code key={p} className="bg-bg px-1.5 py-0.5 rounded text-[12px] mr-1">{p}</code>
+          ))}
+          så fylls kundens uppgifter i automatiskt. Tid, tjänst, längd och pris visas alltid i mejlet.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="flex flex-col gap-3">
+            <div className="text-[13px] font-semibold">Bekräftelse när någon bokat</div>
+            <label className="block">
+              <span className={label}>Ämnesrad</span>
+              <input className={`${input} w-full`} value={s.confirm_subject} onChange={(e) => setS({ ...s, confirm_subject: e.target.value })} placeholder={DEFAULT_CONFIRM_SUBJECT} />
+            </label>
+            <label className="block">
+              <span className={label}>Inledande text</span>
+              <textarea rows={3} className={`${input} w-full`} value={s.confirm_intro} onChange={(e) => setS({ ...s, confirm_intro: e.target.value })} placeholder={DEFAULT_CONFIRM_INTRO} />
+            </label>
+            <label className="block">
+              <span className={label}>Bra att veta (valfri)</span>
+              <textarea rows={4} className={`${input} w-full`} value={s.confirm_extra} onChange={(e) => setS({ ...s, confirm_extra: e.target.value })} placeholder="t.ex. hur man hittar hit, vad man ska ta med, parkering" />
+            </label>
+            <div className="text-[13px] font-semibold mt-1">Vid avbokning</div>
+            <label className="block">
+              <span className={label}>Text i avbokningsmejlet</span>
+              <textarea rows={3} className={`${input} w-full`} value={s.cancel_intro} onChange={(e) => setS({ ...s, cancel_intro: e.target.value })} placeholder={DEFAULT_CANCEL_INTRO_CUSTOMER} />
+            </label>
+          </div>
+
+          <div>
+            <div className="text-[13px] font-semibold mb-2">Så ser bekräftelsen ut (exempel)</div>
+            <div className="rounded-xl border border-line bg-bg p-4 text-[13.5px]">
+              <div className="text-[11.5px] text-ink-dim mb-0.5">Ämne</div>
+              <div className="font-semibold mb-3">{fill(s.confirm_subject, DEFAULT_CONFIRM_SUBJECT)}</div>
+              <div className="rounded-lg bg-white border border-line p-4">
+                <div className="font-semibold text-[15px] mb-2">Din bokning är bekräftad</div>
+                <div className="whitespace-pre-line mb-3">{fill(s.confirm_intro, DEFAULT_CONFIRM_INTRO)}</div>
+                <div className="text-ink-dim text-[12.5px] mb-3">
+                  Tjänst: {example.tjänst}<br />
+                  Tid: {example.tid}<br />
+                  Längd: {example.längd}
+                  {example.pris && (<><br />Pris: {example.pris}</>)}
+                </div>
+                {s.confirm_extra.trim() && (
+                  <div className="rounded-lg bg-bg p-3 mb-3">
+                    <div className="font-semibold text-[12.5px] mb-1">Bra att veta</div>
+                    <div className="whitespace-pre-line text-[12.5px]">{applyMailTemplate(s.confirm_extra.trim(), example)}</div>
+                  </div>
+                )}
+                <span className="inline-block bg-ink text-white text-[12px] font-semibold px-3.5 py-1.5 rounded-full">Avboka tiden</span>
+              </div>
+              <div className="text-[11.5px] text-ink-dim mt-4 mb-1">Avbokningsmejl</div>
+              <div className="whitespace-pre-line">{fill(s.cancel_intro, DEFAULT_CANCEL_INTRO_CUSTOMER)}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button className={btnPrimary} disabled={busy} onClick={() => act({ action: "saveSettings", ...s }, "Inställningarna är sparade.")}>{busy ? "Sparar …" : "Spara inställningar"}</button>
+      </div>
     </div>
   );
 }

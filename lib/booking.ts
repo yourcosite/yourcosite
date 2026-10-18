@@ -147,3 +147,28 @@ export function formatSwedish(instant: Date, tz: string): string {
 export function formatPrice(price?: number | null): string {
   return price == null ? "" : `${new Intl.NumberFormat("sv-SE").format(price)} kr`;
 }
+
+// ---- Mejltexter som ägaren kan skriva själv ----
+// Platshållare som ersätts när mejlet skickas: {namn} {tjänst} {tid} {längd}
+// {pris} {sajt}. Tomma fält ger standardtexten.
+export type MailTexts = {
+  confirm_subject?: string | null;
+  confirm_intro?: string | null;
+  confirm_extra?: string | null;
+  cancel_intro?: string | null;
+};
+export const MAIL_PLACEHOLDERS = ["{namn}", "{tjänst}", "{tid}", "{längd}", "{pris}", "{sajt}"];
+export const DEFAULT_CONFIRM_SUBJECT = "Bokningsbekräftelse: {tjänst}, {tid}";
+export const DEFAULT_CONFIRM_INTRO = "Hej {namn}! Tack för din bokning hos {sajt}. Här är uppgifterna.";
+export const DEFAULT_CANCEL_INTRO_CUSTOMER = "Hej {namn}! Din bokning hos {sajt} är nu avbokad.";
+export const DEFAULT_CANCEL_INTRO_OWNER = "Hej {namn}! {sajt} har tyvärr avbokat tiden nedan. Hör av dig till dem om du vill boka en ny.";
+
+export function applyMailTemplate(template: string, v: { namn: string; tjänst: string; tid: string; längd: string; pris: string; sajt: string }): string {
+  return template
+    .replace(/\{namn\}/gi, v.namn)
+    .replace(/\{tjänst\}/gi, v.tjänst)
+    .replace(/\{tid\}/gi, v.tid)
+    .replace(/\{längd\}/gi, v.längd)
+    .replace(/\{pris\}/gi, v.pris)
+    .replace(/\{sajt\}/gi, v.sajt);
+}

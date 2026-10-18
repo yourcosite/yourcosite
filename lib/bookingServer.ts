@@ -1,6 +1,12 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import {
+  DEFAULT_CANCEL_INTRO_CUSTOMER,
+  DEFAULT_CANCEL_INTRO_OWNER,
+  DEFAULT_CONFIRM_INTRO,
+  DEFAULT_CONFIRM_SUBJECT,
   DEFAULT_TIMEZONE,
+  applyMailTemplate,
+  type MailTexts,
   formatPrice,
   formatSwedish,
   type BookingBlock,
@@ -22,7 +28,7 @@ export const DEFAULT_SETTINGS: BookingSettings = {
 };
 
 export type SiteBookingData = {
-  settings: BookingSettings & { notify_email: string | null };
+  settings: BookingSettings & { notify_email: string | null } & MailTexts;
   packages: BookingPackage[];
   rules: BookingRule[];
   slots: BookingSlot[];
@@ -47,6 +53,10 @@ export async function loadSiteBookingData(db: SupabaseClient, siteId: string): P
       max_days_ahead: s?.max_days_ahead ?? DEFAULT_SETTINGS.max_days_ahead,
       timezone: s?.timezone || DEFAULT_SETTINGS.timezone,
       notify_email: s?.notify_email ?? null,
+      confirm_subject: s?.confirm_subject ?? null,
+      confirm_intro: s?.confirm_intro ?? null,
+      confirm_extra: s?.confirm_extra ?? null,
+      cancel_intro: s?.cancel_intro ?? null,
     },
     packages: (packages.data as BookingPackage[]) || [],
     rules: ((rules.data as BookingRule[]) || []).map((r) => ({ ...r, start_time: String(r.start_time).slice(0, 5), end_time: String(r.end_time).slice(0, 5) })),
@@ -83,7 +93,7 @@ export async function sendBookingEmails(opts: {
   siteId: string;
   siteName: string;
   booking: BookingRow;
-  settings: BookingSettings & { notify_email: string | null };
+  settings: BookingSettings & { notify_email: string | null } & MailTexts;
   origin: string;
 }) {
   const { db, siteId, siteName, booking: b, settings, origin } = opts;
@@ -97,18 +107,23 @@ export async function sendBookingEmails(opts: {
   ];
   const cancelUrl = `${origin}/avboka/${b.cancel_token}`;
   const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
+  const vars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: `${b.duration_min} minuter`, pris: price, sajt: siteName };
+  const subject = applyMailTemplate(settings.confirm_subject?.trim() || DEFAULT_CONFIRM_SUBJECT, vars).replace(/\s+/g, " ").slice(0, 200);
+  const intro = applyMailTemplate(settings.confirm_intro?.trim() || DEFAULT_CONFIRM_INTRO, vars);
+  const extraText = settings.confirm_extra?.trim() ? applyMailTemplate(settings.confirm_extra.trim(), vars) : "";
 
   const customer = sendEmail({
     to: b.customer_email,
-    subject: `Bokningsbekräftelse: ${b.package_name}, ${when}`,
+    subject,
     html: emailLayout({
       title: "Din bokning är bekräftad",
-      intro: `Hej ${b.customer_name}! Tack för din bokning hos ${siteName}. Här är uppgifterna.`,
+      intro,
       rows,
+      extra: extraText ? { heading: "Bra att veta", text: extraText } : undefined,
       button: { label: "Avboka tiden", url: cancelUrl },
       footer: "Behöver du ändra något kan du avboka via knappen och boka en ny tid, eller svara på det här mejlet.",
     }),
-    text: `Din bokning hos ${siteName} är bekräftad.\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}\n\nAvboka: ${cancelUrl}`,
+    text: `${intro}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}${extraText ? `\n\nBra att veta:\n${extraText}` : ""}\n\nAvboka: ${cancelUrl}`,
     replyTo: ownerTo || undefined,
   });
 
@@ -142,23 +157,28 @@ export async function sendCancellationEmails(opts: {
   siteId: string;
   siteName: string;
   booking: BookingRow;
-  settings: BookingSettings & { notify_email: string | null };
+  settings: BookingSettings & { notify_email: string | null } & MailTexts;
   cancelledBy: "customer" | "owner";
 }) {
   const { db, siteId, siteName, booking: b, settings, cancelledBy } = opts;
   const when = formatSwedish(new Date(b.starts_at), settings.timezone);
   const rows: [string, string][] = [["Tjänst", b.package_name], ["Tid", when]];
   const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
+  const cancelVars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: `${b.duration_min} minuter`, pris: formatPrice(b.price_sek), sajt: siteName };
+  const cancelIntro = applyMailTemplate(
+    settings.cancel_intro?.trim() || (cancelledBy === "owner" ? DEFAULT_CANCEL_INTRO_OWNER : DEFAULT_CANCEL_INTRO_CUSTOMER),
+    cancelVars
+  );
   const tasks: Promise<unknown>[] = [
     sendEmail({
       to: b.customer_email,
       subject: `Avbokad: ${b.package_name}, ${when}`,
       html: emailLayout({
         title: "Din bokning är avbokad",
-        intro: cancelledBy === "owner" ? `Hej ${b.customer_name}! ${siteName} har tyvärr avbokat tiden nedan. Hör av dig till dem om du vill boka en ny.` : `Hej ${b.customer_name}! Din bokning hos ${siteName} är nu avbokad.`,
+        intro: cancelIntro,
         rows,
       }),
-      text: `Din bokning hos ${siteName} är avbokad.\n\nTjänst: ${b.package_name}\nTid: ${when}`,
+      text: `${cancelIntro}\n\nTjänst: ${b.package_name}\nTid: ${when}`,
       replyTo: ownerTo || undefined,
     }),
   ];

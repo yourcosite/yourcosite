@@ -634,3 +634,9 @@ create policy "Staff kan läsa bokningar" on bookings for select using (public.i
 
 -- Valfri bild per bokningspaket (körs en gång på sajter som redan har bokningstabellerna).
 alter table booking_packages add column if not exists image_url text;
+
+-- Egna mejltexter för bokningsbekräftelse och avbokning (körs en gång).
+alter table booking_settings add column if not exists confirm_subject text;
+alter table booking_settings add column if not exists confirm_intro text;
+alter table booking_settings add column if not exists confirm_extra text;
+alter table booking_settings add column if not exists cancel_intro text;

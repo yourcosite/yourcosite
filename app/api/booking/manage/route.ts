@@ -47,6 +47,10 @@ export async function GET(request: Request) {
       min_notice_hours: s?.min_notice_hours ?? 12,
       max_days_ahead: s?.max_days_ahead ?? 60,
       timezone: s?.timezone || DEFAULT_TIMEZONE,
+      confirm_subject: s?.confirm_subject ?? "",
+      confirm_intro: s?.confirm_intro ?? "",
+      confirm_extra: s?.confirm_extra ?? "",
+      cancel_intro: s?.cancel_intro ?? "",
     },
     packages: packages.data || [],
     rules: ((rules.data as any[]) || []).map((r) => ({ ...r, start_time: String(r.start_time).slice(0, 5), end_time: String(r.end_time).slice(0, 5) })),
@@ -172,6 +176,10 @@ export async function POST(request: Request) {
       if (!(ahead >= 1 && ahead <= 365)) return fail("Hur långt fram måste vara mellan 1 och 365 dagar.");
       const { error } = await supabase.from("booking_settings").upsert({
         site_id: site.id, notify_email: email || null, min_notice_hours: notice, max_days_ahead: ahead, timezone: tz,
+        confirm_subject: txt(body.confirm_subject, 150) || null,
+        confirm_intro: txt(body.confirm_intro, 1000) || null,
+        confirm_extra: txt(body.confirm_extra, 1500) || null,
+        cancel_intro: txt(body.cancel_intro, 1000) || null,
       });
       if (error) return fail("Kunde inte spara inställningarna.", 500);
       return NextResponse.json({ ok: true });
