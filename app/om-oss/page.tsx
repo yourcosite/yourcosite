@@ -47,10 +47,13 @@ export default function AboutPage() {
             </h1>
             <div className="flex flex-col gap-5 text-[15px] leading-relaxed text-ink-dim max-w-[62ch]">
               <p>
-                {t("CS Kommunikationsbyrå AB bildades 2013 av Carl Schnell och är baserad i Borensberg, med fokus på Östergötland — men med uppdrag i hela Sverige och internationellt. Byrån tar hand om hela kommunikationen åt sina kunder: sociala medier, digital annonsering, föreläsningar, dronarfotografering, film och medierådgivning.")}
+                {t("CS Kommunikationsbyrå AB bildades 2013 av Carl Schnell och finns i Borensberg, Sverige, med fokus på Östergötland — men med uppdrag i hela Sverige och internationellt. Byrån tar hand om hela kommunikationen åt sina kunder: sociala medier, digital annonsering, föreläsningar, drönarfotografering, film och medierådgivning.")}
               </p>
               <p>
-                {t("När Carl byggde om cskb.se tillsammans med Claude — helt genom ett samtal, utan att skriva en rad kod själv — insåg han hur mycket det förändrade arbetet. YourCoSite föddes ur den insikten: samma sätt att bygga en riktigt genomarbetad sajt, tillgängligt för alla företag, inte bara de som råkar ha en kommunikationsbyrå till hands.")}
+                {t("Under åren har vi arbetat med tusentals kunder och byggt mängder av webbplatser, framför allt i WordPress. Vi har märkt att kunden ofta inte kan hantera sidan själv efteråt, även när den är byggd på ett enkelt sätt, och då löpande behöver hjälp.")}
+              </p>
+              <p>
+                {t("Det vill vi göra enklare, och spara pengar åt våra kunder. När Carl byggde om cskb.se tillsammans med Claude — helt genom ett samtal, utan att skriva en rad kod själv — insåg han hur mycket det förändrade arbetet. YourCoSite föddes ur den insikten: en riktigt genomarbetad sajt som du själv ändrar genom att prata med Millie, tillgänglig för alla företag, inte bara de som råkar ha en kommunikationsbyrå till hands.")}
               </p>
             </div>
             <div className="flex gap-6 mt-8 text-[14px] font-semibold">
