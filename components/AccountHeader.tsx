@@ -109,6 +109,13 @@ export default function AccountHeader({
             >
               {t("Kontakta oss")}
             </button>
+            <Link
+              href="/support"
+              onClick={() => setMenuOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-ink text-left"
+            >
+              {t("Supporthistorik")}
+            </Link>
             <div className="h-px bg-line my-1.5" />
             <div className="px-3 py-2"><LanguageSwitcher className="w-full" /></div>
             <button

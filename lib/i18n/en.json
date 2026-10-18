@@ -1262,5 +1262,12 @@
   "Vid första besöket visas en cookiebanner där besökaren kan välja \"Acceptera alla\", \"Endast nödvändiga\" eller \"Hantera val\" för att välja per kategori. Valet går att ändra när som helst via en länk i sidfoten (\"Cookieinställningar\"). Samtycket sparas i 12 månader, därefter tillfrågas besökaren igen.": "On the first visit a cookie banner is shown where the visitor can choose \"Accept all\", \"Necessary only\" or \"Manage choices\" to choose per category. The choice can be changed at any time via a link in the footer (\"Cookie settings\"). Consent is stored for 12 months, after which the visitor is asked again.",
   "Tredjepartscookies": "Third-party cookies",
   "Om analys- eller marknadsföringsverktyg från tredje part (t.ex. Google Analytics, Meta) aktiveras på en kunds webbplats listas dessa specifikt i cookiebannerns detaljvy, med länk till leverantörens egen integritetspolicy.": "If analytics or marketing tools from third parties (for example Google Analytics, Meta) are activated on a customer's website, these are listed specifically in the cookie banner's detail view, with a link to the provider's own privacy policy.",
-  "Det här är en översättning av den svenska versionen och är till för att underlätta förståelsen. Om versionerna skiljer sig åt gäller den svenska.": "This is a translation of the Swedish version and is provided for ease of understanding. If the versions differ, the Swedish version prevails."
+  "Det här är en översättning av den svenska versionen och är till för att underlätta förståelsen. Om versionerna skiljer sig åt gäller den svenska.": "This is a translation of the Swedish version and is provided for ease of understanding. If the versions differ, the Swedish version prevails.",
+  "Din supporthistorik": "Your support history",
+  "Här ser du allt du skrivit till supporten och svaren du fått. Vill du skriva till oss igen väljer du Kontakta oss i kontomenyn.": "Here you can see everything you have written to support and the replies you have received. To write to us again, choose Contact us in the account menu.",
+  "Du har inte skrivit till supporten än.": "You have not written to support yet.",
+  "Besvarad": "Answered",
+  "Väntar på svar": "Waiting for a reply",
+  "Svar från supporten": "Reply from support",
+  "Supporthistorik": "Support history"
 }
