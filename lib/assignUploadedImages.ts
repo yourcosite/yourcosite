@@ -47,6 +47,9 @@ export function assignUploadedImages(
           // hero gör. Utan uppladdade foton rör vi ingenting — SitePreview
           // faller då tillbaka på gradient-platshållaren, som vanligt.
           section.imageUrl = next();
+        } else if (section.type === "booking" && (section.layout === "image-left" || section.layout === "image-right" || section.layout === "image-background")) {
+          // Samma princip som hero imageUrl — se contentModel.ts BookingSection.imageUrl.
+          section.imageUrl = next();
         } else if (section.type === "cta" && (section.layout === "image-bleed" || section.layout === "dark-split")) {
           // Samma princip igen — se contentModel.ts CtaSection.imageUrl.
           section.imageUrl = next();

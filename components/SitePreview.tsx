@@ -4916,30 +4916,85 @@ function SectionBlockInner({
     }
 
     case "booking": {
-      return (
-        <div className="px-10 py-16 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
+      const bLayout = section.layout || "standard";
+      const headingEl = (extra: string) => (
+        <Field
+          editable={editable}
+          as="h2"
+          className={`font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 ${extra}`}
+          selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+          onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+        >
+          {section.heading}
+        </Field>
+      );
+      const bodyEl = (extra: string, style?: React.CSSProperties) =>
+        section.body ? (
           <Field
             editable={editable}
-            as="h2"
-            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center"
-            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
-            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            as="p"
+            className={`text-[14.5px] ${extra}`}
+            style={style ?? { color: palette.textDim }}
+            selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+            onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
           >
-            {section.heading}
+            {section.body}
           </Field>
-          {section.body && (
-            <Field
-              editable={editable}
-              as="p"
-              className="text-[14.5px] mb-7 text-center"
-              style={{ color: palette.textDim }}
-              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
-              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
-            >
-              {section.body}
-            </Field>
-          )}
-          <BookingBlock section={section} palette={palette} accent={accent} siteId={bookingSiteId ?? siteId ?? bookingPreviewSiteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
+        ) : null;
+      const flow = (
+        <BookingBlock section={section} palette={palette} accent={accent} siteId={bookingSiteId ?? siteId ?? bookingPreviewSiteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
+      );
+
+      if (bLayout === "image-left" || bLayout === "image-right") {
+        const image = (
+          <ImageOrArt imageUrl={section.imageUrl} art={art} className="rounded-2xl min-h-[260px] @3xl:min-h-[520px] h-full" />
+        );
+        return (
+          <div className="grid @3xl:grid-cols-2 gap-8 @3xl:gap-12 max-w-[1040px] mx-auto px-8 @3xl:px-12 py-14 @3xl:py-16 items-stretch" style={{ background: sectionBg }}>
+            {bLayout === "image-left" && image}
+            <div className="flex flex-col justify-center">
+              {headingEl("")}
+              {bodyEl("mb-7")}
+              {flow}
+            </div>
+            {bLayout === "image-right" && image}
+          </div>
+        );
+      }
+
+      if (bLayout === "image-background") {
+        return (
+          <div className="relative px-6 @3xl:px-12 py-16 @3xl:py-24 overflow-hidden" style={{ minHeight: 520 }}>
+            <ImageOrArt imageUrl={section.imageUrl} art={art} fill />
+            <div className="absolute inset-0 pointer-events-none" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.35) 100%)" }} />
+            <div className="relative max-w-[640px] mx-auto text-white text-center mb-8">
+              {headingEl("")}
+              {bodyEl("", { color: "rgba(255,255,255,0.85)" })}
+            </div>
+            <div className="relative max-w-[640px] mx-auto rounded-2xl p-6 @3xl:p-8 shadow-[0_24px_60px_rgba(0,0,0,0.3)]" style={{ background: palette.bg, color: palette.text }}>
+              {flow}
+            </div>
+          </div>
+        );
+      }
+
+      if (bLayout === "compact") {
+        return (
+          <div className="px-6 @3xl:px-10 py-10 max-w-[560px] mx-auto" style={{ background: sectionBg }}>
+            <div className="rounded-2xl border p-5 @3xl:p-6" style={{ background: palette.cardBg, borderColor: palette.cardBorder }}>
+              {headingEl("text-[length:calc(22px*var(--ycs-ts,1))]")}
+              {bodyEl("mb-5 text-[13.5px]")}
+              {flow}
+            </div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="px-10 py-16 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
+          {headingEl("text-center")}
+          {bodyEl("mb-7 text-center")}
+          {flow}
         </div>
       );
     }

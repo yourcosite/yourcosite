@@ -7,6 +7,7 @@ import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageCon
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
+import { fillMissingImages, pagesNeedingImages } from "@/lib/ensureImageSlots";
 import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
 import { isSkinId } from "@/lib/skins";
 import { dedupeMaps } from "@/lib/ensureImageSlots";
@@ -240,6 +241,9 @@ VIKTIGT — video ("video"-sektion): ber kunden att få en YouTube-video inbädd
 VIKTIGT — sektioner läggs ALLTID under varandra, ALDRIG bredvid varandra, oavsett typ (en sida är en enkel lista av sektioner, inget rutnät av sektioner). Ber kunden om "X och Y bredvid varandra" eller "i samma sektion/rad" där X/Y är två OLIKA sektionstyper, finns bara EN kombination som faktiskt stöds: ett kontaktformulär med en karta bredvid — sätt då "contactForm"-sektionens "layout" till "split-map" och fyll i dess "address" (samma regel som för "map" ovan: EXAKT kundens adress, aldrig påhittad), ISTÄLLET FÖR en separat "map"-sektion. Har kunden redan en separat "map"-sektion med samma adress när de ber om detta, ta bort den (lägg inte till dess path i "changedPages" igen, eller skriv ut sidans sektionslista utan den) så det inte blir dubbelt. Någon annan kombination av sektioner sida vid sida går inte att göra — förklara det kort i "summary" och föreslå att lägga dem efter varandra istället.
 
 VIKTIGT — bokningssektionen ("booking"): låter besökare välja paket, dag och tid och boka direkt på sidan (bekräftelse går på mejl till både besökaren och sajtens ägare, och bokade tider blockeras automatiskt). Ber kunden om bokning, tidsbokning eller att kunder ska kunna boka tid, lägg till "booking"-sektionen på den sida kunden pekar ut, VILKEN sida som helst (högst en per sida), och placera den längst ned på sidan om kunden inte säger annat eller anger en annan plats (t.ex. "under bilden" eller "högst upp"). Pekar kunden inte ut någon sida: föreslå och använd en egen sida "Boka" eller kontaktsidan. Paketen, priserna, öppettiderna och bokningarna kan du INTE skapa eller ändra här — kunden gör det själv på sidan "Bokningar" i panelen (knappen Bokningar i redigeraren). Säg det i "summary" när du lägger till sektionen så kunden vet att nästa steg är att lägga upp paket och tider där. Ta ALDRIG bort en befintlig "booking"-sektion om inte kunden uttryckligen ber om det.
+
+BOKNINGSMALLAR — "booking"-sektionens "layout": "standard" (centrerad, enkel), "compact" (smal, tät ruta i ett kort), "image-left"/"image-right" (en bild bredvid bokningen) och "image-background" (bild bakom en bokningsruta; dramatisk). Utelämna alltid "imageUrl" (bilden sätts av vårt system av sajtens egna foton). Tre färdiga SIDMALLAR för en hel bokningssida (path "/boka" om kunden inte sagt annat, label "Boka tid"): (1) "Klassisk": en "hero" (layout "centered", rubrik + kort text om vad man kan boka), sedan "booking" (layout "standard"), sedan en "faq" med 3 allmänna frågor (hur bokningen går till, hur man avbokar via länken i mejlet, vad man behöver ta med är OK att utelämna om det vore påhittat), sist en "contact"-sektion om sajten har kontaktuppgifter. (2) "Bildstark": en "hero" (layout "overlay-bottom"), sedan "booking" (layout "image-background"), sedan en "contact"-sektion om det finns kontaktuppgifter. (3) "Lugn": en "hero" (layout "split-right"), sedan "booking" (layout "image-left"), sedan en "faq" med 3 allmänna frågor. Hitta aldrig på priser, tider, villkor, öppettider eller erbjudanden i någon mall.
+FRÅGA FÖRST om utseendet: ber kunden om en bokningssida eller bokningssektion utan att ha valt mall eller utseende (inget av orden mall, layout, bild bredvid, bild i bakgrunden, kompakt, klassisk, bildstark, lugn finns i meddelandet eller tidigare i samtalet), gör du INGA ändringar. Ställ då en kort fråga i "summary" ("Vilket utseende vill du ha på bokningen?") och ge 3-4 kompletta klickbara önskemål i "clarifyOptions". Gäller det en HEL SIDA: "Skapa en bokningssida, mall Klassisk (enkel och ren)", "Skapa en bokningssida, mall Bildstark (stor bild bakom bokningen)", "Skapa en bokningssida, mall Lugn (bild bredvid bokningen)". Gäller det en sektion på en befintlig sida (kontrollera sidans namn i listan ovan): "Lägg till bokningen längst ned på sidan X, standard", "... med bild bredvid", "... med bild i bakgrunden", "... som en kompakt ruta" (byt X mot rätt sidnamn). Har kunden redan valt utseende eller mall (eller svarar på din fråga), bygg det direkt utan att fråga igen. Byter kunden utseende på en befintlig bokning ("byt bokningen till bild bredvid"), ändra bara "layout" och behåll resten oförändrat.
 
 VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
 
@@ -701,6 +705,22 @@ export async function POST(request: Request) {
   else delete updatedContent.logoUrl;
   if (Array.isArray(site.social_links) && site.social_links.length > 0) {
     updatedContent.socialLinks = site.social_links;
+  }
+
+  // Nya sektioner med bildplats (t.ex. en ny hero eller en bokning med
+  // bildlayout) får sajtens egna foton i stället för en tom platshållare.
+  // Rör bara sidor som ändrades i den här redigeringen.
+  {
+    const before = new Map((site.content as SiteContent).pages.map((pg) => [pg.path, JSON.stringify(pg)]));
+    const changedPaths = new Set(updatedContent.pages.filter((pg) => before.get(pg.path) !== JSON.stringify(pg)).map((pg) => pg.path));
+    if (changedPaths.size > 0 && pagesNeedingImages(updatedContent, changedPaths)) {
+      const { data: assetRows } = await supabase
+        .from("site_assets")
+        .select("file_url")
+        .eq("site_id", site.id)
+        .eq("kind", "image");
+      fillMissingImages(updatedContent, (assetRows || []).map((r: { file_url: string }) => r.file_url), changedPaths);
+    }
   }
 
   const { error: saveError } = await supabase

@@ -117,3 +117,79 @@ export function dedupeMaps(content: SiteContent, mode: "drop-map" | "flatten-for
   }
   return content;
 }
+
+// ---------------------------------------------------------------------
+// Bilder till NYA sektioner som Millie lägger till i chatten. Millie får
+// aldrig hitta på bildadresser, så en ny hero eller bokningssektion med
+// bildlayout stod tidigare med en tom platshållare. Här fyller vi i koden
+// de bildplatser som saknar bild på sidor som ändrades i den här
+// redigeringen, med sajtens egna foton: först uppladdade foton som inte
+// används någonstans än, annars de som används minst. Inget befintligt
+// imageUrl rörs, och finns inga foton alls ändras ingenting.
+type AnySection = Record<string, any>;
+
+function wantsImage(s: AnySection): boolean {
+  switch (s.type) {
+    case "hero":
+      return true;
+    case "about":
+      return ["image-full", "image-stats", "image-left", "image-right"].includes(s.layout);
+    case "cta":
+      return s.layout === "image-bleed" || s.layout === "dark-split";
+    case "testimonials":
+      return s.layout === "full-bleed";
+    case "booking":
+      return ["image-left", "image-right", "image-background"].includes(s.layout);
+    default:
+      return false;
+  }
+}
+
+export function pagesNeedingImages(content: SiteContent, changedPaths: Set<string>): boolean {
+  return content.pages.some(
+    (p) => changedPaths.has(p.path) && (p.sections as AnySection[]).some((s) => wantsImage(s) && !s.imageUrl)
+  );
+}
+
+export function fillMissingImages(content: SiteContent, uploadedUrls: string[], changedPaths: Set<string>): SiteContent {
+  const usage = new Map<string, number>();
+  const note = (u: unknown) => {
+    if (typeof u === "string" && u) usage.set(u, (usage.get(u) || 0) + 1);
+  };
+  for (const page of content.pages) {
+    for (const s of page.sections as AnySection[]) {
+      note(s.imageUrl);
+      (s.collageImageUrls || []).forEach(note);
+      for (const key of ["items", "testimonials", "quotes"]) {
+        if (Array.isArray(s[key])) s[key].forEach((it: AnySection) => note(it?.imageUrl));
+      }
+    }
+  }
+  for (const u of uploadedUrls) if (!usage.has(u)) usage.set(u, 0);
+  if (usage.size === 0) return content;
+
+  const pick = () => {
+    let best: string | null = null;
+    let bestCount = Infinity;
+    for (const [u, c] of usage) {
+      if (c < bestCount) {
+        best = u;
+        bestCount = c;
+      }
+    }
+    if (best) usage.set(best, bestCount + 1);
+    return best as string;
+  };
+
+  for (const page of content.pages) {
+    if (!changedPaths.has(page.path)) continue;
+    for (const s of page.sections as AnySection[]) {
+      if (!wantsImage(s) || s.imageUrl) continue;
+      s.imageUrl = pick();
+      if (s.type === "hero" && !(s.collageImageUrls && s.collageImageUrls.length)) {
+        s.collageImageUrls = [pick(), pick()];
+      }
+    }
+  }
+  return content;
+}

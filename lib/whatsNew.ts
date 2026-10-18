@@ -13,6 +13,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-18-bokningsmallar",
+    date: "2026-10-18",
+    icon: "🖼️",
+    title: "Bokningen i flera utseenden",
+    text: "Bokningen finns nu med bild bredvid, bild i bakgrunden eller som en kompakt ruta, och som färdiga bokningssidor: Klassisk, Bildstark och Lugn. Millie frågar vilket du vill ha och använder dina egna foton. Nya sidor och sektioner Millie lägger till får nu också bilder från dina foton i stället för tomma platser.",
+    try: "Skapa en bokningssida",
+  },
+  {
     id: "2026-10-18-bokning",
     date: "2026-10-18",
     icon: "📅",

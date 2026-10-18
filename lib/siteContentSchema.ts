@@ -353,6 +353,12 @@ const RAW_SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "booking" },
+        layout: {
+          type: "string",
+          enum: ["standard", "compact", "image-left", "image-right", "image-background"],
+          description:
+            "Utseende: \"standard\" (centrerad, vanligast), \"compact\" (smal, tät ruta), \"image-left\"/\"image-right\" (en bild BREDVID bokningen) eller \"image-background\" (bild bakom en bokningsruta). Utelämna \"imageUrl\" — bilden sätts av vårt system.",
+        },
         heading: { type: "string" },
         body: { type: "string", description: "Valfri kort text under rubriken, t.ex. \"Välj tjänst och tid som passar dig.\"" },
         bgColor: BG_COLOR_SCHEMA,

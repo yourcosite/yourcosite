@@ -87,6 +87,7 @@ export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side
 export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
+export type BookingLayout = "standard" | "compact" | "image-left" | "image-right" | "image-background";
 export type MapLayout = "inline" | "full-bleed";
 export type VideoLayout = "inline" | "full-bleed";
 
@@ -430,6 +431,12 @@ export interface NewsListSection {
 export interface BookingSection {
   id: string;
   type: "booking";
+  // "standard" (centrerad), "compact" (smal ruta), "image-left"/"image-right"
+  // (bild bredvid bokningen) och "image-background" (bild bakom en
+  // bokningsruta). Saknas = "standard". De tre bildlayouterna får sin bild
+  // i kod (imageUrl), på samma sätt som HeroSection.imageUrl.
+  layout?: BookingLayout;
+  imageUrl?: string;
   heading: string;
   body?: string;
   // Se HeroSection.bgColor — samma princip.
