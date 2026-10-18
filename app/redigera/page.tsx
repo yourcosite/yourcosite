@@ -1,5 +1,6 @@
 "use client";
 
+import MenuStyleThumb, { type MenuStyleId } from "@/components/MenuStyleThumb";
 import { rich } from "@/lib/i18n/rich";
 import { msg } from "@/lib/i18n/config";
 import { useT, useLocale } from "@/components/I18nProvider";
@@ -39,6 +40,8 @@ type ChatMessage = {
   // Millies kontrollfråga: svarsalternativ som skickas direkt vid klick.
   // Visas bara på det SISTA meddelandet och sparas inte i historiken.
   options?: string[];
+  // Förhandsbild per alternativ (menystilar), samma ordning som options.
+  optionPreviews?: MenuStyleId[];
   // Visas men sparas inte i historiken (presentation, hälsning, tips).
   transient?: boolean;
 };
@@ -651,7 +654,7 @@ export default function EditorPage() {
 
   useEffect(() => {
     if (!chatKey || !chatRestored.current) return;
-    const toSave = messages.filter((m) => !m.transient).slice(-40).map(({ options, ...rest }) => rest);
+    const toSave = messages.filter((m) => !m.transient).slice(-40).map(({ options, optionPreviews, ...rest }) => rest);
     if (toSave.length === 0) return; // skriv aldrig över sparad historik med tomt
     try {
       localStorage.setItem(chatKey, JSON.stringify({ messages: toSave }));
@@ -1003,6 +1006,7 @@ export default function EditorPage() {
           text: data.summary || t("Klart!"),
           unsupported: !!data.unsupported,
           options: isQuestion ? data.options : undefined,
+          optionPreviews: isQuestion && Array.isArray(data.optionPreviews) && data.optionPreviews.length === data.options.length ? data.optionPreviews : undefined,
           requestText: text || currentAttachments.map((a) => a.name).join(", "),
         },
         // Varning från servern (t.ex. en nyhet utan nyhetslista att visas i)
@@ -1343,14 +1347,15 @@ export default function EditorPage() {
                   )}
                   {m.options && m.options.length > 0 && i === messages.length - 1 && !sending && (
                     <div className="flex flex-col gap-1.5 mt-2.5">
-                      {m.options.map((o) => (
+                      {m.options.map((o, oi) => (
                         <button
                           key={o}
                           type="button"
                           onClick={() => send(o)}
-                          className="text-left text-[12.5px] font-semibold bg-surface border border-line rounded-xl px-3 py-2 text-ink hover:border-ink"
+                          className="text-left text-[12.5px] font-semibold bg-surface border border-line rounded-xl px-3 py-2 text-ink hover:border-ink flex items-center gap-3"
                         >
-                          {o}
+                          {m.optionPreviews?.[oi] && <MenuStyleThumb style={m.optionPreviews[oi]} accent={content?.theme.accentColor} />}
+                          <span>{o}</span>
                         </button>
                       ))}
                     </div>
