@@ -640,3 +640,14 @@ alter table booking_settings add column if not exists confirm_subject text;
 alter table booking_settings add column if not exists confirm_intro text;
 alter table booking_settings add column if not exists confirm_extra text;
 alter table booking_settings add column if not exists cancel_intro text;
+
+
+-- Spärr mot missbruk (rate limiting). Körs en gång. Ingen policy behövs:
+-- bara servern (service role) når tabellen.
+create table if not exists rate_limit_hits (
+  id bigint generated always as identity primary key,
+  key text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists rate_limit_hits_key_idx on rate_limit_hits (key, created_at desc);
+alter table rate_limit_hits enable row level security;

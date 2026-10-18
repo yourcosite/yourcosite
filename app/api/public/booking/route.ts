@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { computeAvailability, isStartAvailable } from "@/lib/booking";
 import { loadSiteBookingData, sendBookingEmails } from "@/lib/bookingServer";
+import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
 
 // Publika bokningsrutten för en kundsajt (besökare är inte inloggade hos
 // oss, därför service role med egen koll av siteId — samma mönster som
@@ -39,6 +40,14 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
+  // Dolt fält som riktiga besökare aldrig fyller i; botar gör det ofta.
+  if (typeof body.website === "string" && body.website.trim()) {
+    return NextResponse.json({ ok: true, booking: null, emailSent: false });
+  }
+  const ip = clientIp(request);
+  if (await rateLimited(`booking:ip:${ip}`, 6, 3600)) {
+    return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+  }
   const siteId = body.siteId;
   const packageId = body.packageId;
   const startsAt = typeof body.startsAt === "string" ? body.startsAt : "";
@@ -53,6 +62,12 @@ export async function POST(request: Request) {
   if (!name) return NextResponse.json({ error: "Skriv ditt namn." }, { status: 400 });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: "Skriv en giltig e-postadress, dit bekräftelsen skickas." }, { status: 400 });
+  }
+
+  // Samma e-postadress får inte boka hur många tider som helst per timme,
+  // och en sajt får inte översköljas.
+  if (await rateLimited(`booking:mail:${email.toLowerCase()}`, 4, 3600) || await rateLimited(`booking:site:${siteId}`, 60, 3600)) {
+    return NextResponse.json({ error: TOO_MANY }, { status: 429 });
   }
 
   const db = createAdminClient();

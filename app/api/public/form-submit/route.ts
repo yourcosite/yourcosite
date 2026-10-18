@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
 
 // Tar emot ett inskick från en "contactForm"-sektion (components/
 // SitePreview.tsx, ContactFormBlock). Publik rutt (besökare på en
@@ -11,6 +12,7 @@ const MAX_MESSAGE_LENGTH = 5000;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
+  if (typeof body.website === "string" && body.website.trim()) return NextResponse.json({ ok: true });
   const siteId = typeof body.siteId === "string" ? body.siteId : "";
   if (!siteId) return NextResponse.json({ error: "Saknar siteId." }, { status: 400 });
 
@@ -23,6 +25,10 @@ export async function POST(request: Request) {
   const name = typeof body.name === "string" && body.name.trim() ? body.name.trim().slice(0, MAX_FIELD_LENGTH) : null;
   const email =
     typeof body.email === "string" && body.email.trim() ? body.email.trim().slice(0, MAX_FIELD_LENGTH) : null;
+
+  if ((await rateLimited(`form:ip:${clientIp(request)}`, 10, 3600)) || (await rateLimited(`form:site:${siteId}`, 100, 3600))) {
+    return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+  }
 
   const admin = createAdminClient();
   const { data: site } = await admin.from("sites").select("id").eq("id", siteId).maybeSingle();

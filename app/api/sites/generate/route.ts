@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimited } from "@/lib/rateLimit";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
@@ -321,6 +322,9 @@ async function generateSite(emit: (p: Progress) => void) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (await rateLimited(`generate:user:${user.id}`, 15, 86400)) {
+    return NextResponse.json({ error: "Du har nått dagens gräns för att bygga sajt. Försök igen i morgon." }, { status: 429 });
+  }
 
   // Samma sajt kunden faktiskt fyllde i (sidor, foton, logga m.m.) i
   // onboardingen — inte bara "senaste utkastet" rakt av, som kunde peka fel

@@ -1661,6 +1661,7 @@ function BookingBlock({
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [hp, setHp] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<{ startsAt: string; packageName: string; emailSent: boolean } | null>(null);
@@ -1715,7 +1716,7 @@ function BookingBlock({
       const res = await fetch("/api/public/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId, packageId: pkg.id, startsAt: time, name, email, phone, message }),
+        body: JSON.stringify({ siteId, packageId: pkg.id, startsAt: time, name, email, phone, message, website: hp }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -1864,6 +1865,7 @@ function BookingBlock({
 
       {pkg && time && (
         <form onSubmit={submit} className="flex flex-col gap-3">
+        <input type="text" name="website" value={hp} onChange={(e) => setHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
           <div className={stepTitle} style={{ color: palette.textDim }}>3. Dina uppgifter</div>
           <div className="text-[13.5px] font-semibold">{pkg.name} · {fmtLong(time)}</div>
           <input type="text" placeholder="Namn" required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} style={inputStyle} />
@@ -1915,6 +1917,7 @@ function ContactFormBlock({
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [hp, setHp] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
 
   const submit = async (e: React.FormEvent) => {
@@ -1928,7 +1931,7 @@ function ContactFormBlock({
       const res = await fetch("/api/public/form-submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId, pagePath, sectionId: section.id, name, email, message }),
+        body: JSON.stringify({ siteId, pagePath, sectionId: section.id, name, email, message, website: hp }),
       });
       if (!res.ok) throw new Error("fel");
       setStatus("sent");
@@ -1956,6 +1959,7 @@ function ContactFormBlock({
 
   return (
     <form onSubmit={submit} className="flex flex-col gap-3">
+        <input type="text" name="website" value={hp} onChange={(e) => setHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
       <input
         type="text"
         placeholder="Namn"

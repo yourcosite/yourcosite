@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient();
-  const tempPassword = `YCS-${Math.random().toString(36).slice(2, 10)}`;
+  const tempPassword = `YCS-${randomBytes(12).toString("base64url")}`;
 
   const { data: created, error: createError } = await admin.auth.admin.createUser({
     email,

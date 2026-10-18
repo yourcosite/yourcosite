@@ -12,4 +12,23 @@ const nextConfig = {
   },
 };
 
+// Säkerhetsrubriker på alla svar. Ingen strikt Content-Security-Policy än,
+// eftersom kundsajter får ha egna spårningskoder och inbäddningar.
+const securityHeaders = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "SAMEORIGIN" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(self), geolocation=(), payment=()" },
+  { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
+];
+
+nextConfig.headers = async () => [
+  { source: "/:path*", headers: securityHeaders },
+  // Inloggade delar och adminportalen ska aldrig hamna i sökmotorer.
+  ...["admin", "dashboard", "redigera", "sidor", "bokningar", "installningar", "fakturering", "avboka"].map((p) => ({
+    source: `/${p}/:path*`,
+    headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+  })),
+];
+
 export default nextConfig;

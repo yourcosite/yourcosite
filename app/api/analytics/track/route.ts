@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { clientIp, rateLimited } from "@/lib/rateLimit";
 
 // Tar emot en sidvisning från PageviewBeacon (components/SitePreview.tsx).
 // Publik rutt (besökare på en kundsajt är aldrig inloggade hos oss) —
@@ -26,6 +27,8 @@ export async function POST(request: Request) {
       referrer = null;
     }
   }
+
+  if (await rateLimited(`track:ip:${clientIp(request)}`, 300, 3600)) return NextResponse.json({ ok: true });
 
   const admin = createAdminClient();
   const { data: site } = await admin.from("sites").select("id").eq("id", siteId).maybeSingle();

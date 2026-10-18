@@ -1,5 +1,6 @@
 import { childPagesOf } from "@/lib/pageTree";
 import { NextResponse } from "next/server";
+import { rateLimited } from "@/lib/rateLimit";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
@@ -468,6 +469,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (await rateLimited(`edit:user:${user.id}`, 300, 86400)) {
+    return NextResponse.json({ error: "Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten." }, { status: 429 });
+  }
 
   const body = await request.json();
   const message = typeof body.message === "string" ? body.message.trim() : "";

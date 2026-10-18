@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimited } from "@/lib/rateLimit";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 
@@ -28,6 +29,9 @@ export async function POST(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (await rateLimited(`newsassist:user:${user.id}`, 100, 86400)) {
+    return NextResponse.json({ error: "Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten." }, { status: 429 });
+  }
 
   const body = await request.json();
   const instruction = typeof body.instruction === "string" ? body.instruction.trim().slice(0, 2000) : "";

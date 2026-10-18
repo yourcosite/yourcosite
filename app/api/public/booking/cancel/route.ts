@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadSiteBookingData, sendCancellationEmails } from "@/lib/bookingServer";
+import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
 
 // Kundens egen avbokning via länken i bekräftelsemejlet (/avboka/<token>).
 // Token är lång och slumpmässig; den som har länken kan avboka just den tiden.
@@ -30,6 +31,9 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   if (!validToken(body.token)) return NextResponse.json({ error: "Ogiltig länk." }, { status: 400 });
+  if (await rateLimited(`cancel:ip:${clientIp(request)}`, 20, 3600)) {
+    return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+  }
   const db = createAdminClient();
   const { data: b } = await db
     .from("bookings")
