@@ -96,8 +96,8 @@ export default function LanguageSwitcher({
   }
 
   const btn = dark
-    ? "border-[#3A3A3E] text-[#E5E3DE] hover:border-[#5A5A5E] hover:bg-white/5"
-    : "border-line text-ink hover:border-[#CFCBC2] hover:bg-black/[0.03]";
+    ? "border-accent/50 text-accent hover:border-accent hover:bg-accent/10"
+    : "border-accent bg-accent text-accent-ink hover:brightness-95";
   const panel = dark
     ? "bg-[#1F1F23] border-[#3A3A3E] text-[#E5E3DE]"
     : "bg-surface border-line text-ink";
