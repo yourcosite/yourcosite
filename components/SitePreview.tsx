@@ -1071,7 +1071,7 @@ function Header({
     </CtaPill>
   ) : null;
   const ctaAndBurger = (
-    <div className="flex items-center gap-3 justify-end">
+    <div className="flex items-center gap-2 @3xl:gap-3 justify-end flex-shrink-0">
       {ctaEl}
       {hamburgerBtn}
     </div>
@@ -1083,8 +1083,8 @@ function Header({
   if (layout === "left-button") {
     return (
       <div className={`${outerBase} flex items-center justify-between gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
-        <div className="flex items-center gap-2.5 flex-shrink-0">{logoEl}</div>
-        <div className="flex items-center gap-7 min-w-0">
+        <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
+        <div className="flex items-center gap-7 flex-shrink-0">
           <nav className={`${showNav} items-center justify-end flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold min-w-0`}>{navLinksEl}</nav>
           {ctaAndBurger}
         </div>
@@ -1095,10 +1095,10 @@ function Header({
 
   if (layout === "split-button") {
     return (
-      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
-        <div className="flex items-center gap-2.5">{logoEl}</div>
+      <div className={`${outerBase} flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr] @3xl:gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold justify-self-center`}>{navLinksEl}</nav>
-        <div className="col-start-3">{ctaAndBurger}</div>
+        <div className="@3xl:col-start-3 flex-shrink-0">{ctaAndBurger}</div>
         {mobileMenuEl}
       </div>
     );
@@ -1120,12 +1120,12 @@ function Header({
 
   if (layout === "pill-bar") {
     return (
-      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
-        <div className="flex items-center gap-2.5">{logoEl}</div>
+      <div className={`${outerBase} flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr] @3xl:gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         <nav className={`${showNav} items-center justify-center flex-wrap gap-1 text-[13px] font-semibold justify-self-center rounded-full p-1.5`} style={pillBoxStyle}>
           {navLinksEl}
         </nav>
-        <div className="col-start-3">{ctaAndBurger}</div>
+        <div className="@3xl:col-start-3 flex-shrink-0">{ctaAndBurger}</div>
         {mobileMenuEl}
       </div>
     );
@@ -1134,7 +1134,7 @@ function Header({
   if (layout === "minimal") {
     return (
       <div className={`${outerBase} flex items-center justify-between gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
-        <div className="flex items-center gap-2.5 flex-shrink-0">{logoEl}</div>
+        <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         {ctaAndBurger}
         {mobileMenuEl}
       </div>
