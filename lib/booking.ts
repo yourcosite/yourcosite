@@ -12,6 +12,7 @@ export type BookingPackage = {
   name: string;
   description?: string | null;
   duration_min: number;
+  buffer_min?: number | null; // paus efter tiden, syns inte för kunden
   price_sek?: number | null;
   image_url?: string | null;
   active?: boolean;
@@ -73,7 +74,7 @@ const overlaps = (aS: number, aE: number, bS: number, bE: number) => aS < bE && 
 export type Availability = Record<string, string[]>; // datum -> ISO-starttider (UTC)
 
 export function computeAvailability(input: {
-  pkg: Pick<BookingPackage, "id" | "duration_min">;
+  pkg: Pick<BookingPackage, "id" | "duration_min" | "buffer_min">;
   rules: BookingRule[];
   slots: BookingSlot[];
   blocks: BookingBlock[];
@@ -85,13 +86,17 @@ export function computeAvailability(input: {
   const now = input.now ?? new Date();
   const tz = settings.timezone || DEFAULT_TIMEZONE;
   const durMs = pkg.duration_min * 60000;
+  // Tid till nästa bokning: nästa starttid hamnar längd + paus senare, men
+  // kunden ser bara längden.
+  const bufMs = Math.max(0, pkg.buffer_min || 0) * 60000;
+  const stepMs = durMs + bufMs;
   const earliest = now.getTime() + settings.min_notice_hours * 3600000;
   const latest = now.getTime() + settings.max_days_ahead * 86400000;
   const forPkg = <T extends { package_id: string | null }>(x: T) => x.package_id === null || x.package_id === pkg.id;
 
   const starts = new Set<number>();
   const addWindow = (winS: number, winE: number) => {
-    for (let t = winS; t + durMs <= winE; t += durMs) starts.add(t);
+    for (let t = winS; t + durMs <= winE; t += stepMs) starts.add(t);
   };
 
   // Veckoschema, dag för dag i sajtens tidszon.
@@ -112,15 +117,16 @@ export function computeAvailability(input: {
     addWindow(new Date(s.starts_at).getTime(), new Date(s.ends_at).getTime());
   }
 
-  const blockedRanges = [
-    ...blocks.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as const),
-    ...busy.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as const),
-  ];
+  // Stängda tider gäller själva behandlingen; bokningar räknas inklusive sin
+  // paus (busy.ends_at har redan pausen med) och den nya tidens egen paus.
+  const closed = blocks.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as const);
+  const taken = busy.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as const);
 
   const out: Availability = {};
   [...starts].sort((a, b) => a - b).forEach((t) => {
     if (t < earliest || t > latest) return;
-    if (blockedRanges.some(([bs, be]) => overlaps(t, t + durMs, bs, be))) return;
+    if (closed.some(([bs, be]) => overlaps(t, t + durMs, bs, be))) return;
+    if (taken.some(([bs, be]) => overlaps(t, t + stepMs, bs, be))) return;
     const iso = new Date(t).toISOString();
     (out[localDateOf(new Date(t), tz)] ||= []).push(iso);
   });

@@ -70,6 +70,9 @@ export async function POST(request: Request) {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: t("Skriv en giltig e-postadress, dit bekräftelsen skickas.") }, { status: 400 });
   }
+  if (phone.replace(/\D/g, "").length < 6) {
+    return NextResponse.json({ error: t("Skriv ditt telefonnummer.") }, { status: 400 });
+  }
 
   // Samma e-postadress får inte boka hur många tider som helst per timme,
   // och en sajt får inte översköljas.
@@ -100,12 +103,13 @@ export async function POST(request: Request) {
       package_id: pkg.id,
       package_name: pkg.name,
       duration_min: pkg.duration_min,
+      buffer_min: pkg.buffer_min ?? 0,
       price_sek: pkg.price_sek ?? null,
       starts_at: start.toISOString(),
       ends_at: end.toISOString(),
       customer_name: name,
       customer_email: email,
-      customer_phone: phone || null,
+      customer_phone: phone,
       message: message || null,
     })
     .select("id, package_name, duration_min, price_sek, starts_at, customer_name, customer_email, customer_phone, message, cancel_token")

@@ -761,3 +761,8 @@ create policy "Kunden kan läsa egna svar"
 drop policy if exists "Kunden kan läsa egna meddelanden" on support_messages;
 create policy "Kunden kan läsa egna meddelanden"
   on support_messages for select using (user_id = auth.uid());
+
+
+-- Tid till nästa bokning (paus efter varje tid) och manuella bokningar (körs en gång).
+alter table booking_packages add column if not exists buffer_min int not null default 0 check (buffer_min between 0 and 240);
+alter table bookings add column if not exists buffer_min int not null default 0;

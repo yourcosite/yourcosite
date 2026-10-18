@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_TIMEZONE, addDays, timeToMinutes, zonedTimeToUtc } from "@/lib/booking";
-import { loadSiteBookingData, sendCancellationEmails } from "@/lib/bookingServer";
+import { loadSiteBookingData, sendBookingEmails, sendCancellationEmails } from "@/lib/bookingServer";
 import { siteLocale } from "@/lib/i18n/site-server";
 import { LOCALES, isLocale } from "@/lib/i18n/config";
 import { CURRENCIES, isCurrency } from "@/lib/i18n/country";
@@ -102,6 +102,8 @@ export async function POST(request: Request) {
       if (!name) return fail(t("Skriv ett namn på paketet."));
       const duration = Math.round(Number(body.duration_min));
       if (!Number.isFinite(duration) || duration < 5 || duration > 1440) return fail(t("Längden måste vara mellan 5 och 1440 minuter."));
+      const buffer = body.buffer_min === undefined || body.buffer_min === "" || body.buffer_min === null ? 0 : Math.round(Number(body.buffer_min));
+      if (!Number.isFinite(buffer) || buffer < 0 || buffer > 240) return fail(t("Tiden till nästa bokning måste vara mellan 0 och 240 minuter."));
       const priceRaw = body.price_sek === null || body.price_sek === "" || body.price_sek === undefined ? null : Math.round(Number(body.price_sek));
       if (priceRaw !== null && (!Number.isFinite(priceRaw) || priceRaw < 0)) return fail(t("Priset måste vara 0 kr eller mer."));
       const row = {
@@ -109,6 +111,7 @@ export async function POST(request: Request) {
         name,
         description: txt(body.description, 400) || null,
         duration_min: duration,
+        buffer_min: buffer,
         price_sek: priceRaw,
         active: body.active !== false,
       } as Record<string, unknown>;
@@ -208,6 +211,53 @@ export async function POST(request: Request) {
       });
       if (error) return fail(t("Kunde inte spara inställningarna."), 500);
       return NextResponse.json({ ok: true });
+    }
+    case "addBooking": {
+      // Manuell bokning (t.ex. en kund som ringt). Ägaren får lägga den även
+      // utanför öppettiderna, men aldrig ovanpå en annan bokning.
+      const name = txt(body.name, 120);
+      if (!name) return fail(t("Skriv kundens namn."));
+      const email = txt(body.email, 200);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(t("E-postadressen ser inte rätt ut."));
+      if (!DATE.test(body.date) || !TIME.test(body.time)) return fail(t("Välj datum och tid."));
+      let pkgRow: any = null;
+      if (isUuid(body.package_id)) {
+        const { data: p } = await supabase.from("booking_packages").select("*").eq("id", body.package_id).eq("site_id", site.id).maybeSingle();
+        if (!p) return fail(t("Paketet finns inte längre."), 404);
+        pkgRow = p;
+      }
+      const pkgName = pkgRow?.name || txt(body.package_name, 80);
+      if (!pkgName) return fail(t("Välj ett paket eller skriv vad bokningen gäller."));
+      const duration = pkgRow ? pkgRow.duration_min : Math.round(Number(body.duration_min));
+      if (!Number.isFinite(duration) || duration < 5 || duration > 1440) return fail(t("Längden måste vara mellan 5 och 1440 minuter."));
+      const buffer = pkgRow ? pkgRow.buffer_min || 0 : 0;
+      const start = zonedTimeToUtc(body.date, body.time, tz);
+      const end = new Date(start.getTime() + duration * 60000);
+      const admin = createAdminClient();
+      const data = await loadSiteBookingData(admin, site.id);
+      if (data.busy.some((b) => new Date(b.starts_at) < new Date(end.getTime() + buffer * 60000) && start < new Date(b.ends_at))) {
+        return fail(t("Den tiden krockar med en annan bokning."), 409);
+      }
+      const { data: row, error } = await supabase
+        .from("bookings")
+        .insert({
+          site_id: site.id, package_id: pkgRow?.id ?? null, package_name: pkgName, duration_min: duration, buffer_min: buffer,
+          price_sek: pkgRow ? pkgRow.price_sek ?? null : null,
+          starts_at: start.toISOString(), ends_at: end.toISOString(),
+          customer_name: name, customer_email: email, customer_phone: txt(body.phone, 60) || null, message: txt(body.message, 1500) || null,
+        })
+        .select("id, package_name, duration_min, price_sek, starts_at, customer_name, customer_email, customer_phone, message, cancel_token")
+        .single();
+      if (error || !row) {
+        if (error?.code === "23P01") return fail(t("Den tiden krockar med en annan bokning."), 409);
+        return fail(t("Kunde inte spara bokningen just nu."), 500);
+      }
+      let mailed = false;
+      if (body.sendMail === true && email) {
+        const r = await sendBookingEmails({ db: admin, siteId: site.id, siteName: site.name, booking: row as any, settings: data.settings, origin: new URL(request.url).origin, notifyOwner: false }).catch(() => ({ customerSent: false }));
+        mailed = r.customerSent;
+      }
+      return NextResponse.json({ ok: true, mailed });
     }
     case "cancelBooking": {
       if (!isUuid(body.id)) return fail(t("Saknar bokning."));

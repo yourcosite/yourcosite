@@ -46,7 +46,7 @@ export async function loadSiteBookingData(db: SupabaseClient, siteId: string): P
     db.from("booking_rules").select("*").eq("site_id", siteId),
     db.from("booking_slots").select("*").eq("site_id", siteId).gte("ends_at", nowIso),
     db.from("booking_blocks").select("*").eq("site_id", siteId).gte("ends_at", nowIso),
-    db.from("bookings").select("starts_at, ends_at").eq("site_id", siteId).eq("status", "confirmed").gte("ends_at", nowIso),
+    db.from("bookings").select("starts_at, ends_at, buffer_min").eq("site_id", siteId).eq("status", "confirmed").gte("ends_at", nowIso),
   ]);
   const s = settings.data as any;
   return {
@@ -64,7 +64,8 @@ export async function loadSiteBookingData(db: SupabaseClient, siteId: string): P
     rules: ((rules.data as BookingRule[]) || []).map((r) => ({ ...r, start_time: String(r.start_time).slice(0, 5), end_time: String(r.end_time).slice(0, 5) })),
     slots: (slots.data as BookingSlot[]) || [],
     blocks: (blocks.data as BookingBlock[]) || [],
-    busy: (busy.data as BookingBusy[]) || [],
+    // Pausen efter varje bokning räknas som upptagen tid.
+    busy: ((busy.data as any[]) || []).map((b) => ({ starts_at: b.starts_at, ends_at: new Date(new Date(b.ends_at).getTime() + (b.buffer_min || 0) * 60000).toISOString() })),
   };
 }
 
@@ -103,6 +104,7 @@ export async function sendBookingEmails(opts: {
   booking: BookingRow;
   settings: BookingSettings & { notify_email: string | null } & MailTexts;
   origin: string;
+  notifyOwner?: boolean;
 }) {
   const { db, siteId, siteName, booking: b, settings, origin } = opts;
   // Kundens mejl skrivs på sajtens språk, ägarens på ägarens eget.
@@ -150,7 +152,7 @@ export async function sendBookingEmails(opts: {
     replyTo: ownerTo || undefined,
   });
 
-  const owner = ownerTo
+  const owner = ownerTo && opts.notifyOwner !== false
     ? sendEmail({
         to: ownerTo,
         subject: ownerT("Ny bokning: {namn}, {tid}", { namn: b.customer_name, tid: ownerWhen }),
@@ -199,7 +201,8 @@ export async function sendCancellationEmails(opts: {
     settings.cancel_intro?.trim() || t(cancelledBy === "owner" ? DEFAULT_CANCEL_INTRO_OWNER : DEFAULT_CANCEL_INTRO_CUSTOMER),
     cancelVars
   );
-  const tasks: Promise<unknown>[] = [
+  const tasks: Promise<unknown>[] = [];
+  if (b.customer_email) tasks.push(
     sendEmail({
       to: b.customer_email,
       subject: t("Avbokad: {tjänst}, {tid}", { tjänst: b.package_name, tid: when }),
@@ -213,8 +216,8 @@ export async function sendCancellationEmails(opts: {
       }),
       text: `${cancelIntro}\n\n${t("Tjänst")}: ${b.package_name}\n${t("Tid")}: ${when}`,
       replyTo: ownerTo || undefined,
-    }),
-  ];
+    })
+  );
   if (ownerTo && cancelledBy === "customer") {
     tasks.push(
       sendEmail({

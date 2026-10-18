@@ -1973,7 +1973,7 @@ function BookingBlock({
           <div className="text-[13.5px] font-semibold">{pkg.name} · {fmtLong(time)}</div>
           <input type="text" placeholder={t("Namn")} required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} style={inputStyle} />
           <input type="email" placeholder={t("E-post (hit skickas bekräftelsen)")} required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
-          <input type="tel" placeholder={t("Telefon (valfritt)")} value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="tel" placeholder={t("Telefon")} required value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
           <textarea placeholder={t("Meddelande (valfritt)")} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
           {error && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
           <button type="submit" disabled={status === "sending"} className="self-start px-6 py-3 rounded-full text-[14px] font-semibold text-white disabled:opacity-60" style={{ background: accent }}>

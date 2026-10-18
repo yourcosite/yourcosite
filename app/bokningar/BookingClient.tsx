@@ -18,7 +18,7 @@ import {
 } from "@/lib/booking";
 import { createClient } from "@/lib/supabase/client";
 
-type Pkg = { id: string; name: string; description: string | null; duration_min: number; price_sek: number | null; image_url?: string | null; active: boolean };
+type Pkg = { id: string; name: string; description: string | null; duration_min: number; buffer_min?: number | null; price_sek: number | null; image_url?: string | null; active: boolean };
 type Rule = { package_id: string | null; weekday: number; start_time: string; end_time: string };
 type Slot = { id: string; package_id: string | null; starts_at: string; ends_at: string };
 type Block = { id: string; starts_at: string; ends_at: string; note: string | null };
@@ -139,6 +139,14 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
   const bcp47 = BCP47[useLocale()];
   const cur = data.currency || "SEK";
   const [confirming, setConfirming] = useState<string | null>(null);
+  const activePk = data.packages.filter((p) => p.active);
+  const emptyManual = { package_id: activePk[0]?.id || "", package_name: "", duration_min: "60", date: "", time: "09:00", name: "", phone: "", email: "", message: "", sendMail: false };
+  const [manual, setManual] = useState<typeof emptyManual | null>(null);
+  const saveManual = async () => {
+    if (!manual) return;
+    const ok = await act({ action: "addBooking", ...manual, duration_min: Number(manual.duration_min) }, t("Bokningen är sparad."));
+    if (ok) setManual(null);
+  };
   const now = Date.now();
   const upcoming = data.bookings.filter((b) => b.status === "confirmed" && new Date(b.starts_at).getTime() >= now);
   const earlier = data.bookings.filter((b) => !(b.status === "confirmed" && new Date(b.starts_at).getTime() >= now)).reverse();
@@ -182,6 +190,68 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
 
   return (
     <div>
+      <div className="mb-5">
+        {manual ? (
+          <div className="border border-line rounded-xl bg-surface p-4">
+            <div className="text-[14.5px] font-semibold mb-3">{t("Lägg in bokning manuellt")}</div>
+            <div className="grid md:grid-cols-2 gap-3 mb-3">
+              <label className="block md:col-span-2">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Paket")}</span>
+                <select className={`${input} w-full`} value={manual.package_id} onChange={(e) => setManual({ ...manual, package_id: e.target.value })}>
+                  {activePk.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.duration_min} min</option>)}
+                  <option value="">{t("Annat (skriv själv)")}</option>
+                </select>
+              </label>
+              {!manual.package_id && (
+                <>
+                  <label className="block">
+                    <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Vad gäller bokningen?")}</span>
+                    <input className={`${input} w-full`} value={manual.package_name} onChange={(e) => setManual({ ...manual, package_name: e.target.value })} />
+                  </label>
+                  <label className="block">
+                    <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Längd (minuter)")}</span>
+                    <input type="number" min={5} className={`${input} w-full`} value={manual.duration_min} onChange={(e) => setManual({ ...manual, duration_min: e.target.value })} />
+                  </label>
+                </>
+              )}
+              <label className="block">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Datum")}</span>
+                <input type="date" className={`${input} w-full`} value={manual.date} onChange={(e) => setManual({ ...manual, date: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Starttid")}</span>
+                <input type="time" className={`${input} w-full`} value={manual.time} onChange={(e) => setManual({ ...manual, time: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Namn")}</span>
+                <input className={`${input} w-full`} value={manual.name} onChange={(e) => setManual({ ...manual, name: e.target.value })} />
+              </label>
+              <label className="block">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Telefon")}</span>
+                <input type="tel" className={`${input} w-full`} value={manual.phone} onChange={(e) => setManual({ ...manual, phone: e.target.value })} />
+              </label>
+              <label className="block md:col-span-2">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("E-post (valfri)")}</span>
+                <input type="email" className={`${input} w-full`} value={manual.email} onChange={(e) => setManual({ ...manual, email: e.target.value })} />
+              </label>
+              <label className="block md:col-span-2">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Anteckning (valfri)")}</span>
+                <input className={`${input} w-full`} value={manual.message} onChange={(e) => setManual({ ...manual, message: e.target.value })} />
+              </label>
+              <label className="flex items-center gap-2 md:col-span-2 text-[13px]">
+                <input type="checkbox" checked={manual.sendMail && !!manual.email} disabled={!manual.email} onChange={(e) => setManual({ ...manual, sendMail: e.target.checked })} />
+                {t("Skicka bekräftelse till kunden")}
+              </label>
+            </div>
+            <div className="flex gap-2">
+              <button className={btnPrimary} disabled={busy} onClick={saveManual}>{t("Spara bokningen")}</button>
+              <button className={btnGhost} onClick={() => setManual(null)}>{t("Avbryt")}</button>
+            </div>
+          </div>
+        ) : (
+          <button className={btnPrimary} onClick={() => setManual(emptyManual)}>{t("+ Lägg in bokning manuellt")}</button>
+        )}
+      </div>
       <h2 className="text-[15px] font-semibold mb-2.5">{t("Kommande ({n})", { n: upcoming.length })}</h2>
       {upcoming.length === 0 ? (
         <div className="bg-white border border-line rounded-xl p-5 text-center text-ink-dim text-[13.5px] mb-6">{t("Inga kommande bokningar än.")}</div>
@@ -202,7 +272,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
   const t = useT();
   const bcp47 = BCP47[useLocale()];
   const cur = data.currency || "SEK";
-  const empty = { id: "", name: "", description: "", duration_min: "60", price_sek: "", image_url: "", hadImage: false, active: true };
+  const empty = { id: "", name: "", description: "", duration_min: "60", buffer_min: "0", price_sek: "", image_url: "", hadImage: false, active: true };
   const [form, setForm] = useState<typeof empty | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -244,6 +314,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
       name: form.name,
       description: form.description,
       duration_min: Number(form.duration_min),
+      buffer_min: Number(form.buffer_min || 0),
       price_sek: form.price_sek === "" ? null : Number(form.price_sek),
       ...(form.image_url ? { image_url: form.image_url } : form.hadImage ? { clearImage: true } : {}),
       active: form.active,
@@ -286,7 +357,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button className={btnGhost} onClick={() => setForm({ id: p.id, name: p.name, description: p.description || "", duration_min: String(p.duration_min), price_sek: p.price_sek == null ? "" : String(p.price_sek), image_url: p.image_url || "", hadImage: !!p.image_url, active: p.active })}>{t("Ändra")}</button>
+                  <button className={btnGhost} onClick={() => setForm({ id: p.id, name: p.name, description: p.description || "", duration_min: String(p.duration_min), buffer_min: String(p.buffer_min || 0), price_sek: p.price_sek == null ? "" : String(p.price_sek), image_url: p.image_url || "", hadImage: !!p.image_url, active: p.active })}>{t("Ändra")}</button>
                   <button className={btnGhost} onClick={() => setRemoving(p.id)}>{t("Ta bort")}</button>
                 </div>
               )}
@@ -312,6 +383,11 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
             <label className="block">
               <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Längd (minuter)")}</span>
               <input type="number" min={5} className={`${input} w-full`} value={form.duration_min} onChange={(e) => setForm({ ...form, duration_min: e.target.value })} />
+            </label>
+            <label className="block">
+              <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Tid till nästa bokning (minuter)")}</span>
+              <input type="number" min={0} max={240} className={`${input} w-full`} value={form.buffer_min} onChange={(e) => setForm({ ...form, buffer_min: e.target.value })} />
+              <span className="block text-[11.5px] text-ink-dim mt-1">{t("Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.")}</span>
             </label>
             <label className="block">
               <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Pris i {valuta} (tomt = visas inte)", { valuta: data.currency || "SEK" })}</span>
