@@ -1705,7 +1705,7 @@ function BookingBlock({
   const [avail, setAvail] = useState<Record<string, string[]> | null>(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
-  const [shownDays, setShownDays] = useState(14);
+  const [monthKey, setMonthKey] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -1731,7 +1731,7 @@ function BookingBlock({
     setDate("");
     setTime("");
     setError("");
-    setShownDays(14);
+    setMonthKey("");
     setAvail(null);
     if (demo) return setAvail(demoBookingData().availability);
     try {
@@ -1814,7 +1814,29 @@ function BookingBlock({
     );
   }
 
-  const dayKeys = avail ? Object.keys(avail).sort() : [];
+  const dayKeys = avail ? Object.keys(avail).filter((k) => (avail[k] || []).length > 0).sort() : [];
+  const freeDays = new Set(dayKeys);
+  const firstMonth = dayKeys.length ? dayKeys[0].slice(0, 7) : "";
+  const lastMonth = dayKeys.length ? dayKeys[dayKeys.length - 1].slice(0, 7) : "";
+  const curMonth = monthKey && monthKey >= firstMonth && monthKey <= lastMonth ? monthKey : firstMonth;
+  const shiftMonth = (mk: string, d: number) => {
+    const [y, m] = mk.split("-").map(Number);
+    const dt = new Date(Date.UTC(y, m - 1 + d, 1));
+    return `${dt.getUTCFullYear()}-${String(dt.getUTCMonth() + 1).padStart(2, "0")}`;
+  };
+  const [cy, cm] = (curMonth || "2000-01").split("-").map(Number);
+  const monthStart = new Date(Date.UTC(cy, cm - 1, 1));
+  const daysInMonth = new Date(Date.UTC(cy, cm, 0)).getUTCDate();
+  const lead = (monthStart.getUTCDay() + 6) % 7; // veckan börjar på måndag
+  const monthTitle = new Intl.DateTimeFormat(bcp47, { timeZone: "UTC", month: "long", year: "numeric" }).format(monthStart);
+  const weekdayLabels = Array.from({ length: 7 }, (_, i) =>
+    new Intl.DateTimeFormat(bcp47, { timeZone: "UTC", weekday: "short" }).format(new Date(Date.UTC(2024, 0, 1 + i)))
+  );
+  const cap = (x: string) => x.charAt(0).toLocaleUpperCase(bcp47) + x.slice(1);
+  const fmtDayLong = (key: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Intl.DateTimeFormat(bcp47, { timeZone: "UTC", weekday: "long", day: "numeric", month: "long" }).format(new Date(Date.UTC(y, m - 1, d)));
+  };
 
   return (
     <div className="flex flex-col gap-6 text-left">
@@ -1867,47 +1889,79 @@ function BookingBlock({
           ) : dayKeys.length === 0 ? (
             <div className="text-[13.5px]" style={{ color: palette.textDim }}>{t("Det finns inga lediga tider för den här tjänsten just nu.")}</div>
           ) : (
-            <>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {dayKeys.slice(0, shownDays).map((k) => {
-                  const on = date === k;
-                  return (
-                    <button
-                      type="button"
-                      key={k}
-                      onClick={() => { setDate(k); setTime(""); }}
-                      className="px-3.5 py-2 rounded-full border text-[13px] font-semibold"
-                      style={{ background: on ? accent : palette.cardBg, color: on ? "#fff" : palette.text, borderColor: on ? accent : palette.cardBorder }}
-                    >
-                      {fmtDay(k)}
-                    </button>
-                  );
-                })}
-                {dayKeys.length > shownDays && (
-                  <button type="button" onClick={() => setShownDays(shownDays + 14)} className="px-3.5 py-2 text-[13px] font-semibold underline" style={{ color: palette.textDim }}>
-                    {t("Visa fler dagar")}
+            <div className="rounded-xl border p-4 @3xl:p-5 grid gap-5 @3xl:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]" style={card}>
+              {/* Kalender: lediga dagar markerade, som i de flesta bokningssystem */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <button type="button" aria-label={t("Föregående månad")} disabled={curMonth <= firstMonth} onClick={() => setMonthKey(shiftMonth(curMonth, -1))} className="w-8 h-8 rounded-full border flex items-center justify-center disabled:opacity-30" style={{ borderColor: palette.cardBorder }}>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg>
                   </button>
-                )}
-              </div>
-              {date && (
-                <div className="flex flex-wrap gap-2">
-                  {(avail[date] || []).map((iso) => {
-                    const on = time === iso;
+                  <div className="text-[14.5px] font-semibold">{cap(monthTitle)}</div>
+                  <button type="button" aria-label={t("Nästa månad")} disabled={curMonth >= lastMonth} onClick={() => setMonthKey(shiftMonth(curMonth, 1))} className="w-8 h-8 rounded-full border flex items-center justify-center disabled:opacity-30" style={{ borderColor: palette.cardBorder }}>
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg>
+                  </button>
+                </div>
+                <div className="grid grid-cols-7 gap-1 text-center">
+                  {weekdayLabels.map((w, i) => (
+                    <div key={i} className="text-[11px] font-semibold uppercase tracking-wide pb-1" style={{ color: palette.textDim }}>{w}</div>
+                  ))}
+                  {Array.from({ length: lead }).map((_, i) => <div key={`b${i}`} />)}
+                  {Array.from({ length: daysInMonth }).map((_, i) => {
+                    const key = `${curMonth}-${String(i + 1).padStart(2, "0")}`;
+                    const free = freeDays.has(key);
+                    const on = date === key;
                     return (
                       <button
                         type="button"
-                        key={iso}
-                        onClick={() => setTime(iso)}
-                        className="px-3.5 py-2 rounded-lg border text-[13px] font-semibold"
-                        style={{ background: on ? accent : palette.cardBg, color: on ? "#fff" : palette.text, borderColor: on ? accent : palette.cardBorder }}
+                        key={key}
+                        disabled={!free}
+                        onClick={() => { setDate(key); setTime(""); }}
+                        aria-pressed={on}
+                        className="aspect-square rounded-full text-[13.5px] flex items-center justify-center disabled:cursor-default"
+                        style={{
+                          background: on ? accent : free ? `color-mix(in srgb, ${accent} 14%, transparent)` : "transparent",
+                          color: on ? "#fff" : free ? palette.text : palette.textDim,
+                          fontWeight: free ? 700 : 400,
+                          opacity: free ? 1 : 0.45,
+                        }}
                       >
-                        {fmtTime(iso)}
+                        {i + 1}
                       </button>
                     );
                   })}
                 </div>
-              )}
-            </>
+              </div>
+
+              {/* Tider för vald dag i en egen ruta bredvid (under på smal skärm) */}
+              <div className="rounded-lg border p-4 @3xl:border-0 @3xl:border-l @3xl:rounded-none @3xl:pl-5 @3xl:py-0 @3xl:pr-0" style={{ borderColor: palette.cardBorder }}>
+                {date ? (
+                  <>
+                    <div className="text-[12px] font-semibold uppercase tracking-wide" style={{ color: palette.textDim }}>{t("Lediga tider")}</div>
+                    <div className="text-[15px] font-semibold mb-3">{cap(fmtDayLong(date))}</div>
+                    <div className="grid grid-cols-3 @3xl:grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
+                      {(avail[date] || []).map((iso) => {
+                        const on = time === iso;
+                        return (
+                          <button
+                            type="button"
+                            key={iso}
+                            onClick={() => setTime(iso)}
+                            className="py-2.5 rounded-lg border text-[13.5px] font-semibold"
+                            style={{ background: on ? accent : palette.cardBg, color: on ? "#fff" : palette.text, borderColor: on ? accent : palette.cardBorder }}
+                          >
+                            {fmtTime(iso)}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                ) : (
+                  <div className="h-full min-h-[96px] flex items-center justify-center text-center text-[13.5px]" style={{ color: palette.textDim }}>
+                    {t("Välj en dag för att se lediga tider")}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}
