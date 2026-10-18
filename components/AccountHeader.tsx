@@ -123,7 +123,7 @@ export default function AccountHeader({
               {t("Supporthistorik")}
             </Link>
             <div className="h-px bg-line my-1.5" />
-            <div className="px-3 py-2"><LanguageSwitcher className="w-full" /></div>
+            <div className="px-3 py-2"><LanguageSwitcher inline /></div>
             <button
               onClick={handleLogout}
               disabled={loggingOut}
