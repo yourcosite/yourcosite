@@ -4,6 +4,7 @@ import { useT } from "@/components/I18nProvider";
 import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n";
 import { useState, useEffect, createContext, useContext, createElement } from "react";
 import Script from "next/script";
+import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
@@ -350,6 +351,19 @@ function SitePreviewInner({
   // Samma princip, för headerns uppbyggnad — se HeaderLayout i
   // lib/contentModel.ts och Header nedan.
   const headerLayout: HeaderLayout = headerLayoutOverride ?? content.theme.headerLayout ?? "left";
+  // Knappen i menyn (bara header-stilarna med knapp): kundens val, annars
+  // bokningssidan, annars kontaktsidan.
+  const headerCta = (() => {
+    if (!HEADER_BUTTON_LAYOUTS.includes(headerLayout) || content.theme.headerCta?.off) return null;
+    const want = content.theme.headerCta;
+    const hasType = (pg: SiteContent["pages"][number], types: string[]) => pg.sections.some((sec) => types.includes(sec.type));
+    const target =
+      (want?.path && content.pages.find((pg) => pg.path === want.path)) ||
+      content.pages.find((pg) => hasType(pg, ["booking"])) ||
+      content.pages.find((pg) => hasType(pg, ["contactForm", "contact"]) && pg.path !== "/");
+    if (!target) return null;
+    return { path: target.path, label: want?.label?.trim() || target.label };
+  })();
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = skin?.accent ? skin.accent(content.theme.accentColor) : content.theme.accentColor;
   const secondary = content.theme.secondaryColors || [];
@@ -526,6 +540,9 @@ function SitePreviewInner({
           onNavigate={onNavigate}
           overlay={overlayHeader}
           layout={headerLayout}
+          cta={headerCta}
+          accent={accent}
+          buttonShape={buttonShape}
         />
         {overlayHeader && firstSection && (
           <div className="contents ycs-blk" data-ycs-align={firstSection.textAlign ?? content.theme.textAlign}>
@@ -857,7 +874,13 @@ function Header({
   onNavigate,
   overlay,
   layout = "left",
+  cta = null,
+  accent = "#C6FF5E",
+  buttonShape = "pill",
 }: {
+  cta?: { path: string; label: string } | null;
+  accent?: string;
+  buttonShape?: ButtonStyle;
   siteName?: string;
   logoUrl?: string;
   pages: SiteContent["pages"];
@@ -939,23 +962,31 @@ function Header({
   // Alla huvudsidor visas (inget tak) — många val flyttar menyn till
   // hamburgaren, se nedan. Undersidor visas i en rullgardin under sin
   // huvudsida.
-  const topPages = topLevelPages(pages);
+  // Med en knapp i menyn tas knappens sida bort ur länkraden (den syns som
+  // knappen istället).
+  const topPages = topLevelPages(pages).filter((p) => !cta || p.path !== cta.path);
+  const minimal = layout === "minimal";
+  const pill = layout === "pill-bar";
   // Många menyval ger trångt bredvid loggan. Ju fler huvudsidor, desto
   // bredare ruta krävs innan hela menyn visas — annars ersätts den av
   // hamburgarmenyn. Klasserna skrivs ut i sin helhet (Tailwind hittar dem
   // bara så).
-  const navCount = topPages.length;
-  const showNav =
-    navCount <= 4 ? "hidden @3xl:flex" : navCount <= 6 ? "hidden @4xl:flex" : navCount <= 9 ? "hidden @5xl:flex" : "hidden";
-  const hideBurger = navCount <= 4 ? "@3xl:hidden" : navCount <= 6 ? "@4xl:hidden" : navCount <= 9 ? "@5xl:hidden" : "";
+  const navCount = topPages.length + (cta ? 1 : 0);
+  const showNav = minimal
+    ? "hidden"
+    : navCount <= 4 ? "hidden @3xl:flex" : navCount <= 6 ? "hidden @4xl:flex" : navCount <= 9 ? "hidden @5xl:flex" : "hidden";
+  const hideBurger = minimal ? "" : navCount <= 4 ? "@3xl:hidden" : navCount <= 6 ? "@4xl:hidden" : navCount <= 9 ? "@5xl:hidden" : "";
   const navGap = navCount <= 4 ? "gap-7" : "gap-5";
   const navLinksEl = topPages.map((p) => {
     const children = childPagesOf(p.path, pages);
     const activeHere = p.path === activePath || children.some((c) => c.path === activePath);
-    if (children.length === 0) return renderNavLink(p, { color: linkColor(activeHere) });
+    const pillActive = overlay ? { background: "rgba(255,255,255,0.25)", color: "#FFFFFF" } : { background: palette.text, color: palette.bg };
+    const pillStyle = (a: boolean) => (pill ? { color: linkColor(a), ...(a ? pillActive : {}) } : { color: linkColor(a) });
+    const pillClass = pill ? "px-4 py-2 rounded-full whitespace-nowrap" : undefined;
+    if (children.length === 0) return renderNavLink(p, pillStyle(activeHere), pillClass);
     return (
       <span key={p.path} className="relative group inline-flex items-center">
-        {renderNavLink(p, { color: linkColor(activeHere) })}
+        {renderNavLink(p, pillStyle(activeHere), pillClass)}
         <span className="ml-1 text-[9px]" style={{ color: linkColor(activeHere) }} aria-hidden="true">▾</span>
         <span className="absolute left-0 top-full pt-3 hidden group-hover:block group-focus-within:block z-30">
           <span
@@ -1033,6 +1064,82 @@ function Header({
   const outerStyle = overlay
     ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
     : { borderBottom: `1px solid ${palette.cardBorder}` };
+
+  const ctaEl = cta ? (
+    <CtaPill accent={accent} link={cta.path} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} size="sm" textColor={overlay ? "#FFFFFF" : palette.text}>
+      {cta.label}
+    </CtaPill>
+  ) : null;
+  const ctaAndBurger = (
+    <div className="flex items-center gap-3 justify-end">
+      {ctaEl}
+      {hamburgerBtn}
+    </div>
+  );
+  const pillBoxStyle = overlay
+    ? { background: "rgba(255,255,255,0.14)", border: "1px solid rgba(255,255,255,0.3)", backdropFilter: "blur(8px)" }
+    : { background: palette.bgAlt, border: `1px solid ${palette.cardBorder}` };
+
+  if (layout === "left-button") {
+    return (
+      <div className={`${outerBase} flex items-center justify-between gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5 flex-shrink-0">{logoEl}</div>
+        <div className="flex items-center gap-7 min-w-0">
+          <nav className={`${showNav} items-center justify-end flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold min-w-0`}>{navLinksEl}</nav>
+          {ctaAndBurger}
+        </div>
+        {mobileMenuEl}
+      </div>
+    );
+  }
+
+  if (layout === "split-button") {
+    return (
+      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5">{logoEl}</div>
+        <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold justify-self-center`}>{navLinksEl}</nav>
+        <div className="col-start-3">{ctaAndBurger}</div>
+        {mobileMenuEl}
+      </div>
+    );
+  }
+
+  if (layout === "centered-button") {
+    return (
+      <div className={`${outerBase} px-8 @3xl:px-12 py-5`} style={outerStyle}>
+        <div className="flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr]">
+          <div className="hidden @3xl:block" />
+          <div className="@3xl:justify-self-center min-w-0">{logoEl}</div>
+          {ctaAndBurger}
+        </div>
+        <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-2 text-[13px] font-semibold mt-3`}>{navLinksEl}</nav>
+        {mobileMenuEl}
+      </div>
+    );
+  }
+
+  if (layout === "pill-bar") {
+    return (
+      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5">{logoEl}</div>
+        <nav className={`${showNav} items-center justify-center flex-wrap gap-1 text-[13px] font-semibold justify-self-center rounded-full p-1.5`} style={pillBoxStyle}>
+          {navLinksEl}
+        </nav>
+        <div className="col-start-3">{ctaAndBurger}</div>
+        {mobileMenuEl}
+      </div>
+    );
+  }
+
+  if (layout === "minimal") {
+    return (
+      <div className={`${outerBase} flex items-center justify-between gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+        <div className="flex items-center gap-2.5 flex-shrink-0">{logoEl}</div>
+        {ctaAndBurger}
+        {mobileMenuEl}
+      </div>
+    );
+  }
 
   if (layout === "centered-stacked") {
     // Loggan centrerad på en egen rad, menyn centrerad på raden under —
@@ -1392,6 +1499,7 @@ function CtaPill({
   shape = "pill",
   textColor,
   colorOverride,
+  size,
 }: {
   accent: string;
   children: React.ReactNode;
@@ -1409,6 +1517,8 @@ function CtaPill({
   // textfärgen räknas ut automatiskt (se textOn) istället för att anta att
   // den alltid är ljus nog för mörk text.
   colorOverride?: string;
+  // "sm" = den lilla knappen i menyn.
+  size?: "sm";
 }) {
   const fill = colorOverride || accent;
   if (shape === "underline") {
@@ -1425,7 +1535,7 @@ function CtaPill({
         newTab={newTab}
         basePath={basePath}
         onNavigate={onNavigate}
-        className="inline-flex items-center font-semibold text-[13.5px] uppercase tracking-[0.07em] pb-1 border-b-2"
+        className={`inline-flex items-center font-semibold uppercase tracking-[0.07em] pb-1 border-b-2 ${size === "sm" ? "text-[12px] whitespace-nowrap" : "text-[13.5px]"}`}
         style={{ borderColor: fill, color: textColor }}
       >
         {children}
@@ -1438,7 +1548,7 @@ function CtaPill({
       newTab={newTab}
       basePath={basePath}
       onNavigate={onNavigate}
-      className={`inline-block font-semibold text-[14px] px-7 py-3.5 ${shape === "square" ? "rounded-md" : "rounded-full"}`}
+      className={`inline-block font-semibold whitespace-nowrap ${size === "sm" ? "text-[13px] px-5 py-2.5" : "text-[14px] px-7 py-3.5"} ${shape === "square" ? "rounded-md" : "rounded-full"}`}
       style={{
         background: fill,
         // Utan egen färg: mörk text som förut — utom på riktigt mörka

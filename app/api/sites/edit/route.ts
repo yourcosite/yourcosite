@@ -6,7 +6,7 @@ import { rateLimited } from "@/lib/rateLimit";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
-import { isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
+import { HEADER_LAYOUTS, isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
@@ -222,7 +222,7 @@ VIKTIGT — ändra layout på en sektion ("visa tjänsterna som en lista", "gör
 
 VIKTIGT — flytta/ordna om: "flytta citaten högst upp" = skriv ut sidans sektioner i den nya ordningen i changedPages (hero ska alltid ligga först, och sidans kontakt/cta nära slutet om inget annat sägs). "Lägg Kontakt före Nyheter i menyn"/"byt ordning på sidorna" = ange "pageOrder" med ALLA sidors path i ny ordning; startsidan ("/") ska normalt vara först. Ändra inget annat än ordningen.
 
-VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/square/underline = runda, kantiga, understrukna knappar), "headerLayout" (left/centered-stacked/split = menyns placering), "sectionSpacing" (compact/normal/airy = tätare/standard/luftigare). Ange bara det kunden bett om.
+VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/square/underline = runda, kantiga, understrukna knappar), "headerLayout" (left/centered-stacked/split = menyns placering; left-button/split-button/centered-button/pill-bar/minimal = meny med tydlig knapp, t.ex. Bokning, och "headerCta" {path,label,off} för knappens mål/text), "sectionSpacing" (compact/normal/airy = tätare/standard/luftigare). Ange bara det kunden bett om.
 
 VIKTIGT — kontrollfrågor: är önskemålet så oklart att du måste gissa (t.ex. "gör det snyggare", "ändra rubriken" när flera rubriker finns, eller flera helt olika tolkningar är rimliga) — gissa inte. Ställ en kort fråga i "summary" och ge 2-4 klickbara svar i "clarifyOptions" (kompletta önskemål, mest sannolikt först), och gör INGA ändringar. Fråga bara när en felgissning skulle märkas eller vara jobbig att ångra; är det tydligt nog, utför det direkt. ${selection ? "Kunden har just nu MARKERAT något i förhandsvisningen (se ovan) — då vet du redan VAR ändringen ska göras, så fråga ALDRIG var eller vilken sektion/text/rubrik; utför ändringen på det markerade direkt. Fråga högst om själva ändringen, och bara om den verkligen inte går att tolka." : ""} Meddelanden kan vara dikterade med rösten: de är ofta korta, utan skiljetecken och informella ("gör den lite större", "byt till mer personlig") — tolka dem välvilligt och handla hellre än att fråga. Ställ aldrig två kontrollfrågor i rad om samma sak — har kunden redan svarat på din fråga, utför det.
 
@@ -360,9 +360,18 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
       if (content.theme.buttonStyle) merged.theme.buttonStyle = content.theme.buttonStyle;
       else delete merged.theme.buttonStyle;
     }
-    if (t.headerLayout !== undefined && !["left", "centered-stacked", "split"].includes(t.headerLayout)) {
+    if (t.headerLayout !== undefined && !(HEADER_LAYOUTS as readonly string[]).includes(t.headerLayout)) {
       if (content.theme.headerLayout) merged.theme.headerLayout = content.theme.headerLayout;
       else delete merged.theme.headerLayout;
+    }
+    const cta = (patch.theme as { headerCta?: { path?: string; label?: string; off?: boolean } }).headerCta;
+    if (cta !== undefined) {
+      const next: { path?: string; label?: string; off?: boolean } = {};
+      if (cta && typeof cta.path === "string" && content.pages.some((pg) => pg.path === cta.path)) next.path = cta.path;
+      if (cta && typeof cta.label === "string" && cta.label.trim()) next.label = cta.label.trim().slice(0, 30);
+      if (cta?.off === true) next.off = true;
+      if (Object.keys(next).length) merged.theme.headerCta = next;
+      else delete merged.theme.headerCta;
     }
     if (t.sectionSpacing !== undefined) {
       if (t.sectionSpacing === "compact" || t.sectionSpacing === "airy") merged.theme.sectionSpacing = t.sectionSpacing;

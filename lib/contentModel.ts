@@ -35,7 +35,16 @@ export type SkinId = "solglimt" | "skymning" | "pastell" | "kontrast" | "fargyta
 // fältet fanns). "centered-stacked" = loggan centrerad på en egen rad, menyn
 // centrerad på raden under — varmare, mer personlig känsla. "split" = logga
 // vänster, menyn centrerad i mitten — djärvare, mer redaktionell.
-export type HeaderLayout = "left" | "centered-stacked" | "split";
+// De fem nya (med -button/pill-bar/minimal) har en tydlig knapp i menyn,
+// t.ex. "Bokning" — se SiteTheme.headerCta och Header i SitePreview.tsx.
+// "left-button" = klassisk med knapp ytterst till höger. "split-button" =
+// logga vänster, meny i mitten, knapp höger. "centered-button" = loggan
+// centrerad, knappen uppe till höger, menyn på raden under. "pill-bar" =
+// menyn i en rundad flytande ruta, aktiv sida markerad, knapp höger.
+// "minimal" = bara logga, knapp och hamburgare (även på bred skärm).
+export const HEADER_LAYOUTS = ["left", "centered-stacked", "split", "left-button", "split-button", "centered-button", "pill-bar", "minimal"] as const;
+export type HeaderLayout = (typeof HEADER_LAYOUTS)[number];
+export const HEADER_BUTTON_LAYOUTS: readonly HeaderLayout[] = ["left-button", "split-button", "centered-button", "pill-bar", "minimal"];
 
 export interface SiteTheme {
   skin?: SkinId;
@@ -57,6 +66,11 @@ export interface SiteTheme {
   // Saknas den (sajter skapade innan det här fältet fanns) faller
   // SitePreview.tsx tillbaka på "left" — se headerLayout där.
   headerLayout?: HeaderLayout;
+  // Knappen i menyn (bara i header-stilarna med knapp, se HEADER_BUTTON_LAYOUTS).
+  // Saknas den väljs automatiskt: sidan med bokning ("Bokning"), annars
+  // sidan med kontakt. path = vilken sida knappen går till, label = texten
+  // (annars sidans egen rubrik), off = ingen knapp alls. Satt av Millie.
+  headerCta?: { path?: string; label?: string; off?: boolean };
   // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
   // (lib/themeVariants.ts), satt i kod i /api/sites/choose-look. Gäller
   // BARA startsidans hero (se SitePreview.tsx) — undersidornas hero-layout

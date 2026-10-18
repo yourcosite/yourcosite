@@ -509,9 +509,19 @@ export const EDIT_PATCH_PROPERTIES = {
       },
       headerLayout: {
         type: "string",
-        enum: ["left", "centered-stacked", "split"],
+        enum: ["left", "centered-stacked", "split", "left-button", "split-button", "centered-button", "pill-bar", "minimal"],
         description:
-          "Headerns uppbyggnad: left = logga vänster och meny höger (klassisk), centered-stacked = logga centrerad med menyn på en egen rad under, split = logga vänster och menyn centrerad. Sätt bara när kunden ber om en annan header/meny-placering.",
+          "Headerns uppbyggnad: left = logga vänster och meny höger (klassisk), centered-stacked = logga centrerad med menyn på en egen rad under, split = logga vänster och menyn centrerad. Menyer MED en tydlig knapp (t.ex. Bokning): left-button = klassisk meny med knapp ytterst till höger, split-button = logga vänster, meny i mitten, knapp höger, centered-button = loggan centrerad, knapp uppe till höger och menyn under, pill-bar = menyn i en rundad flytande ruta med knapp höger, minimal = bara logga, knapp och hamburgarmeny även på bred skärm. Sätt bara när kunden ber om en annan header/meny-placering eller en knapp i menyn.",
+      },
+      headerCta: {
+        type: "object",
+        description:
+          "Knappen i menyn (syns bara i menyerna med knapp). Utan värden väljs bokningssidan automatiskt, annars kontaktsidan. path = sidans sökväg knappen går till, label = knapptexten (t.ex. Boka tid), off = true tar bort knappen. Sätt bara när kunden vill ändra knappens text/mål eller ta bort den.",
+        properties: {
+          path: { type: "string" },
+          label: { type: "string" },
+          off: { type: "boolean" },
+        },
       },
       sectionSpacing: {
         type: "string",
