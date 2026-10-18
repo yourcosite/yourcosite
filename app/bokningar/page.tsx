@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Logo from "@/components/Logo";
+import AccountHeader from "@/components/AccountHeader";
 import BookingClient from "./BookingClient";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
@@ -7,42 +7,68 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 export const dynamic = "force-dynamic";
 
 // Bokningssystemet för kundens sajt: bokningar, paket, tider och
-// inställningar. Besökarna bokar via sektionen "booking" på sajten
+// inställningar. Nås från kundzonens meny, från sajtkorten på dashboarden
+// och från redigeraren. Besökarna bokar via sektionen "booking" på sajten
 // (lib/contentModel.ts); allt sparas i tabellerna booking_* och bookings.
 export default async function BokningarPage({ searchParams }: { searchParams?: { site?: string } }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  const site = user ? await getCurrentPublishedSite(supabase, user.id, searchParams?.site || null) : null;
+
+  let userName = "Ditt konto";
+  let userEmail = "";
+  let site: { id: string; name: string } | null = null;
+  let allSites: { id: string; name: string }[] = [];
+
+  if (user) {
+    userEmail = user.email ?? "";
+    const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+    userName = profile?.full_name || userEmail;
+    site = await getCurrentPublishedSite(supabase, user.id, searchParams?.site || null);
+    const { data: rows } = await supabase
+      .from("sites")
+      .select("id, name")
+      .eq("owner_id", user.id)
+      .order("created_at", { ascending: false });
+    allSites = rows ?? [];
+  }
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col">
-      <div className="flex items-center justify-between px-6 py-3.5 border-b border-line bg-surface flex-shrink-0">
-        <div className="flex items-center gap-5">
-          <Link href="/dashboard">
-            <Logo light={false} />
-          </Link>
-          <div className="w-px h-5.5 bg-line" />
-          <div>
-            <div className="text-[14px] font-semibold">{site?.name || "Din sajt"}</div>
-            <div className="text-[11.5px] text-ink-dim">Bokningar</div>
-          </div>
-        </div>
-        <Link
-          href={`/redigera${site ? `?site=${site.id}` : ""}`}
-          className="flex items-center gap-1.5 text-[13px] font-semibold text-ink bg-bg border border-line px-4 py-2 rounded-full"
-        >
-          ← Till redigeraren
-        </Link>
-      </div>
+      <AccountHeader active="/bokningar" userName={userName} userEmail={userEmail} />
       <div className="flex-1 px-4 md:px-12 py-8 flex justify-center">
         <div className="w-full max-w-[780px]">
-          <h1 className="text-[27px] font-medium mb-1.5">Bokningar</h1>
+          <div className="flex items-start justify-between gap-3 flex-wrap mb-1.5">
+            <h1 className="text-[27px] font-medium">Bokningar</h1>
+            {site && (
+              <Link
+                href={`/redigera?site=${site.id}`}
+                className="text-[13px] font-semibold text-ink bg-surface border border-line px-4 py-2 rounded-full"
+              >
+                Till redigeraren
+              </Link>
+            )}
+          </div>
+          {allSites.length > 1 && site && (
+            <div className="flex gap-1.5 flex-wrap mb-4">
+              {allSites.map((s) => (
+                <Link
+                  key={s.id}
+                  href={`/bokningar?site=${s.id}`}
+                  className={`text-[12.5px] font-semibold px-3.5 py-1.5 rounded-full border ${
+                    s.id === site!.id ? "bg-ink text-white border-ink" : "bg-surface text-ink-dim border-line"
+                  }`}
+                >
+                  {s.name}
+                </Link>
+              ))}
+            </div>
+          )}
           {!site ? (
             <div className="bg-white border border-line rounded-xl p-6 text-center text-ink-dim text-[14px]">
               Hittade ingen publicerad sajt ännu. Publicera sajten först, så kan du ta emot bokningar.
             </div>
           ) : (
-            <BookingClient siteId={site.id} />
+            <BookingClient key={site.id} siteId={site.id} />
           )}
         </div>
       </div>

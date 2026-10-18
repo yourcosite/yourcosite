@@ -28,7 +28,18 @@ export default async function DashboardPage() {
       // ett klick på dem hittade inte sajten (redigeraren hämtar bara egna).
       .eq("owner_id", user.id)
       .order("created_at", { ascending: false });
+    // Kommande bekräftade bokningar per sajt (visas på sajtkorten). Misslyckas
+    // frågan (t.ex. innan bokningstabellerna finns) visas helt enkelt inget antal.
+    const upcoming: Record<string, number> = {};
+    const { data: bookingRows } = await supabase
+      .from("bookings")
+      .select("site_id")
+      .eq("status", "confirmed")
+      .gte("starts_at", new Date().toISOString())
+      .limit(2000);
+    for (const b of bookingRows ?? []) upcoming[b.site_id] = (upcoming[b.site_id] || 0) + 1;
     sites = (siteRows ?? []).map((s) => ({
+      upcomingBookings: upcoming[s.id] || 0,
       id: s.id,
       name: s.name,
       domain: s.domain,

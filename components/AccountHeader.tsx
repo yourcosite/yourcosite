@@ -10,6 +10,7 @@ import { createClient } from "@/lib/supabase/client";
 const navLinks = [
   { href: "/dashboard", label: "Sajter" },
   { href: "/statistik", label: "Statistik" },
+  { href: "/bokningar", label: "Bokningar" },
   { href: "/fakturering", label: "Fakturering" },
   { href: "/installningar", label: "Inställningar" },
 ];

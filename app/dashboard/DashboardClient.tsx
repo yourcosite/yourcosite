@@ -14,6 +14,8 @@ export type SiteRow = {
   // app/dashboard/page.tsx) — då visar kortet en riktig, levande
   // förhandsvisning istället för gradient-platshållaren nedan.
   content?: SiteContent | null;
+  // Antal kommande bekräftade bokningar (se app/dashboard/page.tsx).
+  upcomingBookings?: number;
 };
 
 const tabs = [
@@ -190,6 +192,17 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
                 </div>
               </div>
             </Link>
+            {s.content && (
+              <Link
+                href={`/bokningar?site=${s.id}`}
+                className="flex items-center justify-between px-4.5 py-3 border-t border-line text-[13px] font-semibold text-ink"
+              >
+                <span>Bokningar</span>
+                <span className={s.upcomingBookings ? "bg-accent text-accent-ink px-2.5 py-0.5 rounded-full text-[12px]" : "text-ink-dim font-normal"}>
+                  {s.upcomingBookings ? `${s.upcomingBookings} kommande` : "Inga kommande"}
+                </span>
+              </Link>
+            )}
           </div>
         ))}
 
