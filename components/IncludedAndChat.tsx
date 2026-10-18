@@ -1,3 +1,6 @@
+import { rich } from "@/lib/i18n/rich";
+import { msg } from "@/lib/i18n/config";
+import { getT } from "@/lib/i18n/server";
 // Två sektioner för startsidan, under "Så här enkelt är det":
 //  1) "Allt ingår" — en bock-lista på vad som följer med. Bara saker som
 //     faktiskt finns (se app/priser och SitePreview/edit-routen) — lägg inte
@@ -7,48 +10,48 @@
 //     något /api/sites/edit faktiskt klarar av.
 
 const included = [
-  "Egen domän",
-  "SSL och hosting",
-  "Anpassad för mobil, surfplatta och dator",
-  "Cookiebanner där besökaren väljer själv",
-  "Integritetspolicy — uppladdad eller genererad",
-  "Kontaktformulär där svaren samlas hos er",
-  "Besöksstatistik utan cookies",
-  "Nyhetsmodul med egna artiklar",
-  "Karta, galleri, vanliga frågor och video",
-  "Länkar till era sociala medier",
-  "Google Analytics och Meta Pixel",
-  "Förhandsvisning innan allt går live",
+  msg("Egen domän"),
+  msg("SSL och hosting"),
+  msg("Anpassad för mobil, surfplatta och dator"),
+  msg("Cookiebanner där besökaren väljer själv"),
+  msg("Integritetspolicy — uppladdad eller genererad"),
+  msg("Kontaktformulär där svaren samlas hos er"),
+  msg("Besöksstatistik utan cookies"),
+  msg("Nyhetsmodul med egna artiklar"),
+  msg("Karta, galleri, vanliga frågor och video"),
+  msg("Länkar till era sociala medier"),
+  msg("Google Analytics och Meta Pixel"),
+  msg("Förhandsvisning innan allt går live"),
 ];
 
 const requestsRowA = [
-  "Byt rubriken på startsidan",
-  "Korta ner texten i Om oss",
-  "Skriv om allt på ett vänligare sätt",
-  "Lägg till en sida om våra tjänster",
-  "Byt bild i första sektionen",
-  "Lägg till en sektion med våra omdömen",
-  "Gör bara den här rutan orange",
-  "Gör knappen grön",
-  "Lägg till en vanliga frågor-sektion",
-  "Ta bort sidan Priser",
-  "Flytta kontakt längst ner",
-  "Lägg till ett bildgalleri",
+  msg("Byt rubriken på startsidan"),
+  msg("Korta ner texten i Om oss"),
+  msg("Skriv om allt på ett vänligare sätt"),
+  msg("Lägg till en sida om våra tjänster"),
+  msg("Byt bild i första sektionen"),
+  msg("Lägg till en sektion med våra omdömen"),
+  msg("Gör bara den här rutan orange"),
+  msg("Gör knappen grön"),
+  msg("Lägg till en vanliga frågor-sektion"),
+  msg("Ta bort sidan Priser"),
+  msg("Flytta kontakt längst ner"),
+  msg("Lägg till ett bildgalleri"),
 ];
 
 const requestsRowB = [
-  "Gör Om oss-sidan mörk",
-  "Byt till ett serif-typsnitt",
-  "Lägg in en karta till butiken",
-  "Bädda in vår YouTube-film",
-  "Lägg till ett kontaktformulär",
-  "Skriv en nyhet om våra nya öppettider",
-  "Låt Läs mer länka till kontaktsidan",
-  "Koppla på Google Analytics",
-  "Byt accentfärg till blå",
-  "Lägg till tre rutor med våra tjänster",
-  "Gör sidan lite lugnare i tonen",
-  "Lägg en knapp som leder till Boka tid",
+  msg("Gör Om oss-sidan mörk"),
+  msg("Byt till ett serif-typsnitt"),
+  msg("Lägg in en karta till butiken"),
+  msg("Bädda in vår YouTube-film"),
+  msg("Lägg till ett kontaktformulär"),
+  msg("Skriv en nyhet om våra nya öppettider"),
+  msg("Låt Läs mer länka till kontaktsidan"),
+  msg("Koppla på Google Analytics"),
+  msg("Byt accentfärg till blå"),
+  msg("Lägg till tre rutor med våra tjänster"),
+  msg("Gör sidan lite lugnare i tonen"),
+  msg("Lägg en knapp som leder till Boka tid"),
 ];
 
 function Check() {
@@ -70,19 +73,20 @@ function Check() {
 }
 
 function Ticker({ items, reverse }: { items: string[]; reverse?: boolean }) {
+  const t = getT();
   // Listan dubbleras så bandet loopar utan hack; kopian göms för skärmläsare.
   const row = (hidden: boolean) => (
     <ul
       className="flex shrink-0 gap-3 pr-3"
       aria-hidden={hidden || undefined}
     >
-      {items.map((t) => (
+      {items.map((line) => (
         <li
-          key={t}
+          key={line}
           className="whitespace-nowrap rounded-full border border-line bg-surface px-5 py-2.5 text-[14px] text-ink shadow-[0_2px_8px_rgba(23,23,26,0.04)]"
         >
           <span className="text-ink-dim mr-1.5">”</span>
-          {t}
+          {t(line)}
           <span className="text-ink-dim ml-0.5">”</span>
         </li>
       ))}
@@ -103,6 +107,7 @@ function Ticker({ items, reverse }: { items: string[]; reverse?: boolean }) {
 }
 
 export default function IncludedAndChat() {
+  const t = getT();
   return (
     <>
       {/* Allt ingår */}
@@ -110,23 +115,22 @@ export default function IncludedAndChat() {
         <div className="max-w-5xl mx-auto px-6 md:px-12 py-16 md:py-20">
           <div className="text-center mb-10">
             <div className="text-[13px] text-ink-dim tracking-wide font-semibold mb-3">
-              ALLT INGÅR
+              {t("ALLT INGÅR")}
             </div>
             <h2 className="text-[28px] md:text-[32px] font-medium">
-              Ni behöver inte tänka på något annat
+              {t("Ni behöver inte tänka på något annat")}
             </h2>
             <p className="text-[15.5px] text-ink-dim mt-3 max-w-[48ch] mx-auto">
-              Det tekniska och det juridiska är redan löst. Ni berättar bara
-              vad sajten ska säga.
+              {t("Det tekniska och det juridiska är redan löst. Ni berättar bara vad sajten ska säga.")}
             </p>
           </div>
           <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-4">
-            {included.map((t) => (
-              <li key={t} className="flex items-start gap-3 text-[15px]">
+            {included.map((line) => (
+              <li key={line} className="flex items-start gap-3 text-[15px]">
                 <span className="mt-[2px] flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-accent">
                   <Check />
                 </span>
-                {t}
+                {t(line)}
               </li>
             ))}
           </ul>
@@ -138,16 +142,12 @@ export default function IncludedAndChat() {
         <div className="py-16 md:py-20">
           <div className="text-center px-6 mb-10">
             <div className="text-[13px] text-ink-dim tracking-wide font-semibold mb-3">
-              ALLT GÅR ATT BE OM
+              {t("ALLT GÅR ATT BE OM")}
             </div>
-            <h2 className="text-[28px] md:text-[32px] font-medium">
-              Säg det —{" "}
-              <span className="italic">så görs det</span>
+            <h2 className="text-[28px] md:text-[32px] font-medium">{rich(t, "Säg det — <span>så görs det</span>", { span: (c) => <span className="italic">{c}</span> })}
             </h2>
             <p className="text-[15.5px] text-ink-dim mt-3 max-w-[50ch] mx-auto">
-              Texter, bilder, färger, sidor, formulär, nyheter, karta, video…
-              Skriv som ni skulle säga det till en kollega, så ändras sajten
-              direkt.
+              {t("Texter, bilder, färger, sidor, formulär, nyheter, karta, video… Skriv som ni skulle säga det till en kollega, så ändras sajten direkt.")}
             </p>
           </div>
           <div className="flex flex-col gap-3">
@@ -155,8 +155,7 @@ export default function IncludedAndChat() {
             <Ticker items={requestsRowB} reverse />
           </div>
           <p className="text-center text-[14px] text-ink-dim mt-8 px-6">
-            …och det är bara början. Ni kan fortsätta be om ändringar hur länge
-            ni vill.
+            {t("…och det är bara början. Ni kan fortsätta be om ändringar hur länge ni vill.")}
           </p>
         </div>
       </section>

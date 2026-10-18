@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
@@ -41,6 +42,7 @@ export default function FileDropzone({
   // buggrapporter om saknade hero-bilder.
   onUploadingChange?: (uploading: boolean) => void;
 } = {}) {
+  const t = useT();
   const [assets, setAssets] = useState<Asset[]>([]);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -65,7 +67,7 @@ export default function FileDropzone({
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setError("Du är inte inloggad längre — ladda om sidan.");
+      setError(t("Du är inte inloggad längre — ladda om sidan."));
       setUploading(false);
       onUploadingChange?.(false);
       return;
@@ -141,7 +143,7 @@ export default function FileDropzone({
       if (!res.ok) throw new Error(data.error);
       setAssets((a) => [...a, data.asset]);
     } catch {
-      setError("Kunde inte lägga till stockbilden.");
+      setError(t("Kunde inte lägga till stockbilden."));
     }
     setUploading(false);
     onUploadingChange?.(false);
@@ -178,11 +180,10 @@ export default function FileDropzone({
           </svg>
         </div>
         <div className="font-semibold text-[15.5px]">
-          {uploading ? "Laddar upp …" : "Släpp filer här, eller bläddra"}
+          {uploading ? t("Laddar upp …") : t("Släpp filer här, eller bläddra")}
         </div>
         <div className="text-[13px] text-ink-dim mt-1.5">
-          Egna foton (PNG/JPG/WEBP), Word eller PDF, max 15 MB per fil, flera åt gången går bra.
-          (Logga? Ladda upp den separat ovanför istället.)
+          {t("Egna foton (PNG/JPG/WEBP), Word eller PDF, max 15 MB per fil, flera åt gången går bra. (Logga? Ladda upp den separat ovanför istället.)")}
         </div>
         <input
           ref={inputRef}
@@ -203,7 +204,7 @@ export default function FileDropzone({
         disabled={uploading}
         className="text-[13px] font-semibold text-ink border border-line bg-surface px-4 py-2 rounded-lg mb-3 disabled:opacity-60"
       >
-        Eller sök gratis stockbilder
+        {t("Eller sök gratis stockbilder")}
       </button>
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={addStock} />
 

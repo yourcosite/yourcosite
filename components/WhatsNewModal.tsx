@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { WHATS_NEW } from "@/lib/whatsNew";
 
 export const WHATS_NEW_SEEN_KEY = "yourcosite-whatsnew-seen";
@@ -19,6 +21,7 @@ export default function WhatsNewModal({
   onTry: (text: string) => void;
   onWish: () => void;
 }) {
+  const t = useT();
   if (!open) return null;
   return (
     <div
@@ -26,7 +29,7 @@ export default function WhatsNewModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Nytt i YourCoSite"
+      aria-label={t("Nytt i YourCoSite")}
     >
       <div
         className="bg-surface rounded-2xl w-full max-w-[560px] max-h-[88vh] flex flex-col overflow-hidden"
@@ -34,10 +37,10 @@ export default function WhatsNewModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 border-b border-line">
           <div>
-            <h2 className="text-[19px] font-medium">Nytt i YourCoSite ✨</h2>
-            <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">Det här kan du göra nu som du inte kunde förut.</p>
+            <h2 className="text-[19px] font-medium">{t("Nytt i YourCoSite ✨")}</h2>
+            <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">{t("Det här kan du göra nu som du inte kunde förut.")}</p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Stäng" className="text-[22px] leading-none text-ink-dim px-1">
+          <button type="button" onClick={onClose} aria-label={t("Stäng")} className="text-[22px] leading-none text-ink-dim px-1">
             ×
           </button>
         </div>
@@ -59,17 +62,15 @@ export default function WhatsNewModal({
                     onClose();
                   }}
                   className="mt-2.5 text-[12px] font-semibold bg-bg border border-line rounded-full px-3 py-1 text-ink hover:border-ink"
-                >
-                  Prova: ”{e.try}”
-                </button>
+                >{rich(t, "Prova: ”{v1}”", {}, { v1: e.try })}</button>
               )}
             </div>
           ))}
         </div>
         <div className="px-6 py-4 border-t border-line bg-bg flex items-center justify-between gap-4">
           <p className="text-[13px] leading-snug">
-            <span className="font-semibold">Saknar du något?</span>
-            <span className="text-ink-dim"> Berätta vilken funktion du önskar dig – vi läser alla förslag.</span>
+            <span className="font-semibold">{t("Saknar du något?")}</span>
+            <span className="text-ink-dim"> {t("Berätta vilken funktion du önskar dig – vi läser alla förslag.")}</span>
           </p>
           <button
             type="button"
@@ -79,7 +80,7 @@ export default function WhatsNewModal({
             }}
             className="flex-shrink-0 text-[12.5px] font-bold bg-accent text-accent-ink rounded-full px-4 py-2"
           >
-            💡 Önska en funktion
+            {t("💡 Önska en funktion")}
           </button>
         </div>
       </div>

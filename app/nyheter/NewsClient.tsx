@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import StockPhotoModal from "@/components/StockPhotoModal";
@@ -51,6 +53,7 @@ export default function NewsClient({
   initialCategories: string[];
   siteId: string;
 }) {
+  const t = useT();
   const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const [composer, setComposer] = useState<ComposerState | null>(null);
@@ -91,7 +94,7 @@ export default function NewsClient({
 
   const uploadImage = async (file: File) => {
     if (!IMAGE_TYPES.includes(file.type)) {
-      setError("Bilden måste vara PNG, JPG, WEBP eller GIF.");
+      setError(t("Bilden måste vara PNG, JPG, WEBP eller GIF."));
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
@@ -103,7 +106,7 @@ export default function NewsClient({
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));
       const ext = file.name.split(".").pop() || "bin";
       const path = `${user.id}/nyhet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: uploadError } = await supabase.storage
@@ -113,7 +116,7 @@ export default function NewsClient({
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       setComposer((prev) => (prev ? { ...prev, imageUrl: pub.publicUrl } : prev));
     } catch (e: any) {
-      setError(e.message || "Kunde inte ladda upp bilden.");
+      setError(e.message || t("Kunde inte ladda upp bilden."));
     } finally {
       setUploading(false);
     }
@@ -135,14 +138,14 @@ export default function NewsClient({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Kunde inte hämta ett förslag.");
+      if (!res.ok) throw new Error(data.error || t("Kunde inte hämta ett förslag."));
       setComposer((prev) =>
         prev ? { ...prev, title: data.title || prev.title, excerpt: data.excerpt || prev.excerpt, body: data.body || prev.body } : prev
       );
       setAssistOpen(false);
       setAssistInstruction("");
     } catch (e: any) {
-      setAssistError(e.message || "Kunde inte hämta ett förslag.");
+      setAssistError(e.message || t("Kunde inte hämta ett förslag."));
     } finally {
       setAssisting(false);
     }
@@ -154,15 +157,15 @@ export default function NewsClient({
   const save = async (mode: "draft" | "schedule" | "publish") => {
     if (!composer) return;
     if (!composer.title.trim()) {
-      setError("Artikeln behöver en rubrik.");
+      setError(t("Artikeln behöver en rubrik."));
       return;
     }
     if (!composer.body.trim()) {
-      setError("Artikeln behöver text.");
+      setError(t("Artikeln behöver text."));
       return;
     }
     if (mode === "schedule" && !composer.scheduledAt) {
-      setError("Välj ett datum och klockslag att schemalägga till.");
+      setError(t("Välj ett datum och klockslag att schemalägga till."));
       return;
     }
     setSaving(true);
@@ -184,7 +187,7 @@ export default function NewsClient({
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Kunde inte spara artikeln.");
+      if (!res.ok) throw new Error(data.error || t("Kunde inte spara artikeln."));
       setArticles((prev) => {
         const next = prev.filter((a) => a.id !== data.article.id);
         return [data.article, ...next].sort(
@@ -194,7 +197,7 @@ export default function NewsClient({
       setCategories((prev) => (prev.includes(data.article.category) ? prev : [...prev, data.article.category]));
       setComposer(null);
     } catch (e: any) {
-      setError(e.message || "Kunde inte spara artikeln.");
+      setError(e.message || t("Kunde inte spara artikeln."));
     } finally {
       setSaving(false);
     }
@@ -225,7 +228,7 @@ export default function NewsClient({
       <div className="flex flex-col gap-2.5 mb-5">
         {articles.length === 0 && (
           <p className="text-[13.5px] text-ink-dim border border-line rounded-xl px-4 py-5 text-center">
-            Inga artiklar än.
+            {t("Inga artiklar än.")}
           </p>
         )}
         {articles.map((a) => {
@@ -234,7 +237,7 @@ export default function NewsClient({
             ? `Publicerad ${a.published_at ? formatDate(a.published_at) : ""}`
             : a.scheduled_at
             ? `Schemalagd till ${formatDateTime(a.scheduled_at)}`
-            : "Utkast";
+            : t("Utkast");
           return (
             <div key={a.id} className="border border-line rounded-xl px-4 py-3.5 bg-surface">
               <div className="flex items-center gap-3">
@@ -256,13 +259,13 @@ export default function NewsClient({
                       onClick={() => togglePublished(a)}
                       className="text-[12.5px] font-semibold text-ink px-3 py-1.5 border border-line rounded-lg"
                     >
-                      {a.published ? "Avpublicera" : "Publicera"}
+                      {a.published ? t("Avpublicera") : t("Publicera")}
                     </button>
                     <button
                       onClick={() => openEdit(a)}
                       className="text-[12.5px] font-semibold text-ink px-3 py-1.5 border border-line rounded-lg"
                     >
-                      Redigera
+                      {t("Redigera")}
                     </button>
                     <button
                       onClick={() => setPendingDeleteId(a.id)}
@@ -282,13 +285,13 @@ export default function NewsClient({
                       onClick={() => setPendingDeleteId(null)}
                       className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                     >
-                      Avbryt
+                      {t("Avbryt")}
                     </button>
                     <button
                       onClick={() => confirmDelete(a)}
                       className="text-[12.5px] font-bold text-white bg-warm px-3 py-1.5 rounded-lg"
                     >
-                      Ta bort permanent
+                      {t("Ta bort permanent")}
                     </button>
                   </div>
                 )}
@@ -299,12 +302,10 @@ export default function NewsClient({
       </div>
 
       <button onClick={openNew} className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        {rich(t, "{v1}Ny artikel", {}, { v1: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
-        </svg>
-        Ny artikel
-      </button>
+        </svg> })}</button>
 
       {composer && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={closeComposer}>
@@ -312,36 +313,31 @@ export default function NewsClient({
             className="bg-surface rounded-2xl w-full max-w-[560px] max-h-[88vh] overflow-y-auto p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-[18px] font-semibold mb-4">{composer.id ? "Redigera artikel" : "Ny artikel"}</h2>
+            <h2 className="text-[18px] font-semibold mb-4">{composer.id ? t("Redigera artikel") : t("Ny artikel")}</h2>
 
             {!composer.id && (
               <div className="bg-accent-soft border border-line rounded-lg px-3.5 py-3 mb-4 text-[12.5px] leading-relaxed">
-                <div className="font-semibold mb-0.5">Så skriver du en nyhet</div>
-                Börja med att skriva en kort text i rutan längre ner. Behöver du hjälp? Klicka på{" "}
-                <b>✨ Be Millie om hjälp med texten</b> och skriv att du vill att hon ska <b>utöka texten</b> eller{" "}
-                <b>skriva om den</b> — då sätter hon även en rubrik och en ingress åt dig.
-              </div>
+                {rich(t, "<div>Så skriver du en nyhet</div>Börja med att skriva en kort text i rutan längre ner. Behöver du hjälp? Klicka på <b>✨ Be Millie om hjälp med texten</b> och skriv att du vill att hon ska <b2>utöka texten</b2> eller <b3>skriva om den</b3> — då sätter hon även en rubrik och en ingress åt dig.", { div: (c) => <div className="font-semibold mb-0.5">{c}</div>, b: (c) => <b>{c}</b>, b2: (c) => <b>{c}</b>, b3: (c) => <b>{c}</b> })}</div>
             )}
 
-            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">Rubrik</label>
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">{t("Rubrik")}</label>
             <input
               value={composer.title}
               onChange={(e) => setComposer({ ...composer, title: e.target.value })}
               className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-4"
-              placeholder="T.ex. Vi utökar öppettiderna"
+              placeholder={t("T.ex. Vi utökar öppettiderna")}
             />
 
-            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">
-              Ingress <span className="font-normal">(kort text som visas i listan, valfritt)</span>
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">{rich(t, "Ingress <span>(kort text som visas i listan, valfritt)</span>", { span: (c) => <span className="font-normal">{c}</span> })}
             </label>
             <input
               value={composer.excerpt}
               onChange={(e) => setComposer({ ...composer, excerpt: e.target.value })}
               className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-4"
-              placeholder="En rad som sammanfattar artikeln"
+              placeholder={t("En rad som sammanfattar artikeln")}
             />
 
-            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">Kategori</label>
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">{t("Kategori")}</label>
             {addingCategory ? (
               <div className="flex items-center gap-2 mb-4">
                 <input
@@ -349,14 +345,14 @@ export default function NewsClient({
                   value={composer.category}
                   onChange={(e) => setComposer({ ...composer, category: e.target.value })}
                   className="flex-1 border border-line rounded-lg px-3 py-2 text-[14px]"
-                  placeholder="Namnge en ny kategori"
+                  placeholder={t("Namnge en ny kategori")}
                   maxLength={40}
                 />
                 <button
                   onClick={() => setAddingCategory(false)}
                   className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg flex-shrink-0"
                 >
-                  Klar
+                  {t("Klar")}
                 </button>
               </div>
             ) : (
@@ -377,11 +373,11 @@ export default function NewsClient({
                     {c}
                   </option>
                 ))}
-                <option value={NEW_CATEGORY_VALUE}>+ Ny kategori…</option>
+                <option value={NEW_CATEGORY_VALUE}>{t("+ Ny kategori…")}</option>
               </select>
             )}
 
-            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">Bild (valfri)</label>
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">{t("Bild (valfri)")}</label>
             {composer.imageUrl ? (
               <div className="flex items-center gap-3 mb-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -390,7 +386,7 @@ export default function NewsClient({
                   onClick={() => setComposer({ ...composer, imageUrl: "" })}
                   className="text-[12.5px] font-semibold text-ink-dim underline"
                 >
-                  Ta bort bild
+                  {t("Ta bort bild")}
                 </button>
               </div>
             ) : (
@@ -416,7 +412,7 @@ export default function NewsClient({
                   <path d="M6.5 9.5 12 4l5.5 5.5" />
                   <path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3" />
                 </svg>
-                {uploading ? "Laddar upp…" : "Lägg till bild — klicka eller dra hit en fil"}
+                {uploading ? t("Laddar upp…") : t("Lägg till bild — klicka eller dra hit en fil")}
                 <input
                   type="file"
                   accept="image/png,image/jpeg,image/webp,image/gif"
@@ -430,7 +426,7 @@ export default function NewsClient({
                 onClick={() => setStockOpen(true)}
                 className="text-[12.5px] font-semibold text-ink-dim underline mb-4"
               >
-                Eller sök gratis stockbilder
+                {t("Eller sök gratis stockbilder")}
               </button>
               </>
             )}
@@ -447,12 +443,12 @@ export default function NewsClient({
             />
 
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-[12.5px] font-semibold text-ink-dim">Text</label>
+              <label className="block text-[12.5px] font-semibold text-ink-dim">{t("Text")}</label>
               <button
                 onClick={() => setAssistOpen((v) => !v)}
                 className="text-[12px] font-semibold text-ink-dim flex items-center gap-1"
               >
-                ✨ Be Millie om hjälp med texten
+                {t("✨ Be Millie om hjälp med texten")}
               </button>
             </div>
 
@@ -461,12 +457,12 @@ export default function NewsClient({
                 <input
                   value={assistInstruction}
                   onChange={(e) => setAssistInstruction(e.target.value)}
-                  placeholder={composer.body ? "T.ex. utöka texten, skriv om den eller gör den kortare" : "Vad ska nyheten handla om?"}
+                  placeholder={composer.body ? t("T.ex. utöka texten, skriv om den eller gör den kortare") : t("Vad ska nyheten handla om?")}
                   className="w-full border border-line rounded-lg px-3 py-2 text-[13.5px] mb-2 bg-surface"
                 />
                 {composer.body.trim() && (
                   <div className="flex flex-wrap gap-1.5 mb-2.5">
-                    {["Utöka texten", "Skriv om den", "Gör den kortare", "Gör den mer personlig"].map((c) => (
+                    {[t("Utöka texten"), t("Skriv om den"), t("Gör den kortare"), t("Gör den mer personlig")].map((c) => (
                       <button
                         key={c}
                         type="button"
@@ -478,18 +474,18 @@ export default function NewsClient({
                     ))}
                   </div>
                 )}
-                <p className="text-[11.5px] text-ink-dim mb-2.5">Millie sätter också rubrik och ingress åt dig.</p>
+                <p className="text-[11.5px] text-ink-dim mb-2.5">{t("Millie sätter också rubrik och ingress åt dig.")}</p>
                 {assistError && <p className="text-[12.5px] text-warm font-semibold mb-2">{assistError}</p>}
                 <div className="flex justify-end gap-2">
                   <button onClick={() => setAssistOpen(false)} className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5">
-                    Avbryt
+                    {t("Avbryt")}
                   </button>
                   <button
                     onClick={askMillie}
                     disabled={assisting || (!assistInstruction.trim() && !composer.body.trim())}
                     className="text-[12.5px] font-bold text-accent-ink bg-accent px-3.5 py-1.5 rounded-lg disabled:opacity-50"
                   >
-                    {assisting ? "Skriver…" : "Skriv med Millie"}
+                    {assisting ? "Skriver…" : t("Skriv med Millie")}
                   </button>
                 </div>
               </div>
@@ -500,11 +496,10 @@ export default function NewsClient({
               onChange={(e) => setComposer({ ...composer, body: e.target.value })}
               rows={8}
               className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-4"
-              placeholder="Hela artikeln. Lämna en tom rad mellan stycken."
+              placeholder={t("Hela artikeln. Lämna en tom rad mellan stycken.")}
             />
 
-            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">
-              Schemalägg publicering <span className="font-normal">(valfritt)</span>
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">{rich(t, "Schemalägg publicering <span>(valfritt)</span>", { span: (c) => <span className="font-normal">{c}</span> })}
             </label>
             <input
               type="datetime-local"
@@ -518,14 +513,14 @@ export default function NewsClient({
 
             <div className="flex items-center justify-end gap-2.5 mt-3">
               <button onClick={closeComposer} className="text-[13px] font-semibold text-ink-dim px-4 py-2">
-                Avbryt
+                {t("Avbryt")}
               </button>
               <button
                 onClick={() => save("draft")}
                 disabled={saving || uploading}
                 className="text-[13px] font-semibold text-ink bg-bg border border-line px-4 py-2 rounded-full"
               >
-                Spara utkast
+                {t("Spara utkast")}
               </button>
               {composer.scheduledAt ? (
                 <button
@@ -533,7 +528,7 @@ export default function NewsClient({
                   disabled={saving || uploading}
                   className="text-[13px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-full"
                 >
-                  Schemalägg
+                  {t("Schemalägg")}
                 </button>
               ) : (
                 <button
@@ -541,7 +536,7 @@ export default function NewsClient({
                   disabled={saving || uploading}
                   className="text-[13px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-full"
                 >
-                  Publicera
+                  {t("Publicera")}
                 </button>
               )}
             </div>

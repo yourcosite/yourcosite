@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 
 // Återanvänds på två ställen: "Kontakta oss" i kontomenyn (AccountHeader,
@@ -14,7 +15,7 @@ export default function ContactSupportModal({
   context,
   defaultMessage = "",
   siteId,
-  title = "Kontakta oss",
+  title,
   intro,
 }: {
   open: boolean;
@@ -26,6 +27,8 @@ export default function ContactSupportModal({
   title?: string;
   intro?: string;
 }) {
+  const t = useT();
+  title = title ?? t("Kontakta oss");
   const [message, setMessage] = useState(defaultMessage);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -56,7 +59,7 @@ export default function ContactSupportModal({
         body: JSON.stringify({ message: text, source, context, siteId }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Kunde inte skicka meddelandet.");
+      if (!res.ok) throw new Error(data.error || t("Kunde inte skicka meddelandet."));
       setSent(true);
     } catch (e: any) {
       setError(e.message);
@@ -73,7 +76,7 @@ export default function ContactSupportModal({
       >
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-[18px] font-semibold">{title}</h2>
-          <button onClick={close} aria-label="Stäng" className="text-ink-dim">
+          <button onClick={close} aria-label={t("Stäng")} className="text-ink-dim">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -83,15 +86,15 @@ export default function ContactSupportModal({
 
         {sent ? (
           <div className="text-center py-4">
-            <div className="font-semibold text-[15px] mb-1.5">Tack, vi har tagit emot det!</div>
+            <div className="font-semibold text-[15px] mb-1.5">{t("Tack, vi har tagit emot det!")}</div>
             <p className="text-[13.5px] text-ink-dim mb-5">
-              Vi återkommer vanligtvis inom 24 timmar på vardagar.
+              {t("Vi återkommer vanligtvis inom 24 timmar på vardagar.")}
             </p>
             <button
               onClick={close}
               className="bg-ink text-white font-semibold text-[13.5px] px-5 py-2.5 rounded-lg"
             >
-              Stäng
+              {t("Stäng")}
             </button>
           </div>
         ) : (
@@ -102,7 +105,7 @@ export default function ContactSupportModal({
               onChange={(e) => setMessage(e.target.value)}
               rows={5}
               autoFocus
-              placeholder="Skriv vad du vill ha hjälp med eller önskar dig …"
+              placeholder={t("Skriv vad du vill ha hjälp med eller önskar dig …")}
               className="w-full box-border px-3 py-2.5 border border-line rounded-lg text-[13.5px] mb-3.5 resize-none"
             />
             {error && <p className="text-[12.5px] text-red-600 mb-3">{error}</p>}
@@ -111,7 +114,7 @@ export default function ContactSupportModal({
               disabled={sending || !message.trim()}
               className="w-full bg-ink text-white font-semibold text-[13.5px] py-2.5 rounded-lg disabled:opacity-60"
             >
-              {sending ? "Skickar …" : "Skicka till oss"}
+              {sending ? t("Skickar …") : t("Skicka till oss")}
             </button>
           </>
         )}

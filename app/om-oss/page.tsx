@@ -1,16 +1,22 @@
+import { msg } from "@/lib/i18n/config";
+import { getT } from "@/lib/i18n/server";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
-export const metadata: Metadata = {
-  title: "Om oss",
+export function generateMetadata(): Metadata {
+  const t = getT();
+  return {
+  title: t("Om oss"),
   description:
-    "En byrå som byggde sitt eget verktyg — och delar det nu med andra.",
-};
+    t("En byrå som byggde sitt eget verktyg — och delar det nu med andra."),
+  };
+}
 
 export default function AboutPage() {
+  const t = getT();
   return (
     <div>
       <Header active="/om-oss" />
@@ -21,49 +27,38 @@ export default function AboutPage() {
             <div className="relative w-full aspect-[3/4] rounded-2xl overflow-hidden mb-4">
               <Image
                 src="/images/about-carl.jpg"
-                alt="Carl Schnell, grundare av CS Kommunikationsbyrå AB"
+                alt={t("Carl Schnell, grundare av CS Kommunikationsbyrå AB")}
                 fill
                 className="object-cover"
               />
             </div>
-            <div className="font-semibold text-[15px]">Carl Schnell</div>
+            <div className="font-semibold text-[15px]">{t("Carl Schnell")}</div>
             <div className="text-[13px] text-ink-dim">
-              Grundare, CS Kommunikationsbyrå AB
+              {t("Grundare, CS Kommunikationsbyrå AB")}
             </div>
           </div>
 
           <div>
             <div className="text-[13.5px] text-ink-dim tracking-wide mb-3">
-              OM OSS
+              {t("OM OSS")}
             </div>
             <h1 className="text-[30px] md:text-[34px] font-medium mb-6 max-w-[20ch]">
-              En byrå som byggde sitt eget verktyg — och delar det nu med
-              andra
+              {t("En byrå som byggde sitt eget verktyg — och delar det nu med andra")}
             </h1>
             <div className="flex flex-col gap-5 text-[15px] leading-relaxed text-ink-dim max-w-[62ch]">
               <p>
-                CS Kommunikationsbyrå AB bildades 2013 av Carl Schnell och är
-                baserad i Borensberg, med fokus på Östergötland — men med
-                uppdrag i hela Sverige och internationellt. Byrån tar hand om
-                hela kommunikationen åt sina kunder: sociala medier, digital
-                annonsering, föreläsningar, dronarfotografering, film och
-                medierådgivning.
+                {t("CS Kommunikationsbyrå AB bildades 2013 av Carl Schnell och är baserad i Borensberg, med fokus på Östergötland — men med uppdrag i hela Sverige och internationellt. Byrån tar hand om hela kommunikationen åt sina kunder: sociala medier, digital annonsering, föreläsningar, dronarfotografering, film och medierådgivning.")}
               </p>
               <p>
-                När Carl byggde om cskb.se tillsammans med Claude — helt
-                genom ett samtal, utan att skriva en rad kod själv — insåg
-                han hur mycket det förändrade arbetet. YourCoSite föddes ur
-                den insikten: samma sätt att bygga en riktigt genomarbetad
-                sajt, tillgängligt för alla företag, inte bara de som råkar
-                ha en kommunikationsbyrå till hands.
+                {t("När Carl byggde om cskb.se tillsammans med Claude — helt genom ett samtal, utan att skriva en rad kod själv — insåg han hur mycket det förändrade arbetet. YourCoSite föddes ur den insikten: samma sätt att bygga en riktigt genomarbetad sajt, tillgängligt för alla företag, inte bara de som råkar ha en kommunikationsbyrå till hands.")}
               </p>
             </div>
             <div className="flex gap-6 mt-8 text-[14px] font-semibold">
               <a href="https://www.linkedin.com" className="border-b border-ink pb-0.5">
-                LinkedIn
+                {t("LinkedIn")}
               </a>
               <a href="https://cskb.se" className="border-b border-ink pb-0.5">
-                cskb.se →
+                {t("cskb.se →")}
               </a>
             </div>
           </div>
@@ -71,17 +66,16 @@ export default function AboutPage() {
 
         <section className="bg-ink text-center px-6 md:px-12 py-16">
           <h2 className="text-white text-[28px] md:text-[30px] font-medium mb-3">
-            Redo att komma igång?
+            {t("Redo att komma igång?")}
           </h2>
           <p className="text-[#C9C7C2] text-[15.5px] mb-7">
-            Det tar under en minut att skapa ett konto och börja berätta om
-            er verksamhet.
+            {t("Det tar under en minut att skapa ett konto och börja berätta om er verksamhet.")}
           </p>
           <Link
             href="/skapa-konto"
             className="inline-block bg-accent text-accent-ink font-bold text-[15.5px] px-7 py-3.5 rounded-xl"
           >
-            Kom igång →
+            {t("Kom igång →")}
           </Link>
         </section>
       </section>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -24,6 +25,7 @@ export default function PrivacyPolicyUpload({
   onChange?: (fileUrl: string | null) => void;
   onUploadingChange?: (uploading: boolean) => void;
 }) {
+  const t = useT();
   const [fileUrl, setFileUrl] = useState<string | null>(initialFileUrl || null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -32,11 +34,11 @@ export default function PrivacyPolicyUpload({
   const upload = async (file: File) => {
     setError("");
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setError("Filtypen stöds inte — använd PDF, Word eller en vanlig textfil.");
+      setError(t("Filtypen stöds inte — använd PDF, Word eller en vanlig textfil."));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError("Filen är större än 10 MB.");
+      setError(t("Filen är större än 10 MB."));
       return;
     }
 
@@ -46,7 +48,7 @@ export default function PrivacyPolicyUpload({
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setError("Du är inte inloggad längre — ladda om sidan.");
+      setError(t("Du är inte inloggad längre — ladda om sidan."));
       setUploading(false);
       onUploadingChange?.(false);
       return;
@@ -74,7 +76,7 @@ export default function PrivacyPolicyUpload({
         body: JSON.stringify({ mode: "uploaded", fileUrl: pub.publicUrl }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setFileUrl(pub.publicUrl);
       onChange?.(pub.publicUrl);
     } catch (e: any) {
@@ -112,7 +114,7 @@ export default function PrivacyPolicyUpload({
           {fileName}
         </a>
         <button type="button" onClick={remove} disabled={uploading} className="text-[12.5px] text-ink-dim font-semibold flex-shrink-0 disabled:opacity-60">
-          {uploading ? "…" : "Ta bort"}
+          {uploading ? "…" : t("Ta bort")}
         </button>
       </div>
     );
@@ -125,9 +127,9 @@ export default function PrivacyPolicyUpload({
         className="border-[1.5px] border-dashed border-line rounded-2xl px-6 py-5 text-center bg-surface cursor-pointer"
       >
         <div className="font-semibold text-[14.5px]">
-          {uploading ? "Laddar upp …" : "Ladda upp din integritetspolicy"}
+          {uploading ? t("Laddar upp …") : t("Ladda upp din integritetspolicy")}
         </div>
-        <div className="text-[12.5px] text-ink-dim mt-1">PDF, Word eller textfil, max 10 MB.</div>
+        <div className="text-[12.5px] text-ink-dim mt-1">{t("PDF, Word eller textfil, max 10 MB.")}</div>
         <input
           ref={inputRef}
           type="file"

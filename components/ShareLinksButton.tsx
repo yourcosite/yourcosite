@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 
 type ShareLink = { id: string; url: string; createdAt: string; expiresAt: string };
@@ -16,6 +17,7 @@ export default function ShareLinksButton({
   popoverDirection?: "up" | "down";
   align?: "left" | "right";
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [links, setLinks] = useState<ShareLink[]>([]);
   const [busy, setBusy] = useState(false);
@@ -44,7 +46,7 @@ export default function ShareLinksButton({
       setLinks(data.links || []);
       if (data.error) setError(data.error);
     } catch {
-      setError("Kunde inte hämta dina delade länkar.");
+      setError(t("Kunde inte hämta dina delade länkar."));
     }
   };
 
@@ -59,7 +61,7 @@ export default function ShareLinksButton({
         body: JSON.stringify({ siteId }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setLinks((ls) => [data.link, ...ls]);
       copy(data.link);
     } catch (e: any) {
@@ -77,7 +79,7 @@ export default function ShareLinksButton({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       });
-      if (!res.ok) throw new Error("Kunde inte stänga av länken.");
+      if (!res.ok) throw new Error(t("Kunde inte stänga av länken."));
       setLinks((ls) => ls.filter((l) => l.id !== id));
     } catch (e: any) {
       setError(e.message);
@@ -91,7 +93,7 @@ export default function ShareLinksButton({
         onClick={toggle}
         className="text-[12.5px] font-semibold text-ink bg-white border border-line rounded-full px-3.5 py-1.5"
       >
-        🔗 Dela förhandsvisning
+        {t("🔗 Dela förhandsvisning")}
       </button>
       {open && (
         <div
@@ -100,13 +102,13 @@ export default function ShareLinksButton({
           } ${align === "right" ? "right-0" : "left-0"}`}
         >
           <div className="flex items-center justify-between mb-2">
-            <div className="font-semibold text-[13px]">Delade länkar</div>
-            <button type="button" onClick={() => setOpen(false)} aria-label="Stäng" className="text-ink-dim font-bold px-1">×</button>
+            <div className="font-semibold text-[13px]">{t("Delade länkar")}</div>
+            <button type="button" onClick={() => setOpen(false)} aria-label={t("Stäng")} className="text-ink-dim font-bold px-1">×</button>
           </div>
           <p className="text-ink-dim mb-2.5">
-            Den som har en länk kan titta på sajten men inte ändra något. Varje länk gäller i 14 dagar, och du kan stänga av den när du vill.
+            {t("Den som har en länk kan titta på sajten men inte ändra något. Varje länk gäller i 14 dagar, och du kan stänga av den när du vill.")}
           </p>
-          {links.length === 0 && <div className="text-ink-dim mb-2.5">Du har inga aktiva länkar just nu.</div>}
+          {links.length === 0 && <div className="text-ink-dim mb-2.5">{t("Du har inga aktiva länkar just nu.")}</div>}
           <div className="flex flex-col gap-2 mb-2.5 max-h-[180px] overflow-y-auto">
             {links.map((l) => (
               <div key={l.id} className="flex items-center gap-2">
@@ -117,10 +119,10 @@ export default function ShareLinksButton({
                   className="flex-1 min-w-0 bg-bg border border-line rounded-full px-3 py-1 text-ink"
                 />
                 <button type="button" onClick={() => copy(l)} className="font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0">
-                  {copiedId === l.id ? "Kopierad ✓" : "Kopiera"}
+                  {copiedId === l.id ? t("Kopierad ✓") : t("Kopiera")}
                 </button>
                 <button type="button" onClick={() => revoke(l.id)} className="font-semibold text-red-600 border border-line rounded-full px-2.5 py-1 flex-shrink-0">
-                  Stäng av
+                  {t("Stäng av")}
                 </button>
               </div>
             ))}
@@ -131,7 +133,7 @@ export default function ShareLinksButton({
             disabled={busy}
             className="font-semibold bg-accent text-accent-ink rounded-full px-3.5 py-1.5 disabled:opacity-60"
           >
-            {busy ? "Skapar …" : "+ Skapa ny länk"}
+            {busy ? t("Skapar …") : t("+ Skapa ny länk")}
           </button>
           {error && <div className="text-red-600 mt-2">{error}</div>}
         </div>

@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -54,6 +56,7 @@ function ColorCircle({
   size?: number;
   selected?: boolean;
 }) {
+  const t = useT();
   return (
     <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
       <div
@@ -71,7 +74,7 @@ function ColorCircle({
         type="color"
         value={isValidHex(value) && value.length === 7 ? value : "#000000"}
         onChange={(e) => onChange(e.target.value)}
-        aria-label="Öppna färgväljare"
+        aria-label={t("Öppna färgväljare")}
         className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
       />
     </div>
@@ -79,6 +82,7 @@ function ColorCircle({
 }
 
 export default function OnboardingStep2() {
+  const t = useT();
   const router = useRouter();
   const [u1, setU1] = useState("");
   const [u2, setU2] = useState("");
@@ -162,11 +166,9 @@ export default function OnboardingStep2() {
   return (
     <OnboardingShell step={2} stepLabel="INSPIRATION">
       <div className="w-full max-w-[620px]">
-        <h1 className="text-[34px] font-medium mb-2.5">Vad gillar du?</h1>
+        <h1 className="text-[34px] font-medium mb-2.5">{t("Vad gillar du?")}</h1>
         <p className="text-[15.5px] text-ink-dim mb-7">
-          Klistra in sajter vars känsla eller stil du gillar. Vi tittar på
-          ton, struktur och stämning — aldrig text eller bilder rakt av.
-          Helt valfritt.
+          {t("Klistra in sajter vars känsla eller stil du gillar. Vi tittar på ton, struktur och stämning — aldrig text eller bilder rakt av. Helt valfritt.")}
         </p>
 
         <form
@@ -178,7 +180,7 @@ export default function OnboardingStep2() {
         >
           <div>
             <label htmlFor="u1" className="block text-[13.5px] font-semibold mb-1.5">
-              Länk 1
+              {t("Länk 1")}
             </label>
             <input
               id="u1"
@@ -191,7 +193,7 @@ export default function OnboardingStep2() {
           </div>
           <div>
             <label htmlFor="u2" className="block text-[13.5px] font-semibold mb-1.5">
-              Länk 2 (valfritt)
+              {t("Länk 2 (valfritt)")}
             </label>
             <input
               id="u2"
@@ -204,7 +206,7 @@ export default function OnboardingStep2() {
           </div>
           <div>
             <label htmlFor="u3" className="block text-[13.5px] font-semibold mb-1.5">
-              Länk 3 (valfritt)
+              {t("Länk 3 (valfritt)")}
             </label>
             <input
               id="u3"
@@ -218,7 +220,7 @@ export default function OnboardingStep2() {
 
           <div className="mt-2">
             <label className="block text-[13.5px] font-semibold mb-1.5">
-              Eller ladda upp bilder (valfritt)
+              {t("Eller ladda upp bilder (valfritt)")}
             </label>
             <InspirationImageUpload
               initialUrls={inspirationImageUrls}
@@ -229,7 +231,7 @@ export default function OnboardingStep2() {
 
           <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mt-2">
             <span className="text-[13.5px] text-ink leading-relaxed">
-              Har du ingen favorit? Hoppa över det här steget.
+              {t("Har du ingen favorit? Hoppa över det här steget.")}
             </span>
           </div>
 
@@ -237,19 +239,18 @@ export default function OnboardingStep2() {
 
           <div className="mt-3.5">
             <div className="flex items-center justify-between mb-1">
-              <div className="text-[13.5px] font-semibold">Huvudfärg</div>
+              <div className="text-[13.5px] font-semibold">{t("Huvudfärg")}</div>
               <div className="flex items-center gap-1.5 bg-accent-soft rounded-full pl-1 pr-3 py-1">
                 <span
                   className="w-[18px] h-[18px] rounded-full border border-line flex-shrink-0"
                   style={{ background: isValidHex(mainColor) ? mainColor : "#fff" }}
                 />
                 <span className="text-[12px] font-mono font-semibold">{mainColor.toUpperCase()}</span>
-                <span className="text-[11px] text-ink-dim">vald</span>
+                <span className="text-[11px] text-ink-dim">{t("vald")}</span>
               </div>
             </div>
             <p className="text-[12px] text-ink-dim mb-2.5">
-              Den färg som syns mest — knappar, länkar och accenter. Du kan
-              alltid ändra den senare.
+              {t("Den färg som syns mest — knappar, länkar och accenter. Du kan alltid ändra den senare.")}
             </p>
             <div className="flex items-center gap-2.5 mb-6 flex-wrap">
               {swatches.map((hex) => {
@@ -293,16 +294,15 @@ export default function OnboardingStep2() {
                   disabled={!isValidHex(mainHexDraft)}
                   className="text-[12.5px] font-semibold px-3.5 py-2 rounded-lg border border-line disabled:opacity-40"
                 >
-                  Använd
+                  {t("Använd")}
                 </button>
               </div>
             </div>
 
-            <div className="text-[13.5px] font-semibold mb-1">
-              Fler färger <span className="text-ink-dim font-normal">(valfritt, max 2)</span>
+            <div className="text-[13.5px] font-semibold mb-1">{rich(t, "Fler färger <span>(valfritt, max 2)</span>", { span: (c) => <span className="text-ink-dim font-normal">{c}</span> })}
             </div>
             <p className="text-[12px] text-ink-dim mb-2.5">
-              Komplementfärger till bakgrunder, kort och detaljer.
+              {t("Komplementfärger till bakgrunder, kort och detaljer.")}
             </p>
             <div className="flex items-center gap-2.5 mb-3.5 flex-wrap">
               {swatches
@@ -344,7 +344,7 @@ export default function OnboardingStep2() {
                   disabled={!isValidHex(extraHexDraft) || extraColors.length >= 2}
                   className="text-[12.5px] font-semibold px-3.5 py-2 rounded-lg border border-line disabled:opacity-40"
                 >
-                  Lägg till
+                  {t("Lägg till")}
                 </button>
               </div>
             </div>
@@ -383,14 +383,14 @@ export default function OnboardingStep2() {
               href="/onboarding/1"
               className="text-ink-dim font-semibold text-[15px] py-3.5 px-2.5"
             >
-              ← Tillbaka
+              {t("← Tillbaka")}
             </Link>
             <button
               type="submit"
               disabled={saving || imagesUploading}
               className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
             >
-              {saving ? "Sparar …" : imagesUploading ? "Väntar på bilder …" : "Nästa →"}
+              {saving ? t("Sparar …") : imagesUploading ? t("Väntar på bilder …") : t("Nästa →")}
             </button>
           </div>
         </form>

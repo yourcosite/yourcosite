@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n/config";
 import { useState } from "react";
 import AccountTab from "./AccountTab";
 import NotificationsTab from "./NotificationsTab";
@@ -9,10 +11,10 @@ import DeleteAccountTab from "./DeleteAccountTab";
 type Tab = "konto" | "losenord" | "notiser" | "radera";
 
 const TABS: { id: Tab; label: string; danger?: boolean }[] = [
-  { id: "konto", label: "Konto" },
-  { id: "losenord", label: "Lösenord" },
-  { id: "notiser", label: "Notiser" },
-  { id: "radera", label: "Ta bort konto", danger: true },
+  { id: "konto", label: msg("Konto") },
+  { id: "losenord", label: msg("Lösenord") },
+  { id: "notiser", label: msg("Notiser") },
+  { id: "radera", label: msg("Ta bort konto"), danger: true },
 ];
 
 // Sidomenyns flikar var tidigare statiska <a>-taggar utan href/onClick —
@@ -50,27 +52,28 @@ export default function SettingsTabs({
   notifyTips: boolean;
   siteCount: number;
 }) {
+  const t = useT();
   const [active, setActive] = useState<Tab>("konto");
 
   return (
     <>
       <div className="w-[170px] flex-shrink-0 hidden md:flex flex-col gap-1">
-        {TABS.map((t) => (
+        {TABS.map((tab) => (
           <button
-            key={t.id}
+            key={tab.id}
             type="button"
-            onClick={() => setActive(t.id)}
-            className={`text-left px-3 py-2 rounded-lg text-[13.5px] font-semibold ${t.danger ? "mt-3.5" : ""} ${
-              active === t.id
-                ? t.danger
+            onClick={() => setActive(tab.id)}
+            className={`text-left px-3 py-2 rounded-lg text-[13.5px] font-semibold ${tab.danger ? "mt-3.5" : ""} ${
+              active === tab.id
+                ? tab.danger
                   ? "bg-warm/10 text-warm"
                   : "bg-accent-soft text-ink"
-                : t.danger
+                : tab.danger
                 ? "text-warm"
                 : "text-ink-dim"
             }`}
           >
-            {t.label}
+            {t(tab.label)}
           </button>
         ))}
       </div>

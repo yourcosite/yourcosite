@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import SitePreview from "@/components/SitePreview";
 import type { SiteContent } from "@/lib/contentModel";
@@ -22,6 +23,7 @@ export default function NewsPreviewModal({
   onClose: () => void;
   onPublished: (a: NewsArticle, published: boolean) => void;
 }) {
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [editing, setEditing] = useState(false);
@@ -63,10 +65,10 @@ export default function NewsPreviewModal({
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Det gick inte att spara.");
+      if (!res.ok) throw new Error(data.error || t("Det gick inte att spara."));
       onPublished(data.article, publishNow);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Det gick inte att spara.");
+      setError(e instanceof Error ? e.message : t("Det gick inte att spara."));
     } finally {
       setBusy(false);
     }
@@ -83,13 +85,13 @@ export default function NewsPreviewModal({
         body: JSON.stringify({ instruction, title, body: text, category: article.category }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Millie kunde inte hjälpa just nu.");
+      if (!res.ok) throw new Error(data.error || t("Millie kunde inte hjälpa just nu."));
       if (data.title) setTitle(data.title);
       if (typeof data.excerpt === "string") setExcerpt(data.excerpt);
       if (data.body) setText(data.body);
       setInstruction("");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Millie kunde inte hjälpa just nu.");
+      setError(e instanceof Error ? e.message : t("Millie kunde inte hjälpa just nu."));
     } finally {
       setAssisting(false);
     }
@@ -101,7 +103,7 @@ export default function NewsPreviewModal({
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Förhandsgranska nyhet"
+      aria-label={t("Förhandsgranska nyhet")}
     >
       <div
         className="bg-surface rounded-2xl w-full max-w-[860px] max-h-[92vh] flex flex-col overflow-hidden"
@@ -109,12 +111,12 @@ export default function NewsPreviewModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 border-b border-line">
           <div>
-            <h2 className="text-[19px] font-medium">Så här ser nyheten ut 📰</h2>
+            <h2 className="text-[19px] font-medium">{t("Så här ser nyheten ut 📰")}</h2>
             <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">
-              {live ? "Nyheten är publicerad och syns för besökarna." : "Nyheten är än så länge ett utkast som bara du ser."}
+              {live ? t("Nyheten är publicerad och syns för besökarna.") : t("Nyheten är än så länge ett utkast som bara du ser.")}
             </p>
           </div>
-          <button type="button" onClick={onClose} aria-label="Stäng" className="text-[22px] leading-none text-ink-dim px-1">×</button>
+          <button type="button" onClick={onClose} aria-label={t("Stäng")} className="text-[22px] leading-none text-ink-dim px-1">×</button>
         </div>
         <div className="flex-1 overflow-y-auto bg-white">
           <SitePreview
@@ -129,13 +131,13 @@ export default function NewsPreviewModal({
         {editing && (
           <div className="px-6 py-4 border-t border-line max-h-[40vh] overflow-y-auto space-y-3">
             <div>
-              <label className="text-[12.5px] font-semibold block mb-1">Be Millie skriva om</label>
+              <label className="text-[12.5px] font-semibold block mb-1">{t("Be Millie skriva om")}</label>
               <div className="flex gap-2">
                 <input
                   value={instruction}
                   onChange={(e) => setInstruction(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") askMillie(); }}
-                  placeholder="T.ex. gör den kortare och mer personlig"
+                  placeholder={t("T.ex. gör den kortare och mer personlig")}
                   className="flex-1 min-w-0 rounded-lg border border-line bg-surface px-3 py-2 text-[14px]"
                 />
                 <button
@@ -144,20 +146,20 @@ export default function NewsPreviewModal({
                   disabled={assisting || !instruction.trim()}
                   className="text-[13.5px] font-semibold px-3 py-2 rounded-lg bg-accent text-accent-ink disabled:opacity-60 whitespace-nowrap"
                 >
-                  {assisting ? "Skriver…" : "Skriv om"}
+                  {assisting ? "Skriver…" : t("Skriv om")}
                 </button>
               </div>
             </div>
             <div>
-              <label className="text-[12.5px] font-semibold block mb-1">Rubrik</label>
+              <label className="text-[12.5px] font-semibold block mb-1">{t("Rubrik")}</label>
               <input value={title} onChange={(e) => setTitle(e.target.value)} maxLength={120} className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-[14px]" />
             </div>
             <div>
-              <label className="text-[12.5px] font-semibold block mb-1">Kort ingress</label>
+              <label className="text-[12.5px] font-semibold block mb-1">{t("Kort ingress")}</label>
               <input value={excerpt} onChange={(e) => setExcerpt(e.target.value)} maxLength={300} className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-[14px]" />
             </div>
             <div>
-              <label className="text-[12.5px] font-semibold block mb-1">Text</label>
+              <label className="text-[12.5px] font-semibold block mb-1">{t("Text")}</label>
               <textarea value={text} onChange={(e) => setText(e.target.value)} rows={7} className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-[14px] leading-relaxed" />
             </div>
           </div>
@@ -165,15 +167,15 @@ export default function NewsPreviewModal({
         <div className="px-6 py-4 border-t border-line flex flex-wrap items-center justify-end gap-3">
           {error && <span className="text-[13px] text-red-600 mr-auto">{error}</span>}
           <button type="button" onClick={() => setEditing((v) => !v)} className="text-[14px] font-semibold px-4 py-2 rounded-lg border border-line">
-            {editing ? "Dölj redigering" : "✏️ Redigera"}
+            {editing ? t("Dölj redigering") : t("✏️ Redigera")}
           </button>
           {dirty && (
             <button type="button" onClick={() => save(false)} disabled={busy} className="text-[14px] font-semibold px-4 py-2 rounded-lg border border-line disabled:opacity-60">
-              Spara ändringar
+              {t("Spara ändringar")}
             </button>
           )}
           <button type="button" onClick={onClose} className="text-[14px] font-semibold px-4 py-2 rounded-lg border border-line">
-            {live ? "Stäng" : "Behåll som utkast"}
+            {live ? t("Stäng") : t("Behåll som utkast")}
           </button>
           {!live && (
             <button
@@ -182,7 +184,7 @@ export default function NewsPreviewModal({
               disabled={busy}
               className="text-[14px] font-semibold px-4 py-2 rounded-lg bg-accent text-accent-ink disabled:opacity-60"
             >
-              {busy ? "Publicerar…" : "Publicera nu"}
+              {busy ? "Publicerar…" : t("Publicera nu")}
             </button>
           )}
         </div>

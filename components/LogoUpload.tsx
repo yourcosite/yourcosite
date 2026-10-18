@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useRef, useState } from "react";
 
 // Egen, tydligt separat uppladdningsknapp för logga — skild från den
@@ -12,6 +13,7 @@ export default function LogoUpload({
   initialUrl?: string;
   onChange?: (url: string | null) => void;
 }) {
+  const t = useT();
   const [logoUrl, setLogoUrl] = useState(initialUrl || "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -25,7 +27,7 @@ export default function LogoUpload({
       body.append("file", file);
       const res = await fetch("/api/onboarding/logo", { method: "POST", body });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setLogoUrl(data.logoUrl);
       onChange?.(data.logoUrl);
     } catch (e: any) {
@@ -51,7 +53,7 @@ export default function LogoUpload({
       <div className="w-14 h-14 rounded-xl bg-bg border border-line flex items-center justify-center flex-shrink-0 overflow-hidden">
         {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={logoUrl} alt="Logga" className="max-w-full max-h-full object-contain" />
+          <img src={logoUrl} alt={t("Logga")} className="max-w-full max-h-full object-contain" />
         ) : (
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#9E9C97" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="9" />
@@ -60,10 +62,9 @@ export default function LogoUpload({
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-[14px] mb-0.5">Logga (valfritt)</div>
+        <div className="font-semibold text-[14px] mb-0.5">{t("Logga (valfritt)")}</div>
         <div className="text-[12.5px] text-ink-dim">
-          Har du ingen logga är det okej — vi visar företagsnamnet tydligt
-          istället. PNG, JPG, SVG eller WEBP, max 2 MB.
+          {t("Har du ingen logga är det okej — vi visar företagsnamnet tydligt istället. PNG, JPG, SVG eller WEBP, max 2 MB.")}
         </div>
         {error && <div className="text-[12px] text-red-600 mt-1">{error}</div>}
       </div>
@@ -84,7 +85,7 @@ export default function LogoUpload({
           disabled={uploading}
           className="text-[12.5px] font-semibold text-ink-dim border border-line px-3.5 py-2 rounded-lg flex-shrink-0 disabled:opacity-60"
         >
-          Ta bort
+          {t("Ta bort")}
         </button>
       ) : (
         <button
@@ -93,7 +94,7 @@ export default function LogoUpload({
           disabled={uploading}
           className="text-[12.5px] font-semibold text-ink bg-bg border border-line px-3.5 py-2 rounded-lg flex-shrink-0 disabled:opacity-60"
         >
-          {uploading ? "Laddar upp …" : "Ladda upp logga"}
+          {uploading ? t("Laddar upp …") : t("Ladda upp logga")}
         </button>
       )}
     </div>

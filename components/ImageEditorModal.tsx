@@ -1,5 +1,7 @@
 "use client";
 
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useRef, useState } from "react";
 
 // Enkel bildredigerare: beskär (med bildförhållande, zoom och dra för att
@@ -8,13 +10,13 @@ import { useEffect, useRef, useState } from "react";
 // upp den och byter bilden (se app/api/sites/replace-image).
 
 const ASPECTS: { id: string; label: string; ratio: number | null }[] = [
-  { id: "orig", label: "Som bilden", ratio: null },
-  { id: "1:1", label: "Kvadrat", ratio: 1 },
+  { id: "orig", label: msg("Som bilden"), ratio: null },
+  { id: "1:1", label: msg("Kvadrat"), ratio: 1 },
   { id: "4:3", label: "4:3", ratio: 4 / 3 },
   { id: "3:2", label: "3:2", ratio: 3 / 2 },
-  { id: "16:9", label: "Bred 16:9", ratio: 16 / 9 },
-  { id: "3:4", label: "Stående", ratio: 3 / 4 },
-  { id: "9:16", label: "Hög 9:16", ratio: 9 / 16 },
+  { id: "16:9", label: msg("Bred 16:9"), ratio: 16 / 9 },
+  { id: "3:4", label: msg("Stående"), ratio: 3 / 4 },
+  { id: "9:16", label: msg("Hög 9:16"), ratio: 9 / 16 },
 ];
 
 const MAX_OUTPUT = 2000; // längsta sidan i pixlar på den sparade bilden
@@ -81,6 +83,7 @@ export default function ImageEditorModal({
   saveLabel?: string;
   title?: string;
 }) {
+  const t = useT();
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [rot, setRot] = useState(0); // antal kvarts varv medurs
@@ -117,7 +120,7 @@ export default function ImageEditorModal({
     const im = new Image();
     im.crossOrigin = "anonymous";
     im.onload = () => setImg(im);
-    im.onerror = () => setError("Det gick inte att öppna bilden för redigering. Prova att ladda upp bilden igen.");
+    im.onerror = () => setError(t("Det gick inte att öppna bilden för redigering. Prova att ladda upp bilden igen."));
     const [base] = src.split("#");
     // En ny parameter gör att webbläsaren inte återanvänder en tidigare
     // cachad kopia utan rätt tillåtelse (CORS) för redigering.
@@ -203,7 +206,7 @@ export default function ImageEditorModal({
     out.toBlob(
       (blob) => {
         if (blob) onSave(blob);
-        else setError("Det gick inte att spara bilden. Försök igen.");
+        else setError(t("Det gick inte att spara bilden. Försök igen."));
       },
       "image/jpeg",
       0.9
@@ -232,15 +235,15 @@ export default function ImageEditorModal({
       onClick={saving ? undefined : onClose}
       role="dialog"
       aria-modal="true"
-      aria-label="Redigera bild"
+      aria-label={t("Redigera bild")}
     >
       <div
         className="bg-surface rounded-2xl w-full max-w-[640px] max-h-[92vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-5 pt-4 pb-3 border-b border-line">
-          <h2 className="text-[17px] font-medium">{title ?? "Redigera bild"}</h2>
-          <button type="button" onClick={onClose} disabled={saving} aria-label="Stäng" className="text-[22px] leading-none text-ink-dim px-1">
+          <h2 className="text-[17px] font-medium">{title ?? t("Redigera bild")}</h2>
+          <button type="button" onClick={onClose} disabled={saving} aria-label={t("Stäng")} className="text-[22px] leading-none text-ink-dim px-1">
             ×
           </button>
         </div>
@@ -249,7 +252,7 @@ export default function ImageEditorModal({
           {error ? (
             <p className="text-[13px] text-red-600">{error}</p>
           ) : !img ? (
-            <p className="text-[13px] text-ink-dim">Öppnar bilden …</p>
+            <p className="text-[13px] text-ink-dim">{t("Öppnar bilden …")}</p>
           ) : (
             <>
               <div className="flex justify-center bg-bg rounded-xl p-2">
@@ -263,7 +266,7 @@ export default function ImageEditorModal({
                   style={{ touchAction: "none" }}
                 />
               </div>
-              <p className="text-[12px] text-ink-dim -mt-2">Zooma med reglaget och dra i bilden för att välja vilken del som ska synas.</p>
+              <p className="text-[12px] text-ink-dim -mt-2">{t("Zooma med reglaget och dra i bilden för att välja vilken del som ska synas.")}</p>
 
               <div className="flex flex-wrap gap-1.5">
                 {ASPECTS.map((a) => (
@@ -278,30 +281,30 @@ export default function ImageEditorModal({
                       aspect === a.id ? "bg-accent text-accent-ink border-accent" : "bg-surface border-line text-ink"
                     }`}
                   >
-                    {a.label}
+                    {t(a.label)}
                   </button>
                 ))}
               </div>
 
               <div className="flex flex-col gap-2.5">
-                {slider("Zoom", Math.round((zoom - 1) * 50), (n) => setZoom(1 + n / 50), 0, 100)}
-                {slider("Ljusstyrka", bright, setBright)}
-                {slider("Kontrast", contrast, setContrast)}
-                {slider("Färgstyrka", sat, setSat)}
+                {slider(t("Zoom"), Math.round((zoom - 1) * 50), (n) => setZoom(1 + n / 50), 0, 100)}
+                {slider(t("Ljusstyrka"), bright, setBright)}
+                {slider(t("Kontrast"), contrast, setContrast)}
+                {slider(t("Färgstyrka"), sat, setSat)}
               </div>
 
               <div className="flex flex-wrap gap-2">
                 <button type="button" className={btn} onClick={() => setRot((r) => (r + 3) % 4)}>
-                  ⟲ Vrid vänster
+                  {t("⟲ Vrid vänster")}
                 </button>
                 <button type="button" className={btn} onClick={() => setRot((r) => (r + 1) % 4)}>
-                  ⟳ Vrid höger
+                  {t("⟳ Vrid höger")}
                 </button>
                 <button type="button" className={btn} onClick={() => setFlip((f) => !f)}>
-                  ⇋ Spegla
+                  {t("⇋ Spegla")}
                 </button>
                 <button type="button" className={btn} onClick={reset}>
-                  Återställ
+                  {t("Återställ")}
                 </button>
               </div>
             </>
@@ -310,7 +313,7 @@ export default function ImageEditorModal({
 
         <div className="flex justify-end gap-2 px-5 py-3 border-t border-line">
           <button type="button" className={btn} onClick={onClose} disabled={saving}>
-            Avbryt
+            {t("Avbryt")}
           </button>
           {onSkip && (
             <button type="button" className={btn} onClick={onSkip.run} disabled={saving}>
@@ -323,7 +326,7 @@ export default function ImageEditorModal({
             disabled={saving || !img}
             className="text-[13px] font-bold rounded-lg px-4 py-1.5 bg-accent text-accent-ink disabled:opacity-60"
           >
-            {saving ? "Sparar …" : saveLabel ?? "Spara bilden"}
+            {saving ? t("Sparar …") : saveLabel ?? t("Spara bilden")}
           </button>
         </div>
       </div>

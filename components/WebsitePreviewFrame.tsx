@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 
 // Webbläsarramen runt den riktiga sajt-förhandsvisningen på /webbplats.
@@ -67,6 +68,7 @@ export default function WebsitePreviewFrame({
   domainLabel: string;
   contentPath: string;
 }) {
+  const t = useT();
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
 
   return (
@@ -79,7 +81,7 @@ export default function WebsitePreviewFrame({
             device === "desktop" ? "bg-ink text-white" : "text-ink-dim"
           }`}
         >
-          Dator
+          {t("Dator")}
         </button>
         <button
           type="button"
@@ -88,7 +90,7 @@ export default function WebsitePreviewFrame({
             device === "mobile" ? "bg-ink text-white" : "text-ink-dim"
           }`}
         >
-          Mobil
+          {t("Mobil")}
         </button>
       </div>
 
@@ -115,7 +117,7 @@ export default function WebsitePreviewFrame({
           <div className="flex-1 w-full overflow-hidden relative">
             <iframe
               src={contentPath}
-              title={siteName ? `Förhandsvisning av ${siteName}` : "Förhandsvisning"}
+              title={siteName ? `Förhandsvisning av ${siteName}` : t("Förhandsvisning")}
               className="absolute top-0 left-0 border-0 bg-white"
               style={{
                 width: `${100 / DESKTOP_ZOOM}%`,
@@ -128,7 +130,7 @@ export default function WebsitePreviewFrame({
         ) : (
           <iframe
             src={contentPath}
-            title={siteName ? `Förhandsvisning av ${siteName}` : "Förhandsvisning"}
+            title={siteName ? `Förhandsvisning av ${siteName}` : t("Förhandsvisning")}
             className="flex-1 w-full border-0 bg-white"
           />
         )}

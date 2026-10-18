@@ -1,3 +1,7 @@
+"use client";
+
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import Link from "next/link";
 import Logo from "./Logo";
 
@@ -12,6 +16,7 @@ export default function OnboardingShell({
   stepLabel: string;
   children: React.ReactNode;
 }) {
+  const t = useT();
   return (
     <div className="min-h-screen flex flex-col font-sans bg-bg">
       <div className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-line bg-surface">
@@ -19,7 +24,7 @@ export default function OnboardingShell({
           <Logo light={false} />
         </Link>
         <Link href="/dashboard" className="text-[14px] text-ink-dim font-medium">
-          Avbryt
+          {t("Avbryt")}
         </Link>
       </div>
 
@@ -34,8 +39,7 @@ export default function OnboardingShell({
             />
           ))}
         </div>
-        <div className="text-[13px] text-ink-dim mt-2.5 font-medium">
-          STEG {step} AV {totalSteps} · {stepLabel}
+        <div className="text-[13px] text-ink-dim mt-2.5 font-medium">{rich(t, "STEG {step} AV {totalSteps} · {stepLabel}", {}, { step, totalSteps, stepLabel })}
         </div>
       </div>
 

@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -10,6 +12,7 @@ import { applyHomeRecipe, recipeForVariant } from "@/lib/homeRecipes";
 import { countImageSlots, type SiteContent } from "@/lib/contentModel";
 
 export default function SuggestionsPage() {
+  const t = useT();
   const router = useRouter();
   const [content, setContent] = useState<SiteContent | null>(null);
   const [siteName, setSiteName] = useState("");
@@ -34,7 +37,7 @@ export default function SuggestionsPage() {
       .then((r) => r.json())
       .then((data) => {
         if (!data.site) {
-          setError("Hittade ingen genererad sajt ännu.");
+          setError(t("Hittade ingen genererad sajt ännu."));
           return;
         }
         setSiteName(data.site.name);
@@ -43,7 +46,7 @@ export default function SuggestionsPage() {
           setUploadedPhotoCount(data.uploadedPhotoCount);
         }
       })
-      .catch(() => setError("Kunde inte hämta sajten."));
+      .catch(() => setError(t("Kunde inte hämta sajten.")));
   }, []);
 
   const relinkImages = async () => {
@@ -52,7 +55,7 @@ export default function SuggestionsPage() {
     try {
       const res = await fetch("/api/sites/relink-images", { method: "POST" });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       // Hämta sajten på nytt så förhandsvisningarna uppdateras med bilderna.
       const fresh = await fetch("/api/sites/mine").then((r) => r.json());
       if (fresh.site) {
@@ -87,7 +90,7 @@ export default function SuggestionsPage() {
           homeRecipe: recipeForVariant(variantIndex, content?.layoutSeed).id,
         }),
       });
-      if (!res.ok) throw new Error("Något gick fel.");
+      if (!res.ok) throw new Error(t("Något gick fel."));
       router.push("/webbplats");
     } catch (e: any) {
       alert(e.message);
@@ -100,51 +103,41 @@ export default function SuggestionsPage() {
       <div className="flex items-center justify-between px-6 md:px-12 py-5 border-b border-line bg-surface">
         <Logo light={false} />
         <Link href="/dashboard" className="text-[14px] text-ink-dim font-medium">
-          Avbryt
+          {t("Avbryt")}
         </Link>
       </div>
 
       <div className="flex-1 flex flex-col items-center px-6 py-10 md:py-11">
         <div className="w-full max-w-[1040px]">
           <div className="text-center mb-8">
-            <h1 className="text-[32px] font-medium mb-2.5">
-              Här är {siteName ? `${siteName}s` : "din"} nya sajt
-            </h1>
-            <p className="text-[15.5px] text-ink-dim max-w-[560px] mx-auto">
-              Samma innehåll, {THEME_VARIANTS.length} olika utseenden. Välj
-              den du gillar bäst — du kan ändra precis allt efteråt.
-            </p>
+            <h1 className="text-[32px] font-medium mb-2.5">{siteName ? t("Här är {name}s nya sajt", { name: siteName }) : t("Här är din nya sajt")}</h1>
+            <p className="text-[15.5px] text-ink-dim max-w-[560px] mx-auto">{t("Samma innehåll, {n} olika utseenden. Välj den du gillar bäst — du kan ändra precis allt efteråt.", { n: THEME_VARIANTS.length })}</p>
           </div>
 
           {error && (
             <div className="bg-surface border border-line rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">
               {error}{" "}
               <Link href="/bygger" className="font-semibold underline">
-                Försök bygga sajten igen
+                {t("Försök bygga sajten igen")}
               </Link>
             </div>
           )}
 
           {!error && !content && (
             <div className="bg-surface border border-line rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">
-              Hämtar din sajt …
+              {t("Hämtar din sajt …")}
             </div>
           )}
 
           {content && uploadedPhotoCount !== null && uploadedPhotoCount > 0 && countImageSlots(content).used === 0 && (
-            <div className="bg-[#FFF4E5] border border-[#F0D9B5] rounded-2xl px-5 py-4 mb-6 text-[13.5px] text-[#6B4A1A] leading-relaxed">
-              Du har {uploadedPhotoCount} uppladdade foto{uploadedPhotoCount === 1 ? "" : "n"}, men inget av dem kom
-              med i den här sajten — designen visar platshållare istället.{" "}
-              <button
+            <div className="bg-[#FFF4E5] border border-[#F0D9B5] rounded-2xl px-5 py-4 mb-6 text-[13.5px] text-[#6B4A1A] leading-relaxed">{rich(t, uploadedPhotoCount === 1 ? "Du har 1 uppladdat foto, men inget av dem kom med i den här sajten — designen visar platshållare istället. {fix} (ingen ny text skrivs, bara bilderna placeras in).{err}" : "Du har {n} uppladdade foton, men inget av dem kom med i den här sajten — designen visar platshållare istället. {fix} (ingen ny text skrivs, bara bilderna placeras in).{err}", {}, { n: uploadedPhotoCount, fix: <button
                 type="button"
                 onClick={relinkImages}
                 disabled={relinking}
                 className="font-semibold underline disabled:opacity-60"
               >
-                {relinking ? "Kopplar in bilder …" : "Koppla in bilderna nu"}
-              </button>{" "}
-              (ingen ny text skrivs, bara bilderna placeras in).
-              {relinkError && <div className="text-red-700 mt-1">{relinkError}</div>}
+                {relinking ? t("Kopplar in bilder …") : t("Koppla in bilderna nu")}
+              </button>, err: relinkError && <div className="text-red-700 mt-1">{relinkError}</div> })}
             </div>
           )}
 
@@ -162,7 +155,7 @@ export default function SuggestionsPage() {
                 >
                   {v.recommended && (
                     <div className="absolute top-3 right-3 bg-ink text-white text-[11px] font-semibold px-2.5 py-1 rounded-full tracking-wide z-10">
-                      REKOMMENDERAS
+                      {t("REKOMMENDERAS")}
                     </div>
                   )}
                   {/* Bredare kort (2 per rad istället för 3) + 16:9-förhållande
@@ -198,7 +191,7 @@ export default function SuggestionsPage() {
                       disabled={choosing !== null}
                       className="block text-center bg-accent text-accent-ink font-semibold text-[14px] py-2.5 rounded-[9px] disabled:opacity-60"
                     >
-                      {choosing === v.id ? "Sparar …" : "Välj den här"}
+                      {choosing === v.id ? t("Sparar …") : t("Välj den här")}
                     </button>
                   </div>
                 </div>
@@ -208,7 +201,7 @@ export default function SuggestionsPage() {
 
           <div className="text-center mt-6.5">
             <Link href="/bygger" className="text-[13.5px] text-ink-dim font-semibold">
-              ← Be YourCoSite skriva om alltihop
+              {t("← Be YourCoSite skriva om alltihop")}
             </Link>
           </div>
         </div>

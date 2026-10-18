@@ -1,3 +1,5 @@
+import { rich } from "@/lib/i18n/rich";
+import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import StatistikClient from "./StatistikClient";
@@ -9,10 +11,11 @@ export const dynamic = "force-dynamic";
 const DAYS = 30;
 
 export default async function StatistikPage() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let userName = "Ditt konto";
+  let userName = t("Ditt konto");
   let userEmail = "";
   if (user) {
     userEmail = user.email ?? "";
@@ -55,7 +58,7 @@ export default async function StatistikPage() {
       const dayKey = row.visited_at.slice(0, 10);
       byDay.set(dayKey, (byDay.get(dayKey) ?? 0) + 1);
       byPath.set(row.path, (byPath.get(row.path) ?? 0) + 1);
-      const ref = row.referrer || "Direkt eller okänd källa";
+      const ref = row.referrer || t("Direkt eller okänd källa");
       byReferrer.set(ref, (byReferrer.get(ref) ?? 0) + 1);
       total += 1;
       if (dayKey === todayKey) today += 1;
@@ -97,20 +100,13 @@ export default async function StatistikPage() {
       <AccountHeader active="/statistik" userName={userName} userEmail={userEmail} />
 
       <div className="flex-1 px-6 md:px-12 py-10 max-w-[900px] w-full mx-auto">
-        <h1 className="text-[28px] font-medium mb-1.5">Statistik</h1>
+        <h1 className="text-[28px] font-medium mb-1.5">{t("Statistik")}</h1>
         {!site ? (
-          <p className="text-[14.5px] text-ink-dim mt-3">
-            Du har ingen genererad sajt ännu.{" "}
-            <Link href="/onboarding/1" className="font-semibold underline">
-              Gå till onboardingen
-            </Link>
+          <p className="text-[14.5px] text-ink-dim mt-3">{rich(t, "Du har ingen genererad sajt ännu. <link>Gå till onboardingen</link>", { link: (c) => <Link href="/onboarding/1" className="font-semibold underline">{c}</Link> })}
           </p>
         ) : (
           <>
-            <p className="text-[14.5px] text-ink-dim mb-7">
-              Besökare och sidvisningar för {site.name}, senaste {DAYS} dagarna. Ingen
-              cookie, inget besökar-id — vi sparar bara vilken sida och varifrån.
-            </p>
+            <p className="text-[14.5px] text-ink-dim mb-7">{rich(t, "Besökare och sidvisningar för {v1}, senaste {DAYS} dagarna. Ingen cookie, inget besökar-id — vi sparar bara vilken sida och varifrån.", {}, { v1: site.name, DAYS })}</p>
             <StatistikClient
               days={days}
               topPages={topPages}

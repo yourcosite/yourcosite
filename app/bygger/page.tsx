@@ -1,17 +1,20 @@
 "use client";
 
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 
 const steps = [
-  "Läser in din verksamhet och ton",
-  "Skriver texter för varje sektion",
-  "Designar layout och väljer struktur",
-  "Sätter samman din sajt",
+  msg("Läser in din verksamhet och ton"),
+  msg("Skriver texter för varje sektion"),
+  msg("Designar layout och väljer struktur"),
+  msg("Sätter samman din sajt"),
 ];
 
 export default function GeneratingPage() {
+  const t = useT();
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [percent, setPercent] = useState(0);
@@ -36,7 +39,7 @@ export default function GeneratingPage() {
     // app/api/sites/generate/route.ts): först "progress"-rader medan sajten
     // skrivs, sist en "result"-rad med själva resultatet.
     const failText =
-      "Bygget avbröts innan det blev klart, troligen för att det tog för lång tid. Inget har gått förlorat, tryck på Försök igen.";
+      t("Bygget avbröts innan det blev klart, troligen för att det tog för lång tid. Inget har gått förlorat, tryck på Försök igen.");
     fetch("/api/sites/generate", { method: "POST", headers: { "x-progress": "1" } })
       .then(async (res) => {
         if (!res.body) throw new Error(failText);
@@ -72,7 +75,7 @@ export default function GeneratingPage() {
         // Ingen resultatrad = servern avbröts mitt i (t.ex. tidsgränsen).
         if (!result) throw new Error(failText);
         const r = result as { status: number; body: any };
-        if (r.status < 200 || r.status >= 300) throw new Error(r.body?.error || "Något gick fel.");
+        if (r.status < 200 || r.status >= 300) throw new Error(r.body?.error || t("Något gick fel."));
         if (!cancelled) {
           setActiveStep(steps.length - 1);
           setPercent(100);
@@ -103,13 +106,13 @@ export default function GeneratingPage() {
 
       <h1 className="text-[28px] md:text-[30px] font-medium mb-2.5 text-center">
         {error
-          ? "Något gick fel"
+          ? t("Något gick fel")
           : siteName
           ? `Bygger ${siteName}s nya sajt`
           : " "}
       </h1>
       <p className="text-[15px] text-[#9E9C97] mb-11">
-        {error ? error : siteName ? "Det här brukar ta under en minut." : " "}
+        {error ? error : siteName ? t("Det här brukar ta under en minut.") : " "}
       </p>
 
       {error && (
@@ -118,14 +121,14 @@ export default function GeneratingPage() {
           onClick={() => window.location.reload()}
           className="bg-accent text-accent-ink font-semibold text-[14.5px] px-6 py-3 rounded-[10px]"
         >
-          Försök igen
+          {t("Försök igen")}
         </button>
       )}
 
       {!error && siteName && (
         <div className="w-full max-w-[420px] mb-9">
           <div className="flex items-center justify-between text-[13px] mb-2">
-            <span className="text-[#9E9C97]">{percent >= 100 ? "Klart!" : pageInfo ? `Skriver sidan ${pageInfo.page} av ${pageInfo.pages}` : "Förbereder"}</span>
+            <span className="text-[#9E9C97]">{percent >= 100 ? "Klart!" : pageInfo ? `Skriver sidan ${pageInfo.page} av ${pageInfo.pages}` : t("Förbereder")}</span>
             <span className="font-semibold tabular-nums">{Math.round(percent)} %</span>
           </div>
           <div
@@ -165,7 +168,7 @@ export default function GeneratingPage() {
                   i < activeStep ? "text-[#E5E4E1]" : i === activeStep ? "text-white font-semibold" : "text-[#6E6C68]"
                 }`}
               >
-                {label}
+                {t(label)}
               </span>
             </div>
           ))}
@@ -177,7 +180,7 @@ export default function GeneratingPage() {
           onClick={() => window.location.reload()}
           className="mt-4 bg-accent text-accent-ink font-semibold text-[15px] px-7.5 py-3.5 rounded-[10px]"
         >
-          Försök igen
+          {t("Försök igen")}
         </button>
       )}
     </div>

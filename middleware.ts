@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { LOCALE_COOKIE, LOCALE_HEADER, isLocale, matchLocale } from "@/lib/i18n/config";
 
 // Sidor som kräver att man är inloggad som kund.
 const PROTECTED_PREFIXES = [
@@ -22,7 +23,18 @@ const ADMIN_PREFIXES = ["/admin"];
 const ADMIN_LOGIN_PATH = "/admin/logga-in";
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  // Språk: kakan (besökarens eget val) vinner, annars webbläsarens språk.
+  // Språket skickas vidare som rubrik så att även allra första sidvisningen
+  // (innan någon kaka finns) renderas på rätt språk.
+  const savedLocale = request.cookies.get(LOCALE_COOKIE)?.value;
+  const locale = isLocale(savedLocale) ? savedLocale : matchLocale(request.headers.get("accept-language"));
+  const forwardHeaders = new Headers(request.headers);
+  forwardHeaders.set(LOCALE_HEADER, locale);
+
+  let response = NextResponse.next({ request: { headers: forwardHeaders } });
+  if (!isLocale(savedLocale)) {
+    response.cookies.set(LOCALE_COOKIE, locale, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -34,7 +46,10 @@ export async function middleware(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          response = NextResponse.next({ request });
+          response = NextResponse.next({ request: { headers: forwardHeaders } });
+          if (!isLocale(savedLocale)) {
+            response.cookies.set(LOCALE_COOKIE, locale, { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" });
+          }
           cookiesToSet.forEach(({ name, value, options }) =>
             response.cookies.set(name, value, options)
           );

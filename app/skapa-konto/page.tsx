@@ -1,12 +1,16 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
+  const t = useT();
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,15 +32,15 @@ export default function SignupPage() {
     setError(null);
 
     if (!accepted) {
-      setError("Du behöver bekräfta att du ansvarar för innehållet på din sajt för att skapa ett konto.");
+      setError(t("Du behöver bekräfta att du ansvarar för innehållet på din sajt för att skapa ett konto."));
       return;
     }
     if (password.length < 8) {
-      setError("Lösenordet måste vara minst 8 tecken.");
+      setError(t("Lösenordet måste vara minst 8 tecken."));
       return;
     }
     if (password !== password2) {
-      setError("Lösenorden matchar inte.");
+      setError(t("Lösenorden matchar inte."));
       return;
     }
 
@@ -72,7 +76,7 @@ export default function SignupPage() {
     if (signUpError) {
       setError(
         signUpError.message === "User already registered"
-          ? "Det finns redan ett konto med den e-postadressen."
+          ? t("Det finns redan ett konto med den e-postadressen.")
           : signUpError.message
       );
       return;
@@ -90,16 +94,12 @@ export default function SignupPage() {
         </Link>
         <div className="max-w-[440px]">
           <div className="text-[15px] text-[#9E9C97] mb-4 tracking-wide">
-            HEMSIDAN BYGGS I ETT SAMTAL
+            {t("HEMSIDAN BYGGS I ETT SAMTAL")}
           </div>
-          <h1 className="text-[46px] leading-[1.12] font-medium text-white">
-            Din hemsida.
-            <br />
-            <span className="italic text-accent">Byggd genom ett samtal.</span>
+          <h1 className="text-[46px] leading-[1.12] font-medium text-white">{rich(t, "Din hemsida.{br}<span>Byggd genom ett samtal.</span>", { span: (c) => <span className="italic text-accent">{c}</span> }, { br: <br /> })}
           </h1>
           <p className="text-[17px] leading-relaxed text-[#C9C7C2] mt-5">
-            Beskriv verksamheten, visa oss vad ni gillar, och låt YourCoSite
-            göra resten. Sen fortsätter ni bara att be om ändringar.
+            {t("Beskriv verksamheten, visa oss vad ni gillar, och låt YourCoSite göra resten. Sen fortsätter ni bara att be om ändringar.")}
           </p>
         </div>
         <div />
@@ -107,16 +107,16 @@ export default function SignupPage() {
 
       <div className="flex-1 flex items-center justify-center bg-surface px-6 py-16 overflow-y-auto">
         <div className="w-full max-w-[440px]">
-          <h2 className="text-[28px] font-medium mb-2">Skapa ditt konto</h2>
+          <div className="flex justify-end mb-4"><LanguageSwitcher /></div>
+          <h2 className="text-[28px] font-medium mb-2">{t("Skapa ditt konto")}</h2>
           <p className="text-[15px] text-ink-dim mb-7">
-            Tar under en minut. Nästa steg är att välja paket — sen är ni
-            inne i kundportalen.
+            {t("Tar under en minut. Nästa steg är att välja paket — sen är ni inne i kundportalen.")}
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label htmlFor="name" className="block text-[13.5px] font-semibold mb-1.5">
-                Namn
+                {t("Namn")}
               </label>
               <input
                 id="name"
@@ -124,13 +124,13 @@ export default function SignupPage() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Förnamn Efternamn"
+                placeholder={t("Förnamn Efternamn")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="email" className="block text-[13.5px] font-semibold mb-1.5">
-                E-post
+                {t("E-post")}
               </label>
               <input
                 id="email"
@@ -138,13 +138,13 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="du@företag.se"
+                placeholder={t("du@företag.se")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="pw" className="block text-[13.5px] font-semibold mb-1.5">
-                Lösenord
+                {t("Lösenord")}
               </label>
               <input
                 id="pw"
@@ -152,13 +152,13 @@ export default function SignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="Minst 8 tecken"
+                placeholder={t("Minst 8 tecken")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="pw2" className="block text-[13.5px] font-semibold mb-1.5">
-                Bekräfta lösenord
+                {t("Bekräfta lösenord")}
               </label>
               <input
                 id="pw2"
@@ -173,26 +173,26 @@ export default function SignupPage() {
 
             <div className="border-t border-line pt-4 mt-1">
               <div className="text-[13px] font-semibold text-ink-dim mb-3.5">
-                Företag och fakturering (valfritt, går bra att fylla i senare)
+                {t("Företag och fakturering (valfritt, går bra att fylla i senare)")}
               </div>
             </div>
 
             <div>
               <label htmlFor="phone" className="block text-[13.5px] font-semibold mb-1.5">
-                Telefon
+                {t("Telefon")}
               </label>
               <input
                 id="phone"
                 type="tel"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                placeholder="07X – XXX XX XX"
+                placeholder={t("07X – XXX XX XX")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="companyName" className="block text-[13.5px] font-semibold mb-1.5">
-                Företagsnamn
+                {t("Företagsnamn")}
               </label>
               <input
                 id="companyName"
@@ -204,47 +204,47 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="orgNumber" className="block text-[13.5px] font-semibold mb-1.5">
-                Organisationsnummer
+                {t("Organisationsnummer")}
               </label>
               <input
                 id="orgNumber"
                 type="text"
                 value={orgNumber}
                 onChange={(e) => setOrgNumber(e.target.value)}
-                placeholder="XXXXXX-XXXX"
+                placeholder={t("XXXXXX-XXXX")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="addressStreet" className="block text-[13.5px] font-semibold mb-1.5">
-                Adress
+                {t("Adress")}
               </label>
               <input
                 id="addressStreet"
                 type="text"
                 value={addressStreet}
                 onChange={(e) => setAddressStreet(e.target.value)}
-                placeholder="Gatuadress"
+                placeholder={t("Gatuadress")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div className="flex gap-3">
               <div className="w-[120px] flex-shrink-0">
                 <label htmlFor="postal" className="block text-[13.5px] font-semibold mb-1.5">
-                  Postnummer
+                  {t("Postnummer")}
                 </label>
                 <input
                   id="postal"
                   type="text"
                   value={addressPostalCode}
                   onChange={(e) => setAddressPostalCode(e.target.value)}
-                  placeholder="XXX XX"
+                  placeholder={t("XXX XX")}
                   className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
                 />
               </div>
               <div className="flex-1">
                 <label htmlFor="city" className="block text-[13.5px] font-semibold mb-1.5">
-                  Ort
+                  {t("Ort")}
                 </label>
                 <input
                   id="city"
@@ -257,14 +257,14 @@ export default function SignupPage() {
             </div>
             <div>
               <label htmlFor="billingEmail" className="block text-[13.5px] font-semibold mb-1.5">
-                Fakturerings-e-post
+                {t("Fakturerings-e-post")}
               </label>
               <input
                 id="billingEmail"
                 type="email"
                 value={billingEmail}
                 onChange={(e) => setBillingEmail(e.target.value)}
-                placeholder="Lämna tomt för att använda kontots e-post"
+                placeholder={t("Lämna tomt för att använda kontots e-post")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
@@ -277,16 +277,7 @@ export default function SignupPage() {
                 onChange={(e) => setAccepted(e.target.checked)}
                 className="mt-1 w-4 h-4 shrink-0"
               />
-              <span className="text-[12.5px] leading-relaxed text-ink-dim">
-                Jag förstår att texter, kundcitat, nyckeltal och annat innehåll
-                som AI skapar åt mig är förslag och exempel som jag själv
-                ansvarar för att granska, byta ut eller ta bort innan
-                publicering. Jag godkänner{" "}
-                <Link href="/anvandarvillkor" target="_blank" className="font-semibold underline text-ink">
-                  användarvillkoren
-                </Link>
-                .
-              </span>
+              <span className="text-[12.5px] leading-relaxed text-ink-dim">{rich(t, "Jag förstår att texter, kundcitat, nyckeltal och annat innehåll som AI skapar åt mig är förslag och exempel som jag själv ansvarar för att granska, byta ut eller ta bort innan publicering. Jag godkänner <link>användarvillkoren</link>.", { link: (c) => <Link href="/anvandarvillkor" target="_blank" className="font-semibold underline text-ink">{c}</Link> })}</span>
             </label>
 
             {error && (
@@ -298,33 +289,19 @@ export default function SignupPage() {
               disabled={loading || !accepted}
               className="block text-center bg-accent text-accent-ink font-semibold text-[15.5px] py-3.5 rounded-[10px] mt-1 disabled:opacity-60"
             >
-              {loading ? "Skapar konto …" : "Skapa konto →"}
+              {loading ? t("Skapar konto …") : t("Skapa konto →")}
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-6">
             <div className="flex-1 h-px bg-line" />
-            <span className="text-[12.5px] text-ink-dim">ELLER</span>
+            <span className="text-[12.5px] text-ink-dim">{t("ELLER")}</span>
             <div className="flex-1 h-px bg-line" />
           </div>
 
-          <p className="text-center text-[14.5px] text-ink-dim">
-            Har du redan ett konto?{" "}
-            <Link href="/logga-in" className="font-semibold text-ink">
-              Logga in
-            </Link>
+          <p className="text-center text-[14.5px] text-ink-dim">{rich(t, "Har du redan ett konto? <link>Logga in</link>", { link: (c) => <Link href="/logga-in" className="font-semibold text-ink">{c}</Link> })}
           </p>
-          <p className="text-center text-[11.5px] text-ink-dim mt-4 leading-relaxed">
-            Du kan läsa våra{" "}
-            <Link href="/anvandarvillkor" className="font-semibold underline">
-              användarvillkor
-            </Link>{" "}
-            och vår{" "}
-            <Link href="/integritetspolicy" className="font-semibold underline">
-              integritetspolicy
-            </Link>
-            .
-          </p>
+          <p className="text-center text-[11.5px] text-ink-dim mt-4 leading-relaxed">{rich(t, "Du kan läsa våra <link>användarvillkor</link> och vår <link2>integritetspolicy</link2>.", { link: (c) => <Link href="/anvandarvillkor" className="font-semibold underline">{c}</Link>, link2: (c) => <Link href="/integritetspolicy" className="font-semibold underline">{c}</Link> })}</p>
         </div>
       </div>
     </div>

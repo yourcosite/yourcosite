@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 
 // Sajtinställningar för spårning — öppnas från ett kugghjul i
@@ -22,6 +23,7 @@ export default function TrackingSettingsModal({
   siteId?: string;
   onSaved: (values: { gaMeasurementId?: string; metaPixelId?: string }) => void;
 }) {
+  const t = useT();
   const [ga, setGa] = useState(gaMeasurementId || "");
   const [pixel, setPixel] = useState(metaPixelId || "");
   const [saving, setSaving] = useState(false);
@@ -41,7 +43,7 @@ export default function TrackingSettingsModal({
         body: JSON.stringify({ gaMeasurementId: ga, metaPixelId: pixel, siteId }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Kunde inte spara.");
+      if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
       onSaved({ gaMeasurementId: data.content?.gaMeasurementId, metaPixelId: data.content?.metaPixelId });
       setSaved(true);
     } catch (e: any) {
@@ -55,8 +57,8 @@ export default function TrackingSettingsModal({
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4" onClick={onClose}>
       <div className="bg-surface rounded-2xl p-6 w-full max-w-[440px]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[18px] font-semibold">Analys och marknadsföring</h2>
-          <button onClick={onClose} aria-label="Stäng" className="text-ink-dim">
+          <h2 className="text-[18px] font-semibold">{t("Analys och marknadsföring")}</h2>
+          <button onClick={onClose} aria-label={t("Stäng")} className="text-ink-dim">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
@@ -65,47 +67,45 @@ export default function TrackingSettingsModal({
         </div>
 
         <p className="text-[12.5px] text-ink-dim mb-4 leading-relaxed">
-          Koppla er egen Google Analytics och/eller Meta (Facebook) Pixel —
-          läggs in på sajten automatiskt. Laddas bara in hos besökare som
-          godkänt &rdquo;Alla cookies&rdquo; i cookiebannern.
+          {t("Koppla er egen Google Analytics och/eller Meta (Facebook) Pixel — läggs in på sajten automatiskt. Laddas bara in hos besökare som godkänt ”Alla cookies” i cookiebannern.")}
         </p>
 
         <div className="mb-3.5">
           <label htmlFor="ga" className="block text-[12.5px] font-semibold mb-1.5">
-            Google Analytics-ID
+            {t("Google Analytics-ID")}
           </label>
           <input
             id="ga"
             type="text"
             value={ga}
             onChange={(e) => setGa(e.target.value)}
-            placeholder="G-XXXXXXXXXX"
+            placeholder={t("G-XXXXXXXXXX")}
             className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px]"
           />
         </div>
         <div className="mb-4">
           <label htmlFor="pixel" className="block text-[12.5px] font-semibold mb-1.5">
-            Meta Pixel-ID
+            {t("Meta Pixel-ID")}
           </label>
           <input
             id="pixel"
             type="text"
             value={pixel}
             onChange={(e) => setPixel(e.target.value)}
-            placeholder="Bara siffror"
+            placeholder={t("Bara siffror")}
             className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px]"
           />
         </div>
 
         {error && <p className="text-[12.5px] text-red-600 mb-3">{error}</p>}
-        {saved && !error && <p className="text-[12.5px] text-ink-dim mb-3">Sparat.</p>}
+        {saved && !error && <p className="text-[12.5px] text-ink-dim mb-3">{t("Sparat.")}</p>}
 
         <button
           onClick={save}
           disabled={saving}
           className="w-full bg-ink text-white font-semibold text-[13.5px] py-2.5 rounded-lg disabled:opacity-60"
         >
-          {saving ? "Sparar …" : "Spara"}
+          {saving ? t("Sparar …") : t("Spara")}
         </button>
       </div>
     </div>

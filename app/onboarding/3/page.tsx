@@ -1,5 +1,8 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -23,13 +26,13 @@ type Page = {
 };
 
 const defaultPages: Page[] = [
-  { id: "start", label: "Startsida", menuName: "Hem", brief: "Kort presentation, de bästa bilderna, vad vi gör och en tydlig call-to-action.", included: true, removable: false },
-  { id: "om", label: "Om oss", menuName: "Om oss", brief: "Vår historia, vilka vi är och varför vi gör det vi gör.", included: true, removable: true },
-  { id: "tjanster", label: "Tjänster", menuName: "Vad vi gör", brief: "Lista över tjänster/produkter, med en kort beskrivning av varje.", included: true, removable: true },
-  { id: "inspiration", label: "Inspiration / Portfolio", menuName: "Inspiration", brief: "Bildgalleri med tidigare projekt eller referensjobb.", included: false, removable: true },
-  { id: "nyheter", label: "Nyheter", menuName: "Nyheter", brief: "Visar era publicerade nyheter och erbjudanden. Tom tills ni skriver och publicerar den första artikeln själva i panelen — inget AI-påhittat innehåll här.", included: false, removable: true, isNew: true },
-  { id: "bokning", label: "Boka tid", menuName: "Boka tid", brief: "Besökarna bokar tid själva: väljer tjänst, dag och tid och får en bekräftelse på mejl. Ni lägger upp paket, priser och tider under Bokningar när sajten är klar — inget AI-påhittat innehåll här.", included: false, removable: true, isNew: true },
-  { id: "kontakt", label: "Kontakt", menuName: "Kontakt", brief: "Adress, telefon, e-post, karta och ett kontaktformulär.", included: true, removable: true },
+  { id: "start", label: msg("Startsida"), menuName: msg("Hem"), brief: msg("Kort presentation, de bästa bilderna, vad vi gör och en tydlig call-to-action."), included: true, removable: false },
+  { id: "om", label: msg("Om oss"), menuName: msg("Om oss"), brief: msg("Vår historia, vilka vi är och varför vi gör det vi gör."), included: true, removable: true },
+  { id: "tjanster", label: msg("Tjänster"), menuName: msg("Vad vi gör"), brief: msg("Lista över tjänster/produkter, med en kort beskrivning av varje."), included: true, removable: true },
+  { id: "inspiration", label: msg("Inspiration / Portfolio"), menuName: msg("Inspiration"), brief: msg("Bildgalleri med tidigare projekt eller referensjobb."), included: false, removable: true },
+  { id: "nyheter", label: msg("Nyheter"), menuName: msg("Nyheter"), brief: msg("Visar era publicerade nyheter och erbjudanden. Tom tills ni skriver och publicerar den första artikeln själva i panelen — inget AI-påhittat innehåll här."), included: false, removable: true, isNew: true },
+  { id: "bokning", label: msg("Boka tid"), menuName: msg("Boka tid"), brief: msg("Besökarna bokar tid själva: väljer tjänst, dag och tid och får en bekräftelse på mejl. Ni lägger upp paket, priser och tider under Bokningar när sajten är klar — inget AI-påhittat innehåll här."), included: false, removable: true, isNew: true },
+  { id: "kontakt", label: msg("Kontakt"), menuName: msg("Kontakt"), brief: msg("Adress, telefon, e-post, karta och ett kontaktformulär."), included: true, removable: true },
 ];
 
 function slugify(s: string) {
@@ -44,8 +47,9 @@ function slugify(s: string) {
 }
 
 export default function OnboardingStep3() {
+  const t = useT();
   const router = useRouter();
-  const [pages, setPages] = useState(defaultPages);
+  const [pages, setPages] = useState(() => defaultPages.map((p) => ({ ...p, label: t(p.label), menuName: t(p.menuName), brief: t(p.brief) })));
   const [customCount, setCustomCount] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -128,14 +132,14 @@ export default function OnboardingStep3() {
   const next = async () => {
     const included = orderedPages.filter((p) => p.included);
     if (included.length === 0) {
-      setError("Välj minst en sida.");
+      setError(t("Välj minst en sida."));
       return;
     }
     // Annars gick det att klicka vidare medan foton fortfarande laddades
     // upp i bakgrunden — sajten byggdes då utan dem, trots att det såg ut
     // som att uppladdningen redan var klar.
     if (anyUploading) {
-      setError("Vänta tills dina bilder är klara att ladda upp innan du går vidare.");
+      setError(t("Vänta tills dina bilder är klara att ladda upp innan du går vidare."));
       return;
     }
     setSaving(true);
@@ -163,7 +167,7 @@ export default function OnboardingStep3() {
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       router.push("/onboarding/4");
     } catch (e: any) {
       setError(e.message);
@@ -175,15 +179,10 @@ export default function OnboardingStep3() {
     <OnboardingShell step={3} stepLabel="INNEHÅLL">
       <div className="w-full max-w-[680px]">
         <h1 className="text-[34px] font-medium mb-2.5">
-          Vilka sidor vill du ha?
+          {t("Vilka sidor vill du ha?")}
         </h1>
         <p className="text-[15.5px] text-ink-dim mb-5">
-          Kryssa för de sidor du vill ha med, bestäm vad de ska heta i
-          menyn, och skriv en kort brief om vad varje sida ska innehålla.
-          Vill du ha en huvudsida med flera undersidor under, till exempel
-          &ldquo;Produkter&rdquo; med en sida per produkt, väljer du
-          placering på undersidan eller trycker på &ldquo;Lägg till
-          undersida&rdquo;.
+          {t("Kryssa för de sidor du vill ha med, bestäm vad de ska heta i menyn, och skriv en kort brief om vad varje sida ska innehålla. Vill du ha en huvudsida med flera undersidor under, till exempel “Produkter” med en sida per produkt, väljer du placering på undersidan eller trycker på “Lägg till undersida”.")}
         </p>
 
         <div className="flex flex-col gap-2.5 mb-3.5">
@@ -215,7 +214,7 @@ export default function OnboardingStep3() {
                   </span>
                   {p.isNew && (
                     <span className="text-[10.5px] font-bold text-ink bg-accent-soft px-2 py-0.5 rounded-full">
-                      NYTT
+                      {t("NYTT")}
                     </span>
                   )}
                 </div>
@@ -236,7 +235,7 @@ export default function OnboardingStep3() {
               <div className="flex gap-3">
                 <div className="w-[170px] flex-shrink-0">
                   <label className="block text-[11px] font-semibold text-ink-dim tracking-wide mb-1">
-                    NAMN I MENYN
+                    {t("NAMN I MENYN")}
                   </label>
                   <input
                     value={p.menuName}
@@ -246,7 +245,7 @@ export default function OnboardingStep3() {
                 </div>
                 <div className="flex-1">
                   <label className="block text-[11px] font-semibold text-ink-dim tracking-wide mb-1">
-                    VAD SKA SIDAN INNEHÅLLA?
+                    {t("VAD SKA SIDAN INNEHÅLLA?")}
                   </label>
                   <input
                     value={p.brief}
@@ -258,15 +257,15 @@ export default function OnboardingStep3() {
               {p.id !== "start" && (
                 <div className="flex items-center justify-between gap-3 mt-3 flex-wrap">
                   <div className="flex items-center gap-2">
-                    <label className="text-[11px] font-semibold text-ink-dim tracking-wide">PLACERING</label>
+                    <label className="text-[11px] font-semibold text-ink-dim tracking-wide">{t("PLACERING")}</label>
                     <select
                       value={p.parentId || ""}
                       onChange={(e) => setParent(p.id, e.target.value)}
                       className="px-2.5 py-1.5 border border-line rounded-lg text-[13px] bg-surface"
                     >
-                      <option value="">Egen sida i menyn</option>
+                      <option value="">{t("Egen sida i menyn")}</option>
                       {possibleParentsFor(p).map((q) => (
-                        <option key={q.id} value={q.id}>Undersida under &ldquo;{q.menuName || q.label}&rdquo;</option>
+                        <option key={q.id} value={q.id}>{rich(t, "Undersida under “{v1}”", {}, { v1: q.menuName || q.label })}</option>
                       ))}
                     </select>
                   </div>
@@ -276,7 +275,7 @@ export default function OnboardingStep3() {
                       onClick={() => addSubPage(p.id)}
                       className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                     >
-                      + Lägg till undersida
+                      {t("+ Lägg till undersida")}
                     </button>
                   )}
                 </div>
@@ -290,19 +289,17 @@ export default function OnboardingStep3() {
           onClick={addPage}
           className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5 mb-7"
         >
-          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          {rich(t, "{v1}Lägg till egen sida", {}, { v1: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-          Lägg till egen sida
-        </button>
+          </svg> })}</button>
 
         <div className="flex items-start gap-3 rounded-xl px-4 py-3.5 mb-7 border border-line bg-surface">
           <button
             type="button"
             onClick={() => setAllowAiTextFill((v) => !v)}
             aria-pressed={allowAiTextFill}
-            aria-label="Låt AI:n fylla i text där briefen saknas"
+            aria-label={t("Låt AI:n fylla i text där briefen saknas")}
             className={`relative flex-shrink-0 w-[42px] h-[24px] rounded-full transition-colors mt-0.5 ${
               allowAiTextFill ? "bg-accent" : "bg-line"
             }`}
@@ -315,12 +312,12 @@ export default function OnboardingStep3() {
           </button>
           <div>
             <div className="font-semibold text-[14.5px] mb-1">
-              Låt AI:n skriva text där jag inte fyllt i något
+              {t("Låt AI:n skriva text där jag inte fyllt i något")}
             </div>
             <p className="text-[13.5px] text-ink-dim leading-relaxed">
               {allowAiTextFill
-                ? "På: saknar en sida brief skriver AI:n ändå genuin, relevant copy utifrån bransch och beskrivning."
-                : "Av: AI:n håller sig nära det du faktiskt skrivit och hittar inte på egna detaljer, erbjudanden eller siffror — sidor med tom brief blir kortare och mer allmänt hållna."}
+                ? t("På: saknar en sida brief skriver AI:n ändå genuin, relevant copy utifrån bransch och beskrivning.")
+                : t("Av: AI:n håller sig nära det du faktiskt skrivit och hittar inte på egna detaljer, erbjudanden eller siffror — sidor med tom brief blir kortare och mer allmänt hållna.")}
             </p>
           </div>
         </div>
@@ -328,11 +325,10 @@ export default function OnboardingStep3() {
         <div className="h-px bg-line my-1.5 mb-6" />
 
         <h2 className="text-[27px] font-medium mb-2.5">
-          Har du texter eller bilder?
+          {t("Har du texter eller bilder?")}
         </h2>
         <p className="text-[15.5px] text-ink-dim mb-5">
-          Lägg till det du redan har. Resten skriver och väljer YourCoSite
-          åt dig — du godkänner allt innan sajten publiceras.
+          {t("Lägg till det du redan har. Resten skriver och väljer YourCoSite åt dig — du godkänner allt innan sajten publiceras.")}
         </p>
 
         <div className="mb-5">
@@ -348,19 +344,15 @@ export default function OnboardingStep3() {
 
         <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mb-9">
           <span className="text-[13.5px] text-ink leading-relaxed">
-            YourCoSite kan inte generera egna bilder åt dig — av
-            upphovsrättsskäl skapar vi aldrig nya foton eller
-            illustrationer. Ladda upp dina bilder här ovan — du kan alltid
-            be oss lägga till fler bilder senare.
+            {t("YourCoSite kan inte generera egna bilder åt dig — av upphovsrättsskäl skapar vi aldrig nya foton eller illustrationer. Ladda upp dina bilder här ovan — du kan alltid be oss lägga till fler bilder senare.")}
           </span>
         </div>
 
         <div className="h-px bg-line my-1.5 mb-6" />
 
-        <h2 className="text-[27px] font-medium mb-2.5">Sociala medier</h2>
+        <h2 className="text-[27px] font-medium mb-2.5">{t("Sociala medier")}</h2>
         <p className="text-[15.5px] text-ink-dim mb-5">
-          Lägg till dina konton — vi länkar dit från sidfoten och
-          kontaktsidan. Fyll bara i de du faktiskt har, helt valfritt.
+          {t("Lägg till dina konton — vi länkar dit från sidfoten och kontaktsidan. Fyll bara i de du faktiskt har, helt valfritt.")}
         </p>
         <div className="mb-9 rounded-xl border border-line bg-surface px-4 py-4">
           <SocialLinksFields value={socialLinks} onChange={setSocialLinks} />
@@ -370,7 +362,7 @@ export default function OnboardingStep3() {
 
         <div className="flex justify-between">
           <Link href="/onboarding/2" className="text-ink-dim font-semibold text-[15px] py-3.5 px-2.5">
-            ← Tillbaka
+            {t("← Tillbaka")}
           </Link>
           <button
             type="button"
@@ -378,7 +370,7 @@ export default function OnboardingStep3() {
             disabled={saving || anyUploading}
             className="bg-accent text-accent-ink font-semibold text-[15px] px-7 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? "Sparar …" : anyUploading ? "Väntar på bilder …" : "Nästa →"}
+            {saving ? t("Sparar …") : anyUploading ? t("Väntar på bilder …") : t("Nästa →")}
           </button>
         </div>
       </div>

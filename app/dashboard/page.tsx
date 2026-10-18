@@ -1,13 +1,15 @@
+import { getT } from "@/lib/i18n/server";
 import AccountHeader from "@/components/AccountHeader";
 import DashboardClient, { type SiteRow } from "./DashboardClient";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
 
 export default async function DashboardPage() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let userName = "Ditt konto";
+  let userName = t("Ditt konto");
   let userEmail = "";
   let sites: SiteRow[] = [];
 

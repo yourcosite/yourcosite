@@ -1,5 +1,8 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -85,63 +88,63 @@ const EXTRACTABLE_DOC_TYPES = [
 // sidan bara hänger (se intervallet i EditorPage nedan).
 // "Välkommen tillbaka" — en slumpas varje gång man öppnar redigeraren igen.
 const WELCOME_BACK = [
-  "Välkommen tillbaka! Jag har hållit din sajt varm åt dig. 🔥",
-  "Där är du ju! Jag har suttit här och polerat rubrikerna medan du var borta.",
-  "Hej igen! Jag hann nästan sakna dig. Nästan.",
-  "Tjena! Kaffet är kallt men sajten är redo. ☕ Vad ska vi fixa idag?",
-  "Välkommen åter! Jag har inte rört något. Jag lovar. (Okej, jag tittade lite.)",
-  "Där satt den! Fint att se dig igen, vad ska vi förbättra den här gången?",
-  "Hej och välkommen tillbaka! Jag har värmt upp tangentbordet. ⌨️",
-  "Åh, du kom tillbaka! Då kör vi. Berätta vad du vill ändra.",
-  "Hallå där! Jag låg och drömde om perfekta marginaler. Vad kan jag göra för dig?",
-  "Välkommen tillbaka, chefen! Din sajt väntar, och det gör jag också. 😄",
+  msg("Välkommen tillbaka! Jag har hållit din sajt varm åt dig. 🔥"),
+  msg("Där är du ju! Jag har suttit här och polerat rubrikerna medan du var borta."),
+  msg("Hej igen! Jag hann nästan sakna dig. Nästan."),
+  msg("Tjena! Kaffet är kallt men sajten är redo. ☕ Vad ska vi fixa idag?"),
+  msg("Välkommen åter! Jag har inte rört något. Jag lovar. (Okej, jag tittade lite.)"),
+  msg("Där satt den! Fint att se dig igen, vad ska vi förbättra den här gången?"),
+  msg("Hej och välkommen tillbaka! Jag har värmt upp tangentbordet. ⌨️"),
+  msg("Åh, du kom tillbaka! Då kör vi. Berätta vad du vill ändra."),
+  msg("Hallå där! Jag låg och drömde om perfekta marginaler. Vad kan jag göra för dig?"),
+  msg("Välkommen tillbaka, chefen! Din sajt väntar, och det gör jag också. 😄"),
 ];
 
 const THINKING_PHRASES = [
-  "Millie tänker…",
-  "Millie hjälper dig nu",
-  "Millie gör sin magi",
-  "Millie uppdaterar sidan",
-  "Millie finslipar detaljerna",
-  "Millie sorterar pixlarna",
-  "Millie debuggar designen",
-  "Millie rätar ut raderna",
-  "Millie hittar rätt ord",
-  "Millie pysslar lite",
-  "Millie optimerar layouten",
-  "Millie läser ritningen",
-  "Millie mixar färgerna",
-  "Millie flyttar på saker",
-  "Millie polerar rubrikerna",
-  "Millie kompilerar idéerna",
-  "Millie dubbelkollar",
-  "Millie fixar till det",
-  "Millie renderar sidan",
-  "Millie snurrar ett varv",
-  "Millie trollar med koden",
-  "Millie tänker extra noga",
-  "Millie synkar med molnet",
-  "Millie knådar texten",
-  "Millie parsar texten",
-  "Millie kör en build",
-  "Millie cachar bilderna",
-  "Millie komprimerar pixlar",
-  "Millie refaktorerar",
-  "Millie indexerar sidan",
-  "Millie laddar om hjärnan",
-  "Millie uppdaterar databasen",
-  "Millie validerar sidan",
-  "Millie deployar glädje",
-  "Millie gör det åt dig",
-  "Millie tar hand om det",
-  "Millie ger det kärlek",
-  "Millie gör det fint",
-  "Millie håller tummarna",
-  "Millie tänker på dig",
-  "Millie satsar helhjärtat",
-  "Millie älskar det här",
-  "Millie ordnar det snart",
-  "Millie fixar det här",
+  msg("Millie tänker…"),
+  msg("Millie hjälper dig nu"),
+  msg("Millie gör sin magi"),
+  msg("Millie uppdaterar sidan"),
+  msg("Millie finslipar detaljerna"),
+  msg("Millie sorterar pixlarna"),
+  msg("Millie debuggar designen"),
+  msg("Millie rätar ut raderna"),
+  msg("Millie hittar rätt ord"),
+  msg("Millie pysslar lite"),
+  msg("Millie optimerar layouten"),
+  msg("Millie läser ritningen"),
+  msg("Millie mixar färgerna"),
+  msg("Millie flyttar på saker"),
+  msg("Millie polerar rubrikerna"),
+  msg("Millie kompilerar idéerna"),
+  msg("Millie dubbelkollar"),
+  msg("Millie fixar till det"),
+  msg("Millie renderar sidan"),
+  msg("Millie snurrar ett varv"),
+  msg("Millie trollar med koden"),
+  msg("Millie tänker extra noga"),
+  msg("Millie synkar med molnet"),
+  msg("Millie knådar texten"),
+  msg("Millie parsar texten"),
+  msg("Millie kör en build"),
+  msg("Millie cachar bilderna"),
+  msg("Millie komprimerar pixlar"),
+  msg("Millie refaktorerar"),
+  msg("Millie indexerar sidan"),
+  msg("Millie laddar om hjärnan"),
+  msg("Millie uppdaterar databasen"),
+  msg("Millie validerar sidan"),
+  msg("Millie deployar glädje"),
+  msg("Millie gör det åt dig"),
+  msg("Millie tar hand om det"),
+  msg("Millie ger det kärlek"),
+  msg("Millie gör det fint"),
+  msg("Millie håller tummarna"),
+  msg("Millie tänker på dig"),
+  msg("Millie satsar helhjärtat"),
+  msg("Millie älskar det här"),
+  msg("Millie ordnar det snart"),
+  msg("Millie fixar det här"),
 ];
 
 // Slumpad ordning varje gång Millie börjar jobba, så det inte blir samma
@@ -174,6 +177,7 @@ type SiteMeta = {
 // länkar, av samma skäl — annars tappas hela chatt-historiken vid varje
 // klick.
 export default function EditorPage() {
+  const t = useT();
   const [site, setSite] = useState<SiteMeta | null>(null);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [activePath, setActivePath] = useState("/");
@@ -185,7 +189,7 @@ export default function EditorPage() {
     {
       from: "bot",
       transient: true,
-      text: "Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt.",
+      text: t("Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt."),
     },
   ]);
   // De senaste versionerna av sajten före Millies ändringar, för "Ångra".
@@ -236,11 +240,11 @@ export default function EditorPage() {
     };
     rec.onerror = (e: any) => {
       if (e.error === "not-allowed" || e.error === "service-not-allowed") {
-        setMicError("Webbläsaren fick inte använda mikrofonen. Tillåt den i adressfältet och försök igen.");
+        setMicError(t("Webbläsaren fick inte använda mikrofonen. Tillåt den i adressfältet och försök igen."));
       } else if (e.error === "no-speech") {
-        setMicError("Jag hörde inget. Försök igen och prata nära mikrofonen.");
+        setMicError(t("Jag hörde inget. Försök igen och prata nära mikrofonen."));
       } else if (e.error !== "aborted") {
-        setMicError("Mikrofonen fungerade inte just nu. Du kan skriva istället.");
+        setMicError(t("Mikrofonen fungerade inte just nu. Du kan skriva istället."));
       }
     };
     rec.onend = () => {
@@ -272,7 +276,7 @@ export default function EditorPage() {
   // i components/Millie.tsx (animate-millie-bounce/-hair, "active"-läget).
   const [phraseIndex, setPhraseIndex] = useState(0);
   const [phraseOrder, setPhraseOrder] = useState<number[]>(() => THINKING_PHRASES.map((_, i) => i));
-  const thinkingPhrase = THINKING_PHRASES[phraseOrder[phraseIndex % phraseOrder.length]];
+  const thinkingPhrase = t(THINKING_PHRASES[phraseOrder[phraseIndex % phraseOrder.length]]);
   useEffect(() => {
     if (!sending) {
       setPhraseIndex(0);
@@ -359,7 +363,7 @@ export default function EditorPage() {
       .then((r) => r.json())
       .then((data) => {
         if (!data.site) {
-          setLoadError("Hittade ingen genererad sajt ännu.");
+          setLoadError(t("Hittade ingen genererad sajt ännu."));
           return;
         }
         setSite(data.site);
@@ -381,10 +385,10 @@ export default function EditorPage() {
             // Ignorera — startsidan visas som vanligt.
           }
         } else {
-          setLoadError("Sajtens innehåll kunde inte läsas.");
+          setLoadError(t("Sajtens innehåll kunde inte läsas."));
         }
       })
-      .catch(() => setLoadError("Kunde inte hämta sajten."));
+      .catch(() => setLoadError(t("Kunde inte hämta sajten.")));
 
     // Så "newsList"-sektionen kan visa kundens egna artiklar i
     // förhandsvisningen här också — se app/nyheter/page.tsx där de
@@ -417,7 +421,7 @@ export default function EditorPage() {
 
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+    if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));
 
     const ext = file.name.split(".").pop() || "bin";
     const path = `${user.id}/chat-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
@@ -462,7 +466,7 @@ export default function EditorPage() {
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));
       const png = blob.type === "image/png";
       const path = `${user.id}/chat-edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${png ? "png" : "jpg"}`;
       const { error: upErr } = await supabase.storage.from("uploads").upload(path, blob, { contentType: png ? "image/png" : "image/jpeg" });
@@ -477,7 +481,7 @@ export default function EditorPage() {
       );
       setEditAtt(null);
     } catch (e: any) {
-      setAttachError(e.message || "Det gick inte att spara bilden.");
+      setAttachError(e.message || t("Det gick inte att spara bilden."));
       setEditAtt(null);
     } finally {
       setSavingAtt(false);
@@ -586,7 +590,7 @@ export default function EditorPage() {
           try {
             localStorage.setItem(`${chatKey}-greeting`, String(g));
           } catch {}
-          next.push({ from: "bot", text: WELCOME_BACK[g], transient: true });
+          next.push({ from: "bot", text: t(WELCOME_BACK[g]), transient: true });
         }
       }
       // Förstasidan har exempelinnehåll (citat, nyckeltal, frågor) — Millie
@@ -598,12 +602,12 @@ export default function EditorPage() {
         next.push({
           from: "bot",
           transient: true,
-          text: "Obs: förstasidan har exempeltexter som jag lagt dit för att visa vad som går att ha — kundcitat, nyckeltal och vanliga frågor. De är påhittade, så byt ut dem mot era egna eller ta bort dem innan ni publicerar.",
+          text: t("Obs: förstasidan har exempeltexter som jag lagt dit för att visa vad som går att ha — kundcitat, nyckeltal och vanliga frågor. De är påhittade, så byt ut dem mot era egna eller ta bort dem innan ni publicerar."),
           chips: [
-            "Byt ut exempelcitaten mot mina egna",
-            "Ta bort alla exempelcitat",
-            "Ta bort nyckeltalen",
-            "Ta bort vanliga frågor",
+            t("Byt ut exempelcitaten mot mina egna"),
+            t("Ta bort alla exempelcitat"),
+            t("Ta bort nyckeltalen"),
+            t("Ta bort vanliga frågor"),
           ],
         });
       }
@@ -690,10 +694,10 @@ export default function EditorPage() {
         body: JSON.stringify({ siteId: site?.id, content: previous }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setContent(data.content);
       setUndoStack((st) => st.slice(0, -1));
-      setMessages((m) => [...m, { from: "bot", text: "Klart, jag har ångrat din senaste ändring." }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Klart, jag har ångrat din senaste ändring.") }]);
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: `Det gick inte att ångra: ${e.message}` }]);
     } finally {
@@ -719,7 +723,7 @@ export default function EditorPage() {
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));
       const isPng = blob.type === "image/png";
       const path = `${user.id}/edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${isPng ? "png" : "jpg"}`;
       const { error: uploadError } = await supabase.storage.from("uploads").upload(path, blob, { contentType: isPng ? "image/png" : "image/jpeg" });
@@ -735,7 +739,7 @@ export default function EditorPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
       setImageEditorOpen(false);
@@ -781,12 +785,12 @@ export default function EditorPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
       setTextEditOpen(false);
       setSelection(null);
-      setMessages((m) => [...m, { from: "bot", text: "Klart! Din text är sparad. Du kan ångra med knappen om du ändrar dig." }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Klart! Din text är sparad. Du kan ångra med knappen om du ändrar dig.") }]);
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: `Texten kunde inte sparas: ${e.message}` }]);
       setTextEditOpen(false);
@@ -813,18 +817,18 @@ export default function EditorPage() {
   const uploadLinkDoc = async (file: File) => {
     setLinkDocError("");
     if (file.size > MAX_DOC_BYTES) {
-      setLinkDocError("Filen är för stor. Max 10 MB.");
+      setLinkDocError(t("Filen är för stor. Max 10 MB."));
       return;
     }
     if (!/\.(pdf|docx?|xlsx?|pptx?|txt|csv|zip)$/i.test(file.name)) {
-      setLinkDocError("Den filtypen går inte att länka till. Välj PDF, Word, Excel, PowerPoint, text, CSV eller zip.");
+      setLinkDocError(t("Den filtypen går inte att länka till. Välj PDF, Word, Excel, PowerPoint, text, CSV eller zip."));
       return;
     }
     setLinkDocBusy(true);
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du är inte inloggad längre — ladda om sidan.");
+      if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));
       const dot = file.name.lastIndexOf(".");
       const ext = file.name.slice(dot + 1).toLowerCase();
       const base = file.name.slice(0, dot).toLowerCase().replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "dokument";
@@ -862,7 +866,7 @@ export default function EditorPage() {
     const sel = selection;
     const value = linkChoice === "__egen" ? linkCustom.trim() : linkChoice === "__doc" ? linkDocUrl : linkChoice;
     if (linkChoice === "__doc" && !linkDocUrl) {
-      setLinkDocError("Välj en fil att ladda upp först.");
+      setLinkDocError(t("Välj en fil att ladda upp först."));
       return;
     }
     setSavingText(true);
@@ -879,12 +883,12 @@ export default function EditorPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
       setLinkEditOpen(false);
       setSelection(null);
-      setMessages((m) => [...m, { from: "bot", text: "Klart! Länken är sparad. Du kan ångra med knappen om du ändrar dig." }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Klart! Länken är sparad. Du kan ångra med knappen om du ändrar dig.") }]);
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: `Länken kunde inte sparas: ${e.message}` }]);
       setLinkEditOpen(false);
@@ -973,7 +977,7 @@ export default function EditorPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       const isQuestion = Array.isArray(data.options) && data.options.length >= 2;
       if (!isQuestion && !data.noChange) {
         if (content) setUndoStack((st) => [...st.slice(-9), content]);
@@ -1023,7 +1027,7 @@ export default function EditorPage() {
         <div className="flex items-center gap-2.5 md:gap-5 min-w-0">
           <Link
             href="/dashboard"
-            title="Tillbaka till kundzonen"
+            title={t("Tillbaka till kundzonen")}
             className="flex items-center gap-1.5 text-[12.5px] font-bold text-ink bg-bg border border-line px-2.5 md:px-3 py-1.5 rounded-full flex-shrink-0"
           >
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
@@ -1033,17 +1037,17 @@ export default function EditorPage() {
             {/* Loggan intill räcker som varumärke på en smal skärm — "Kundzon"
                 i klartext tar bara plats som den fasta "← Kundzon"-knappen
                 redan ger genom ikonen. */}
-            <span className="hidden sm:inline">Kundzon</span>
+            <span className="hidden sm:inline">{t("Kundzon")}</span>
           </Link>
           <div className="hidden md:block w-px h-5.5 bg-line" />
           <div className="hidden md:block">
             <Logo light={false} />
           </div>
           <div className="min-w-0">
-            <div className="text-[14px] font-semibold truncate">{site?.name || "Din sajt"}</div>
+            <div className="text-[14px] font-semibold truncate">{site?.name || t("Din sajt")}</div>
             <div className="text-[11.5px] text-ink-dim truncate">
-              {site ? (site.status === "live" ? "Live" : "Utkast") : "…"}
-              {site?.domain ? ` · ${site.domain}` : " · ingen domän ännu"}
+              {site ? (site.status === "live" ? t("Live") : t("Utkast")) : "…"}
+              {site?.domain ? ` · ${site.domain}` : t(" · ingen domän ännu")}
             </div>
           </div>
         </div>
@@ -1055,8 +1059,8 @@ export default function EditorPage() {
           <button
             type="button"
             onClick={() => setTrackingOpen(true)}
-            title="Analys och marknadsföring (Google Analytics, Meta Pixel)"
-            aria-label="Sajtinställningar"
+            title={t("Analys och marknadsföring (Google Analytics, Meta Pixel)")}
+            aria-label={t("Sajtinställningar")}
             className="w-[34px] h-[34px] rounded-full border border-line bg-bg flex items-center justify-center text-ink-dim flex-shrink-0"
           >
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1065,27 +1069,27 @@ export default function EditorPage() {
             </svg>
           </button>
           <Link href={`/sidor${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            Sidor
+            {t("Sidor")}
           </Link>
           <Link href={`/nyheter${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            Nyheter
+            {t("Nyheter")}
           </Link>
           <Link href={`/bokningar${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            Bokningar
+            {t("Bokningar")}
           </Link>
           <Link
             href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
             className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
           >
-            Förhandsgranska
+            {t("Förhandsgranska")}
           </Link>
           <button
             type="button"
             disabled
-            title="Publicering till en riktig domän byggs i ett senare steg"
+            title={t("Publicering till en riktig domän byggs i ett senare steg")}
             className="text-[13.5px] font-semibold text-ink-dim bg-bg border border-line px-4.5 py-2.5 rounded-lg cursor-not-allowed opacity-70"
           >
-            Publicera (kommer snart)
+            {t("Publicera (kommer snart)")}
           </button>
         </div>
 
@@ -1093,7 +1097,7 @@ export default function EditorPage() {
         <button
           type="button"
           onClick={() => setMobileMenuOpen((v) => !v)}
-          aria-label="Fler alternativ"
+          aria-label={t("Fler alternativ")}
           aria-expanded={mobileMenuOpen}
           className="md:hidden w-9 h-9 rounded-lg border border-line bg-bg flex items-center justify-center text-ink flex-shrink-0"
         >
@@ -1114,39 +1118,39 @@ export default function EditorPage() {
               }}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
-              Analys och marknadsföring
+              {t("Analys och marknadsföring")}
             </button>
             <Link
               href={`/sidor${site ? `?site=${site.id}` : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
-              Sidor
+              {t("Sidor")}
             </Link>
             <Link
               href={`/nyheter${site ? `?site=${site.id}` : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
-              Nyheter
+              {t("Nyheter")}
             </Link>
             <Link
               href={`/bokningar${site ? `?site=${site.id}` : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
-              Bokningar
+              {t("Bokningar")}
             </Link>
             <Link
               href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
               onClick={() => setMobileMenuOpen(false)}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
-              Förhandsgranska
+              {t("Förhandsgranska")}
             </Link>
             <div className="h-px bg-line my-1.5" />
             <div className="px-3 py-2 text-[12.5px] text-ink-dim leading-relaxed">
-              Publicera (kommer snart) — publicering till en riktig domän byggs i ett senare steg.
+              {t("Publicera (kommer snart) — publicering till en riktig domän byggs i ett senare steg.")}
             </div>
           </div>
         )}
@@ -1162,7 +1166,7 @@ export default function EditorPage() {
             mobileView === "preview" ? "border-ink text-ink" : "border-transparent text-ink-dim"
           }`}
         >
-          Sajten
+          {t("Sajten")}
         </button>
         <button
           type="button"
@@ -1171,7 +1175,7 @@ export default function EditorPage() {
             mobileView === "chat" ? "border-ink text-ink" : "border-transparent text-ink-dim"
           }`}
         >
-          Chatta med Millie
+          {t("Chatta med Millie")}
         </button>
       </div>
 
@@ -1183,13 +1187,13 @@ export default function EditorPage() {
             <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px] max-w-[420px]">
               {loadError}{" "}
               <Link href="/onboarding/1" className="font-semibold underline">
-                Gå till onboardingen
+                {t("Gå till onboardingen")}
               </Link>
             </div>
           )}
 
           {!loadError && !content && (
-            <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">Hämtar din sajt …</div>
+            <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">{t("Hämtar din sajt …")}</div>
           )}
 
           {content && (
@@ -1269,28 +1273,28 @@ export default function EditorPage() {
           <div className="px-5 py-4 border-b border-line flex items-center gap-2.5">
             <Millie size={28} />
             <div className="min-w-0">
-              <div className="font-semibold text-[14.5px]">Chatta med Millie</div>
-              <div className="text-[12px] text-ink-dim mt-0.5">Säg vilken sida du menar, och vad du vill ändra eller lägga till.</div>
+              <div className="font-semibold text-[14.5px]">{t("Chatta med Millie")}</div>
+              <div className="text-[12px] text-ink-dim mt-0.5">{t("Säg vilken sida du menar, och vad du vill ändra eller lägga till.")}</div>
             </div>
             <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
               <button
                 type="button"
                 onClick={openNews}
-                title="Se vad som är nytt"
+                title={t("Se vad som är nytt")}
                 className="relative text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
               >
                 ✨ Nytt
                 {hasUnseenNews && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" aria-label="Nya nyheter" />
+                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" aria-label={t("Nya nyheter")} />
                 )}
               </button>
               <button
                 type="button"
                 onClick={() => setHelpOpen(true)}
-                title="Se vad du kan be Millie om"
+                title={t("Se vad du kan be Millie om")}
                 className="text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
               >
-                💡 Tips
+                {t("💡 Tips")}
               </button>
             </div>
           </div>
@@ -1356,7 +1360,7 @@ export default function EditorPage() {
                       }}
                       className="mt-2.5 block text-[12.5px] font-semibold underline text-ink"
                     >
-                      Skicka önskemålet till oss →
+                      {t("Skicka önskemålet till oss →")}
                     </button>
                   )}
                 </div>
@@ -1387,25 +1391,25 @@ export default function EditorPage() {
                 disabled={undoing || sending}
                 className="mb-2 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5 disabled:opacity-60"
               >
-                {undoing ? "Ångrar …" : "↩ Ångra senaste ändringen"}
+                {undoing ? t("Ångrar …") : t("↩ Ångra senaste ändringen")}
               </button>
             )}
             {linkEditOpen && content && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
-                  <div className="text-[14px] font-semibold mb-2">Ändra länk</div>
+                  <div className="text-[14px] font-semibold mb-2">{t("Ändra länk")}</div>
                   <div className="text-[12px] text-ink-dim mb-2 truncate">{selection?.label}</div>
                   <select
                     value={linkChoice}
                     onChange={(e) => setLinkChoice(e.target.value)}
                     className="w-full bg-bg border border-line rounded-lg p-2 text-[14px]"
                   >
-                    <option value="">Ingen länk</option>
+                    <option value="">{t("Ingen länk")}</option>
                     {content.pages.map((p) => (
-                      <option key={p.path} value={p.path}>Sidan &ldquo;{p.label}&rdquo;</option>
+                      <option key={p.path} value={p.path}>{rich(t, "Sidan “{v1}”", {}, { v1: p.label })}</option>
                     ))}
-                    <option value="__egen">Egen webbadress …</option>
-                    <option value="__doc">Dokument (PDF, Word, Excel …)</option>
+                    <option value="__egen">{t("Egen webbadress …")}</option>
+                    <option value="__doc">{t("Dokument (PDF, Word, Excel …)")}</option>
                   </select>
                   {linkChoice === "__doc" && (
                     <div className="mt-2">
@@ -1416,7 +1420,7 @@ export default function EditorPage() {
                         </div>
                       )}
                       <label className="inline-block text-[13px] font-semibold border border-line rounded-full px-3.5 py-1.5 cursor-pointer bg-bg">
-                        {linkDocBusy ? "Laddar upp …" : linkDocUrl ? "Byt dokument" : "Välj dokument att ladda upp"}
+                        {linkDocBusy ? t("Laddar upp …") : linkDocUrl ? t("Byt dokument") : t("Välj dokument att ladda upp")}
                         <input
                           type="file"
                           className="hidden"
@@ -1429,7 +1433,7 @@ export default function EditorPage() {
                           }}
                         />
                       </label>
-                      <div className="text-[11.5px] text-ink-dim mt-1">Max 10 MB. Besökaren kan öppna eller ladda ner filen.</div>
+                      <div className="text-[11.5px] text-ink-dim mt-1">{t("Max 10 MB. Besökaren kan öppna eller ladda ner filen.")}</div>
                       {linkDocError && <div className="text-[12px] text-red-600 mt-1">{linkDocError}</div>}
                     </div>
                   )}
@@ -1443,23 +1447,19 @@ export default function EditorPage() {
                   )}
                   {linkChoice !== "" && (
                     <div className="mt-3">
-                      <div className="text-[12px] font-semibold text-ink-dim mb-1.5">Hur ska länken öppnas?</div>
+                      <div className="text-[12px] font-semibold text-ink-dim mb-1.5">{t("Hur ska länken öppnas?")}</div>
                       <label className="flex items-center gap-2 text-[13.5px] py-1 cursor-pointer">
-                        <input type="radio" name="linkTarget" checked={!linkNewTab} onChange={() => setLinkNewTab(false)} />
-                        I samma fönster
-                      </label>
+                        {rich(t, "{input}I samma fönster", {}, { input: <input type="radio" name="linkTarget" checked={!linkNewTab} onChange={() => setLinkNewTab(false)} /> })}</label>
                       <label className="flex items-center gap-2 text-[13.5px] py-1 cursor-pointer">
-                        <input type="radio" name="linkTarget" checked={linkNewTab} onChange={() => setLinkNewTab(true)} />
-                        I ett nytt fönster
-                      </label>
+                        {rich(t, "{input}I ett nytt fönster", {}, { input: <input type="radio" name="linkTarget" checked={linkNewTab} onChange={() => setLinkNewTab(true)} /> })}</label>
                     </div>
                   )}
                   <div className="flex justify-end gap-2 mt-3">
                     <button type="button" onClick={() => setLinkEditOpen(false)} disabled={savingText} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
-                      Avbryt
+                      {t("Avbryt")}
                     </button>
                     <button type="button" onClick={saveLink} disabled={savingText || linkDocBusy} className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60">
-                      {savingText ? "Sparar …" : "Spara"}
+                      {savingText ? t("Sparar …") : t("Spara")}
                     </button>
                   </div>
                 </div>
@@ -1468,7 +1468,7 @@ export default function EditorPage() {
             {textEditOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
-                  <div className="text-[14px] font-semibold mb-2">Ändra text</div>
+                  <div className="text-[14px] font-semibold mb-2">{t("Ändra text")}</div>
                   <div className="text-[12px] text-ink-dim mb-2 truncate">{selection?.label}</div>
                   <textarea
                     value={textDraft}
@@ -1484,7 +1484,7 @@ export default function EditorPage() {
                       disabled={savingText}
                       className="text-[13px] px-3 py-1.5 rounded-full border border-line"
                     >
-                      Avbryt
+                      {t("Avbryt")}
                     </button>
                     <button
                       type="button"
@@ -1492,7 +1492,7 @@ export default function EditorPage() {
                       disabled={savingText || textDraft.trim() === ""}
                       className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60"
                     >
-                      {savingText ? "Sparar …" : "Spara"}
+                      {savingText ? t("Sparar …") : t("Spara")}
                     </button>
                   </div>
                 </div>
@@ -1513,16 +1513,16 @@ export default function EditorPage() {
                     disabled={sending}
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
-                    ✂️ Redigera bild
+                    {t("✂️ Redigera bild")}
                   </button>
                 )}
                 {selection.target === "image" && !selectedImageUrl && (
-                  <span className="text-[11.5px] text-ink-dim flex-shrink-0">Ingen bild att redigera ännu</span>
+                  <span className="text-[11.5px] text-ink-dim flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
                 )}
                 <button
                   type="button"
                   onClick={() => setSelection(null)}
-                  aria-label="Ta bort markeringen"
+                  aria-label={t("Ta bort markeringen")}
                   className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
                 >
                   ×
@@ -1552,13 +1552,13 @@ export default function EditorPage() {
                         disabled={sending}
                         className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
                       >
-                        ✂️ Redigera
+                        {t("✂️ Redigera")}
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
-                      aria-label="Ta bort bilagan"
+                      aria-label={t("Ta bort bilagan")}
                       className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
                     >
                       ×
@@ -1583,8 +1583,8 @@ export default function EditorPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={sending || attaching || !content}
-                aria-label="Bifoga filer"
-                title="Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri"
+                aria-label={t("Bifoga filer")}
+                title={t("Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri")}
                 className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
               >
                 {attaching ? (
@@ -1599,8 +1599,8 @@ export default function EditorPage() {
                 type="button"
                 onClick={() => setStockOpen(true)}
                 disabled={sending || attaching || !content}
-                aria-label="Sök stockbilder"
-                title="Sök gratis stockbilder"
+                aria-label={t("Sök stockbilder")}
+                title={t("Sök gratis stockbilder")}
                 className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
               >
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -1614,9 +1614,9 @@ export default function EditorPage() {
                   type="button"
                   onClick={toggleListening}
                   disabled={sending || attaching || !content}
-                  aria-label={listening ? "Sluta lyssna" : "Prata in meddelandet"}
+                  aria-label={listening ? t("Sluta lyssna") : t("Prata in meddelandet")}
                   aria-pressed={listening}
-                  title={listening ? "Tryck för att sluta lyssna" : "Prata in ditt meddelande (svenska)"}
+                  title={listening ? t("Tryck för att sluta lyssna") : t("Prata in ditt meddelande (svenska)")}
                   className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px] ${
                     listening ? "bg-red-500 text-white animate-pulse" : "text-ink-dim"
                   }`}
@@ -1640,7 +1640,7 @@ export default function EditorPage() {
                     send();
                   }
                 }}
-                placeholder={listening ? "Jag lyssnar … prata på" : "Skriv till Millie …"}
+                placeholder={listening ? t("Jag lyssnar … prata på") : t("Skriv till Millie …")}
                 disabled={sending || !content}
                 rows={1}
                 className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60 resize-none py-1.5 leading-[1.4] max-h-[160px] overflow-y-auto"
@@ -1648,7 +1648,7 @@ export default function EditorPage() {
               <button
                 onClick={() => send()}
                 disabled={sending || attaching || !content || (!draft.trim() && attachments.length === 0)}
-                aria-label="Skicka"
+                aria-label={t("Skicka")}
                 className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px]"
               >
                 <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0C1004" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
@@ -1670,7 +1670,7 @@ export default function EditorPage() {
           onClose={() => setPreviewNewsId(null)}
           onPublished={(a, published) => {
             setNewsArticles((prev) => prev.map((x) => (x.id === a.id ? a : x)));
-            if (published) setMessages((m) => [...m, { from: "bot", text: "Nyheten är publicerad! 🎉" }]);
+            if (published) setMessages((m) => [...m, { from: "bot", text: t("Nyheten är publicerad! 🎉") }]);
           }}
         />
       )}
@@ -1682,7 +1682,7 @@ export default function EditorPage() {
           draftInputRef.current?.focus();
         }}
         onWish={() => {
-          setSupportDraft({ message: "", context: "Önskemål om ny funktion (från Nytt-rutan i redigeraren)", wish: true });
+          setSupportDraft({ message: "", context: t("Önskemål om ny funktion (från Nytt-rutan i redigeraren)"), wish: true });
           setSupportOpen(true);
         }}
       />
@@ -1708,7 +1708,7 @@ export default function EditorPage() {
           open
           src={attachments[editAtt].url}
           saving={savingAtt}
-          title="Redigera bilden"
+          title={t("Redigera bilden")}
           saveLabel="Använd den redigerade bilden"
           onClose={() => setEditAtt(null)}
           onSave={saveEditedAttachment}
@@ -1724,11 +1724,11 @@ export default function EditorPage() {
         context={supportDraft.context}
         defaultMessage={supportDraft.message}
         siteId={site?.id}
-        title={supportDraft.wish ? "Önska en ny funktion" : "Skicka önskemål till oss"}
+        title={supportDraft.wish ? t("Önska en ny funktion") : t("Skicka önskemål till oss")}
         intro={
           supportDraft.wish
-            ? "Vad skulle du vilja kunna göra på din sajt som du inte kan idag? Beskriv gärna så konkret du kan – vi läser alla förslag."
-            : "Millie kan inte fixa det här själv än, men vi läser alla önskemål — skriv gärna lite mer om vad du vill kunna göra."
+            ? t("Vad skulle du vilja kunna göra på din sajt som du inte kan idag? Beskriv gärna så konkret du kan – vi läser alla förslag.")
+            : t("Millie kan inte fixa det här själv än, men vi läser alla önskemål — skriv gärna lite mer om vad du vill kunna göra.")
         }
       />
 

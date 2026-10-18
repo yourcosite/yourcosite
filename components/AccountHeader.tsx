@@ -1,18 +1,21 @@
 "use client";
 
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "./Logo";
+import LanguageSwitcher from "./LanguageSwitcher";
 import ContactSupportModal from "./ContactSupportModal";
 import { createClient } from "@/lib/supabase/client";
 
 const navLinks = [
-  { href: "/dashboard", label: "Sajter" },
-  { href: "/statistik", label: "Statistik" },
-  { href: "/bokningar", label: "Bokningar" },
-  { href: "/fakturering", label: "Fakturering" },
-  { href: "/installningar", label: "Inställningar" },
+  { href: "/dashboard", label: msg("Sajter") },
+  { href: "/statistik", label: msg("Statistik") },
+  { href: "/bokningar", label: msg("Bokningar") },
+  { href: "/fakturering", label: msg("Fakturering") },
+  { href: "/installningar", label: msg("Inställningar") },
 ];
 
 function initialsOf(name: string) {
@@ -24,13 +27,15 @@ function initialsOf(name: string) {
 
 export default function AccountHeader({
   active,
-  userName = "Ditt konto",
+  userName,
   userEmail = "",
 }: {
   active?: string;
   userName?: string;
   userEmail?: string;
 }) {
+  const t = useT();
+  userName = userName ?? t("Ditt konto");
   const [menuOpen, setMenuOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
   const [contactOpen, setContactOpen] = useState(false);
@@ -60,12 +65,12 @@ export default function AccountHeader({
             href={l.href}
             className={`hidden md:inline ${active === l.href ? "text-ink font-semibold" : ""}`}
           >
-            {l.label}
+            {t(l.label)}
           </Link>
         ))}
         <button
           onClick={() => setMenuOpen((v) => !v)}
-          aria-label="Kontomeny"
+          aria-label={t("Kontomeny")}
           aria-expanded={menuOpen}
           className="w-[34px] h-[34px] rounded-full bg-accent-soft text-ink flex items-center justify-center font-bold text-[13px] flex-shrink-0"
         >
@@ -91,7 +96,7 @@ export default function AccountHeader({
                   active === l.href ? "text-ink font-semibold" : "text-ink"
                 }`}
               >
-                {l.label}
+                {t(l.label)}
               </Link>
             ))}
             <div className="md:hidden h-px bg-line my-1.5" />
@@ -102,15 +107,16 @@ export default function AccountHeader({
               }}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-ink text-left"
             >
-              Kontakta oss
+              {t("Kontakta oss")}
             </button>
             <div className="h-px bg-line my-1.5" />
+            <div className="px-3 py-2"><LanguageSwitcher className="w-full" /></div>
             <button
               onClick={handleLogout}
               disabled={loggingOut}
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] text-warm text-left disabled:opacity-60"
             >
-              {loggingOut ? "Loggar ut …" : "Logga ut"}
+              {loggingOut ? t("Loggar ut …") : t("Logga ut")}
             </button>
           </div>
         )}
@@ -120,7 +126,7 @@ export default function AccountHeader({
         open={contactOpen}
         onClose={() => setContactOpen(false)}
         source="konto"
-        intro="Fråga oss något, eller skicka in ett önskemål om något du vill kunna göra eller ändra på din sajt."
+        intro={t("Fråga oss något, eller skicka in ett önskemål om något du vill kunna göra eller ändra på din sajt.")}
       />
     </div>
   );

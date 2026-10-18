@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -15,6 +17,7 @@ const CONFIRM_PHRASE = "RADERA";
 // automatiskt till sajter, nyheter, besöksstatistik m.m. via FK:erna i
 // supabase/schema.sql.
 export default function DeleteAccountTab({ siteCount }: { siteCount: number }) {
+  const t = useT();
   const router = useRouter();
   const [confirmText, setConfirmText] = useState("");
   const [deleting, setDeleting] = useState(false);
@@ -27,7 +30,7 @@ export default function DeleteAccountTab({ siteCount }: { siteCount: number }) {
     const res = await fetch("/api/account/delete", { method: "DELETE" });
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data.error || "Något gick fel, kontot kunde inte raderas.");
+      setError(data.error || t("Något gick fel, kontot kunde inte raderas."));
       setDeleting(false);
       return;
     }
@@ -39,18 +42,12 @@ export default function DeleteAccountTab({ siteCount }: { siteCount: number }) {
 
   return (
     <div className="flex-1 max-w-[560px]">
-      <h1 className="text-[28px] font-medium mb-6.5">Ta bort konto</h1>
+      <h1 className="text-[28px] font-medium mb-6.5">{t("Ta bort konto")}</h1>
 
       <div className="bg-surface border border-warm/40 rounded-2xl p-6 mb-6">
-        <div className="font-semibold text-[15px] mb-2 text-warm">Det här går inte att ångra</div>
-        <p className="text-[13.5px] text-ink-dim leading-relaxed mb-4">
-          Kontot, {siteCount > 0 ? `${siteCount} sajt${siteCount === 1 ? "" : "er"} (inklusive publicerat innehåll),` : "dina sajter,"}{" "}
-          allt nyhetsinnehåll och all besöksstatistik raderas permanent. Det går inte att få tillbaka något av detta
-          i efterhand.
-        </p>
-        <label className="block text-[13px] font-semibold mb-1.5">
-          Skriv <span className="font-mono">{CONFIRM_PHRASE}</span> för att bekräfta
-        </label>
+        <div className="font-semibold text-[15px] mb-2 text-warm">{t("Det här går inte att ångra")}</div>
+        <p className="text-[13.5px] text-ink-dim leading-relaxed mb-4">{siteCount > 0 ? (siteCount === 1 ? t("Kontot, 1 sajt (inklusive publicerat innehåll), allt nyhetsinnehåll och all besöksstatistik raderas permanent. Det går inte att få tillbaka något av detta i efterhand.") : t("Kontot, {n} sajter (inklusive publicerat innehåll), allt nyhetsinnehåll och all besöksstatistik raderas permanent. Det går inte att få tillbaka något av detta i efterhand.", { n: siteCount })) : t("Kontot, dina sajter, allt nyhetsinnehåll och all besöksstatistik raderas permanent. Det går inte att få tillbaka något av detta i efterhand.")}</p>
+        <label className="block text-[13px] font-semibold mb-1.5">{rich(t, "Skriv {phrase} för att bekräfta", {}, { phrase: <span className="font-mono">{CONFIRM_PHRASE}</span> })}</label>
         <input
           value={confirmText}
           onChange={(e) => setConfirmText(e.target.value)}
@@ -64,7 +61,7 @@ export default function DeleteAccountTab({ siteCount }: { siteCount: number }) {
           disabled={confirmText !== CONFIRM_PHRASE || deleting}
           className="bg-warm text-white font-semibold text-[14.5px] px-6.5 py-3 rounded-[10px] disabled:opacity-40"
         >
-          {deleting ? "Raderar …" : "Radera kontot permanent"}
+          {deleting ? t("Raderar …") : t("Radera kontot permanent")}
         </button>
       </div>
     </div>

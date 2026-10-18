@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -17,6 +18,7 @@ type Mode = "uploaded" | "generated" | null;
 // Djärv/Varm/Klassisk) togs bort, och färgvalet flyttades till steg 2
 // (direkt efter referenserna), så onboardingen gick från 5 till 4 steg.
 export default function OnboardingStep4() {
+  const t = useT();
   const router = useRouter();
   const [mode, setMode] = useState<Mode>(null);
   const [fileUrl, setFileUrl] = useState<string | null>(null);
@@ -53,7 +55,7 @@ export default function OnboardingStep4() {
     try {
       if (mode === "generated") {
         if (!orgNumber.trim() || !address.trim() || !email.trim()) {
-          setError("Fyll i organisationsnummer, adress och e-post — eller välj att hoppa över.");
+          setError(t("Fyll i organisationsnummer, adress och e-post — eller välj att hoppa över."));
           setSaving(false);
           return;
         }
@@ -63,7 +65,7 @@ export default function OnboardingStep4() {
           body: JSON.stringify({ mode: "generated", orgNumber, address, email }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Något gick fel.");
+        if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       }
       // Läget "uploaded" har redan sparats direkt av PrivacyPolicyUpload,
       // och "hoppa över" (mode === null) behöver inget sparanrop alls —
@@ -78,12 +80,9 @@ export default function OnboardingStep4() {
   return (
     <OnboardingShell step={4} totalSteps={4} stepLabel="INTEGRITETSPOLICY">
       <div className="w-full max-w-[620px]">
-        <h1 className="text-[34px] font-medium mb-2.5">Integritetspolicy</h1>
+        <h1 className="text-[34px] font-medium mb-2.5">{t("Integritetspolicy")}</h1>
         <p className="text-[15.5px] text-ink-dim mb-7">
-          Besökare på din sajt bör kunna läsa hur du hanterar deras
-          personuppgifter. Har du redan en policy kan du ladda upp den —
-          annars skriver vi en enkel standardtext åt dig. Helt valfritt,
-          du kan alltid lägga till det senare.
+          {t("Besökare på din sajt bör kunna läsa hur du hanterar deras personuppgifter. Har du redan en policy kan du ladda upp den — annars skriver vi en enkel standardtext åt dig. Helt valfritt, du kan alltid lägga till det senare.")}
         </p>
 
         <div className="flex gap-3 mb-6">
@@ -94,8 +93,8 @@ export default function OnboardingStep4() {
               mode === "uploaded" ? "border-ink bg-accent-soft" : "border-line"
             }`}
           >
-            <div className="font-semibold text-[14.5px]">Jag har redan en</div>
-            <div className="text-[12.5px] text-ink-dim mt-0.5">Ladda upp din egen fil</div>
+            <div className="font-semibold text-[14.5px]">{t("Jag har redan en")}</div>
+            <div className="text-[12.5px] text-ink-dim mt-0.5">{t("Ladda upp din egen fil")}</div>
           </button>
           <button
             type="button"
@@ -104,8 +103,8 @@ export default function OnboardingStep4() {
               mode === "generated" ? "border-ink bg-accent-soft" : "border-line"
             }`}
           >
-            <div className="font-semibold text-[14.5px]">Skriv en åt mig</div>
-            <div className="text-[12.5px] text-ink-dim mt-0.5">Utifrån dina uppgifter</div>
+            <div className="font-semibold text-[14.5px]">{t("Skriv en åt mig")}</div>
+            <div className="text-[12.5px] text-ink-dim mt-0.5">{t("Utifrån dina uppgifter")}</div>
           </button>
         </div>
 
@@ -123,47 +122,45 @@ export default function OnboardingStep4() {
           <div className="flex flex-col gap-4 mb-6">
             <div>
               <label htmlFor="org" className="block text-[13.5px] font-semibold mb-1.5">
-                Organisationsnummer
+                {t("Organisationsnummer")}
               </label>
               <input
                 id="org"
                 type="text"
                 value={orgNumber}
                 onChange={(e) => setOrgNumber(e.target.value)}
-                placeholder="XXXXXX-XXXX"
+                placeholder={t("XXXXXX-XXXX")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="addr" className="block text-[13.5px] font-semibold mb-1.5">
-                Adress
+                {t("Adress")}
               </label>
               <input
                 id="addr"
                 type="text"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                placeholder="Gatuadress, postnummer, ort"
+                placeholder={t("Gatuadress, postnummer, ort")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="mail" className="block text-[13.5px] font-semibold mb-1.5">
-                Kontakt-e-post för dataskyddsfrågor
+                {t("Kontakt-e-post för dataskyddsfrågor")}
               </label>
               <input
                 id="mail"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="dataskydd@dittforetag.se"
+                placeholder={t("dataskydd@dittforetag.se")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div className="bg-accent-soft rounded-xl px-4 py-3.5 text-[13px] text-ink leading-relaxed">
-              Texten vi skriver är en enkel standardmall, inte juridisk
-              rådgivning — bra att låta någon kunnig granska den innan du
-              litar helt på den.
+              {t("Texten vi skriver är en enkel standardmall, inte juridisk rådgivning — bra att låta någon kunnig granska den innan du litar helt på den.")}
             </div>
           </div>
         )}
@@ -172,13 +169,13 @@ export default function OnboardingStep4() {
 
         <div className="flex items-start gap-2.5 bg-accent-soft rounded-xl px-4 py-3.5 mt-2 mb-6">
           <span className="text-[13.5px] text-ink leading-relaxed">
-            Vill du inte ta ställning nu? Hoppa över det här steget.
+            {t("Vill du inte ta ställning nu? Hoppa över det här steget.")}
           </span>
         </div>
 
         <div className="flex justify-between">
           <Link href="/onboarding/3" className="text-ink-dim font-semibold text-[15px] py-3.5 px-2.5">
-            ← Tillbaka
+            {t("← Tillbaka")}
           </Link>
           <button
             type="button"
@@ -186,7 +183,7 @@ export default function OnboardingStep4() {
             disabled={saving || uploading}
             className="bg-accent text-accent-ink font-semibold text-[15.5px] px-7.5 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? "Sparar …" : uploading ? "Väntar på fil …" : "Bygg min sajt →"}
+            {saving ? t("Sparar …") : uploading ? t("Väntar på fil …") : t("Bygg min sajt →")}
           </button>
         </div>
       </div>

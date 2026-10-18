@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 
 type Day = { date: string; label: string; count: number };
@@ -29,6 +31,7 @@ export default function StatistikClient({
   today: number;
   formSubmissions: FormSubmission[];
 }) {
+  const t = useT();
   const [hover, setHover] = useState<number | null>(null);
   const max = Math.max(1, ...days.map((d) => d.count));
   const avgPerDay = days.length ? Math.round((total / days.length) * 10) / 10 : 0;
@@ -40,22 +43,22 @@ export default function StatistikClient({
       {/* Stat-brickor */}
       <div className="grid grid-cols-3 gap-3.5">
         <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="text-[12px] text-ink-dim font-semibold mb-1.5">Sidvisningar, 30 dagar</div>
+          <div className="text-[12px] text-ink-dim font-semibold mb-1.5">{t("Sidvisningar, 30 dagar")}</div>
           <div className="text-[26px] font-medium">{total}</div>
         </div>
         <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="text-[12px] text-ink-dim font-semibold mb-1.5">Idag</div>
+          <div className="text-[12px] text-ink-dim font-semibold mb-1.5">{t("Idag")}</div>
           <div className="text-[26px] font-medium">{today}</div>
         </div>
         <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="text-[12px] text-ink-dim font-semibold mb-1.5">Snitt per dag</div>
+          <div className="text-[12px] text-ink-dim font-semibold mb-1.5">{t("Snitt per dag")}</div>
           <div className="text-[26px] font-medium">{avgPerDay}</div>
         </div>
       </div>
 
       {/* Stapeldiagram */}
       <div className="bg-surface border border-line rounded-2xl p-5">
-        <div className="text-[13.5px] font-semibold mb-4">Sidvisningar per dag</div>
+        <div className="text-[13.5px] font-semibold mb-4">{t("Sidvisningar per dag")}</div>
         <div className="relative flex items-end gap-[3px] h-[140px]">
           {days.map((d, i) => (
             <div
@@ -87,8 +90,8 @@ export default function StatistikClient({
 
       <div className="grid sm:grid-cols-2 gap-3.5">
         <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="text-[13.5px] font-semibold mb-3.5">Mest besökta sidor</div>
-          {topPages.length === 0 && <p className="text-[12.5px] text-ink-dim">Inga sidvisningar än.</p>}
+          <div className="text-[13.5px] font-semibold mb-3.5">{t("Mest besökta sidor")}</div>
+          {topPages.length === 0 && <p className="text-[12.5px] text-ink-dim">{t("Inga sidvisningar än.")}</p>}
           <div className="flex flex-col gap-2.5">
             {topPages.map((p) => (
               <div key={p.path}>
@@ -105,8 +108,8 @@ export default function StatistikClient({
         </div>
 
         <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="text-[13.5px] font-semibold mb-3.5">Källor</div>
-          {topReferrers.length === 0 && <p className="text-[12.5px] text-ink-dim">Inga sidvisningar än.</p>}
+          <div className="text-[13.5px] font-semibold mb-3.5">{t("Källor")}</div>
+          {topReferrers.length === 0 && <p className="text-[12.5px] text-ink-dim">{t("Inga sidvisningar än.")}</p>}
           <div className="flex flex-col gap-2.5">
             {topReferrers.map((r) => (
               <div key={r.referrer}>
@@ -128,13 +131,13 @@ export default function StatistikClient({
           minst ett svar. */}
       {formSubmissions.length > 0 && (
         <div className="bg-surface border border-line rounded-2xl p-5">
-          <div className="text-[13.5px] font-semibold mb-3.5">Formulärsvar</div>
+          <div className="text-[13.5px] font-semibold mb-3.5">{t("Formulärsvar")}</div>
           <div className="flex flex-col gap-3">
             {formSubmissions.map((s) => (
               <div key={s.id} className="border border-line rounded-xl p-4">
                 <div className="flex items-center justify-between gap-3 mb-1.5">
                   <span className="text-[13px] font-semibold truncate">
-                    {s.name || "Namnlös"}
+                    {s.name || t("Namnlös")}
                     {s.email ? ` · ${s.email}` : ""}
                   </span>
                   <span className="text-[11.5px] text-ink-dim flex-shrink-0">
@@ -142,7 +145,7 @@ export default function StatistikClient({
                   </span>
                 </div>
                 <p className="text-[13px] text-ink-dim whitespace-pre-wrap">{s.message}</p>
-                <div className="text-[11px] text-ink-dim mt-1.5">Sidan {s.pagePath}</div>
+                <div className="text-[11px] text-ink-dim mt-1.5">{rich(t, "Sidan {v1}", {}, { v1: s.pagePath })}</div>
               </div>
             ))}
           </div>

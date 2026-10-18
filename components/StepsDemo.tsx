@@ -1,22 +1,25 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 
 const steps = [
   {
     n: "1",
-    title: "Berätta om er",
-    body: "Namn, ton, färger och egna bilder — så mycket eller lite ni vill.",
+    title: msg("Berätta om er"),
+    body: msg("Namn, ton, färger och egna bilder — så mycket eller lite ni vill."),
   },
   {
     n: "2",
-    title: "Vi bygger sajten",
-    body: "Text, bilder och design sätts samman snabbt och effektivt.",
+    title: msg("Vi bygger sajten"),
+    body: msg("Text, bilder och design sätts samman snabbt och effektivt."),
   },
   {
     n: "3",
-    title: "Fortsätt i samtalet",
-    body: "Be om ändringar när som helst — och se dem direkt i sajten.",
+    title: msg("Fortsätt i samtalet"),
+    body: msg("Be om ändringar när som helst — och se dem direkt i sajten."),
   },
 ];
 
@@ -43,6 +46,7 @@ function BrowserChrome({ dark }: { dark?: boolean }) {
 }
 
 export default function StepsDemo() {
+  const t = useT();
   const [formPhase, setFormPhase] = useState(0);
   const [phase, setPhase] = useState(0);
 
@@ -67,10 +71,10 @@ export default function StepsDemo() {
             <span className="font-serif italic text-accent-ink bg-accent w-7 h-7 rounded-full inline-flex items-center justify-center text-[14px] flex-shrink-0">
               {s.n}
             </span>
-            <span className="font-semibold text-[16.5px]">{s.title}</span>
+            <span className="font-semibold text-[16.5px]">{t(s.title)}</span>
           </div>
           <p className="text-[13.5px] leading-relaxed text-ink-dim mb-4.5 max-w-[30ch]">
-            {s.body}
+            {t(s.body)}
           </p>
 
           {idx === 0 && (
@@ -82,7 +86,7 @@ export default function StepsDemo() {
                   style={{ animation: "yc-fade 0.3s ease" }}
                 >
                   <div className="text-[11px] text-ink-dim mb-2 font-bold tracking-[0.03em]">
-                    FÖRETAGSNAMN
+                    {t("FÖRETAGSNAMN")}
                   </div>
                   <div
                     className="text-[15px] text-ink overflow-hidden whitespace-nowrap border-r-2 border-ink"
@@ -92,7 +96,7 @@ export default function StepsDemo() {
                         "yc-type 2.1s steps(15) forwards, yc-caret .7s step-end infinite",
                     }}
                   >
-                    Solgläntans Bageri
+                    {t("Solgläntans Bageri")}
                   </div>
                 </div>
               )}
@@ -102,21 +106,21 @@ export default function StepsDemo() {
                   style={{ animation: "yc-fade 0.3s ease" }}
                 >
                   <div className="text-[11px] text-ink-dim mb-2 font-bold tracking-[0.03em]">
-                    TON
+                    {t("TON")}
                   </div>
                   <div className="flex gap-1.5 mb-5.5">
                     <div
                       className="bg-accent text-accent-ink text-[11.5px] font-bold px-3.5 py-1.5 rounded-full"
                       style={{ animation: "yc-pop 0.3s ease" }}
                     >
-                      Personlig
+                      {t("Personlig")}
                     </div>
                     <div className="border border-line text-ink-dim text-[11.5px] px-3.5 py-1.5 rounded-full">
-                      Professionell
+                      {t("Professionell")}
                     </div>
                   </div>
                   <div className="text-[11px] text-ink-dim mb-2.5 font-bold tracking-[0.03em]">
-                    FÄRG
+                    {t("FÄRG")}
                   </div>
                   <div className="flex gap-2.5">
                     <div
@@ -138,7 +142,7 @@ export default function StepsDemo() {
                   style={{ animation: "yc-fade 0.3s ease" }}
                 >
                   <div className="text-[11px] text-ink-dim mb-2.5 font-bold tracking-[0.03em]">
-                    LADDAR UPP BILDER
+                    {t("LADDAR UPP BILDER")}
                   </div>
                   <div className="border-[1.5px] border-dashed border-line rounded-[10px] p-3.5 flex items-center gap-2.5 mb-3.5">
                     <svg
@@ -157,7 +161,7 @@ export default function StepsDemo() {
                     </svg>
                     <div className="flex-1">
                       <div className="text-[11.5px] text-ink font-semibold">
-                        bageri_fasad.jpg
+                        {t("bageri_fasad.jpg")}
                       </div>
                       <div className="h-[5px] rounded-[3px] bg-line mt-1.5 overflow-hidden">
                         <div
@@ -234,7 +238,7 @@ export default function StepsDemo() {
                         animation: "yc-spin 0.8s linear infinite",
                       }}
                     />
-                    <span className="text-[11px] text-[#9E9C97]">Bygger sajten …</span>
+                    <span className="text-[11px] text-[#9E9C97]">{t("Bygger sajten …")}</span>
                   </div>
                 </div>
               )}
@@ -246,7 +250,7 @@ export default function StepsDemo() {
                   <div className="flex items-center gap-1.5 px-3.5 py-2.5 bg-[#1D1D21]">
                     <div className="w-3 h-3 rounded-[4px] bg-[#C9834A]" />
                     <span className="font-serif italic text-[11px] text-white">
-                      Solgläntans Bageri
+                      {t("Solgläntans Bageri")}
                     </span>
                   </div>
                   <div
@@ -294,34 +298,32 @@ export default function StepsDemo() {
                       className="absolute top-2 right-2 bg-accent text-accent-ink text-[9.5px] font-bold px-2.5 py-1 rounded-full"
                       style={{ animation: "yc-pop 0.3s ease" }}
                     >
-                      Ny bild
+                      {t("Ny bild")}
                     </div>
                   )}
                   {isLoading && (
                     <div className="absolute top-2 right-2 bg-black/80 text-white text-[9.5px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1.5">
-                      <div
+                      {rich(t, "{div}Byter …", {}, { div: <div
                         className="w-2 h-2 rounded-full border-[1.5px]"
                         style={{
                           borderColor: "rgba(255,255,255,0.35)",
                           borderTopColor: "#fff",
                           animation: "yc-spin 0.7s linear infinite",
                         }}
-                      />
-                      Byter …
-                    </div>
+                      /> })}</div>
                   )}
                 </div>
 
                 <div className="flex-1 flex flex-col justify-end gap-1.5">
                   <div className="self-end max-w-[88%] bg-accent text-accent-ink text-[11.5px] font-semibold px-2.5 py-1.5 rounded-[10px_10px_3px_10px]">
-                    Byt till en bild med fler bullar i förgrunden
+                    {t("Byt till en bild med fler bullar i förgrunden")}
                   </div>
                   {isDone && (
                     <div
                       className="self-start max-w-[88%] bg-white border border-line text-ink text-[11.5px] px-2.5 py-1.5 rounded-[10px_10px_10px_3px]"
                       style={{ animation: "yc-fade 0.3s ease" }}
                     >
-                      Klart! Kolla ovan.
+                      {t("Klart! Kolla ovan.")}
                     </div>
                   )}
                   {isLoading && (

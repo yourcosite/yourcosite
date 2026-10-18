@@ -1,3 +1,5 @@
+import { rich } from "@/lib/i18n/rich";
+import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import NewsClient from "./NewsClient";
@@ -17,6 +19,7 @@ export default async function NyheterPage({
 }: {
   searchParams?: { site?: string };
 }) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   // ?site=<id> skickas med från redigeraren (se app/redigera/page.tsx) så
@@ -36,33 +39,27 @@ export default async function NyheterPage({
           </Link>
           <div className="w-px h-5.5 bg-line" />
           <div>
-            <div className="text-[14px] font-semibold">{site?.name || "Din sajt"}</div>
-            <div className="text-[11.5px] text-ink-dim">Nyheter</div>
+            <div className="text-[14px] font-semibold">{site?.name || t("Din sajt")}</div>
+            <div className="text-[11.5px] text-ink-dim">{t("Nyheter")}</div>
           </div>
         </div>
         <Link
           href={`/redigera${site ? `?site=${site.id}` : ""}`}
           className="flex items-center gap-1.5 text-[13px] font-semibold text-ink bg-bg border border-line px-4 py-2 rounded-full"
         >
-          ← Till redigeraren
+          {t("← Till redigeraren")}
         </Link>
       </div>
 
       <div className="flex-1 px-6 md:px-12 py-8 flex justify-center">
         <div className="w-full max-w-[720px]">
-          <h1 className="text-[27px] font-medium mb-1.5">Nyheter</h1>
+          <h1 className="text-[27px] font-medium mb-1.5">{t("Nyheter")}</h1>
           <p className="text-[13.5px] text-ink-dim mb-5.5">
-            Skriv och publicera nyheter till er sajt. En publicerad artikel syns genast — lägg
-            till en nyhetssektion på en sida i chattredigeraren om ni inte redan har en, så
-            artiklarna visas där.
+            {t("Skriv och publicera nyheter till er sajt. En publicerad artikel syns genast — lägg till en nyhetssektion på en sida i chattredigeraren om ni inte redan har en, så artiklarna visas där.")}
           </p>
 
           {!site ? (
-            <p className="text-[14.5px] text-ink-dim">
-              Du har ingen genererad sajt ännu.{" "}
-              <Link href="/onboarding/1" className="font-semibold underline">
-                Gå till onboardingen
-              </Link>
+            <p className="text-[14.5px] text-ink-dim">{rich(t, "Du har ingen genererad sajt ännu. <link>Gå till onboardingen</link>", { link: (c) => <Link href="/onboarding/1" className="font-semibold underline">{c}</Link> })}
             </p>
           ) : (
             <NewsClient initialArticles={articles} initialCategories={categories} siteId={site.id} />

@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import BookingClient from "./BookingClient";
@@ -11,10 +12,11 @@ export const dynamic = "force-dynamic";
 // och från redigeraren. Besökarna bokar via sektionen "booking" på sajten
 // (lib/contentModel.ts); allt sparas i tabellerna booking_* och bookings.
 export default async function BokningarPage({ searchParams }: { searchParams?: { site?: string } }) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
-  let userName = "Ditt konto";
+  let userName = t("Ditt konto");
   let userEmail = "";
   let site: { id: string; name: string } | null = null;
   let allSites: { id: string; name: string }[] = [];
@@ -38,13 +40,13 @@ export default async function BokningarPage({ searchParams }: { searchParams?: {
       <div className="flex-1 px-4 md:px-12 py-8 flex justify-center">
         <div className="w-full max-w-[780px]">
           <div className="flex items-start justify-between gap-3 flex-wrap mb-1.5">
-            <h1 className="text-[27px] font-medium">Bokningar</h1>
+            <h1 className="text-[27px] font-medium">{t("Bokningar")}</h1>
             {site && (
               <Link
                 href={`/redigera?site=${site.id}`}
                 className="text-[13px] font-semibold text-ink bg-surface border border-line px-4 py-2 rounded-full"
               >
-                Till redigeraren
+                {t("Till redigeraren")}
               </Link>
             )}
           </div>
@@ -65,7 +67,7 @@ export default async function BokningarPage({ searchParams }: { searchParams?: {
           )}
           {!site ? (
             <div className="bg-white border border-line rounded-xl p-6 text-center text-ink-dim text-[14px]">
-              Hittade ingen publicerad sajt ännu. Publicera sajten först, så kan du ta emot bokningar.
+              {t("Hittade ingen publicerad sajt ännu. Publicera sajten först, så kan du ta emot bokningar.")}
             </div>
           ) : (
             <BookingClient key={site.id} siteId={site.id} />

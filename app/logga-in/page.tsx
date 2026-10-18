@@ -1,12 +1,16 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
 
 export default function LoginPage() {
+  const t = useT();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,7 +32,7 @@ export default function LoginPage() {
     if (signInError) {
       setError(
         signInError.message === "Invalid login credentials"
-          ? "Fel e-post eller lösenord."
+          ? t("Fel e-post eller lösenord.")
           : signInError.message
       );
       return;
@@ -46,16 +50,12 @@ export default function LoginPage() {
         </Link>
         <div className="max-w-[440px]">
           <div className="text-[15px] text-[#9E9C97] mb-4 tracking-wide">
-            HEMSIDAN BYGGS I ETT SAMTAL
+            {t("HEMSIDAN BYGGS I ETT SAMTAL")}
           </div>
-          <h1 className="text-[46px] leading-[1.12] font-medium text-white">
-            Din hemsida.
-            <br />
-            <span className="italic text-accent">Byggd genom ett samtal.</span>
+          <h1 className="text-[46px] leading-[1.12] font-medium text-white">{rich(t, "Din hemsida.{br}<span>Byggd genom ett samtal.</span>", { span: (c) => <span className="italic text-accent">{c}</span> }, { br: <br /> })}
           </h1>
           <p className="text-[17px] leading-relaxed text-[#C9C7C2] mt-5">
-            Beskriv verksamheten, visa oss vad ni gillar, och låt YourCoSite
-            göra resten. Sen fortsätter ni bara att be om ändringar.
+            {t("Beskriv verksamheten, visa oss vad ni gillar, och låt YourCoSite göra resten. Sen fortsätter ni bara att be om ändringar.")}
           </p>
         </div>
         <div />
@@ -63,15 +63,16 @@ export default function LoginPage() {
 
       <div className="flex-1 flex items-center justify-center bg-surface px-6 py-16">
         <div className="w-full max-w-[380px]">
-          <h2 className="text-[28px] font-medium mb-2">Välkommen tillbaka</h2>
+          <div className="flex justify-end mb-4"><LanguageSwitcher /></div>
+          <h2 className="text-[28px] font-medium mb-2">{t("Välkommen tillbaka")}</h2>
           <p className="text-[15px] text-ink-dim mb-8">
-            Logga in för att fortsätta jobba på era sajter.
+            {t("Logga in för att fortsätta jobba på era sajter.")}
           </p>
 
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label htmlFor="email" className="block text-[13.5px] font-semibold mb-1.5">
-                E-post
+                {t("E-post")}
               </label>
               <input
                 id="email"
@@ -79,13 +80,13 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="du@företag.se"
+                placeholder={t("du@företag.se")}
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
             <div>
               <label htmlFor="pw" className="block text-[13.5px] font-semibold mb-1.5">
-                Lösenord
+                {t("Lösenord")}
               </label>
               <input
                 id="pw"
@@ -99,7 +100,7 @@ export default function LoginPage() {
             </div>
             <div className="text-right -mt-1">
               <a href="#" className="text-[13.5px] font-medium">
-                Glömt lösenord?
+                {t("Glömt lösenord?")}
               </a>
             </div>
 
@@ -112,33 +113,19 @@ export default function LoginPage() {
               disabled={loading}
               className="block text-center bg-accent text-accent-ink font-semibold text-[15.5px] py-3.5 rounded-[10px] mt-1 disabled:opacity-60"
             >
-              {loading ? "Loggar in …" : "Logga in"}
+              {loading ? t("Loggar in …") : t("Logga in")}
             </button>
           </form>
 
           <div className="flex items-center gap-3 my-7">
             <div className="flex-1 h-px bg-line" />
-            <span className="text-[12.5px] text-ink-dim">ELLER</span>
+            <span className="text-[12.5px] text-ink-dim">{t("ELLER")}</span>
             <div className="flex-1 h-px bg-line" />
           </div>
 
-          <p className="text-center text-[14.5px] text-ink-dim">
-            Ny hos YourCoSite?{" "}
-            <Link href="/skapa-konto" className="font-semibold text-ink">
-              Skapa konto
-            </Link>
+          <p className="text-center text-[14.5px] text-ink-dim">{rich(t, "Ny hos YourCoSite? <link>Skapa konto</link>", { link: (c) => <Link href="/skapa-konto" className="font-semibold text-ink">{c}</Link> })}
           </p>
-          <p className="text-center text-[11.5px] text-ink-dim mt-4 leading-relaxed">
-            Genom att logga in godkänner du våra{" "}
-            <Link href="/anvandarvillkor" className="font-semibold underline">
-              användarvillkor
-            </Link>{" "}
-            och vår{" "}
-            <Link href="/integritetspolicy" className="font-semibold underline">
-              integritetspolicy
-            </Link>
-            .
-          </p>
+          <p className="text-center text-[11.5px] text-ink-dim mt-4 leading-relaxed">{rich(t, "Genom att logga in godkänner du våra <link>användarvillkor</link> och vår <link2>integritetspolicy</link2>.", { link: (c) => <Link href="/anvandarvillkor" className="font-semibold underline">{c}</Link>, link2: (c) => <Link href="/integritetspolicy" className="font-semibold underline">{c}</Link> })}</p>
         </div>
       </div>
     </div>

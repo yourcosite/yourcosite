@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
@@ -28,6 +30,7 @@ export default function InspirationImageUpload({
   onChange?: (urls: string[]) => void;
   onUploadingChange?: (uploading: boolean) => void;
 }) {
+  const t = useT();
   const [urls, setUrls] = useState<string[]>(initialUrls || []);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -49,7 +52,7 @@ export default function InspirationImageUpload({
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      setError("Du är inte inloggad längre — ladda om sidan.");
+      setError(t("Du är inte inloggad längre — ladda om sidan."));
       setUploading(false);
       onUploadingChange?.(false);
       return;
@@ -92,7 +95,7 @@ export default function InspirationImageUpload({
           body: JSON.stringify({ fileUrl: pub.publicUrl }),
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Något gick fel.");
+        if (!res.ok) throw new Error(data.error || t("Något gick fel."));
         nextUrls = data.inspirationImageUrls;
       } catch (e: any) {
         skipped.push(`${file.name} (${e.message})`);
@@ -133,15 +136,11 @@ export default function InspirationImageUpload({
         className="border-[1.5px] border-dashed border-line rounded-2xl px-6 py-5 text-center bg-surface cursor-pointer mb-3"
       >
         <div className="font-semibold text-[14.5px]">
-          {uploading ? "Laddar upp …" : "Ladda upp skärmdumpar av andra hemsidor"}
+          {uploading ? t("Laddar upp …") : t("Ladda upp skärmdumpar av andra hemsidor")}
         </div>
-        <div className="text-[12.5px] text-ink-dim mt-1">
-          PNG/JPG/WEBP, max 5 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.
-        </div>
+        <div className="text-[12.5px] text-ink-dim mt-1">{rich(t, "PNG/JPG/WEBP, max 5 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.", {}, { MAX_IMAGES })}</div>
         <div className="text-[12.5px] text-ink-dim mt-2.5 max-w-[420px] mx-auto">
-          Används bara som inspiration för känsla och layout — hamnar aldrig
-          på din sajt eller någon annans, och sparas inte kvar hos oss efter
-          att din sajt byggts.
+          {t("Används bara som inspiration för känsla och layout — hamnar aldrig på din sajt eller någon annans, och sparas inte kvar hos oss efter att din sajt byggts.")}
         </div>
         <input
           ref={inputRef}
@@ -163,14 +162,14 @@ export default function InspirationImageUpload({
           {urls.map((url) => (
             <div key={url} className="relative w-[72px] h-[72px] rounded-xl overflow-hidden border border-line flex-shrink-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={url} alt="Inspiration" className="w-full h-full object-cover" />
+              <img src={url} alt={t("Inspiration")} className="w-full h-full object-cover" />
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   remove(url);
                 }}
-                aria-label="Ta bort bild"
+                aria-label={t("Ta bort bild")}
                 className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/60 flex items-center justify-center"
               >
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="#fff" strokeWidth="2.6" strokeLinecap="round">

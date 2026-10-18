@@ -1,13 +1,16 @@
+import { msg } from "@/lib/i18n/config";
+import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 import Logo from "./Logo";
 import { createClient } from "@/lib/supabase/server";
 
 const navLinks = [
-  { href: "/funktioner", label: "Funktioner" },
-  { href: "/priser", label: "Priser" },
-  { href: "/exempel", label: "Exempel" },
-  { href: "/om-oss", label: "Om oss" },
-  { href: "/kontakt", label: "Kontakt" },
+  { href: "/funktioner", label: msg("Funktioner") },
+  { href: "/priser", label: msg("Priser") },
+  { href: "/exempel", label: msg("Exempel") },
+  { href: "/om-oss", label: msg("Om oss") },
+  { href: "/kontakt", label: msg("Kontakt") },
 ];
 
 // Innan kollade den här headern aldrig om besökaren var inloggad — så även
@@ -16,6 +19,7 @@ const navLinks = [
 // Nu är den async och kollar sessionen, precis som sidorna under
 // /dashboard m.fl. redan gör.
 export default async function Header({ active }: { active?: string }) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -32,26 +36,27 @@ export default async function Header({ active }: { active?: string }) {
               href={l.href}
               className={active === l.href ? "text-white" : "hover:text-white transition-colors"}
             >
-              {l.label}
+              {t(l.label)}
             </Link>
           ))}
+          <LanguageSwitcher tone="dark" />
           {user ? (
             <Link
               href="/dashboard"
               className="bg-accent text-accent-ink font-bold px-[18px] py-[9px] rounded-lg text-[13.5px]"
             >
-              Till kundzonen →
+              {t("Till kundzonen →")}
             </Link>
           ) : (
             <>
               <Link href="/logga-in" className="text-white font-semibold">
-                Logga in
+                {t("Logga in")}
               </Link>
               <Link
                 href="/skapa-konto"
                 className="bg-accent text-accent-ink font-bold px-[18px] py-[9px] rounded-lg text-[13.5px]"
               >
-                Kom igång
+                {t("Kom igång")}
               </Link>
             </>
           )}

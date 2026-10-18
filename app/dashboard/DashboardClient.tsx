@@ -1,5 +1,8 @@
 "use client";
 
+import { msg } from "@/lib/i18n/config";
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import Link from "next/link";
 import SitePreview from "@/components/SitePreview";
@@ -19,9 +22,9 @@ export type SiteRow = {
 };
 
 const tabs = [
-  { id: "alla", label: "Alla" },
-  { id: "live", label: "Live" },
-  { id: "utkast", label: "Utkast" },
+  { id: "alla", label: msg("Alla") },
+  { id: "live", label: msg("Live") },
+  { id: "utkast", label: msg("Utkast") },
 ];
 
 const gradients = [
@@ -32,6 +35,7 @@ const gradients = [
 ];
 
 export default function DashboardClient({ sites: initialSites }: { sites: SiteRow[] }) {
+  const t = useT();
   const [sites, setSites] = useState(initialSites);
   const [tab, setTab] = useState("alla");
   const [search, setSearch] = useState("");
@@ -46,7 +50,7 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
       const res = await fetch(`/api/sites/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Kunde inte ta bort sajten.");
+        throw new Error(data.error || t("Kunde inte ta bort sajten."));
       }
       setSites((s) => s.filter((x) => x.id !== id));
       setConfirmId(null);
@@ -70,24 +74,23 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
     <div className="flex-1 px-6 md:px-12 py-10">
       <div className="flex items-end justify-between flex-wrap gap-4 mb-2">
         <div>
-          <h1 className="text-[32px] font-medium">Dina sajter</h1>
+          <h1 className="text-[32px] font-medium">{t("Dina sajter")}</h1>
           <p className="text-[15px] text-ink-dim mt-1.5">
-            {sites.length} {sites.length === 1 ? "sajt" : "sajter"}, {liveCount} av dem live.
-          </p>
+            {sites.length === 1 ? t("1 sajt, {live} av dem live.", { live: liveCount }) : t("{n} sajter, {live} av dem live.", { n: sites.length, live: liveCount })}</p>
         </div>
       </div>
 
       <div className="flex items-center justify-between mt-7 flex-wrap gap-3">
         <div className="flex gap-1.5 bg-surface border border-line rounded-[10px] p-1">
-          {tabs.map((t) => (
+          {tabs.map((tabItem) => (
             <button
-              key={t.id}
-              onClick={() => setTab(t.id)}
+              key={tabItem.id}
+              onClick={() => setTab(tabItem.id)}
               className={`px-4 py-1.5 rounded-lg text-[13.5px] font-semibold ${
-                tab === t.id ? "bg-accent text-accent-ink" : "text-ink-dim"
+                tab === tabItem.id ? "bg-accent text-accent-ink" : "text-ink-dim"
               }`}
             >
-              {t.label}
+              {t(tabItem.label)}
             </button>
           ))}
         </div>
@@ -101,7 +104,7 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Sök sajt eller domän"
+            placeholder={t("Sök sajt eller domän")}
             className="border-none outline-none text-[13.5px] flex-1 bg-transparent"
           />
         </div>
@@ -131,17 +134,14 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
 
             {confirmId === s.id && (
               <div className="absolute inset-0 z-20 bg-black/70 flex flex-col items-center justify-center text-center p-5 gap-3">
-                <p className="text-[13.5px] text-white leading-relaxed">
-                  Ta bort <span className="font-semibold">{s.name}</span>{" "}
-                  permanent? Det här kan inte ångras.
-                </p>
+                <p className="text-[13.5px] text-white leading-relaxed">{rich(t, "Ta bort {name} permanent? Det här kan inte ångras.", {}, { name: <span className="font-semibold">{s.name}</span> })}</p>
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={() => setConfirmId(null)}
                     className="text-[12.5px] font-semibold text-white border border-white/40 px-3.5 py-2 rounded-lg"
                   >
-                    Avbryt
+                    {t("Avbryt")}
                   </button>
                   <button
                     type="button"
@@ -149,7 +149,7 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
                     disabled={deletingId === s.id}
                     className="text-[12.5px] font-semibold bg-red-600 text-white px-3.5 py-2 rounded-lg disabled:opacity-60"
                   >
-                    {deletingId === s.id ? "Tar bort …" : "Ta bort"}
+                    {deletingId === s.id ? t("Tar bort …") : t("Ta bort")}
                   </button>
                 </div>
               </div>
@@ -188,7 +188,7 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
               <div className="p-4.5">
                 <div className="font-semibold text-[16px]">{s.name}</div>
                 <div className="text-[13.5px] text-ink-dim mt-0.5">
-                  {s.domain || "Ingen domän ännu"}
+                  {s.domain || t("Ingen domän ännu")}
                 </div>
               </div>
             </Link>
@@ -197,9 +197,9 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
                 href={`/bokningar?site=${s.id}`}
                 className="flex items-center justify-between px-4.5 py-3 border-t border-line text-[13px] font-semibold text-ink"
               >
-                <span>Bokningar</span>
+                <span>{t("Bokningar")}</span>
                 <span className={s.upcomingBookings ? "bg-accent text-accent-ink px-2.5 py-0.5 rounded-full text-[12px]" : "text-ink-dim font-normal"}>
-                  {s.upcomingBookings ? `${s.upcomingBookings} kommande` : "Inga kommande"}
+                  {s.upcomingBookings ? `${s.upcomingBookings} kommande` : t("Inga kommande")}
                 </span>
               </Link>
             )}
@@ -216,13 +216,13 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
           </div>
-          <span className="text-[14.5px] font-semibold text-ink">Skapa ny sajt</span>
+          <span className="text-[14.5px] font-semibold text-ink">{t("Skapa ny sajt")}</span>
         </Link>
       </div>
 
       {sites.length === 0 && (
         <p className="text-[13.5px] text-ink-dim mt-6">
-          Du har inga sajter än — klicka på &rdquo;Skapa ny sajt&rdquo; för att komma igång.
+          {t("Du har inga sajter än — klicka på ”Skapa ny sajt” för att komma igång.")}
         </p>
       )}
     </div>

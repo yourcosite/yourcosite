@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n/config";
 import { useEffect, useState } from "react";
 
 type Msg = {
@@ -12,28 +14,28 @@ type Msg = {
 
 const messages: Msg[] = [
   {
-    text: "Vi är ett hantverksbageri i Uppsala. Varmt och personligt, gärna bilder på nybakat.",
+    text: msg("Vi är ett hantverksbageri i Uppsala. Varmt och personligt, gärna bilder på nybakat."),
     align: "flex-end",
     bg: "#C6FF5E",
     color: "#0C1004",
     radius: "11px 11px 4px 11px",
   },
   {
-    text: "Perfekt, jag sätter ihop ett första förslag åt er nu …",
+    text: msg("Perfekt, jag sätter ihop ett första förslag åt er nu …"),
     align: "flex-start",
     bg: "#fff",
     color: "#17171A",
     radius: "11px 11px 11px 4px",
   },
   {
-    text: "Kan hero-bilden vara ljusare? Morgonljus känns rätt.",
+    text: msg("Kan hero-bilden vara ljusare? Morgonljus känns rätt."),
     align: "flex-end",
     bg: "#C6FF5E",
     color: "#0C1004",
     radius: "11px 11px 4px 11px",
   },
   {
-    text: "Klart! Bytte till en bild med nybakat bröd i morgonljus.",
+    text: msg("Klart! Bytte till en bild med nybakat bröd i morgonljus."),
     align: "flex-start",
     bg: "#fff",
     color: "#17171A",
@@ -42,6 +44,7 @@ const messages: Msg[] = [
 ];
 
 export default function HeroChatDemo() {
+  const t = useT();
   const [chatStep, setChatStep] = useState(0);
 
   useEffect(() => {
@@ -68,7 +71,7 @@ export default function HeroChatDemo() {
             animation: "yc-fade 0.35s ease",
           }}
         >
-          {m.text}
+          {t(m.text)}
         </div>
       ))}
       {stillTyping && (

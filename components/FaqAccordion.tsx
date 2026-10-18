@@ -1,36 +1,39 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n/config";
 import { useState } from "react";
 
 const faqs = [
   {
     id: "overused",
-    q: "Vad händer om jag använder alla ändringar för månaden?",
-    a: "Ni kan antingen vänta till nästa period eller köpa till fler ändringar direkt i Fakturering, utan att behöva byta plan.",
+    q: msg("Vad händer om jag använder alla ändringar för månaden?"),
+    a: msg("Ni kan antingen vänta till nästa period eller köpa till fler ändringar direkt i Fakturering, utan att behöva byta plan."),
   },
   {
     id: "switch",
-    q: "Kan jag byta plan när som helst?",
-    a: "Ja, uppgradera eller nedgradera när ni vill. Ändringen börjar gälla direkt och justeras på nästa faktura.",
+    q: msg("Kan jag byta plan när som helst?"),
+    a: msg("Ja, uppgradera eller nedgradera när ni vill. Ändringen börjar gälla direkt och justeras på nästa faktura."),
   },
   {
     id: "domain",
-    q: "Ingår domänen i priset?",
-    a: "Ni kan koppla en domän ni redan äger utan extra kostnad. Vill ni köpa en ny domän går det att göra direkt i tjänsten.",
+    q: msg("Ingår domänen i priset?"),
+    a: msg("Ni kan koppla en domän ni redan äger utan extra kostnad. Vill ni köpa en ny domän går det att göra direkt i tjänsten."),
   },
   {
     id: "uppsagning",
-    q: "Finns det någon bindningstid?",
-    a: "Nej. Uppsägningstiden är 3 månader, löpande — ingen bindning i block. Säger ni upp idag avslutas tjänsten exakt 3 månader senare.",
+    q: msg("Finns det någon bindningstid?"),
+    a: msg("Nej. Uppsägningstiden är 3 månader, löpande — ingen bindning i block. Säger ni upp idag avslutas tjänsten exakt 3 månader senare."),
   },
   {
     id: "change",
-    q: 'Vad räknas som en "ändring"?',
-    a: "Varje gång ni ber om en ändring i chatten eller redigerar text direkt på sidan räknas det som en ändring mot månadens kvot.",
+    q: msg("Vad räknas som en \"ändring\"?"),
+    a: msg("Varje gång ni ber om en ändring i chatten eller redigerar text direkt på sidan räknas det som en ändring mot månadens kvot."),
   },
 ];
 
 export default function FaqAccordion() {
+  const t = useT();
   const [openId, setOpenId] = useState<string | null>("uppsagning");
 
   return (
@@ -47,7 +50,7 @@ export default function FaqAccordion() {
               aria-expanded={open}
               className="w-full flex items-center justify-between text-left px-[18px] py-[15px] text-[14.5px] font-semibold"
             >
-              {f.q}
+              {t(f.q)}
               <svg
                 viewBox="0 0 24 24"
                 width="14"
@@ -65,7 +68,7 @@ export default function FaqAccordion() {
             </button>
             {open && (
               <div className="px-[18px] pb-4 text-[13.5px] text-ink-dim leading-relaxed">
-                {f.a}
+                {t(f.a)}
               </div>
             )}
           </div>

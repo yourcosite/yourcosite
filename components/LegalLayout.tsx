@@ -1,3 +1,5 @@
+import { rich } from "@/lib/i18n/rich";
+import { getT } from "@/lib/i18n/server";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -18,6 +20,7 @@ export default function LegalLayout({
   intro?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const t = getT();
   return (
     <div>
       <Header />
@@ -25,7 +28,7 @@ export default function LegalLayout({
         <div className="max-w-[720px] mx-auto px-6 py-16 md:py-20">
           <h1 className="text-[32px] font-medium mb-2">{title}</h1>
           {updated && (
-            <p className="text-[13px] text-ink-dim mb-8">Senast uppdaterad: {updated}</p>
+            <p className="text-[13px] text-ink-dim mb-8">{rich(t, "Senast uppdaterad: {updated}", {}, { updated })}</p>
           )}
           {intro && (
             <div className="bg-accent-soft rounded-xl px-5 py-4 text-[13.5px] text-ink leading-relaxed mb-10">

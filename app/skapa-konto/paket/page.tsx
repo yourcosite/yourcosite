@@ -1,5 +1,7 @@
 "use client";
 
+import { msg } from "@/lib/i18n/config";
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import OnboardingShell from "@/components/OnboardingShell";
@@ -15,26 +17,26 @@ import { createClient } from "@/lib/supabase/client";
 const PLANS = [
   {
     id: "bas",
-    name: "Bas",
+    name: msg("Bas"),
     price: "149 kr",
-    body: "För er som vill komma igång enkelt med en sajt.",
-    features: ["1 sajt", "25 ändringar/månad", "Egen domän"],
+    body: msg("För er som vill komma igång enkelt med en sajt."),
+    features: [msg("1 sajt"), msg("25 ändringar/månad"), msg("Egen domän")],
     popular: false,
   },
   {
     id: "standard",
-    name: "Standard",
+    name: msg("Standard"),
     price: "249 kr",
-    body: "För verksamheter som finslipar sajten löpande.",
-    features: ["60 ändringar/månad", "Nyhetsmodul med AI-förslag", "Flerspråkigt (2 språk)"],
+    body: msg("För verksamheter som finslipar sajten löpande."),
+    features: [msg("60 ändringar/månad"), msg("Nyhetsmodul med AI-förslag"), msg("Flerspråkigt (2 språk)")],
     popular: true,
   },
   {
     id: "premium",
-    name: "Premium",
+    name: msg("Premium"),
     price: "399 kr",
-    body: "För er med flera sajter eller högre tempo.",
-    features: ["Upp till 3 sajter", "150 ändringar/månad", "Prioriterad support"],
+    body: msg("För er med flera sajter eller högre tempo."),
+    features: [msg("Upp till 3 sajter"), msg("150 ändringar/månad"), msg("Prioriterad support")],
     popular: false,
   },
 ] as const;
@@ -42,6 +44,7 @@ const PLANS = [
 type PlanId = (typeof PLANS)[number]["id"];
 
 export default function SignupPlanPage() {
+  const t = useT();
   const router = useRouter();
   const [plan, setPlan] = useState<PlanId | null>(null);
   const [saving, setSaving] = useState(false);
@@ -71,7 +74,7 @@ export default function SignupPlanPage() {
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Du är inte inloggad längre.");
+      if (!user) throw new Error(t("Du är inte inloggad längre."));
 
       // billing_setup_complete lämnas false här medvetet — se kommentaren
       // högst upp i filen, riktig kortkoppling finns inte att slutföra än.
@@ -92,10 +95,9 @@ export default function SignupPlanPage() {
   return (
     <OnboardingShell step={2} totalSteps={2} stepLabel="Paket och betalning">
       <div className="w-full max-w-[720px]">
-        <h1 className="text-[26px] font-medium mb-2">Välj paket</h1>
+        <h1 className="text-[26px] font-medium mb-2">{t("Välj paket")}</h1>
         <p className="text-[14.5px] text-ink-dim mb-7">
-          Du kan byta paket när som helst senare i Fakturering. Det går
-          bra att hoppa över det här steget helt för nu också.
+          {t("Du kan byta paket när som helst senare i Fakturering. Det går bra att hoppa över det här steget helt för nu också.")}
         </p>
 
         <div className="grid sm:grid-cols-3 gap-3.5 mb-7">
@@ -110,19 +112,19 @@ export default function SignupPlanPage() {
             >
               {p.popular && (
                 <span className="absolute -top-2.5 left-5 bg-accent text-accent-ink text-[10.5px] font-bold px-2 py-0.5 rounded-full">
-                  POPULÄRAST
+                  {t("POPULÄRAST")}
                 </span>
               )}
-              <div className="font-semibold text-[15.5px] mb-1">{p.name}</div>
+              <div className="font-semibold text-[15.5px] mb-1">{t(p.name)}</div>
               <div className="text-[20px] font-medium mb-1.5">
                 {p.price}
-                <span className="text-[12.5px] text-ink-dim font-normal"> /mån</span>
+                <span className="text-[12.5px] text-ink-dim font-normal"> {t("/mån")}</span>
               </div>
-              <p className="text-[12.5px] text-ink-dim mb-3 leading-relaxed">{p.body}</p>
+              <p className="text-[12.5px] text-ink-dim mb-3 leading-relaxed">{t(p.body)}</p>
               <ul className="flex flex-col gap-1.5">
                 {p.features.map((f) => (
                   <li key={f} className="text-[12.5px] text-ink-dim">
-                    · {f}
+                    · {t(f)}
                   </li>
                 ))}
               </ul>
@@ -132,28 +134,26 @@ export default function SignupPlanPage() {
 
         <div className="bg-surface border border-line rounded-2xl p-6 mb-7 opacity-70">
           <div className="flex items-center justify-between mb-4">
-            <div className="font-semibold text-[15px]">Betalkort</div>
+            <div className="font-semibold text-[15px]">{t("Betalkort")}</div>
             <span className="text-[11px] font-bold text-ink-dim bg-bg border border-line px-2.5 py-1 rounded-full">
-              KOMMER SNART
+              {t("KOMMER SNART")}
             </span>
           </div>
           <p className="text-[12.5px] text-ink-dim mb-4 leading-relaxed">
-            Vi har inte kopplat på kortbetalning än — inga kortuppgifter går
-            att fylla i eller sparas här ännu. Du kan välja paket ovan ändå,
-            vi hör av oss när det är dags att lägga in betalningen.
+            {t("Vi har inte kopplat på kortbetalning än — inga kortuppgifter går att fylla i eller sparas här ännu. Du kan välja paket ovan ändå, vi hör av oss när det är dags att lägga in betalningen.")}
           </p>
           <div className="grid sm:grid-cols-2 gap-3.5">
             <div>
-              <label className="block text-[12.5px] font-semibold mb-1.5 text-ink-dim">Kortnummer</label>
+              <label className="block text-[12.5px] font-semibold mb-1.5 text-ink-dim">{t("Kortnummer")}</label>
               <input disabled placeholder="•••• •••• •••• ••••" className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px] bg-bg text-ink-dim cursor-not-allowed" />
             </div>
             <div className="flex gap-3">
               <div className="flex-1">
-                <label className="block text-[12.5px] font-semibold mb-1.5 text-ink-dim">Utgångsdatum</label>
-                <input disabled placeholder="MM/ÅÅ" className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px] bg-bg text-ink-dim cursor-not-allowed" />
+                <label className="block text-[12.5px] font-semibold mb-1.5 text-ink-dim">{t("Utgångsdatum")}</label>
+                <input disabled placeholder={t("MM/ÅÅ")} className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px] bg-bg text-ink-dim cursor-not-allowed" />
               </div>
               <div className="flex-1">
-                <label className="block text-[12.5px] font-semibold mb-1.5 text-ink-dim">CVC</label>
+                <label className="block text-[12.5px] font-semibold mb-1.5 text-ink-dim">{t("CVC")}</label>
                 <input disabled placeholder="•••" className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px] bg-bg text-ink-dim cursor-not-allowed" />
               </div>
             </div>
@@ -169,7 +169,7 @@ export default function SignupPlanPage() {
             onClick={() => finish(plan)}
             className="bg-accent text-accent-ink font-semibold text-[15px] px-6 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? "Sparar …" : "Spara och fortsätt →"}
+            {saving ? t("Sparar …") : t("Spara och fortsätt →")}
           </button>
           <button
             type="button"
@@ -177,7 +177,7 @@ export default function SignupPlanPage() {
             onClick={() => finish(plan)}
             className="text-[14px] font-semibold text-ink-dim px-3 py-3.5 disabled:opacity-60"
           >
-            Hoppa över för nu
+            {t("Hoppa över för nu")}
           </button>
         </div>
       </div>

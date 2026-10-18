@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import { createClient } from "@/lib/supabase/server";
@@ -10,9 +11,10 @@ const invoices = [
 ];
 
 export default async function BillingPage() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  let userName = "Ditt konto";
+  let userName = t("Ditt konto");
   const userEmail = user?.email ?? "";
   if (user) {
     const { data: profile } = await supabase
@@ -28,61 +30,59 @@ export default async function BillingPage() {
       <AccountHeader active="/fakturering" userName={userName} userEmail={userEmail} />
 
       <div className="flex-1 px-6 md:px-12 py-10">
-        <h1 className="text-[30px] font-medium mb-7">Fakturering</h1>
+        <h1 className="text-[30px] font-medium mb-7">{t("Fakturering")}</h1>
 
         <div className="grid md:grid-cols-[1.3fr_1fr] gap-6 mb-7">
           <div className="bg-surface border border-line rounded-2xl p-6">
             <div className="flex items-center justify-between mb-4.5">
               <div>
                 <div className="text-[12.5px] text-ink-dim uppercase tracking-wide">
-                  Nuvarande plan
+                  {t("Nuvarande plan")}
                 </div>
                 <div className="font-semibold text-[20px] mt-1">
-                  Standardplan — 249 kr/mån
+                  {t("Standardplan — 249 kr/mån")}
                 </div>
               </div>
               <Link
                 href="/priser"
                 className="bg-accent text-accent-ink font-semibold text-[13.5px] px-4.5 py-2.5 rounded-lg"
               >
-                Uppgradera
+                {t("Uppgradera")}
               </Link>
             </div>
 
             <div className="flex justify-between text-[13px] text-ink-dim mb-1.5">
-              <span>Ändringar denna period</span>
-              <span>38 av 60</span>
+              <span>{t("Ändringar denna period")}</span>
+              <span>{t("38 av 60")}</span>
             </div>
             <div className="h-2 rounded-full bg-bg overflow-hidden">
               <div className="h-full bg-accent" style={{ width: "63%" }} />
             </div>
             <div className="text-[12.5px] text-ink-dim mt-2">
-              Nästa betalning dras 1 november 2026
+              {t("Nästa betalning dras 1 november 2026")}
             </div>
 
             <div className="mt-4.5 pt-4 border-t border-line flex items-center justify-between">
               <div>
                 <div className="text-[13px] font-semibold">
-                  Uppsägningstid: 3 månader, löpande
+                  {t("Uppsägningstid: 3 månader, löpande")}
                 </div>
                 <div className="text-[12px] text-ink-dim mt-0.5">
-                  Ingen bindningstid i block — säger du upp idag avslutas
-                  tjänsten exakt 3 månader senare, oavsett när i månaden du
-                  gör det.
+                  {t("Ingen bindningstid i block — säger du upp idag avslutas tjänsten exakt 3 månader senare, oavsett när i månaden du gör det.")}
                 </div>
               </div>
               <Link
                 href="/anvandarvillkor"
                 className="text-[12.5px] font-semibold text-ink underline flex-shrink-0 ml-4"
               >
-                Prenumerationsvillkor
+                {t("Prenumerationsvillkor")}
               </Link>
             </div>
           </div>
 
           <div className="bg-surface border border-line rounded-2xl p-6">
             <div className="text-[12.5px] text-ink-dim uppercase tracking-wide mb-3.5">
-              Betalmetod
+              {t("Betalmetod")}
             </div>
             <div className="flex items-center gap-3 mb-3.5">
               <div className="w-10 h-7 rounded-[5px] bg-ink flex items-center justify-center">
@@ -92,24 +92,24 @@ export default async function BillingPage() {
                 </svg>
               </div>
               <div>
-                <div className="font-semibold text-[14px]">Visa •••• 4242</div>
-                <div className="text-[12px] text-ink-dim">Utgår 08/28</div>
+                <div className="font-semibold text-[14px]">{t("Visa •••• 4242")}</div>
+                <div className="text-[12px] text-ink-dim">{t("Utgår 08/28")}</div>
               </div>
             </div>
             <a href="#" className="text-[13.5px] font-semibold text-ink">
-              Byt betalkort
+              {t("Byt betalkort")}
             </a>
           </div>
         </div>
 
         <div className="bg-surface border border-line rounded-2xl p-6">
-          <div className="font-semibold text-[16px] mb-4">Fakturor</div>
+          <div className="font-semibold text-[16px] mb-4">{t("Fakturor")}</div>
           <table className="w-full border-collapse">
             <thead>
               <tr className="text-left text-[12.5px] text-ink-dim uppercase tracking-wide">
-                <th className="py-2 font-semibold border-b border-line">Datum</th>
-                <th className="py-2 font-semibold border-b border-line">Belopp</th>
-                <th className="py-2 font-semibold border-b border-line">Status</th>
+                <th className="py-2 font-semibold border-b border-line">{t("Datum")}</th>
+                <th className="py-2 font-semibold border-b border-line">{t("Belopp")}</th>
+                <th className="py-2 font-semibold border-b border-line">{t("Status")}</th>
                 <th className="py-2 font-semibold border-b border-line" />
               </tr>
             </thead>
@@ -125,7 +125,7 @@ export default async function BillingPage() {
                   </td>
                   <td className="py-3 border-b border-line text-right">
                     <a href="#" className="text-ink font-semibold text-[13px]">
-                      Ladda ner
+                      {t("Ladda ner")}
                     </a>
                   </td>
                 </tr>

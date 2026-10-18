@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -7,6 +8,7 @@ import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
 
 export default function ResetPasswordPage() {
+  const t = useT();
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [invalid, setInvalid] = useState(false);
@@ -48,11 +50,11 @@ export default function ResetPasswordPage() {
     setError(null);
 
     if (password.length < 8) {
-      setError("Lösenordet måste vara minst 8 tecken.");
+      setError(t("Lösenordet måste vara minst 8 tecken."));
       return;
     }
     if (password !== password2) {
-      setError("Lösenorden matchar inte.");
+      setError(t("Lösenorden matchar inte."));
       return;
     }
 
@@ -92,25 +94,24 @@ export default function ResetPasswordPage() {
 
         {invalid && !ready ? (
           <div className="bg-surface border border-line rounded-2xl p-7 text-center">
-            <h1 className="text-[20px] font-medium mb-2">Länken fungerar inte längre</h1>
+            <h1 className="text-[20px] font-medium mb-2">{t("Länken fungerar inte längre")}</h1>
             <p className="text-[14px] text-ink-dim leading-relaxed">
-              Återställningslänkar slutar gälla efter ett tag. Be om en ny länk
-              och försök igen.
+              {t("Återställningslänkar slutar gälla efter ett tag. Be om en ny länk och försök igen.")}
             </p>
           </div>
         ) : !ready ? (
-          <div className="text-center text-[14px] text-ink-dim">Laddar …</div>
+          <div className="text-center text-[14px] text-ink-dim">{t("Laddar …")}</div>
         ) : (
           <div className="bg-surface border border-line rounded-2xl p-7">
-            <h1 className="text-[22px] font-medium mb-1">Välj nytt lösenord</h1>
+            <h1 className="text-[22px] font-medium mb-1">{t("Välj nytt lösenord")}</h1>
             <p className="text-[13.5px] text-ink-dim mb-6">
-              Minst 8 tecken.
+              {t("Minst 8 tecken.")}
             </p>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
               <div>
                 <label htmlFor="pw" className="block text-[13px] font-semibold mb-1.5">
-                  Nytt lösenord
+                  {t("Nytt lösenord")}
                 </label>
                 <input
                   id="pw"
@@ -123,7 +124,7 @@ export default function ResetPasswordPage() {
               </div>
               <div>
                 <label htmlFor="pw2" className="block text-[13px] font-semibold mb-1.5">
-                  Bekräfta lösenord
+                  {t("Bekräfta lösenord")}
                 </label>
                 <input
                   id="pw2"
@@ -142,7 +143,7 @@ export default function ResetPasswordPage() {
                 disabled={loading}
                 className="bg-accent text-accent-ink font-semibold text-[15px] py-3.5 rounded-[10px] disabled:opacity-60"
               >
-                {loading ? "Sparar …" : "Spara nytt lösenord"}
+                {loading ? t("Sparar …") : t("Spara nytt lösenord")}
               </button>
             </form>
           </div>

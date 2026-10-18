@@ -1,5 +1,6 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
@@ -23,6 +24,7 @@ export default function HeroImageUpload({
   onChange?: (url: string | null) => void;
   onUploadingChange?: (uploading: boolean) => void;
 }) {
+  const t = useT();
   const [imageUrl, setImageUrl] = useState(initialUrl || "");
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
@@ -31,11 +33,11 @@ export default function HeroImageUpload({
 
   const upload = async (file: File) => {
     if (!ALLOWED_TYPES.includes(file.type)) {
-      setError("Använd PNG, JPG eller WEBP.");
+      setError(t("Använd PNG, JPG eller WEBP."));
       return;
     }
     if (file.size > MAX_BYTES) {
-      setError("Filen är större än 15 MB.");
+      setError(t("Filen är större än 15 MB."));
       return;
     }
 
@@ -47,7 +49,7 @@ export default function HeroImageUpload({
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setError("Du är inte inloggad längre — ladda om sidan.");
+        setError(t("Du är inte inloggad längre — ladda om sidan."));
         return;
       }
 
@@ -67,7 +69,7 @@ export default function HeroImageUpload({
         body: JSON.stringify({ fileUrl: pub.publicUrl }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
 
       setImageUrl(data.heroImageUrl);
       onChange?.(data.heroImageUrl);
@@ -91,7 +93,7 @@ export default function HeroImageUpload({
         body: JSON.stringify({ fileUrl }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Något gick fel.");
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setImageUrl(data.heroImageUrl);
       onChange?.(data.heroImageUrl);
     } catch (e: any) {
@@ -120,7 +122,7 @@ export default function HeroImageUpload({
       <div className="w-20 h-14 rounded-xl bg-bg border border-line flex items-center justify-center flex-shrink-0 overflow-hidden">
         {imageUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={imageUrl} alt="Huvudbild" className="w-full h-full object-cover" />
+          <img src={imageUrl} alt={t("Huvudbild")} className="w-full h-full object-cover" />
         ) : (
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#9E9C97" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
             <rect x="3" y="4" width="18" height="16" rx="2" />
@@ -130,10 +132,9 @@ export default function HeroImageUpload({
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <div className="font-semibold text-[14px] mb-0.5">Huvudbild (valfritt)</div>
+        <div className="font-semibold text-[14px] mb-0.5">{t("Huvudbild (valfritt)")}</div>
         <div className="text-[12.5px] text-ink-dim">
-          Den stora bilden högst upp på startsidan. Väljer du ingen tar vi
-          istället en av dina andra uppladdade bilder.
+          {t("Den stora bilden högst upp på startsidan. Väljer du ingen tar vi istället en av dina andra uppladdade bilder.")}
         </div>
         {error && <div className="text-[12px] text-red-600 mt-1">{error}</div>}
       </div>
@@ -155,7 +156,7 @@ export default function HeroImageUpload({
           disabled={uploading}
           className="text-[12.5px] font-semibold text-ink-dim border border-line px-3.5 py-2 rounded-lg flex-shrink-0 disabled:opacity-60"
         >
-          Ta bort
+          {t("Ta bort")}
         </button>
       ) : (
         <div className="flex flex-col gap-1.5 flex-shrink-0">
@@ -165,7 +166,7 @@ export default function HeroImageUpload({
             disabled={uploading}
             className="text-[12.5px] font-semibold text-ink bg-bg border border-line px-3.5 py-2 rounded-lg disabled:opacity-60"
           >
-            {uploading ? "Laddar upp …" : "Ladda upp huvudbild"}
+            {uploading ? t("Laddar upp …") : t("Ladda upp huvudbild")}
           </button>
           <button
             type="button"
@@ -173,7 +174,7 @@ export default function HeroImageUpload({
             disabled={uploading}
             className="text-[12.5px] font-semibold text-ink-dim border border-line px-3.5 py-2 rounded-lg disabled:opacity-60"
           >
-            Sök stockbild
+            {t("Sök stockbild")}
           </button>
         </div>
       )}

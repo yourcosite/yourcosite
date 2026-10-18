@@ -1,41 +1,44 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n/config";
 import { useState } from "react";
 
 const faqs = [
   {
     id: "time",
-    q: "Hur lång tid tar det att bygga en sajt?",
-    a: "Oftast under en minut för ett första utkast. Sen fortsätter ni finslipa i ett samtal så länge ni vill, innan ni publicerar.",
+    q: msg("Hur lång tid tar det att bygga en sajt?"),
+    a: msg("Oftast under en minut för ett första utkast. Sen fortsätter ni finslipa i ett samtal så länge ni vill, innan ni publicerar."),
   },
   {
     id: "domain",
-    q: "Kan jag använda min egen domän?",
-    a: "Ja. Koppla en domän ni redan äger, eller köp en ny direkt i YourCoSite utan att lämna flödet.",
+    q: msg("Kan jag använda min egen domän?"),
+    a: msg("Ja. Koppla en domän ni redan äger, eller köp en ny direkt i YourCoSite utan att lämna flödet."),
   },
   {
     id: "limit",
-    q: "Vad händer om jag använder alla ändringar för månaden?",
-    a: "Ni kan antingen vänta till nästa period eller köpa till fler ändringar direkt, utan att behöva byta plan.",
+    q: msg("Vad händer om jag använder alla ändringar för månaden?"),
+    a: msg("Ni kan antingen vänta till nästa period eller köpa till fler ändringar direkt, utan att behöva byta plan."),
   },
   {
     id: "own",
-    q: "Äger jag innehållet på min sajt?",
-    a: "Ja. All text och alla bilder ni laddar upp eller godkänner är helt era, oavsett om ni fortsätter använda YourCoSite eller inte.",
+    q: msg("Äger jag innehållet på min sajt?"),
+    a: msg("Ja. All text och alla bilder ni laddar upp eller godkänner är helt era, oavsett om ni fortsätter använda YourCoSite eller inte."),
   },
   {
     id: "export",
-    q: "Kan jag exportera sajten om jag vill lämna tjänsten?",
-    a: "Ja, ni kan alltid ladda ner en fullständig kopia av er sajt och ta med er den till valfritt webbhotell.",
+    q: msg("Kan jag exportera sajten om jag vill lämna tjänsten?"),
+    a: msg("Ja, ni kan alltid ladda ner en fullständig kopia av er sajt och ta med er den till valfritt webbhotell."),
   },
   {
     id: "pay",
-    q: "Hur fungerar betalningen?",
-    a: "Månadsvis fakturering, ingen bindningstid. Avsluta när ni vill direkt under Fakturering.",
+    q: msg("Hur fungerar betalningen?"),
+    a: msg("Månadsvis fakturering, ingen bindningstid. Avsluta när ni vill direkt under Fakturering."),
   },
 ];
 
 export default function SupportFaq() {
+  const t = useT();
   const [openId, setOpenId] = useState<string | null>("time");
 
   return (
@@ -52,7 +55,7 @@ export default function SupportFaq() {
               aria-expanded={open}
               className="w-full flex items-center justify-between text-left px-4 py-[13px] text-[14px] font-semibold"
             >
-              {f.q}
+              {t(f.q)}
               <svg
                 viewBox="0 0 24 24"
                 width="14"
@@ -70,7 +73,7 @@ export default function SupportFaq() {
             </button>
             {open && (
               <div className="px-4 pb-[15px] text-[13.5px] text-ink-dim leading-relaxed">
-                {f.a}
+                {t(f.a)}
               </div>
             )}
           </div>

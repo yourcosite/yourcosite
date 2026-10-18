@@ -1,5 +1,7 @@
 "use client";
 
+import { rich } from "@/lib/i18n/rich";
+import { useT } from "@/components/I18nProvider";
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -9,6 +11,7 @@ import { pagesInTreeOrder, parentPathOf, childPagesOf, movePage } from "@/lib/pa
 type Site = { id: string; name?: string; content: SiteContent };
 
 export default function PagesManagePage() {
+  const t = useT();
   const [site, setSite] = useState<Site | null>(null);
   const [loadError, setLoadError] = useState("");
   const [pendingRemovePath, setPendingRemovePath] = useState<string | null>(null);
@@ -46,12 +49,12 @@ export default function PagesManagePage() {
       .then((r) => r.json())
       .then((data) => {
         if (!data.site) {
-          setLoadError("Hittade ingen genererad sajt ännu.");
+          setLoadError(t("Hittade ingen genererad sajt ännu."));
           return;
         }
         setSite(data.site);
       })
-      .catch(() => setLoadError("Kunde inte hämta sajten."));
+      .catch(() => setLoadError(t("Kunde inte hämta sajten.")));
   }, []);
 
   const redigeraHref = (extra?: string) => {
@@ -76,7 +79,7 @@ export default function PagesManagePage() {
   const confirmAdd = async () => {
     const label = newLabel.trim();
     if (!label) {
-      setAddError("Skriv ett namn för sidan.");
+      setAddError(t("Skriv ett namn för sidan."));
       return;
     }
     if (!site) return;
@@ -90,7 +93,7 @@ export default function PagesManagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setAddError(data.error || "Kunde inte skapa sidan.");
+        setAddError(data.error || t("Kunde inte skapa sidan."));
         return;
       }
       setSite({ ...site, content: data.content });
@@ -98,7 +101,7 @@ export default function PagesManagePage() {
       setJustAdded({ label, path: data.newPath });
       setJustRemoved(null);
     } catch {
-      setAddError("Kunde inte skapa sidan just nu.");
+      setAddError(t("Kunde inte skapa sidan just nu."));
     } finally {
       setSaving(false);
     }
@@ -117,14 +120,14 @@ export default function PagesManagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setAddError(data.error || "Kunde inte flytta sidan.");
+        setAddError(data.error || t("Kunde inte flytta sidan."));
         return;
       }
       setSite({ ...site, content: data.content });
       setJustAdded(null);
       setJustRemoved(null);
     } catch {
-      setAddError("Kunde inte flytta sidan just nu.");
+      setAddError(t("Kunde inte flytta sidan just nu."));
     } finally {
       setMoving(false);
     }
@@ -148,7 +151,7 @@ export default function PagesManagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setAddError(data.error || "Kunde inte flytta sidan.");
+        setAddError(data.error || t("Kunde inte flytta sidan."));
         return;
       }
       const label = allPages.find((p) => p.path === path)?.label || path;
@@ -162,7 +165,7 @@ export default function PagesManagePage() {
       setJustAdded(null);
       setJustRemoved(null);
     } catch {
-      setAddError("Kunde inte flytta sidan just nu.");
+      setAddError(t("Kunde inte flytta sidan just nu."));
     } finally {
       setMoving(false);
     }
@@ -206,7 +209,7 @@ export default function PagesManagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setAddError(data.error || "Kunde inte flytta sidan.");
+        setAddError(data.error || t("Kunde inte flytta sidan."));
         return;
       }
       const label = allPages.find((p) => p.path === path)?.label || path;
@@ -216,7 +219,7 @@ export default function PagesManagePage() {
       setReparenting(null);
       setReparentNotice(data.newPath !== path ? `"${label}" har flyttats. Dess nya adress är ${data.newPath}.` : "");
     } catch {
-      setAddError("Kunde inte flytta sidan just nu.");
+      setAddError(t("Kunde inte flytta sidan just nu."));
     } finally {
       setMoving(false);
     }
@@ -233,7 +236,7 @@ export default function PagesManagePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setAddError(data.error || "Kunde inte ta bort sidan.");
+        setAddError(data.error || t("Kunde inte ta bort sidan."));
         return;
       }
       const removedLabel = allPages.find((p) => p.path === path)?.label || path;
@@ -255,27 +258,22 @@ export default function PagesManagePage() {
           </Link>
           <div className="w-px h-5.5 bg-line" />
           <div>
-            <div className="text-[14px] font-semibold">{site?.name || "Din sajt"}</div>
+            <div className="text-[14px] font-semibold">{site?.name || t("Din sajt")}</div>
           </div>
         </div>
         <Link
           href={redigeraHref()}
           className="flex items-center gap-1.5 text-[13px] font-semibold text-ink bg-bg border border-line px-4 py-2 rounded-full"
         >
-          ← Till redigeraren
+          {t("← Till redigeraren")}
         </Link>
       </div>
 
       <div className="flex-1 px-6 md:px-12 py-8 flex justify-center">
         <div className="w-full max-w-[680px]">
-          <h1 className="text-[27px] font-medium mb-1.5">Sidor</h1>
+          <h1 className="text-[27px] font-medium mb-1.5">{t("Sidor")}</h1>
           <p className="text-[13.5px] text-ink-dim mb-5.5">
-            Hantera sidorna på er live-sajt. Dra en sida till rätt plats för att
-            ändra ordningen i menyn. Håll den över en annan sida så öppnas en
-            plats under den där du kan släppa för att göra den till undersida. På mobil eller surfplatta använder du
-            pilarna ↑ och ↓ och knappen Flytta. En borttagen sida slutar genast
-            visas för besökare. En ny sida skapas tom — berätta för Millie i
-            redigeraren vad den ska innehålla.
+            {t("Hantera sidorna på er live-sajt. Dra en sida till rätt plats för att ändra ordningen i menyn. Håll den över en annan sida så öppnas en plats under den där du kan släppa för att göra den till undersida. På mobil eller surfplatta använder du pilarna ↑ och ↓ och knappen Flytta. En borttagen sida slutar genast visas för besökare. En ny sida skapas tom — berätta för Millie i redigeraren vad den ska innehålla.")}
           </p>
 
           {loadError && (
@@ -286,7 +284,7 @@ export default function PagesManagePage() {
 
           {!loadError && !site && (
             <div className="bg-white border border-line rounded-xl p-6 text-center text-ink-dim text-[14px]">
-              Hämtar din sajt …
+              {t("Hämtar din sajt …")}
             </div>
           )}
 
@@ -346,7 +344,7 @@ export default function PagesManagePage() {
                         {!locked && (
                           <span
                             className="text-ink-dim text-[15px] leading-none cursor-grab select-none -mr-1"
-                            title="Dra för att flytta sidan"
+                            title={t("Dra för att flytta sidan")}
                             aria-hidden="true"
                           >
                             ⋮⋮
@@ -360,11 +358,11 @@ export default function PagesManagePage() {
                         <div className="flex-1">
                           <div className="font-semibold text-[14.5px]">{p.label}</div>
                           <div className="text-[12px] text-ink-dim mt-0.5">
-                            {isChild ? "Undersida · " : childCount > 0 ? `Huvudsida med ${childCount} ${childCount === 1 ? "undersida" : "undersidor"} · ` : ""}{p.path} · {empty ? "Inget innehåll än" : `${p.sections.length} ${p.sections.length === 1 ? "sektion" : "sektioner"}`}
+                            {isChild ? t("Undersida · ") : childCount > 0 ? `Huvudsida med ${childCount} ${childCount === 1 ? "undersida" : "undersidor"} · ` : ""}{p.path} · {empty ? t("Inget innehåll än") : `${p.sections.length} ${p.sections.length === 1 ? "sektion" : "sektioner"}`}
                           </div>
                         </div>
                         {locked && (
-                          <span className="text-[11px] text-ink-dim font-semibold">Krävs av sajten</span>
+                          <span className="text-[11px] text-ink-dim font-semibold">{t("Krävs av sajten")}</span>
                         )}
                         {!locked && !confirming && (
                           <div className="flex items-center gap-1 flex-shrink-0">
@@ -372,7 +370,7 @@ export default function PagesManagePage() {
                               onClick={() => move(p.path, "up")}
                               disabled={moving || !movePage(allPages, p.path, "up")}
                               aria-label={`Flytta ${p.label} uppåt i menyn`}
-                              title="Flytta uppåt i menyn"
+                              title={t("Flytta uppåt i menyn")}
                               className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink-dim disabled:opacity-30"
                             >
                               ↑
@@ -381,7 +379,7 @@ export default function PagesManagePage() {
                               onClick={() => move(p.path, "down")}
                               disabled={moving || !movePage(allPages, p.path, "down")}
                               aria-label={`Flytta ${p.label} nedåt i menyn`}
-                              title="Flytta nedåt i menyn"
+                              title={t("Flytta nedåt i menyn")}
                               className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink-dim disabled:opacity-30"
                             >
                               ↓
@@ -396,7 +394,7 @@ export default function PagesManagePage() {
                                 }}
                                 className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                               >
-                                Flytta
+                                {t("Flytta")}
                               </button>
                             )}
                             {!isChild && (
@@ -404,14 +402,14 @@ export default function PagesManagePage() {
                                 onClick={() => startAdd(p.path)}
                                 className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                               >
-                                + Undersida
+                                {t("+ Undersida")}
                               </button>
                             )}
                             <Link
                               href={redigeraHref(p.path)}
                               className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                             >
-                              Öppna
+                              {t("Öppna")}
                             </Link>
                             <button
                               onClick={() => setPendingRemovePath(p.path)}
@@ -431,33 +429,33 @@ export default function PagesManagePage() {
                               onClick={() => setPendingRemovePath(null)}
                               className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
                             >
-                              Avbryt
+                              {t("Avbryt")}
                             </button>
                             <button
                               onClick={() => confirmRemove(p.path)}
                               disabled={removing}
                               className="text-[12.5px] font-bold text-white bg-warm px-3 py-1.5 rounded-lg disabled:opacity-60"
                             >
-                              {removing ? "Tar bort …" : "Ta bort permanent"}
+                              {removing ? t("Tar bort …") : t("Ta bort permanent")}
                             </button>
                           </div>
                         )}
                       </div>
                       {reparenting === p.path && !confirming && (
                         <div className="mt-2.5 pt-2.5 border-t border-line">
-                          <label className="block text-[11.5px] font-semibold text-ink-dim mb-1">Var ska &ldquo;{p.label}&rdquo; ligga?</label>
+                          <label className="block text-[11.5px] font-semibold text-ink-dim mb-1">{rich(t, "Var ska “{v1}” ligga?", {}, { v1: p.label })}</label>
                           <div className="flex items-center gap-2 flex-wrap">
                             <select
                               value={reparentTarget}
                               onChange={(e) => setReparentTarget(e.target.value)}
                               className="flex-1 min-w-[200px] border border-line rounded-lg px-3 py-2 text-[13.5px] bg-surface"
                             >
-                              <option value="">Välj plats …</option>
-                              {isChild && <option value="__top">Egen sida i huvudmenyn</option>}
+                              <option value="">{t("Välj plats …")}</option>
+                              {isChild && <option value="__top">{t("Egen sida i huvudmenyn")}</option>}
                               {possibleParents
                                 .filter((pp) => pp.path !== p.path && pp.path !== parentPathOf(p.path, allPages))
                                 .map((pp) => (
-                                  <option key={pp.path} value={pp.path}>Undersida under &ldquo;{pp.label}&rdquo;</option>
+                                  <option key={pp.path} value={pp.path}>{rich(t, "Undersida under “{v1}”", {}, { v1: pp.label })}</option>
                                 ))}
                             </select>
                             <button
@@ -465,24 +463,22 @@ export default function PagesManagePage() {
                               disabled={!reparentTarget || moving}
                               className="text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60"
                             >
-                              {moving ? "Flyttar …" : "Flytta"}
+                              {moving ? t("Flyttar …") : t("Flytta")}
                             </button>
                             <button
                               onClick={() => setReparenting(null)}
                               className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg"
                             >
-                              Avbryt
+                              {t("Avbryt")}
                             </button>
                           </div>
                           <div className="text-[12px] text-ink-dim mt-2">
-                            Sidans webbadress ändras när den flyttas. Knappar på sajten som leder till sidan uppdateras automatiskt, men länkar ni skickat ut utanför sajten slutar fungera.
+                            {t("Sidans webbadress ändras när den flyttas. Knappar på sajten som leder till sidan uppdateras automatiskt, men länkar ni skickat ut utanför sajten slutar fungera.")}
                           </div>
                         </div>
                       )}
                       {confirming && (
-                        <div className="mt-2.5 pt-2.5 border-t border-line text-[12.5px] text-warm font-semibold">
-                          Detta tar bort sidan permanent från den publicerade sajten{childCount > 0 ? `, tillsammans med dess ${childCount} ${childCount === 1 ? "undersida" : "undersidor"}` : ""}. Går inte att ångra.
-                        </div>
+                        <div className="mt-2.5 pt-2.5 border-t border-line text-[12.5px] text-warm font-semibold">{rich(t, "Detta tar bort sidan permanent från den publicerade sajten{v1}. Går inte att ångra.", {}, { v1: childCount > 0 ? `, tillsammans med dess ${childCount} ${childCount === 1 ? "undersida" : "undersidor"}` : "" })}</div>
                       )}
                     </div>
                     {showSlot && (
@@ -497,9 +493,7 @@ export default function PagesManagePage() {
                         }}
                         className="ml-8 rounded-xl border-2 border-dashed border-accent bg-accent-soft px-4 py-3.5 text-[13px] font-semibold text-ink flex items-center gap-2"
                       >
-                        <span aria-hidden="true">↳</span>
-                        Släpp här så blir sidan en undersida under &ldquo;{intoLabel}&rdquo;
-                      </div>
+                        {rich(t, "<span>↳</span>Släpp här så blir sidan en undersida under “{intoLabel}”", { span: (c) => <span aria-hidden="true">{c}</span> }, { intoLabel })}</div>
                     )}
                     </Fragment>
                   );
@@ -515,44 +509,40 @@ export default function PagesManagePage() {
               )}
 
               {justRemoved && (
-                <div className="flex items-center gap-2.5 bg-accent-soft rounded-lg px-4 py-3 mb-4.5 text-[13px] text-ink font-semibold">
-                  &ldquo;{justRemoved}&rdquo; har tagits bort och syns inte längre på sajten.
-                </div>
+                <div className="flex items-center gap-2.5 bg-accent-soft rounded-lg px-4 py-3 mb-4.5 text-[13px] text-ink font-semibold">{rich(t, "“{justRemoved}” har tagits bort och syns inte längre på sajten.", {}, { justRemoved })}</div>
               )}
 
               {justAdded && (
                 <div className="flex items-center justify-between gap-3 bg-accent-soft rounded-lg px-4 py-3 mb-4.5 text-[13px] text-ink font-semibold">
-                  <span>&ldquo;{justAdded.label}&rdquo; är skapad och ligger redan i menyn.</span>
+                  <span>{rich(t, "“{v1}” är skapad och ligger redan i menyn.", {}, { v1: justAdded.label })}</span>
                   <Link
                     href={redigeraHref(justAdded.path)}
                     className="whitespace-nowrap underline"
                   >
-                    Öppna i redigeraren →
+                    {t("Öppna i redigeraren →")}
                   </Link>
                 </div>
               )}
 
               {!adding ? (
                 <button onClick={() => startAdd()} className="flex items-center gap-2 text-ink font-semibold text-[13.5px] py-1.5">
-                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  {rich(t, "{v1}Lägg till ny sida", {}, { v1: <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <line x1="12" y1="5" x2="12" y2="19" />
                     <line x1="5" y1="12" x2="19" y2="12" />
-                  </svg>
-                  Lägg till ny sida
-                </button>
+                  </svg> })}</button>
               ) : (
                 <div className="border border-line rounded-xl px-4 py-3.5 bg-surface">
-                  <div className="text-[12.5px] font-semibold text-ink-dim mb-2">Namn på den nya sidan</div>
+                  <div className="text-[12.5px] font-semibold text-ink-dim mb-2">{t("Namn på den nya sidan")}</div>
                   <div className="mb-2.5">
-                    <label className="block text-[11.5px] font-semibold text-ink-dim mb-1">Placering</label>
+                    <label className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Placering")}</label>
                     <select
                       value={newParent}
                       onChange={(e) => setNewParent(e.target.value)}
                       className="w-full border border-line rounded-lg px-3 py-2 text-[13.5px] bg-surface"
                     >
-                      <option value="">Egen sida i huvudmenyn</option>
+                      <option value="">{t("Egen sida i huvudmenyn")}</option>
                       {possibleParents.map((pp) => (
-                        <option key={pp.path} value={pp.path}>Undersida under &ldquo;{pp.label}&rdquo;</option>
+                        <option key={pp.path} value={pp.path}>{rich(t, "Undersida under “{v1}”", {}, { v1: pp.label })}</option>
                       ))}
                     </select>
                   </div>
@@ -563,7 +553,7 @@ export default function PagesManagePage() {
                       value={newLabel}
                       onChange={(e) => setNewLabel(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && confirmAdd()}
-                      placeholder={newParent ? "t.ex. Produkt A" : "t.ex. Vårt team"}
+                      placeholder={newParent ? t("t.ex. Produkt A") : t("t.ex. Vårt team")}
                       className="flex-1 min-w-[160px] border border-line rounded-lg px-3 py-2 text-[13.5px]"
                     />
                     <button
@@ -571,13 +561,13 @@ export default function PagesManagePage() {
                       disabled={saving}
                       className="text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60"
                     >
-                      {saving ? "Skapar …" : "Skapa"}
+                      {saving ? t("Skapar …") : t("Skapa")}
                     </button>
                     <button
                       onClick={() => setAdding(false)}
                       className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg"
                     >
-                      Avbryt
+                      {t("Avbryt")}
                     </button>
                   </div>
                   {addError && <div className="text-[12px] text-warm font-semibold mt-2">{addError}</div>}
