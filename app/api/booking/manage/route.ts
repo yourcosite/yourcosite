@@ -61,7 +61,7 @@ export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const ctx = await ownedSite(body.siteId);
   if ("error" in ctx) return ctx.error;
-  const { supabase, site } = ctx;
+  const { supabase, site, user } = ctx;
   const fail = (msg: string, status = 400) => NextResponse.json({ error: msg }, { status });
 
   const { data: st } = await supabase.from("booking_settings").select("timezone").eq("site_id", site.id).maybeSingle();
@@ -82,7 +82,17 @@ export async function POST(request: Request) {
         duration_min: duration,
         price_sek: priceRaw,
         active: body.active !== false,
-      };
+      } as Record<string, unknown>;
+      // Valfri bild: bara vår egen uppladdningsmapp för den här användaren
+      // godtas. Fältet skickas bara med när bilden sätts eller tas bort.
+      if (typeof body.image_url === "string" && body.image_url) {
+        if (!/^https:\/\//.test(body.image_url) || !body.image_url.includes(`/uploads/${user.id}/`) || body.image_url.length > 600) {
+          return fail("Bilden måste vara uppladdad här i verktyget.");
+        }
+        row.image_url = body.image_url;
+      } else if (body.clearImage === true) {
+        row.image_url = null;
+      }
       const q = isUuid(body.id)
         ? supabase.from("booking_packages").update(row).eq("id", body.id).eq("site_id", site.id)
         : supabase.from("booking_packages").insert(row);

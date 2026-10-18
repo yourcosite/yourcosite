@@ -1612,7 +1612,7 @@ function FieldBadge({
 // riktiga sajten (active) hämtas paket och lediga tider från
 // /api/public/booking; i redigerarens förhandsvisning visas ett exempel så
 // ägaren ser hur det blir, utan att något sparas.
-type BookingPkg = { id: string; name: string; description?: string | null; duration_min: number; price_sek?: number | null };
+type BookingPkg = { id: string; name: string; description?: string | null; duration_min: number; price_sek?: number | null; image_url?: string | null };
 
 function demoBookingData(): { packages: BookingPkg[]; availability: Record<string, string[]> } {
   const availability: Record<string, string[]> = {};
@@ -1788,15 +1788,21 @@ function BookingBlock({
                 type="button"
                 key={p.id}
                 onClick={() => choosePkg(p)}
-                className="rounded-xl border p-4 text-left"
+                className={`rounded-xl border text-left overflow-hidden ${p.image_url ? "" : "p-4"}`}
                 style={{ ...card, borderColor: on ? accent : palette.cardBorder, boxShadow: on ? `0 0 0 1.5px ${accent}` : undefined }}
               >
+                {p.image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={p.image_url} alt={p.name} className="w-full h-36 object-cover block" loading="lazy" />
+                )}
+                <div className={p.image_url ? "p-4" : ""}>
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-semibold text-[14.5px]">{p.name}</span>
                   {p.price_sek != null && <span className="text-[13.5px] font-semibold">{p.price_sek === 0 ? "Gratis" : `${new Intl.NumberFormat("sv-SE").format(p.price_sek)} kr`}</span>}
                 </div>
                 <div className="text-[12.5px] mt-0.5" style={{ color: palette.textDim }}>{p.duration_min} minuter</div>
                 {p.description && <div className="text-[13px] mt-1.5" style={{ color: palette.textDim }}>{p.description}</div>}
+                </div>
               </button>
             );
           })}

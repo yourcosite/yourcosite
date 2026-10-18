@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { formatPrice, formatSwedish } from "@/lib/booking";
+import { createClient } from "@/lib/supabase/client";
 
-type Pkg = { id: string; name: string; description: string | null; duration_min: number; price_sek: number | null; active: boolean };
+type Pkg = { id: string; name: string; description: string | null; duration_min: number; price_sek: number | null; image_url?: string | null; active: boolean };
 type Rule = { package_id: string | null; weekday: number; start_time: string; end_time: string };
 type Slot = { id: string; package_id: string | null; starts_at: string; ends_at: string };
 type Block = { id: string; starts_at: string; ends_at: string; note: string | null };
@@ -178,9 +179,39 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
 }
 
 function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act }) {
-  const empty = { id: "", name: "", description: "", duration_min: "60", price_sek: "", active: true };
+  const empty = { id: "", name: "", description: "", duration_min: "60", price_sek: "", image_url: "", hadImage: false, active: true };
   const [form, setForm] = useState<typeof empty | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+
+  const uploadImage = async (file: File) => {
+    if (!["image/png", "image/jpeg", "image/webp", "image/gif"].includes(file.type)) {
+      setUploadError("Bilden måste vara PNG, JPG, WEBP eller GIF.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Bilden är större än 5 MB.");
+      return;
+    }
+    setUploading(true);
+    setUploadError("");
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Du är inte inloggad längre, ladda om sidan.");
+      const ext = file.name.split(".").pop() || "bin";
+      const path = `${user.id}/paket-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("uploads").upload(path, file, { contentType: file.type || undefined });
+      if (upErr) throw new Error(upErr.message);
+      const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
+      setForm((f) => (f ? { ...f, image_url: pub.publicUrl } : f));
+    } catch (e: any) {
+      setUploadError(e.message || "Kunde inte ladda upp bilden.");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async () => {
     if (!form) return;
@@ -191,6 +222,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
       description: form.description,
       duration_min: Number(form.duration_min),
       price_sek: form.price_sek === "" ? null : Number(form.price_sek),
+      ...(form.image_url ? { image_url: form.image_url } : form.hadImage ? { clearImage: true } : {}),
       active: form.active,
     }, "Paketet är sparat.");
     if (ok) setForm(null);
@@ -207,7 +239,11 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
         {data.packages.map((p) => (
           <div key={p.id} className={`border border-line rounded-xl px-4 py-3.5 bg-surface ${p.active ? "" : "opacity-60"}`}>
             <div className="flex items-center justify-between gap-3 flex-wrap">
-              <div>
+              {p.image_url && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={p.image_url} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+              )}
+              <div className="flex-1 min-w-[180px]">
                 <div className="font-semibold text-[14.5px]">{p.name}{p.active ? "" : " (dold)"}</div>
                 <div className="text-[12.5px] text-ink-dim">
                   {p.duration_min} min{p.price_sek != null ? ` · ${formatPrice(p.price_sek)}` : ""}
@@ -227,7 +263,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <button className={btnGhost} onClick={() => setForm({ id: p.id, name: p.name, description: p.description || "", duration_min: String(p.duration_min), price_sek: p.price_sek == null ? "" : String(p.price_sek), active: p.active })}>Ändra</button>
+                  <button className={btnGhost} onClick={() => setForm({ id: p.id, name: p.name, description: p.description || "", duration_min: String(p.duration_min), price_sek: p.price_sek == null ? "" : String(p.price_sek), image_url: p.image_url || "", hadImage: !!p.image_url, active: p.active })}>Ändra</button>
                   <button className={btnGhost} onClick={() => setRemoving(p.id)}>Ta bort</button>
                 </div>
               )}
@@ -259,12 +295,28 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
               <input type="number" min={0} className={`${input} w-full`} value={form.price_sek} onChange={(e) => setForm({ ...form, price_sek: e.target.value })} />
             </label>
           </div>
+          <div className="mb-3">
+            <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">Bild (valfri, visas på paketet i bokningen)</span>
+            {form.image_url ? (
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={form.image_url} alt="" className="w-24 h-16 rounded-lg object-cover" />
+                <button type="button" className={btnGhost} onClick={() => setForm({ ...form, image_url: "" })}>Ta bort bilden</button>
+              </div>
+            ) : (
+              <label className={`inline-flex items-center gap-2 border-2 border-dashed border-line rounded-xl px-4 py-3 text-[13px] font-semibold text-ink-dim cursor-pointer ${uploading ? "opacity-60 pointer-events-none" : ""}`}>
+                {uploading ? "Laddar upp …" : "+ Lägg till bild"}
+                <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} />
+              </label>
+            )}
+            {uploadError && <div className="text-[12px] text-warm font-semibold mt-1.5">{uploadError}</div>}
+          </div>
           <label className="flex items-center gap-2 text-[13px] mb-3">
             <input type="checkbox" checked={form.active} onChange={(e) => setForm({ ...form, active: e.target.checked })} />
             Visa paketet för besökare
           </label>
           <div className="flex gap-2">
-            <button className={btnPrimary} disabled={busy} onClick={save}>{busy ? "Sparar …" : "Spara paket"}</button>
+            <button className={btnPrimary} disabled={busy || uploading} onClick={save}>{busy ? "Sparar …" : "Spara paket"}</button>
             <button className={btnGhost} onClick={() => setForm(null)}>Avbryt</button>
           </div>
         </div>

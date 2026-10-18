@@ -27,7 +27,7 @@ export async function GET(request: Request) {
 
   if (!packageId) {
     return NextResponse.json({
-      packages: packages.map((p) => ({ id: p.id, name: p.name, description: p.description, duration_min: p.duration_min, price_sek: p.price_sek })),
+      packages: packages.map((p) => ({ id: p.id, name: p.name, description: p.description, duration_min: p.duration_min, price_sek: p.price_sek, image_url: p.image_url ?? null })),
       timezone: data.settings.timezone,
     });
   }

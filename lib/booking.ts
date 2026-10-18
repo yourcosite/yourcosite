@@ -13,6 +13,7 @@ export type BookingPackage = {
   description?: string | null;
   duration_min: number;
   price_sek?: number | null;
+  image_url?: string | null;
   active?: boolean;
   sort_order?: number;
 };

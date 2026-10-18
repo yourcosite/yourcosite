@@ -517,6 +517,7 @@ create table if not exists booking_packages (
   description text,
   duration_min int not null check (duration_min between 5 and 1440),
   price_sek int check (price_sek is null or price_sek >= 0),
+  image_url text,
   active boolean not null default true,
   sort_order int not null default 0,
   created_at timestamptz not null default now()
@@ -629,3 +630,7 @@ create policy "Ägare läser och ändrar bokningar" on bookings for all
 
 drop policy if exists "Staff kan läsa bokningar" on bookings;
 create policy "Staff kan läsa bokningar" on bookings for select using (public.is_staff());
+
+
+-- Valfri bild per bokningspaket (körs en gång på sajter som redan har bokningstabellerna).
+alter table booking_packages add column if not exists image_url text;
