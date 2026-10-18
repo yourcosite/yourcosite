@@ -141,6 +141,12 @@ function randomizeSectionLayouts(content: SiteContent, homePath: string): SiteCo
         case "cta":
           section.layout = pickRandom(CTA_LAYOUT_POOL);
           break;
+        case "booking":
+          // Bokningssidan i onboarding får, precis som övriga sektioner, ett
+          // slumpat utseende per förslag (bilderna delas ut av
+          // assignUploadedImages). Kunden kan byta senare via Millie.
+          section.layout = pickRandom(["standard", "image-left", "image-right", "image-background"] as const);
+          break;
         case "contact":
           section.layout = pickRandom(CONTACT_LAYOUT_POOL);
           break;
