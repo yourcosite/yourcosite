@@ -40,7 +40,7 @@ export function recipeForVariant(index: number, seed: number | undefined): HomeR
 }
 
 // Typer som alltid ska ligga sist på sidan, i sin ursprungliga ordning.
-const TAIL_TYPES = new Set(["faq", "map", "contact", "contactForm", "newsList"]);
+const TAIL_TYPES = new Set(["faq", "map", "contact", "contactForm", "newsList", "booking"]);
 
 // Returnerar en KOPIA av sajten där förstasidans sektioner ligger i receptets
 // ordning. Heron ligger kvar överst, "cta" och sidans avslutande sektioner

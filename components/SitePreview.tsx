@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext } from "react";
 import Script from "next/script";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, PhotoCredit, SkinId } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
@@ -1595,6 +1595,267 @@ function FieldBadge({
   );
 }
 
+// Bokningsflödet på sajten (BookingSection): välj paket, välj dag och tid,
+// fyll i uppgifter. Egen toppnivåkomponent av samma skäl som
+// ContactFormBlock (eget tillstånd får inte tappas vid omrendering). På den
+// riktiga sajten (active) hämtas paket och lediga tider från
+// /api/public/booking; i redigerarens förhandsvisning visas ett exempel så
+// ägaren ser hur det blir, utan att något sparas.
+type BookingPkg = { id: string; name: string; description?: string | null; duration_min: number; price_sek?: number | null };
+
+function demoBookingData(): { packages: BookingPkg[]; availability: Record<string, string[]> } {
+  const availability: Record<string, string[]> = {};
+  const base = new Date();
+  base.setUTCHours(0, 0, 0, 0);
+  let added = 0;
+  for (let i = 2; added < 6 && i < 20; i++) {
+    const d = new Date(base.getTime() + i * 86400000);
+    const wd = d.getUTCDay();
+    if (wd === 0 || wd === 6) continue;
+    const key = d.toISOString().slice(0, 10);
+    availability[key] = [9, 10, 13, 14].map((h) => new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), h - 1)).toISOString());
+    added++;
+  }
+  return {
+    packages: [
+      { id: "demo-1", name: "Första samtalet", description: "Vi går igenom era behov.", duration_min: 30, price_sek: 0 },
+      { id: "demo-2", name: "Fördjupning", description: "Tid för en grundlig genomgång.", duration_min: 60, price_sek: 1200 },
+    ],
+    availability,
+  };
+}
+
+function BookingBlock({
+  palette,
+  accent,
+  siteId,
+  active,
+}: {
+  section: BookingSection;
+  palette: Palette;
+  accent: string;
+  siteId?: string;
+  active: boolean;
+}) {
+  const demo = !active || !siteId;
+  const [packages, setPackages] = useState<BookingPkg[] | null>(demo ? demoBookingData().packages : null);
+  const [tz, setTz] = useState("Europe/Stockholm");
+  const [pkg, setPkg] = useState<BookingPkg | null>(null);
+  const [avail, setAvail] = useState<Record<string, string[]> | null>(null);
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [shownDays, setShownDays] = useState(14);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [error, setError] = useState("");
+  const [confirmed, setConfirmed] = useState<{ startsAt: string; packageName: string; emailSent: boolean } | null>(null);
+
+  useEffect(() => {
+    if (demo) return;
+    fetch(`/api/public/booking?siteId=${siteId}`)
+      .then((r) => r.json())
+      .then((d) => {
+        setPackages(d.packages || []);
+        if (d.timezone) setTz(d.timezone);
+      })
+      .catch(() => setPackages([]));
+  }, [demo, siteId]);
+
+  const choosePkg = async (p: BookingPkg) => {
+    setPkg(p);
+    setDate("");
+    setTime("");
+    setError("");
+    setShownDays(14);
+    setAvail(null);
+    if (demo) return setAvail(demoBookingData().availability);
+    try {
+      const d = await (await fetch(`/api/public/booking?siteId=${siteId}&packageId=${p.id}`)).json();
+      setAvail(d.availability || {});
+      if (d.timezone) setTz(d.timezone);
+    } catch {
+      setAvail({});
+    }
+  };
+
+  const fmtDay = (key: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Intl.DateTimeFormat("sv-SE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(new Date(Date.UTC(y, m - 1, d)));
+  };
+  const fmtTime = (iso: string) => new Intl.DateTimeFormat("sv-SE", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+  const fmtLong = (iso: string) =>
+    new Intl.DateTimeFormat("sv-SE", { timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!pkg || !time) return;
+    setError("");
+    if (demo) {
+      setConfirmed({ startsAt: time, packageName: pkg.name, emailSent: false });
+      setStatus("sent");
+      return;
+    }
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/public/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId, packageId: pkg.id, startsAt: time, name, email, phone, message }),
+      });
+      const d = await res.json();
+      if (!res.ok) {
+        setError(d.error || "Det gick inte att boka just nu.");
+        setStatus("error");
+        if (d.taken) choosePkg(pkg); // ladda om lediga tider
+        return;
+      }
+      setConfirmed({ startsAt: d.booking.startsAt, packageName: d.booking.packageName, emailSent: !!d.emailSent });
+      setStatus("sent");
+    } catch {
+      setError("Det gick inte att boka just nu. Försök igen.");
+      setStatus("error");
+    }
+  };
+
+  const card = { background: palette.cardBg, borderColor: palette.cardBorder, color: palette.text };
+  const inputClass = "w-full px-4 py-3 rounded-xl border text-[14px] outline-none";
+  const inputStyle = { borderColor: palette.cardBorder, background: palette.cardBg, color: palette.text };
+  const stepTitle = "text-[12px] font-semibold tracking-[0.08em] uppercase mb-2.5";
+
+  if (status === "sent" && confirmed) {
+    return (
+      <div className="rounded-2xl border p-6 text-center" style={card}>
+        <div className="text-[18px] font-semibold mb-1.5">Tack, din bokning är klar!</div>
+        <div className="text-[14px]" style={{ color: palette.textDim }}>
+          {confirmed.packageName} · {fmtLong(confirmed.startsAt)}
+        </div>
+        <div className="text-[13px] mt-3" style={{ color: palette.textDim }}>
+          {demo ? "Det här är ett exempel, ingen bokning har sparats." : confirmed.emailSent ? "En bekräftelse är skickad till din e-post." : "Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu."}
+        </div>
+      </div>
+    );
+  }
+
+  if (packages === null) {
+    return <div className="text-center text-[14px]" style={{ color: palette.textDim }}>Hämtar bokningen …</div>;
+  }
+  if (packages.length === 0) {
+    return (
+      <div className="rounded-2xl border p-6 text-center text-[14px]" style={{ ...card, color: palette.textDim }}>
+        Det finns inga bokningsbara tider just nu. Kom gärna tillbaka snart.
+      </div>
+    );
+  }
+
+  const dayKeys = avail ? Object.keys(avail).sort() : [];
+
+  return (
+    <div className="flex flex-col gap-6 text-left">
+      {demo && (
+        <div className="text-[12px] rounded-lg px-3 py-2 border border-dashed" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+          Exempel: så här ser bokningen ut för besökarna. Era egna paket och tider lägger ni upp under Bokningar.
+        </div>
+      )}
+      <div>
+        <div className={stepTitle} style={{ color: palette.textDim }}>1. Välj tjänst</div>
+        <div className="grid gap-2.5 @3xl:grid-cols-2">
+          {packages.map((p) => {
+            const on = pkg?.id === p.id;
+            return (
+              <button
+                type="button"
+                key={p.id}
+                onClick={() => choosePkg(p)}
+                className="rounded-xl border p-4 text-left"
+                style={{ ...card, borderColor: on ? accent : palette.cardBorder, boxShadow: on ? `0 0 0 1.5px ${accent}` : undefined }}
+              >
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="font-semibold text-[14.5px]">{p.name}</span>
+                  {p.price_sek != null && <span className="text-[13.5px] font-semibold">{p.price_sek === 0 ? "Gratis" : `${new Intl.NumberFormat("sv-SE").format(p.price_sek)} kr`}</span>}
+                </div>
+                <div className="text-[12.5px] mt-0.5" style={{ color: palette.textDim }}>{p.duration_min} minuter</div>
+                {p.description && <div className="text-[13px] mt-1.5" style={{ color: palette.textDim }}>{p.description}</div>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {pkg && (
+        <div>
+          <div className={stepTitle} style={{ color: palette.textDim }}>2. Välj dag och tid</div>
+          {avail === null ? (
+            <div className="text-[13.5px]" style={{ color: palette.textDim }}>Hämtar lediga tider …</div>
+          ) : dayKeys.length === 0 ? (
+            <div className="text-[13.5px]" style={{ color: palette.textDim }}>Det finns inga lediga tider för den här tjänsten just nu.</div>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {dayKeys.slice(0, shownDays).map((k) => {
+                  const on = date === k;
+                  return (
+                    <button
+                      type="button"
+                      key={k}
+                      onClick={() => { setDate(k); setTime(""); }}
+                      className="px-3.5 py-2 rounded-full border text-[13px] font-semibold"
+                      style={{ background: on ? accent : palette.cardBg, color: on ? "#fff" : palette.text, borderColor: on ? accent : palette.cardBorder }}
+                    >
+                      {fmtDay(k)}
+                    </button>
+                  );
+                })}
+                {dayKeys.length > shownDays && (
+                  <button type="button" onClick={() => setShownDays(shownDays + 14)} className="px-3.5 py-2 text-[13px] font-semibold underline" style={{ color: palette.textDim }}>
+                    Visa fler dagar
+                  </button>
+                )}
+              </div>
+              {date && (
+                <div className="flex flex-wrap gap-2">
+                  {(avail[date] || []).map((iso) => {
+                    const on = time === iso;
+                    return (
+                      <button
+                        type="button"
+                        key={iso}
+                        onClick={() => setTime(iso)}
+                        className="px-3.5 py-2 rounded-lg border text-[13px] font-semibold"
+                        style={{ background: on ? accent : palette.cardBg, color: on ? "#fff" : palette.text, borderColor: on ? accent : palette.cardBorder }}
+                      >
+                        {fmtTime(iso)}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {pkg && time && (
+        <form onSubmit={submit} className="flex flex-col gap-3">
+          <div className={stepTitle} style={{ color: palette.textDim }}>3. Dina uppgifter</div>
+          <div className="text-[13.5px] font-semibold">{pkg.name} · {fmtLong(time)}</div>
+          <input type="text" placeholder="Namn" required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="email" placeholder="E-post (hit skickas bekräftelsen)" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="tel" placeholder="Telefon (valfritt)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
+          <textarea placeholder="Meddelande (valfritt)" rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
+          {error && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
+          <button type="submit" disabled={status === "sending"} className="self-start px-6 py-3 rounded-full text-[14px] font-semibold text-white disabled:opacity-60" style={{ background: accent }}>
+            {status === "sending" ? "Bokar …" : "Boka tiden"}
+          </button>
+        </form>
+      )}
+      {error && !time && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
+    </div>
+  );
+}
+
 // Det RIKTIGA, ifyllbara kontaktformuläret (ContactFormSection) — en egen
 // toppnivåkomponent (inte en nästlad funktion inne i SectionBlockInner)
 // eftersom den har sitt eget useState för fälten/skickat-status: en
@@ -1747,6 +2008,8 @@ function sectionLabel(section: Section): string {
       return `sektionen "${section.heading}"`;
     case "newsList":
       return `nyhetssektionen "${section.heading}"`;
+    case "booking":
+      return `bokningssektionen "${section.heading}"`;
     default:
       return "den här sektionen";
   }
@@ -4621,6 +4884,35 @@ function SectionBlockInner({
             </Field>
           )}
           {formBlock}
+        </div>
+      );
+    }
+
+    case "booking": {
+      return (
+        <div className="px-10 py-16 max-w-[680px] mx-auto" style={{ background: sectionBg }}>
+          <Field
+            editable={editable}
+            as="h2"
+            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center"
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+          {section.body && (
+            <Field
+              editable={editable}
+              as="p"
+              className="text-[14.5px] mb-7 text-center"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+            >
+              {section.body}
+            </Field>
+          )}
+          <BookingBlock section={section} palette={palette} accent={accent} siteId={siteId} active={!!basePath && !!siteId} />
         </div>
       );
     }

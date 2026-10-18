@@ -348,6 +348,19 @@ const RAW_SECTION_SCHEMA = {
       description:
         "Visar kundens PUBLICERADE nyhetsartiklar som ett klickbart rutnät (bild, titel, ingress) — varje artikel länkar till en egen sida med hela texten och bilden. Lägg bara till en \"heading\" här — artiklarnas eget innehåll (titel, text, bild) skrivs och publiceras av kunden själv på \"Nyheter\"-sidan i panelen, aldrig av dig. Hittar INTE på artiklar eller artikelinnehåll. Högst en sådan sektion per sida.",
     },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "booking" },
+        heading: { type: "string" },
+        body: { type: "string", description: "Valfri kort text under rubriken, t.ex. \"Välj tjänst och tid som passar dig.\"" },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "heading"],
+      description:
+        "Bokningssektion: besökaren väljer paket, dag och tid och bokar direkt på sidan, och får en bekräftelse på mejl. Lägg bara till en \"heading\" (och gärna en kort \"body\") — paketen, priserna, tiderna och bokningarna hanteras av kunden själv på \"Bokningar\"-sidan i panelen, aldrig av dig. Hittar ALDRIG på paket, priser eller tider. Högst en sådan sektion per sida.",
+    },
   ],
 };
 

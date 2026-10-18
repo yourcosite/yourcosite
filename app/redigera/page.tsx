@@ -1070,6 +1070,9 @@ export default function EditorPage() {
           <Link href={`/nyheter${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             Nyheter
           </Link>
+          <Link href={`/bokningar${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
+            Bokningar
+          </Link>
           <Link
             href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
             className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
@@ -1126,6 +1129,13 @@ export default function EditorPage() {
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
               Nyheter
+            </Link>
+            <Link
+              href={`/bokningar${site ? `?site=${site.id}` : ""}`}
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
+            >
+              Bokningar
             </Link>
             <Link
               href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}

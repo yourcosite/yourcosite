@@ -421,6 +421,21 @@ export interface NewsListSection {
   bgColor?: string;
 }
 
+// Bokningssektion: visar sajtens bokningsbara paket och lediga tider så att
+// besökaren kan boka direkt på sidan. Själva paketen, tiderna och
+// bokningarna hanteras av kunden på /bokningar i panelen (tabellerna
+// booking_* och bookings, se supabase/schema.sql), aldrig av Millie i
+// chatten — sektionen bestämmer bara VAR på sajten bokningen visas och med
+// vilken rubrik. En sida kan ha som mest en sådan sektion.
+export interface BookingSection {
+  id: string;
+  type: "booking";
+  heading: string;
+  body?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
+}
+
 // Sektionsegna reglage som Millie kan sätta på VILKEN sektion som helst.
 // "spacing": tätare/luftigare lodrätt avstånd i just den sektionen (hero
 // rörs inte). "textAlign": text vänster/mitten/höger i just den sektionen.
@@ -444,6 +459,7 @@ export type Section = (
   | VideoSection
   | ContactFormSection
   | NewsListSection
+  | BookingSection
 ) &
   SectionExtras;
 
@@ -547,6 +563,7 @@ const VALID_SECTION_TYPES = [
   "video",
   "contactForm",
   "newsList",
+  "booking",
 ];
 
 // Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så

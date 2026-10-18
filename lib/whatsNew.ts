@@ -13,6 +13,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-18-bokning",
+    date: "2026-10-18",
+    icon: "📅",
+    title: "Låt besökarna boka tid hos dig",
+    text: "Nu finns ett bokningssystem. Under Bokningar lägger du upp paket med längd och pris, ställer in dina tider och ser alla bokningar. Besökaren väljer tjänst, dag och tid på din sajt och får en bekräftelse på mejl, och du får ett mejl direkt. Bokade tider blockeras automatiskt. Be Millie lägga till en bokning på en sida så visas den.",
+    try: "Lägg till en bokning på sidan Kontakt",
+  },
+  {
     id: "2026-10-13-dra-och-slapp",
     date: "2026-10-13",
     icon: "✋",

@@ -489,3 +489,143 @@ create policy "Ägare kan skapa delningslänkar"
 drop policy if exists "Ägare kan stänga av delningslänkar" on share_links;
 create policy "Ägare kan stänga av delningslänkar"
   on share_links for update using (auth.uid() = owner_id);
+
+
+-- ============================================================
+-- BOKNING (egen kalender i systemet, ingen koppling till Google)
+-- Ägaren sköter allt på /bokningar i panelen. Besökare på kundsajten
+-- bokar via publika rutter (/api/public/booking/*) som använder service
+-- role, samma mönster som site_form_submissions.
+-- Tider lagras som timestamptz (UTC). Veckoschemat räknas om i sajtens
+-- tidszon (booking_settings.timezone).
+-- ============================================================
+create extension if not exists btree_gist;
+
+create table if not exists booking_settings (
+  site_id uuid primary key references sites (id) on delete cascade,
+  notify_email text,
+  min_notice_hours int not null default 12,
+  max_days_ahead int not null default 60,
+  timezone text not null default 'Europe/Stockholm',
+  created_at timestamptz not null default now()
+);
+
+create table if not exists booking_packages (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  name text not null,
+  description text,
+  duration_min int not null check (duration_min between 5 and 1440),
+  price_sek int check (price_sek is null or price_sek >= 0),
+  active boolean not null default true,
+  sort_order int not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists booking_packages_site_idx on booking_packages (site_id, sort_order);
+
+-- Veckoschema: återkommande öppettider. package_id null = gäller alla paket.
+create table if not exists booking_rules (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  package_id uuid references booking_packages (id) on delete cascade,
+  weekday int not null check (weekday between 1 and 7), -- 1 = måndag ... 7 = söndag
+  start_time time not null,
+  end_time time not null,
+  created_at timestamptz not null default now(),
+  check (end_time > start_time)
+);
+create index if not exists booking_rules_site_idx on booking_rules (site_id);
+
+-- Enskilda extra tider (utöver veckoschemat). package_id null = alla paket.
+create table if not exists booking_slots (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  package_id uuid references booking_packages (id) on delete cascade,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  created_at timestamptz not null default now(),
+  check (ends_at > starts_at)
+);
+create index if not exists booking_slots_site_idx on booking_slots (site_id, starts_at);
+
+-- Stängda tider (semester, sjukdag ...). Ingen kan boka här.
+create table if not exists booking_blocks (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  note text,
+  created_at timestamptz not null default now(),
+  check (ends_at > starts_at)
+);
+create index if not exists booking_blocks_site_idx on booking_blocks (site_id, starts_at);
+
+create table if not exists bookings (
+  id uuid primary key default gen_random_uuid(),
+  site_id uuid not null references sites (id) on delete cascade,
+  package_id uuid references booking_packages (id) on delete set null,
+  package_name text not null,
+  duration_min int not null,
+  price_sek int,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  customer_name text not null,
+  customer_email text not null,
+  customer_phone text,
+  message text,
+  status text not null default 'confirmed' check (status in ('confirmed', 'cancelled')),
+  cancel_token text not null default replace(gen_random_uuid()::text || gen_random_uuid()::text, '-', ''),
+  cancelled_at timestamptz,
+  created_at timestamptz not null default now(),
+  check (ends_at > starts_at),
+  -- Skydd mot dubbelbokning: en kalender per sajt, två bekräftade bokningar
+  -- får aldrig överlappa.
+  constraint bookings_no_overlap exclude using gist (
+    site_id with =,
+    tstzrange(starts_at, ends_at) with &&
+  ) where (status = 'confirmed')
+);
+create index if not exists bookings_site_idx on bookings (site_id, starts_at);
+create unique index if not exists bookings_cancel_token_idx on bookings (cancel_token);
+
+-- RLS: ägaren hanterar allt för sina egna sajter. Publika flödet går via
+-- service role och behöver inga policyer.
+alter table booking_settings enable row level security;
+alter table booking_packages enable row level security;
+alter table booking_rules enable row level security;
+alter table booking_slots enable row level security;
+alter table booking_blocks enable row level security;
+alter table bookings enable row level security;
+
+drop policy if exists "Ägare hanterar bokningsinställningar" on booking_settings;
+create policy "Ägare hanterar bokningsinställningar" on booking_settings for all
+  using (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()));
+
+drop policy if exists "Ägare hanterar bokningspaket" on booking_packages;
+create policy "Ägare hanterar bokningspaket" on booking_packages for all
+  using (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()));
+
+drop policy if exists "Ägare hanterar bokningsregler" on booking_rules;
+create policy "Ägare hanterar bokningsregler" on booking_rules for all
+  using (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()));
+
+drop policy if exists "Ägare hanterar extra tider" on booking_slots;
+create policy "Ägare hanterar extra tider" on booking_slots for all
+  using (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()));
+
+drop policy if exists "Ägare hanterar stängda tider" on booking_blocks;
+create policy "Ägare hanterar stängda tider" on booking_blocks for all
+  using (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()));
+
+drop policy if exists "Ägare läser och ändrar bokningar" on bookings;
+create policy "Ägare läser och ändrar bokningar" on bookings for all
+  using (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()))
+  with check (exists (select 1 from sites s where s.id = site_id and s.owner_id = auth.uid()));
+
+drop policy if exists "Staff kan läsa bokningar" on bookings;
+create policy "Staff kan läsa bokningar" on bookings for select using (public.is_staff());
