@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -5,13 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 // bara som miljövariabel på servern (UNSPLASH_ACCESS_KEY i Vercel) och når
 // aldrig webbläsaren eller git.
 export async function GET(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const accessKey = process.env.UNSPLASH_ACCESS_KEY;
   if (!accessKey) {
-    return NextResponse.json({ error: "Bildsökningen är inte påkopplad än." }, { status: 503 });
+    return NextResponse.json({ error: t("Bildsökningen är inte påkopplad än.") }, { status: 503 });
   }
 
   const { searchParams } = new URL(request.url);
@@ -33,12 +35,12 @@ export async function GET(request: Request) {
       cache: "no-store",
     });
   } catch {
-    return NextResponse.json({ error: "Kunde inte nå bildtjänsten just nu." }, { status: 502 });
+    return NextResponse.json({ error: t("Kunde inte nå bildtjänsten just nu.") }, { status: 502 });
   }
   if (res.status === 403 || res.status === 429) {
-    return NextResponse.json({ error: "Bildsökningen är tillfälligt överbelastad — försök igen om en stund." }, { status: 429 });
+    return NextResponse.json({ error: t("Bildsökningen är tillfälligt överbelastad — försök igen om en stund.") }, { status: 429 });
   }
-  if (!res.ok) return NextResponse.json({ error: "Bildsökningen misslyckades." }, { status: 502 });
+  if (!res.ok) return NextResponse.json({ error: t("Bildsökningen misslyckades.") }, { status: 502 });
 
   const data = await res.json();
   const photos = (Array.isArray(data.results) ? data.results : []).map((p: any) => ({

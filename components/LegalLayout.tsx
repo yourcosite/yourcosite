@@ -1,5 +1,5 @@
 import { rich } from "@/lib/i18n/rich";
-import { getT } from "@/lib/i18n/server";
+import { getT, getLocale } from "@/lib/i18n/server";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
@@ -21,6 +21,7 @@ export default function LegalLayout({
   children: React.ReactNode;
 }) {
   const t = getT();
+  const translated = getLocale() !== "sv";
   return (
     <div>
       <Header />
@@ -29,6 +30,11 @@ export default function LegalLayout({
           <h1 className="text-[32px] font-medium mb-2">{title}</h1>
           {updated && (
             <p className="text-[13px] text-ink-dim mb-8">{rich(t, "Senast uppdaterad: {updated}", {}, { updated })}</p>
+          )}
+          {translated && (
+            <div className="border border-line rounded-xl px-5 py-4 text-[13.5px] text-ink-dim leading-relaxed mb-6">
+              {t("Det här är en översättning av den svenska versionen och är till för att underlätta förståelsen. Om versionerna skiljer sig åt gäller den svenska.")}
+            </div>
           )}
           {intro && (
             <div className="bg-accent-soft rounded-xl px-5 py-4 text-[13.5px] text-ink leading-relaxed mb-10">

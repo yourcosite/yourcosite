@@ -1,3 +1,5 @@
+import { getT } from "@/lib/i18n/server";
+import { LANGUAGE_ENGLISH } from "@/lib/i18n/config";
 import { NextResponse } from "next/server";
 import { rateLimited } from "@/lib/rateLimit";
 import type Anthropic from "@anthropic-ai/sdk";
@@ -223,12 +225,15 @@ function buildPrompt(
     `"map": luta åt "${pickRandom(MAP_LAYOUT_POOL)}"`,
   ].join("; ");
 
+  const langName = LANGUAGE_ENGLISH[(site as any).language] ?? "Swedish";
   const textFillInstruction =
     site.allow_ai_text_fill === false
       ? `VIKTIGT — texten ska hålla sig nära det kunden faktiskt skrivit: kunden har INTE godkänt att du fyller ut saknad information med egna påhittade detaljer. Utgå bara från briefen, beskrivningen och branschen ovan. Hitta inte på konkreta erbjudanden, historia, priser eller funktioner kunden inte nämnt. Där en sida eller sektion saknar underlag — håll texten kort, allmän och varumärkesneutral. UNDANTAG: de EXEMPELSEKTIONER som beskrivs i stycket om exempelinnehåll nedan (citat, nyckeltal, vanliga frågor) ska ändå finnas — de är tydliga platshållare som kunden byter eller tar bort.`
-      : `Skriv genuint bra, konkret copy på svenska för varje sida — ingen platshållartext ("Lorem ipsum" eller liknande är förbjudet). Utgå från beskrivningen och branschen för att hitta rätt detaljer och ton, och fyll gärna i rimliga, generiska detaljer där kundens egen brief är sparsam.`;
+      : `Skriv genuint bra, konkret copy på ${langName} för varje sida — ingen platshållartext ("Lorem ipsum" eller liknande är förbjudet). Utgå från beskrivningen och branschen för att hitta rätt detaljer och ton, och fyll gärna i rimliga, generiska detaljer där kundens egen brief är sparsam.`;
 
-  return `Du ska skriva innehållet till en helt ny webbplats, åt en kund hos YourCoSite (en AI-driven hemsidesbyggare för svenska småföretag).
+  return `Du ska skriva innehållet till en helt ny webbplats, åt en kund hos YourCoSite (en AI-driven hemsidesbyggare för småföretag i Sverige, Danmark, Finland, Tyskland, Frankrike och Spanien).
+
+SPRÅK: skriv ALL synlig text på webbplatsen (rubriker, brödtext, knappar, menynamn, sidnamn, exempelcitat, frågor och svar) på ${langName}, med naturligt, lokalt språk och tilltal som passar landet. Kundens brief nedan kan vara skriven på ett annat språk — förstå den, men skriv sajten på ${langName}. Översätt aldrig företagsnamn, personnamn, produktnamn eller adresser.
 
 Företag: ${site.name}
 Bransch: ${site.industry || "ej angiven"}
@@ -319,11 +324,12 @@ export async function POST(request: Request) {
 }
 
 async function generateSite(emit: (p: Progress) => void) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
   if (await rateLimited(`generate:user:${user.id}`, 15, 86400)) {
-    return NextResponse.json({ error: "Du har nått dagens gräns för att bygga sajt. Försök igen i morgon." }, { status: 429 });
+    return NextResponse.json({ error: t("Du har nått dagens gräns för att bygga sajt. Försök igen i morgon.") }, { status: 429 });
   }
 
   // Samma sajt kunden faktiskt fyllde i (sidor, foton, logga m.m.) i
@@ -336,7 +342,7 @@ async function generateSite(emit: (p: Progress) => void) {
 
   if (!site) {
     return NextResponse.json(
-      { error: "Hittade inget onboarding-utkast att bygga sajt från." },
+      { error: t("Hittade inget onboarding-utkast att bygga sajt från.") },
       { status: 400 }
     );
   }
@@ -349,7 +355,7 @@ async function generateSite(emit: (p: Progress) => void) {
 
   if (!pages || pages.length === 0) {
     return NextResponse.json(
-      { error: "Inga sidor valda — gå tillbaka till steg 3 i onboardingen." },
+      { error: t("Inga sidor valda — gå tillbaka till steg 3 i onboardingen.") },
       { status: 400 }
     );
   }
@@ -428,12 +434,12 @@ async function generateSite(emit: (p: Progress) => void) {
     (b): b is Extract<typeof message.content[number], { type: "tool_use" }> => b.type === "tool_use"
   );
   if (!toolUse) {
-    return NextResponse.json({ error: "AI-svaret innehöll inget sajtinnehåll." }, { status: 502 });
+    return NextResponse.json({ error: t("AI-svaret innehöll inget sajtinnehåll.") }, { status: 502 });
   }
 
   const content = toolUse.input as SiteContent;
   if (!isValidSiteContent(content)) {
-    return NextResponse.json({ error: "AI-svaret hade fel format." }, { status: 502 });
+    return NextResponse.json({ error: t("AI-svaret hade fel format.") }, { status: 502 });
   }
 
   // Kundens färgval från onboarding steg 4 är ett beslut kunden redan

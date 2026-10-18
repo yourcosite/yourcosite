@@ -1,5 +1,7 @@
 "use client";
 
+import { useT } from "@/components/I18nProvider";
+import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n";
 import { useState, useEffect, createContext, useContext, createElement } from "react";
 import Script from "next/script";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
@@ -146,7 +148,30 @@ function gridItemCardStyle(bgColor: string | undefined, basePalette: Palette): R
 // sidfoten — precis som juridiska sidor brukar vara.
 const PRIVACY_POLICY_PATH = "/integritetspolicy";
 
-export default function SitePreview({
+function formatMoney(amount: number, bcp47: string, currency: string): string {
+  try {
+    return new Intl.NumberFormat(bcp47, { style: "currency", currency, maximumFractionDigits: Number.isInteger(amount) ? 0 : 2 }).format(amount);
+  } catch {
+    return `${amount} ${currency}`;
+  }
+}
+
+type SitePreviewProps = Parameters<typeof SitePreviewInner>[0] & {
+  // Sajtens språk och valuta (sites.language / sites.currency). Styr allt
+  // som besökaren ser av oss: cookiebanner, bokning, formulär, datum, pris.
+  lang?: string | null;
+  currency?: string | null;
+};
+
+export default function SitePreview({ lang, currency, ...rest }: SitePreviewProps) {
+  return (
+    <SiteLangProvider lang={lang} currency={currency}>
+      <SitePreviewInner {...rest} />
+    </SiteLangProvider>
+  );
+}
+
+function SitePreviewInner({
   content,
   siteName,
   siteId,
@@ -259,6 +284,7 @@ export default function SitePreview({
   selectedFieldKey?: string | null;
   onSelectField?: (sel: { key: string; pagePath: string; sectionId: string; field: string; label: string }) => void;
 }) {
+  const t = useT();
   const isPrivacyPolicyPage =
     activePath === PRIVACY_POLICY_PATH && privacyPolicyMode === "generated" && !!privacyPolicyText;
 
@@ -547,7 +573,7 @@ export default function SitePreview({
         // tom yta mellan header och sidfot, tills kunden bett Millie
         // fylla den.
         <div className="px-10 py-24 text-center" style={{ color: palette.textDim }}>
-          <p className="text-[14.5px]">Den här sidan har inget innehåll än — berätta för Millie vad den ska handla om.</p>
+          <p className="text-[14.5px]">{t("Den här sidan har inget innehåll än — berätta för Millie vad den ska handla om.")}</p>
         </div>
       ) : (
         restSections.map((section, i) => (
@@ -662,9 +688,11 @@ function NewsArticleDetail({
   basePath?: string;
   onNavigate?: (path: string) => void;
 }) {
+  const t = useSiteT();
+  const { bcp47 } = useSiteLocale();
   const paragraphs = article.body.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
   const publishedDate = article.published_at
-    ? new Date(article.published_at).toLocaleDateString("sv-SE", { year: "numeric", month: "long", day: "numeric" })
+    ? new Date(article.published_at).toLocaleDateString(bcp47, { year: "numeric", month: "long", day: "numeric" })
     : null;
   return (
     <div className="px-8 @3xl:px-14 py-14 max-w-[720px] mx-auto">
@@ -675,7 +703,7 @@ function NewsArticleDetail({
         className="text-[13px] font-semibold mb-6 inline-block"
         style={{ color: palette.textDim }}
       >
-        ← Alla nyheter
+        {t("← Alla nyheter")}
       </CtaLink>
       {article.image_url && (
         <div className={`rounded-2xl overflow-hidden ${creditFromUrl(article.image_url) ? "mb-2" : "mb-8"}`}>
@@ -688,10 +716,10 @@ function NewsArticleDetail({
         const credit = creditFromUrl(article.image_url);
         return credit ? (
           <div className="text-[11.5px] mb-8" style={{ color: palette.textDim }}>
-            Foto:{" "}
+            {t("Foto:")}{" "}
             <a href={credit.profileUrl} target="_blank" rel="noopener noreferrer" className="underline">{credit.name}</a>{" "}
-            på{" "}
-            <a href="https://unsplash.com/?utm_source=YourCoSite&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline">Unsplash</a>
+            {t("på")}{" "}
+            <a href="https://unsplash.com/?utm_source=YourCoSite&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline">{t("Unsplash")}</a>
           </div>
         ) : null;
       })()}
@@ -723,16 +751,17 @@ function CookieBanner({
   policyHref?: string;
   onDecide: (value: "all" | "necessary") => void;
 }) {
+  const t = useSiteT();
   return (
     <div
       className="fixed bottom-0 left-0 right-0 z-30 flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 sm:px-8"
       style={{ background: palette.cardBg, borderTop: `1px solid ${palette.cardBorder}`, boxShadow: "0 -8px 24px rgba(0,0,0,0.08)" }}
     >
       <p className="text-[12.5px] leading-relaxed max-w-[560px]" style={{ color: palette.textDim }}>
-        Vi använder cookies för att ge dig en bättre upplevelse.{" "}
+        {t("Vi använder cookies för att ge dig en bättre upplevelse.")}{" "}
         {policyHref && (
           <a href={policyHref} target={policyHref.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer" className="underline" style={{ color: palette.text }}>
-            Läs mer i vår integritetspolicy
+            {t("Läs mer i vår integritetspolicy")}
           </a>
         )}
       </p>
@@ -743,14 +772,14 @@ function CookieBanner({
           className="text-[12.5px] font-semibold px-4 py-2 rounded-lg border"
           style={{ borderColor: palette.cardBorder, color: palette.text }}
         >
-          Endast nödvändiga
+          {t("Endast nödvändiga")}
         </button>
         <button
           type="button"
           onClick={() => onDecide("all")}
           className="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-accent text-accent-ink"
         >
-          Acceptera alla
+          {t("Acceptera alla")}
         </button>
       </div>
     </div>
@@ -850,6 +879,7 @@ function Header({
   // anges, samma som innan den här axeln fanns.
   layout?: HeaderLayout;
 }) {
+  const t = useSiteT();
   const [menuOpen, setMenuOpen] = useState(false);
   const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
   const linkColor = (active: boolean) =>
@@ -865,7 +895,7 @@ function Header({
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoUrl}
-        alt={siteName || "Logga"}
+        alt={siteName || t("Logga")}
         className={overlay ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
       />
     </div>
@@ -1079,6 +1109,7 @@ function Footer({
   privacyPolicyMode?: "uploaded" | "generated" | null;
   privacyPolicyFileUrl?: string | null;
 }) {
+  const t = useSiteT();
   // "uploaded" länkar rakt till kundens egen fil (ny flik); "generated" går
   // till den genererade sidan på /integritetspolicy. Finns ingen policy
   // alls (mode null/ej satt) visas ingen länk — det finns inget att länka
@@ -1139,9 +1170,9 @@ function Footer({
                 sidfot, inte en kopia i headerstorlek. */}
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName || "Logga"} className="h-5 max-w-[90px] object-contain" />
+              <img src={logoUrl} alt={siteName || t("Logga")} className="h-5 max-w-[90px] object-contain" />
             )}
-            <span>{siteName || "Ditt företag"} · Byggd med YourCoSite</span>
+            <span>{siteName || t("Ditt företag")} · {t("Byggd med YourCoSite")}</span>
           </span>
           {policyHref && (
             <a
@@ -1150,7 +1181,7 @@ function Footer({
               rel="noopener noreferrer"
               className="underline"
             >
-              Integritetspolicy
+              {t("Integritetspolicy")}
             </a>
           )}
         </span>
@@ -1159,15 +1190,15 @@ function Footer({
       {/* Unsplashs licens: fotografen ska anges med länk till deras profil. */}
       {photoCredits && photoCredits.length > 0 && (
         <div className="px-8 @3xl:px-12 pb-6 text-[11px] text-center" style={{ color: palette.textDim }}>
-          Foto:{" "}
+          {t("Foto:")}{" "}
           {photoCredits.map((c, i) => (
             <span key={c.profileUrl}>
               {i > 0 && ", "}
               <a href={c.profileUrl} target="_blank" rel="noopener noreferrer" className="underline">{c.name}</a>
             </span>
           ))}{" "}
-          på{" "}
-          <a href="https://unsplash.com/?utm_source=YourCoSite&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline">Unsplash</a>
+          {t("på")}{" "}
+          <a href="https://unsplash.com/?utm_source=YourCoSite&utm_medium=referral" target="_blank" rel="noopener noreferrer" className="underline">{t("Unsplash")}</a>
         </div>
       )}
     </div>
@@ -1488,6 +1519,7 @@ function Field({
   style?: React.CSSProperties;
   children: React.ReactNode;
 }) {
+  const t = useT();
   if (!editable) {
     const Plain = Tag;
     return <Plain className={className} style={style}>{children}</Plain>;
@@ -1519,8 +1551,8 @@ function Field({
             e.preventDefault();
             edit.onEditText();
           }}
-          aria-label="Ändra texten"
-          title="Ändra texten själv"
+          aria-label={t("Ändra texten")}
+          title={t("Ändra texten själv")}
           className="absolute -top-4 -right-4 z-10 w-7 h-7 rounded-full flex items-center justify-center text-[13px] font-bold shadow-md"
           style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
         >
@@ -1551,6 +1583,7 @@ function FieldBadge({
   onSelect?: () => void;
   children: React.ReactNode;
 }) {
+  const t = useT();
   const edit = useContext(FieldEditContext);
   if (!editable) return <>{children}</>;
   return (
@@ -1591,7 +1624,7 @@ function FieldBadge({
               className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
               style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
             >
-              ✎ Text
+              {t("✎ Text")}
             </button>
           )}
           {edit?.canEditLink && (
@@ -1601,7 +1634,7 @@ function FieldBadge({
               className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
               style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
             >
-              🔗 Länk
+              {t("🔗 Länk")}
             </button>
           )}
           {edit?.canTestLink && (
@@ -1611,7 +1644,7 @@ function FieldBadge({
               className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
               style={{ background: "#FFFFFF", color: "#17171A", border: "2px solid #4A90D9" }}
             >
-              ↗ Testa länken
+              {t("↗ Testa länken")}
             </button>
           )}
         </span>
@@ -1662,6 +1695,8 @@ function BookingBlock({
   siteId?: string;
   active: boolean;
 }) {
+  const t = useSiteT();
+  const { bcp47, currency } = useSiteLocale();
   const demo = !siteId; // saknar datakälla: visa exempel
   const preview = !!siteId && !active; // riktiga paket/tider, men ingen bokning sparas
   const [packages, setPackages] = useState<BookingPkg[] | null>(demo ? demoBookingData().packages : null);
@@ -1710,11 +1745,11 @@ function BookingBlock({
 
   const fmtDay = (key: string) => {
     const [y, m, d] = key.split("-").map(Number);
-    return new Intl.DateTimeFormat("sv-SE", { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(new Date(Date.UTC(y, m - 1, d)));
+    return new Intl.DateTimeFormat(bcp47, { timeZone: "UTC", weekday: "short", day: "numeric", month: "short" }).format(new Date(Date.UTC(y, m - 1, d)));
   };
-  const fmtTime = (iso: string) => new Intl.DateTimeFormat("sv-SE", { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+  const fmtTime = (iso: string) => new Intl.DateTimeFormat(bcp47, { timeZone: tz, hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
   const fmtLong = (iso: string) =>
-    new Intl.DateTimeFormat("sv-SE", { timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
+    new Intl.DateTimeFormat(bcp47, { timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date(iso));
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1734,7 +1769,7 @@ function BookingBlock({
       });
       const d = await res.json();
       if (!res.ok) {
-        setError(d.error || "Det gick inte att boka just nu.");
+        setError(d.error || t("Det gick inte att boka just nu."));
         setStatus("error");
         if (d.taken) choosePkg(pkg); // ladda om lediga tider
         return;
@@ -1742,7 +1777,7 @@ function BookingBlock({
       setConfirmed({ startsAt: d.booking.startsAt, packageName: d.booking.packageName, emailSent: !!d.emailSent });
       setStatus("sent");
     } catch {
-      setError("Det gick inte att boka just nu. Försök igen.");
+      setError(t("Det gick inte att boka just nu. Försök igen."));
       setStatus("error");
     }
   };
@@ -1755,7 +1790,7 @@ function BookingBlock({
   if (status === "sent" && confirmed) {
     return (
       <div className="rounded-2xl border p-6 text-center" style={card}>
-        <div className="text-[18px] font-semibold mb-1.5">Tack, din bokning är klar!</div>
+        <div className="text-[18px] font-semibold mb-1.5">{t("Tack, din bokning är klar!")}</div>
         <div className="text-[14px]" style={{ color: palette.textDim }}>
           {confirmed.packageName} · {fmtLong(confirmed.startsAt)}
         </div>
@@ -1767,7 +1802,7 @@ function BookingBlock({
   }
 
   if (packages === null) {
-    return <div className="text-center text-[14px]" style={{ color: palette.textDim }}>Hämtar bokningen …</div>;
+    return <div className="text-center text-[14px]" style={{ color: palette.textDim }}>{t("Hämtar bokningen …")}</div>;
   }
   if (packages.length === 0) {
     return (
@@ -1785,16 +1820,16 @@ function BookingBlock({
     <div className="flex flex-col gap-6 text-left">
       {demo && (
         <div className="text-[12px] rounded-lg px-3 py-2 border border-dashed" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
-          Exempel: så här ser bokningen ut för besökarna. Era egna paket och tider lägger ni upp under Bokningar.
+          {t("Exempel: så här ser bokningen ut för besökarna. Era egna paket och tider lägger ni upp under Bokningar.")}
         </div>
       )}
       {preview && (
         <div className="text-[12px] rounded-lg px-3 py-2 border border-dashed" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
-          Förhandsvisning: det här är dina riktiga paket och lediga tider, så som besökarna ser dem. Ingen bokning sparas härifrån.
+          {t("Förhandsvisning: det här är dina riktiga paket och lediga tider, så som besökarna ser dem. Ingen bokning sparas härifrån.")}
         </div>
       )}
       <div>
-        <div className={stepTitle} style={{ color: palette.textDim }}>1. Välj tjänst</div>
+        <div className={stepTitle} style={{ color: palette.textDim }}>{t("1. Välj tjänst")}</div>
         <div className="grid gap-2.5 @3xl:grid-cols-2">
           {packages.map((p) => {
             const on = pkg?.id === p.id;
@@ -1813,9 +1848,9 @@ function BookingBlock({
                 <div className={p.image_url ? "p-4" : ""}>
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="font-semibold text-[14.5px]">{p.name}</span>
-                  {p.price_sek != null && <span className="text-[13.5px] font-semibold">{p.price_sek === 0 ? "Gratis" : `${new Intl.NumberFormat("sv-SE").format(p.price_sek)} kr`}</span>}
+                  {p.price_sek != null && <span className="text-[13.5px] font-semibold">{p.price_sek === 0 ? t("Gratis") : formatMoney(p.price_sek, bcp47, currency)}</span>}
                 </div>
-                <div className="text-[12.5px] mt-0.5" style={{ color: palette.textDim }}>{p.duration_min} minuter</div>
+                <div className="text-[12.5px] mt-0.5" style={{ color: palette.textDim }}>{p.duration_min} {t("minuter")}</div>
                 {p.description && <div className="text-[13px] mt-1.5" style={{ color: palette.textDim }}>{p.description}</div>}
                 </div>
               </button>
@@ -1826,11 +1861,11 @@ function BookingBlock({
 
       {pkg && (
         <div>
-          <div className={stepTitle} style={{ color: palette.textDim }}>2. Välj dag och tid</div>
+          <div className={stepTitle} style={{ color: palette.textDim }}>{t("2. Välj dag och tid")}</div>
           {avail === null ? (
-            <div className="text-[13.5px]" style={{ color: palette.textDim }}>Hämtar lediga tider …</div>
+            <div className="text-[13.5px]" style={{ color: palette.textDim }}>{t("Hämtar lediga tider …")}</div>
           ) : dayKeys.length === 0 ? (
-            <div className="text-[13.5px]" style={{ color: palette.textDim }}>Det finns inga lediga tider för den här tjänsten just nu.</div>
+            <div className="text-[13.5px]" style={{ color: palette.textDim }}>{t("Det finns inga lediga tider för den här tjänsten just nu.")}</div>
           ) : (
             <>
               <div className="flex flex-wrap gap-2 mb-3">
@@ -1850,7 +1885,7 @@ function BookingBlock({
                 })}
                 {dayKeys.length > shownDays && (
                   <button type="button" onClick={() => setShownDays(shownDays + 14)} className="px-3.5 py-2 text-[13px] font-semibold underline" style={{ color: palette.textDim }}>
-                    Visa fler dagar
+                    {t("Visa fler dagar")}
                   </button>
                 )}
               </div>
@@ -1880,12 +1915,12 @@ function BookingBlock({
       {pkg && time && (
         <form onSubmit={submit} className="flex flex-col gap-3">
         <input type="text" name="website" value={hp} onChange={(e) => setHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
-          <div className={stepTitle} style={{ color: palette.textDim }}>3. Dina uppgifter</div>
+          <div className={stepTitle} style={{ color: palette.textDim }}>{t("3. Dina uppgifter")}</div>
           <div className="text-[13.5px] font-semibold">{pkg.name} · {fmtLong(time)}</div>
-          <input type="text" placeholder="Namn" required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} style={inputStyle} />
-          <input type="email" placeholder="E-post (hit skickas bekräftelsen)" required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
-          <input type="tel" placeholder="Telefon (valfritt)" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
-          <textarea placeholder="Meddelande (valfritt)" rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
+          <input type="text" placeholder={t("Namn")} required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="email" placeholder={t("E-post (hit skickas bekräftelsen)")} required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="tel" placeholder={t("Telefon (valfritt)")} value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
+          <textarea placeholder={t("Meddelande (valfritt)")} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
           {error && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
           <button type="submit" disabled={status === "sending"} className="self-start px-6 py-3 rounded-full text-[14px] font-semibold text-white disabled:opacity-60" style={{ background: accent }}>
             {status === "sending" ? "Bokar …" : "Boka tiden"}
@@ -1928,6 +1963,7 @@ function ContactFormBlock({
   selected?: boolean;
   onSelect?: () => void;
 }) {
+  const t = useSiteT();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -1963,7 +1999,7 @@ function ContactFormBlock({
         className="rounded-2xl border p-6 text-center text-[14px]"
         style={{ background: palette.cardBg, borderColor: palette.cardBorder, color: palette.textDim }}
       >
-        Tack, ditt meddelande har skickats!
+        {t("Tack, ditt meddelande har skickats!")}
       </div>
     );
   }
@@ -1976,7 +2012,7 @@ function ContactFormBlock({
         <input type="text" name="website" value={hp} onChange={(e) => setHp(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" style={{ position: "absolute", left: "-9999px", width: 1, height: 1, opacity: 0 }} />
       <input
         type="text"
-        placeholder="Namn"
+        placeholder={t("Namn")}
         value={name}
         onChange={(e) => setName(e.target.value)}
         className={inputClass}
@@ -1984,7 +2020,7 @@ function ContactFormBlock({
       />
       <input
         type="email"
-        placeholder="E-post"
+        placeholder={t("E-post")}
         required
         value={email}
         onChange={(e) => setEmail(e.target.value)}
@@ -1992,7 +2028,7 @@ function ContactFormBlock({
         style={inputStyle}
       />
       <textarea
-        placeholder="Meddelande"
+        placeholder={t("Meddelande")}
         required
         rows={4}
         value={message}
@@ -2012,7 +2048,7 @@ function ContactFormBlock({
       </FieldBadge>
       {status === "error" && (
         <p className="text-[12.5px] text-center" style={{ color: "#C0392B" }}>
-          Något gick fel — försök igen.
+          {t("Något gick fel — försök igen.")}
         </p>
       )}
     </form>
@@ -2054,6 +2090,7 @@ function SocialFeedBlock({
   palette: Palette;
   gated: boolean;
 }) {
+  const t = useSiteT();
   const embed = parseSocialEmbed(source);
   const [consent, setConsent] = useState(!gated);
   useEffect(() => {
@@ -2097,9 +2134,9 @@ function SocialFeedBlock({
   if (!consent) {
     return (
       <div className="text-center rounded-2xl border px-6 py-9 w-full" style={{ borderColor: palette.cardBorder, background: palette.cardBg }}>
-        <div className="text-[14px] font-semibold mb-1.5" style={{ color: palette.text }}>{kindLabel}-flödet visas när du godkänt cookies</div>
+        <div className="text-[14px] font-semibold mb-1.5" style={{ color: palette.text }}>{t("{kind}-flödet visas när du godkänt cookies", { kind: kindLabel })}</div>
         <div className="text-[12.5px] mb-4 max-w-[420px] mx-auto" style={{ color: palette.textDim }}>
-          Flödet hämtas från {kindLabel} och sätter deras cookies. Godkänn alla cookies för att se det direkt.
+          {t("Flödet hämtas från {kind} och sätter deras cookies. Godkänn alla cookies för att se det direkt.", { kind: kindLabel })}
         </div>
         <button
           type="button"
@@ -2110,7 +2147,7 @@ function SocialFeedBlock({
           }}
           className="text-[12.5px] font-semibold px-4 py-2 rounded-lg bg-accent text-accent-ink"
         >
-          Godkänn och visa
+          {t("Godkänn och visa")}
         </button>
       </div>
     );
@@ -2276,6 +2313,7 @@ function SectionBlockInner({
   // för varför artiklarna inte ligger i content.pages.
   newsArticles?: NewsArticle[];
 }) {
+  const t = useSiteT();
   // Sektionens EGEN fria hex-bakgrundsfärg (Millie, se Section.bgColor i
   // lib/contentModel.ts) — satt via chattredigeraren, oberoende av sidans
   // (SitePageContent.backgroundMode) eller sajtens (theme.backgroundMode)
@@ -2936,7 +2974,7 @@ function SectionBlockInner({
             </div>
             <div className="absolute left-8 @3xl:left-14 bottom-7 @3xl:bottom-9 flex items-center gap-4 text-white opacity-60 text-[11px] tracking-[0.08em] pointer-events-none">
               <span className="w-10 h-px bg-white" />
-              Scrolla ner
+              {t("Scrolla ner")}
             </div>
             {/* Dekorativ "01/02/03"-radnummerering, referensens "slide-nav"
                 — ren dekoration (ingen riktig karusell bakom), bara nere i
@@ -4118,7 +4156,7 @@ function SectionBlockInner({
               <div className="flex items-center justify-center gap-5 mt-9">
                 <button
                   type="button"
-                  aria-label="Föregående citat"
+                  aria-label={t("Föregående citat")}
                   onClick={() => setTestimonialIndex((i) => (i - 1 + items.length) % items.length)}
                   className="w-9 h-9 rounded-full border flex items-center justify-center flex-shrink-0"
                   style={{ borderColor: palette.cardBorder, color: palette.textDim }}
@@ -4141,7 +4179,7 @@ function SectionBlockInner({
                 </div>
                 <button
                   type="button"
-                  aria-label="Nästa citat"
+                  aria-label={t("Nästa citat")}
                   onClick={() => setTestimonialIndex((i) => (i + 1) % items.length)}
                   className="w-9 h-9 rounded-full border flex items-center justify-center flex-shrink-0"
                   style={{ borderColor: palette.cardBorder, color: palette.textDim }}
@@ -4171,7 +4209,7 @@ function SectionBlockInner({
                 {section.heading}
               </Field>
               <div className="text-[13.5px]" style={{ color: palette.textDim }}>
-                Vad kunder säger om oss.
+                {t("Vad kunder säger om oss.")}
               </div>
             </div>
             <div className="flex flex-col justify-center px-10 py-14" style={{ background: palette.bgAlt }}>
@@ -4538,7 +4576,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("email", section.email, "e-postadressen")?.key}
                   onSelect={() => { const s = fieldSel("email", section.email, "e-postadressen"); s && onSelectField?.(s); }}
                 >
-                  <span className="font-semibold">E-post: </span>
+                  <span className="font-semibold">{t("E-post:")} </span>
                   <span style={{ color: palette.textDim }}>{section.email}</span>
                 </Field>
               )}
@@ -4550,7 +4588,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("phone", section.phone, "telefonnumret")?.key}
                   onSelect={() => { const s = fieldSel("phone", section.phone, "telefonnumret"); s && onSelectField?.(s); }}
                 >
-                  <span className="font-semibold">Telefon: </span>
+                  <span className="font-semibold">{t("Telefon:")} </span>
                   <span style={{ color: palette.textDim }}>{section.phone}</span>
                 </Field>
               )}
@@ -4562,7 +4600,7 @@ function SectionBlockInner({
                   selected={selectedFieldKey === fieldSel("address", section.address, "adressen")?.key}
                   onSelect={() => { const s = fieldSel("address", section.address, "adressen"); s && onSelectField?.(s); }}
                 >
-                  <span className="font-semibold">Adress: </span>
+                  <span className="font-semibold">{t("Adress:")} </span>
                   <span style={{ color: palette.textDim }}>{section.address}</span>
                 </Field>
               )}
@@ -4933,7 +4971,7 @@ function SectionBlockInner({
         </div>
       ) : (
         <div className="aspect-video w-full flex items-center justify-center text-[13px] rounded-2xl border" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
-          Videolänken känns inte igen som en YouTube-länk.
+          {t("Videolänken känns inte igen som en YouTube-länk.")}
         </div>
       );
       const heading = section.heading && (
@@ -5231,7 +5269,7 @@ function SectionBlockInner({
           </Field>
           {live.length === 0 ? (
             <p className="text-[14px] text-center" style={{ color: palette.textDim }}>
-              Inga publicerade nyheter än.
+              {t("Inga publicerade nyheter än.")}
             </p>
           ) : (
             <>
@@ -5246,7 +5284,7 @@ function SectionBlockInner({
                         : { borderColor: palette.cardBorder, color: palette.textDim }
                     }
                   >
-                    Alla
+                    {t("Alla")}
                   </button>
                   {categories.map((c) => (
                     <button

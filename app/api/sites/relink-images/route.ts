@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
@@ -11,9 +12,10 @@ import { ensureImageSlots } from "@/lib/ensureImageSlots";
 // så kunden slipper bygga om — och betala för — hela sajten på nytt bara
 // för att få in bilderna.
 export async function POST() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
@@ -25,7 +27,7 @@ export async function POST() {
     .maybeSingle();
 
   if (siteError || !site || !isValidSiteContent(site.content)) {
-    return NextResponse.json({ error: "Hittade ingen genererad sajt." }, { status: 400 });
+    return NextResponse.json({ error: t("Hittade ingen genererad sajt.") }, { status: 400 });
   }
 
   const { data: imageAssets, error: assetsError } = await supabase
@@ -42,7 +44,7 @@ export async function POST() {
   const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
   if (imageUrls.length === 0 && !site.hero_image_url) {
     return NextResponse.json(
-      { error: "Hittade inga uppladdade foton att koppla in." },
+      { error: t("Hittade inga uppladdade foton att koppla in.") },
       { status: 400 }
     );
   }

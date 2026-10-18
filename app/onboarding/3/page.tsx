@@ -122,7 +122,7 @@ export default function OnboardingStep3() {
     const n = customCount + 1;
     setPages((ps) => [
       ...ps,
-      { id: `custom-${n}`, label: `Ny sida ${n}`, menuName: `Ny sida ${n}`, brief: "", included: true, removable: true },
+      { id: `custom-${n}`, label: t("Ny sida {n}", { n }), menuName: t("Ny sida {n}", { n }), brief: "", included: true, removable: true },
     ]);
     setCustomCount(n);
   };

@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
@@ -9,9 +10,10 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 // SIN egen sajt när kontot har flera — se kommentaren i
 // lib/supabase/currentSite.ts för bakgrunden till buggen det fixar.
 export async function GET(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const requestedId = new URL(request.url).searchParams.get("id");
   const site = await getCurrentPublishedSite(supabase, user.id, requestedId);

@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadSiteBookingData, sendCancellationEmails } from "@/lib/bookingServer";
@@ -10,15 +11,16 @@ export const dynamic = "force-dynamic";
 const validToken = (t: unknown): t is string => typeof t === "string" && /^[0-9a-f]{40,80}$/i.test(t);
 
 export async function GET(request: Request) {
+  const t = getT();
   const token = new URL(request.url).searchParams.get("token");
-  if (!validToken(token)) return NextResponse.json({ error: "Ogiltig länk." }, { status: 400 });
+  if (!validToken(token)) return NextResponse.json({ error: t("Ogiltig länk.") }, { status: 400 });
   const db = createAdminClient();
   const { data: b } = await db
     .from("bookings")
     .select("package_name, starts_at, duration_min, status, site_id")
     .eq("cancel_token", token)
     .maybeSingle();
-  if (!b) return NextResponse.json({ error: "Hittade ingen bokning." }, { status: 404 });
+  if (!b) return NextResponse.json({ error: t("Hittade ingen bokning.") }, { status: 404 });
   const { data: site } = await db.from("sites").select("name").eq("id", (b as any).site_id).maybeSingle();
   const data = await loadSiteBookingData(db, (b as any).site_id);
   return NextResponse.json({
@@ -29,10 +31,11 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const t = getT();
   const body = await request.json().catch(() => ({}));
-  if (!validToken(body.token)) return NextResponse.json({ error: "Ogiltig länk." }, { status: 400 });
+  if (!validToken(body.token)) return NextResponse.json({ error: t("Ogiltig länk.") }, { status: 400 });
   if (await rateLimited(`cancel:ip:${clientIp(request)}`, 20, 3600)) {
-    return NextResponse.json({ error: TOO_MANY }, { status: 429 });
+    return NextResponse.json({ error: t(TOO_MANY) }, { status: 429 });
   }
   const db = createAdminClient();
   const { data: b } = await db
@@ -40,13 +43,13 @@ export async function POST(request: Request) {
     .select("id, site_id, package_name, duration_min, price_sek, starts_at, customer_name, customer_email, customer_phone, message, cancel_token, status")
     .eq("cancel_token", body.token)
     .maybeSingle();
-  if (!b) return NextResponse.json({ error: "Hittade ingen bokning." }, { status: 404 });
+  if (!b) return NextResponse.json({ error: t("Hittade ingen bokning.") }, { status: 404 });
   if ((b as any).status === "cancelled") return NextResponse.json({ ok: true, already: true });
   if (new Date((b as any).starts_at).getTime() < Date.now()) {
-    return NextResponse.json({ error: "Tiden har redan passerat." }, { status: 400 });
+    return NextResponse.json({ error: t("Tiden har redan passerat.") }, { status: 400 });
   }
   const { error } = await db.from("bookings").update({ status: "cancelled", cancelled_at: new Date().toISOString() }).eq("id", (b as any).id);
-  if (error) return NextResponse.json({ error: "Kunde inte avboka just nu." }, { status: 500 });
+  if (error) return NextResponse.json({ error: t("Kunde inte avboka just nu.") }, { status: 500 });
 
   const [{ data: site }, data] = await Promise.all([
     db.from("sites").select("name").eq("id", (b as any).site_id).maybeSingle(),

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { PLAN_LABELS, formatKr, planPrice } from "@/lib/pricing";
+import { PLAN_LABELS, formatKr, formatMoney, planPrice } from "@/lib/pricing";
+import { billingCurrencyFor } from "@/lib/i18n/country";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("sv-SE", {
@@ -32,7 +33,19 @@ export default async function AdminOverviewPage() {
   const allSites = list.flatMap((c) => c.sites ?? []);
   const liveSites = allSites.filter((s) => s.status === "live");
   const draftSites = allSites.filter((s) => s.status === "draft");
-  const mrr = liveSites.reduce((sum, s) => sum + planPrice(s.plan), 0);
+  const { data: countryRows } = await supabase.from("profiles").select("id, country").eq("role", "customer");
+  const countryOf = new Map<string, string>((countryRows ?? []).map((r: any) => [r.id, r.country]));
+  let mrrSek = 0;
+  let mrrEur = 0;
+  for (const c of list) {
+    const cur = billingCurrencyFor(countryOf.get(c.id));
+    for (const s of c.sites ?? []) {
+      if (s.status !== "live") continue;
+      if (cur === "EUR") mrrEur += planPrice(s.plan, "EUR");
+      else mrrSek += planPrice(s.plan, "SEK");
+    }
+  }
+  const mrr = mrrSek;
 
   const recent = list.slice(0, 6);
   const waitingToBuild = list.filter((c) => (c.sites ?? []).length === 0).slice(0, 4);
@@ -54,7 +67,7 @@ export default async function AdminOverviewPage() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4.5 mb-6.5">
         <StatCard label="Aktiva kunder" value={String(list.length)} />
-        <StatCard label="MRR" value={formatKr(mrr)} />
+        <StatCard label="MRR" value={mrrEur > 0 ? `${formatKr(mrr)} + ${formatMoney(mrrEur, "EUR")}` : formatKr(mrr)} />
         <StatCard
           label="Live-sajter"
           value={`${liveSites.length} / ${allSites.length}`}

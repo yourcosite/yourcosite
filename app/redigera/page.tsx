@@ -2,7 +2,9 @@
 
 import { rich } from "@/lib/i18n/rich";
 import { msg } from "@/lib/i18n/config";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import { BCP47 } from "@/lib/i18n/country";
+import { LOCALE_NAMES } from "@/lib/i18n/config";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
@@ -167,6 +169,8 @@ type SiteMeta = {
   privacy_policy_mode: "uploaded" | "generated" | null;
   privacy_policy_file_url: string | null;
   privacy_policy_text: string | null;
+  language?: string | null;
+  currency?: string | null;
 };
 
 // Chattredigeraren — till skillnad från /webbplats (som bara VISAR sajten,
@@ -178,6 +182,7 @@ type SiteMeta = {
 // klick.
 export default function EditorPage() {
   const t = useT();
+  const locale = useLocale();
   const [site, setSite] = useState<SiteMeta | null>(null);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [activePath, setActivePath] = useState("/");
@@ -223,7 +228,7 @@ export default function EditorPage() {
     if (!Rec) return;
     setMicError(null);
     const rec = new Rec();
-    rec.lang = "sv-SE";
+    rec.lang = BCP47[locale] ?? "sv-SE";
     rec.continuous = true;
     rec.interimResults = true;
     // Det som redan står i rutan behålls; det som sägs läggs till efter.
@@ -412,11 +417,11 @@ export default function EditorPage() {
     const isExtractableDoc = EXTRACTABLE_DOC_TYPES.includes(file.type);
 
     if (!isImage && !isPlainText && !isExtractableDoc) {
-      throw new Error(`${file.name}: filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.`);
+      throw new Error(t("{name}: filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.", { name: file.name }));
     }
     const maxBytes = isImage ? MAX_IMAGE_BYTES : MAX_DOC_BYTES;
     if (file.size > maxBytes) {
-      throw new Error(`${file.name}: filen är större än ${Math.round(maxBytes / (1024 * 1024))} MB.`);
+      throw new Error(t("{name}: filen är större än {v2} MB.", { name: file.name, v2: Math.round(maxBytes / (1024 * 1024)) }));
     }
 
     const supabase = createClient();
@@ -428,7 +433,7 @@ export default function EditorPage() {
     const { error: uploadError } = await supabase.storage
       .from("uploads")
       .upload(path, file, { contentType: file.type || undefined });
-    if (uploadError) throw new Error(`Gick inte att ladda upp ${file.name}: ${uploadError.message}`);
+    if (uploadError) throw new Error(t("Gick inte att ladda upp {name}: {message}", { name: file.name, message: uploadError.message }));
     const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
 
     if (isImage) {
@@ -447,7 +452,7 @@ export default function EditorPage() {
       body: JSON.stringify({ fileUrl: pub.publicUrl, mimeType: file.type }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `Kunde inte läsa ${file.name}.`);
+    if (!res.ok) throw new Error(data.error || t("Kunde inte läsa {name}.", { name: file.name }));
     return { kind: "document", url: pub.publicUrl, name: file.name, mimeType: file.type, text: data.text };
   };
 
@@ -470,7 +475,7 @@ export default function EditorPage() {
       const png = blob.type === "image/png";
       const path = `${user.id}/chat-edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${png ? "png" : "jpg"}`;
       const { error: upErr } = await supabase.storage.from("uploads").upload(path, blob, { contentType: png ? "image/png" : "image/jpeg" });
-      if (upErr) throw new Error(`Gick inte att ladda upp bilden: ${upErr.message}`);
+      if (upErr) throw new Error(t("Gick inte att ladda upp bilden: {message}", { message: upErr.message }));
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       setAttachments((prev) =>
         prev.map((a, j) =>
@@ -496,7 +501,7 @@ export default function EditorPage() {
     }
     const toUpload = files.slice(0, room);
     if (files.length > toUpload.length) {
-      setAttachError(`Max ${MAX_ATTACHMENTS} bilagor i samma meddelande — tog med de första ${toUpload.length}.`);
+      setAttachError(t("Max {MAX_ATTACHMENTS} bilagor i samma meddelande — tog med de första {length}.", { MAX_ATTACHMENTS, length: toUpload.length }));
     }
 
     setAttaching(true);
@@ -699,7 +704,7 @@ export default function EditorPage() {
       setUndoStack((st) => st.slice(0, -1));
       setMessages((m) => [...m, { from: "bot", text: t("Klart, jag har ångrat din senaste ändring.") }]);
     } catch (e: any) {
-      setMessages((m) => [...m, { from: "bot", text: `Det gick inte att ångra: ${e.message}` }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Det gick inte att ångra: {message}", { message: e.message }) }]);
     } finally {
       setUndoing(false);
     }
@@ -727,7 +732,7 @@ export default function EditorPage() {
       const isPng = blob.type === "image/png";
       const path = `${user.id}/edit-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${isPng ? "png" : "jpg"}`;
       const { error: uploadError } = await supabase.storage.from("uploads").upload(path, blob, { contentType: isPng ? "image/png" : "image/jpeg" });
-      if (uploadError) throw new Error(`Gick inte att ladda upp bilden: ${uploadError.message}`);
+      if (uploadError) throw new Error(t("Gick inte att ladda upp bilden: {message}", { message: uploadError.message }));
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       const res = await fetch("/api/sites/replace-image", {
         method: "POST",
@@ -744,9 +749,9 @@ export default function EditorPage() {
       setContent(data.content);
       setImageEditorOpen(false);
       setSelection(null);
-      setMessages((m) => [...m, { from: "bot", text: `Klart! Jag har sparat den redigerade bilden (${sel.label}). Du kan ångra med knappen om du ändrar dig.` }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Klart! Jag har sparat den redigerade bilden ({label}). Du kan ångra med knappen om du ändrar dig.", { label: sel.label }) }]);
     } catch (e: any) {
-      setMessages((m) => [...m, { from: "bot", text: `Bilden kunde inte sparas: ${e.message}` }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Bilden kunde inte sparas: {message}", { message: e.message }) }]);
       setImageEditorOpen(false);
     } finally {
       setSavingImage(false);
@@ -792,7 +797,7 @@ export default function EditorPage() {
       setSelection(null);
       setMessages((m) => [...m, { from: "bot", text: t("Klart! Din text är sparad. Du kan ångra med knappen om du ändrar dig.") }]);
     } catch (e: any) {
-      setMessages((m) => [...m, { from: "bot", text: `Texten kunde inte sparas: ${e.message}` }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Texten kunde inte sparas: {message}", { message: e.message }) }]);
       setTextEditOpen(false);
     } finally {
       setSavingText(false);
@@ -834,7 +839,7 @@ export default function EditorPage() {
       const base = file.name.slice(0, dot).toLowerCase().replace(/[åä]/g, "a").replace(/ö/g, "o").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60) || "dokument";
       const path = `${user.id}/doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}-${base}.${ext}`;
       const { error: upErr } = await supabase.storage.from("uploads").upload(path, file, { contentType: file.type || "application/octet-stream" });
-      if (upErr) throw new Error(`Gick inte att ladda upp filen: ${upErr.message}`);
+      if (upErr) throw new Error(t("Gick inte att ladda upp filen: {message}", { message: upErr.message }));
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       setLinkDocUrl(pub.publicUrl);
       setLinkDocName(file.name);
@@ -890,7 +895,7 @@ export default function EditorPage() {
       setSelection(null);
       setMessages((m) => [...m, { from: "bot", text: t("Klart! Länken är sparad. Du kan ångra med knappen om du ändrar dig.") }]);
     } catch (e: any) {
-      setMessages((m) => [...m, { from: "bot", text: `Länken kunde inte sparas: ${e.message}` }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Länken kunde inte sparas: {message}", { message: e.message }) }]);
       setLinkEditOpen(false);
     } finally {
       setSavingText(false);
@@ -986,6 +991,7 @@ export default function EditorPage() {
       // Millie kan ha skapat en ny nyhetsartikel i samma svar (se
       // app/api/sites/edit/route.ts) — lägg in den i listan direkt så en
       // "newsList"-sektion i förhandsvisningen visar den utan omladdning.
+      if (data.siteLanguage) setSite((prev) => (prev ? { ...prev, language: data.siteLanguage } : prev));
       if (data.newsArticle) {
         setNewsArticles((prev) => [data.newsArticle, ...prev.filter((a) => a.id !== data.newsArticle.id)]);
         setPreviewNewsId(data.newsArticle.id);
@@ -994,7 +1000,7 @@ export default function EditorPage() {
         ...m,
         {
           from: "bot",
-          text: data.summary || "Klart!",
+          text: data.summary || t("Klart!"),
           unsupported: !!data.unsupported,
           options: isQuestion ? data.options : undefined,
           requestText: text || currentAttachments.map((a) => a.name).join(", "),
@@ -1012,7 +1018,7 @@ export default function EditorPage() {
           : []),
       ]);
     } catch (e: any) {
-      setMessages((m) => [...m, { from: "bot", text: `Det gick inte: ${e.message}` }]);
+      setMessages((m) => [...m, { from: "bot", text: t("Det gick inte: {message}", { message: e.message }) }]);
     } finally {
       // Fyll stapeln till 100 % en kort stund så det känns avslutat.
       setProgress(1);
@@ -1234,6 +1240,8 @@ export default function EditorPage() {
                   bookingPreviewSiteId={site?.id}
                   content={content}
                   siteName={site?.name}
+                  lang={site?.language}
+                  currency={site?.currency}
                   activePath={activePath}
                   onNavigate={(path) => {
                     // Byter kunden sida medan något är markerat, ta bort
@@ -1352,7 +1360,7 @@ export default function EditorPage() {
                       type="button"
                       onClick={() => {
                         setSupportDraft({
-                          message: m.requestText ? `Jag vill kunna: ${m.requestText}` : "",
+                          message: m.requestText ? t("Jag vill kunna: {requestText}", { requestText: m.requestText }) : "",
                           context: `Önskemål i chattredigeraren: "${m.requestText || ""}"\nMillies svar: "${m.text}"`,
                           wish: false,
                         });
@@ -1616,7 +1624,7 @@ export default function EditorPage() {
                   disabled={sending || attaching || !content}
                   aria-label={listening ? t("Sluta lyssna") : t("Prata in meddelandet")}
                   aria-pressed={listening}
-                  title={listening ? t("Tryck för att sluta lyssna") : t("Prata in ditt meddelande (svenska)")}
+                  title={listening ? t("Tryck för att sluta lyssna") : t("Prata in ditt meddelande ({språk})", { språk: LOCALE_NAMES[locale] })}
                   className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px] ${
                     listening ? "bg-red-500 text-white animate-pulse" : "text-ink-dim"
                   }`}

@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { randomBytes } from "crypto";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -20,6 +21,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
 
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
   const billingEmail = (body.billingEmail ?? "").trim();
 
   if (!email || !fullName) {
-    return NextResponse.json({ error: "Namn och e-post krävs." }, { status: 400 });
+    return NextResponse.json({ error: t("Namn och e-post krävs.") }, { status: 400 });
   }
 
   const admin = createAdminClient();

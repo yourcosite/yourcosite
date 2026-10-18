@@ -2,16 +2,19 @@
 
 import { msg } from "@/lib/i18n/config";
 import { rich } from "@/lib/i18n/rich";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import { BCP47, CURRENCIES } from "@/lib/i18n/country";
+import { LOCALES, LOCALE_NAMES } from "@/lib/i18n/config";
 import { useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_CANCEL_INTRO_CUSTOMER,
   DEFAULT_CONFIRM_INTRO,
   DEFAULT_CONFIRM_SUBJECT,
   MAIL_PLACEHOLDERS,
+  MAIL_PLACEHOLDERS_EN,
   applyMailTemplate,
   formatPrice,
-  formatSwedish,
+  formatWhen,
 } from "@/lib/booking";
 import { createClient } from "@/lib/supabase/client";
 
@@ -25,6 +28,8 @@ type Booking = {
 };
 type Data = {
   siteName?: string;
+  siteLang?: string;
+  currency?: string;
   settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string };
   packages: Pkg[]; rules: Rule[]; slots: Slot[]; blocks: Block[]; bookings: Booking[]; mailConfigured: boolean;
 };
@@ -131,6 +136,8 @@ type Act = (payload: Record<string, unknown>, okMsg?: string) => Promise<boolean
 
 function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: boolean; act: Act }) {
   const t = useT();
+  const bcp47 = BCP47[useLocale()];
+  const cur = data.currency || "SEK";
   const [confirming, setConfirming] = useState<string | null>(null);
   const now = Date.now();
   const upcoming = data.bookings.filter((b) => b.status === "confirmed" && new Date(b.starts_at).getTime() >= now);
@@ -140,9 +147,9 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
     <div key={b.id} className={`border border-line rounded-xl px-4 py-3.5 bg-surface ${b.status === "cancelled" ? "opacity-60" : ""}`}>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div>
-          <div className="font-semibold text-[14.5px]">{formatSwedish(new Date(b.starts_at), tz)}</div>
+          <div className="font-semibold text-[14.5px]">{formatWhen(new Date(b.starts_at), tz, bcp47)}</div>
           <div className="text-[13px] text-ink-dim">
-            {b.package_name} · {b.duration_min} min{b.price_sek != null ? ` · ${formatPrice(b.price_sek)}` : ""}
+            {b.package_name} · {b.duration_min} min{b.price_sek != null ? ` · ${formatPrice(b.price_sek, cur, bcp47)}` : ""}
             {b.status === "cancelled" ? t(" · Avbokad") : ""}
           </div>
         </div>
@@ -193,6 +200,8 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
 
 function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act }) {
   const t = useT();
+  const bcp47 = BCP47[useLocale()];
+  const cur = data.currency || "SEK";
   const empty = { id: "", name: "", description: "", duration_min: "60", price_sek: "", image_url: "", hadImage: false, active: true };
   const [form, setForm] = useState<typeof empty | null>(null);
   const [removing, setRemoving] = useState<string | null>(null);
@@ -260,7 +269,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
               <div className="flex-1 min-w-[180px]">
                 <div className="font-semibold text-[14.5px]">{p.name}{p.active ? "" : " (dold)"}</div>
                 <div className="text-[12.5px] text-ink-dim">
-                  {p.duration_min} min{p.price_sek != null ? ` · ${formatPrice(p.price_sek)}` : ""}
+                  {p.duration_min} min{p.price_sek != null ? ` · ${formatPrice(p.price_sek, cur, bcp47)}` : ""}
                 </div>
                 {p.description && <div className="text-[13px] text-ink-dim mt-1">{p.description}</div>}
               </div>
@@ -305,7 +314,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
               <input type="number" min={5} className={`${input} w-full`} value={form.duration_min} onChange={(e) => setForm({ ...form, duration_min: e.target.value })} />
             </label>
             <label className="block">
-              <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Pris i kronor (tomt = visas inte)")}</span>
+              <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Pris i {valuta} (tomt = visas inte)", { valuta: data.currency || "SEK" })}</span>
               <input type="number" min={0} className={`${input} w-full`} value={form.price_sek} onChange={(e) => setForm({ ...form, price_sek: e.target.value })} />
             </label>
           </div>
@@ -339,6 +348,7 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
 
 function TimesTab({ data, tz, busy, act, pkgName }: { data: Data; tz: string; busy: boolean; act: Act; pkgName: (id: string | null) => string }) {
   const t = useT();
+  const bcp47 = BCP47[useLocale()];
   const [rules, setRules] = useState<Rule[]>(data.rules);
   useEffect(() => setRules(data.rules), [data.rules]);
   const dirty = JSON.stringify(rules) !== JSON.stringify(data.rules);
@@ -352,7 +362,7 @@ function TimesTab({ data, tz, busy, act, pkgName }: { data: Data; tz: string; bu
 
   const [slot, setSlot] = useState({ date: "", start: "09:00", end: "12:00", package_id: "" });
   const [block, setBlock] = useState({ startDate: "", endDate: "", allDay: true, start: "09:00", end: "17:00", note: "" });
-  const fmtRange = (s: string, e: string) => `${formatSwedish(new Date(s), tz)} till ${new Date(e).toLocaleTimeString("sv-SE", { timeZone: tz, hour: "2-digit", minute: "2-digit" })}`;
+  const fmtRange = (s: string, e: string) => `${formatWhen(new Date(s), tz, bcp47)} ${t("till")} ${new Date(e).toLocaleTimeString(bcp47, { timeZone: tz, hour: "2-digit", minute: "2-digit" })}`;
 
   return (
     <div className="flex flex-col gap-8">
@@ -444,6 +454,11 @@ function TimesTab({ data, tz, busy, act, pkgName }: { data: Data; tz: string; bu
 
 function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act }) {
   const t = useT();
+  const uiLocale = useLocale();
+  const bcp47 = BCP47[uiLocale];
+  const placeholders = uiLocale === "sv" ? MAIL_PLACEHOLDERS : MAIL_PLACEHOLDERS_EN;
+  const [siteLang, setSiteLang] = useState(data.siteLang || "sv");
+  const [siteCur, setSiteCur] = useState(data.currency || "SEK");
   const st = data.settings;
   const [s, setS] = useState({
     notify_email: st.notify_email,
@@ -454,7 +469,7 @@ function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
     confirm_extra: st.confirm_extra || "",
     cancel_intro: st.cancel_intro || "",
   });
-  const example = { namn: t("Anna"), tjänst: data.packages[0]?.name || t("Konsultation"), tid: "tisdag 3 november 2026 kl 10:00", längd: `${data.packages[0]?.duration_min || 60} minuter`, pris: data.packages[0]?.price_sek != null ? formatPrice(data.packages[0].price_sek) : "", sajt: data.siteName || "din sajt" };
+  const example = { namn: t("Anna"), tjänst: data.packages[0]?.name || t("Konsultation"), tid: formatWhen(new Date(Date.UTC(2026, 10, 3, 9, 0)), data.settings.timezone, bcp47), längd: t("{n} minuter", { n: data.packages[0]?.duration_min || 60 }), pris: data.packages[0]?.price_sek != null ? formatPrice(data.packages[0].price_sek, data.currency || "SEK", bcp47) : "", sajt: data.siteName || t("din sajt") };
   const fill = (custom: string, fallback: string) => applyMailTemplate(custom.trim() || fallback, example);
   const label = "block text-[11.5px] font-semibold text-ink-dim mb-1";
 
@@ -476,9 +491,29 @@ function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
         <p className="text-[12px] text-ink-dim mt-3">{t("Tider räknas i tidszonen {tz}.", { tz: data.settings.timezone })}</p>
       </div>
 
+      <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[560px]">
+        <h2 className="text-[15px] font-semibold mb-1">{t("Sajtens språk och valuta")}</h2>
+        <p className="text-[13px] text-ink-dim mb-3">{t("Språket besökarna ser i cookiebanner, bokning och formulär, och som bekräftelsemejlen till dem skrivs på. Texterna du själv skrivit på sajten ändras inte av det.")}</p>
+        <div className="flex gap-3 flex-wrap">
+          <label className="block">
+            <span className={label}>{t("Språk")}</span>
+            <select className={input} value={siteLang} onChange={(e) => setSiteLang(e.target.value)}>
+              {LOCALES.map((l) => <option key={l} value={l}>{LOCALE_NAMES[l]}</option>)}
+            </select>
+          </label>
+          <label className="block">
+            <span className={label}>{t("Valuta för priser")}</span>
+            <select className={input} value={siteCur} onChange={(e) => setSiteCur(e.target.value)}>
+              {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </label>
+          <button type="button" disabled={busy} className={`${btnPrimary} self-end`} onClick={() => act({ action: "saveSiteLocale", language: siteLang, currency: siteCur }, t("Sparat."))}>{t("Spara")}</button>
+        </div>
+      </div>
+
       <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[760px]">
         <h2 className="text-[15px] font-semibold mb-1">{t("Mejl till kunden")}</h2>
-        <p className="text-[13px] text-ink-dim mb-4">{rich(t, "Skriv egna texter, eller lämna fälten tomma så används standardtexten. Du kan använda {codes} så fylls kundens uppgifter i automatiskt. Tid, tjänst, längd och pris visas alltid i mejlet.", {}, { codes: MAIL_PLACEHOLDERS.map((p) => (
+        <p className="text-[13px] text-ink-dim mb-4">{rich(t, "Skriv egna texter, eller lämna fälten tomma så används standardtexten. Du kan använda {codes} så fylls kundens uppgifter i automatiskt. Tid, tjänst, längd och pris visas alltid i mejlet.", {}, { codes: placeholders.map((p) => (
             <code key={p} className="bg-bg px-1.5 py-0.5 rounded text-[12px] mr-1">{p}</code>
           )) })}</p>
         <div className="grid gap-4 md:grid-cols-2">
@@ -486,11 +521,11 @@ function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
             <div className="text-[13px] font-semibold">{t("Bekräftelse när någon bokat")}</div>
             <label className="block">
               <span className={label}>{t("Ämnesrad")}</span>
-              <input className={`${input} w-full`} value={s.confirm_subject} onChange={(e) => setS({ ...s, confirm_subject: e.target.value })} placeholder={DEFAULT_CONFIRM_SUBJECT} />
+              <input className={`${input} w-full`} value={s.confirm_subject} onChange={(e) => setS({ ...s, confirm_subject: e.target.value })} placeholder={t(DEFAULT_CONFIRM_SUBJECT)} />
             </label>
             <label className="block">
               <span className={label}>{t("Inledande text")}</span>
-              <textarea rows={3} className={`${input} w-full`} value={s.confirm_intro} onChange={(e) => setS({ ...s, confirm_intro: e.target.value })} placeholder={DEFAULT_CONFIRM_INTRO} />
+              <textarea rows={3} className={`${input} w-full`} value={s.confirm_intro} onChange={(e) => setS({ ...s, confirm_intro: e.target.value })} placeholder={t(DEFAULT_CONFIRM_INTRO)} />
             </label>
             <label className="block">
               <span className={label}>{t("Bra att veta (valfri)")}</span>
@@ -499,7 +534,7 @@ function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
             <div className="text-[13px] font-semibold mt-1">{t("Vid avbokning")}</div>
             <label className="block">
               <span className={label}>{t("Text i avbokningsmejlet")}</span>
-              <textarea rows={3} className={`${input} w-full`} value={s.cancel_intro} onChange={(e) => setS({ ...s, cancel_intro: e.target.value })} placeholder={DEFAULT_CANCEL_INTRO_CUSTOMER} />
+              <textarea rows={3} className={`${input} w-full`} value={s.cancel_intro} onChange={(e) => setS({ ...s, cancel_intro: e.target.value })} placeholder={t(DEFAULT_CANCEL_INTRO_CUSTOMER)} />
             </label>
           </div>
 
@@ -507,10 +542,10 @@ function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
             <div className="text-[13px] font-semibold mb-2">{t("Så ser bekräftelsen ut (exempel)")}</div>
             <div className="rounded-xl border border-line bg-bg p-4 text-[13.5px]">
               <div className="text-[11.5px] text-ink-dim mb-0.5">{t("Ämne")}</div>
-              <div className="font-semibold mb-3">{fill(s.confirm_subject, DEFAULT_CONFIRM_SUBJECT)}</div>
+              <div className="font-semibold mb-3">{fill(s.confirm_subject, t(DEFAULT_CONFIRM_SUBJECT))}</div>
               <div className="rounded-lg bg-white border border-line p-4">
                 <div className="font-semibold text-[15px] mb-2">{t("Din bokning är bekräftad")}</div>
-                <div className="whitespace-pre-line mb-3">{fill(s.confirm_intro, DEFAULT_CONFIRM_INTRO)}</div>
+                <div className="whitespace-pre-line mb-3">{fill(s.confirm_intro, t(DEFAULT_CONFIRM_INTRO))}</div>
                 <div className="text-ink-dim text-[12.5px] mb-3">{t("Tjänst: {value}", { value: example.tjänst })}<br />{t("Tid: {value}", { value: example.tid })}<br />{t("Längd: {value}", { value: example.längd })}{example.pris && (<><br />{t("Pris: {value}", { value: example.pris })}</>)}
                 </div>
                 {s.confirm_extra.trim() && (

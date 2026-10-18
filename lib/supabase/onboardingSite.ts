@@ -1,6 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { getLocale } from "@/lib/i18n/server";
+import { isLocale } from "@/lib/i18n/config";
+import { siteCurrencyFor } from "@/lib/i18n/country";
 
 // Pinnar kunden till SAMMA utkast genom hela onboardingen, istället för att
 // varje steg gissa "senaste sajten utan innehåll" på nytt. Utan det här kan
@@ -81,13 +84,30 @@ export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: st
     throw new DraftLimitError();
   }
 
-  const { data: created, error } = await supabase
-    .from("sites")
-    .insert({ owner_id: ownerId, name: "Min sajt" })
-    .select("*")
-    .single();
-
-  if (error) throw error;
+  // Nya sajter ärver ägarens språk och land (sajtens språk och valuta kan
+  // ändras senare under Bokningar → Inställningar eller via Millie).
+  // Kolumnerna kommer från supabase/sprak.sql; saknas de skapas sajten
+  // ändå, bara utan språk/valuta.
+  let created: any = null;
+  let error: any = null;
+  try {
+    const { data: prof } = await supabase.from("profiles").select("language, country").eq("id", ownerId).maybeSingle();
+    const lang = isLocale((prof as any)?.language) ? (prof as any).language : getLocale();
+    const res = await supabase
+      .from("sites")
+      .insert({ owner_id: ownerId, name: "Min sajt", language: lang, currency: siteCurrencyFor((prof as any)?.country) })
+      .select("*")
+      .single();
+    created = res.data;
+    error = res.error;
+  } catch {
+    error = true;
+  }
+  if (error || !created) {
+    const res = await supabase.from("sites").insert({ owner_id: ownerId, name: "Min sajt" }).select("*").single();
+    if (res.error) throw res.error;
+    created = res.data;
+  }
 
   cookieStore.set(DRAFT_COOKIE, created.id, {
     httpOnly: true,

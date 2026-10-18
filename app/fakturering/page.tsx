@@ -1,20 +1,25 @@
-import { getT } from "@/lib/i18n/server";
+import { getT, getLocale } from "@/lib/i18n/server";
+import { formatMoney, planPrice } from "@/lib/pricing";
+import { BCP47, billingCurrencyFor } from "@/lib/i18n/country";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import { createClient } from "@/lib/supabase/server";
 
+// Exempelfakturor (visas tills riktig betalning är kopplad).
 const invoices = [
-  { date: "1 oktober 2026", amount: "249 kr", status: "Betald" },
-  { date: "1 september 2026", amount: "249 kr", status: "Betald" },
-  { date: "1 augusti 2026", amount: "249 kr", status: "Betald" },
-  { date: "1 juli 2026", amount: "249 kr", status: "Betald" },
+  { date: "2026-10-01", plan: "standard", status: "Betald" },
+  { date: "2026-09-01", plan: "standard", status: "Betald" },
+  { date: "2026-08-01", plan: "standard", status: "Betald" },
+  { date: "2026-07-01", plan: "standard", status: "Betald" },
 ];
 
 export default async function BillingPage() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
+  const locale = getLocale();
   let userName = t("Ditt konto");
+  let country: string | null = null;
   const userEmail = user?.email ?? "";
   if (user) {
     const { data: profile } = await supabase
@@ -23,7 +28,15 @@ export default async function BillingPage() {
       .eq("id", user.id)
       .single();
     userName = profile?.full_name || userEmail;
+    // Ny kolumn (supabase/sprak.sql): hämtas separat så sidan funkar även utan den.
+    const { data: c } = await supabase.from("profiles").select("country").eq("id", user.id).single();
+    country = c?.country ?? null;
   }
+
+  const currency = billingCurrencyFor(country);
+  const price = formatMoney(planPrice("standard", currency), currency, locale);
+  const fmtDate = (iso: string) =>
+    new Intl.DateTimeFormat(BCP47[locale] ?? locale, { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }).format(new Date(iso));
 
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col">
@@ -40,7 +53,7 @@ export default async function BillingPage() {
                   {t("Nuvarande plan")}
                 </div>
                 <div className="font-semibold text-[20px] mt-1">
-                  {t("Standardplan — 249 kr/mån")}
+                  {t("Standardplan — {price}/mån", { price })}
                 </div>
               </div>
               <Link
@@ -59,7 +72,7 @@ export default async function BillingPage() {
               <div className="h-full bg-accent" style={{ width: "63%" }} />
             </div>
             <div className="text-[12.5px] text-ink-dim mt-2">
-              {t("Nästa betalning dras 1 november 2026")}
+              {t("Nästa betalning dras {date}", { date: fmtDate("2026-11-01") })}
             </div>
 
             <div className="mt-4.5 pt-4 border-t border-line flex items-center justify-between">
@@ -116,11 +129,11 @@ export default async function BillingPage() {
             <tbody>
               {invoices.map((inv) => (
                 <tr key={inv.date} className="text-[13.5px]">
-                  <td className="py-3 border-b border-line">{inv.date}</td>
-                  <td className="py-3 border-b border-line">{inv.amount}</td>
+                  <td className="py-3 border-b border-line">{fmtDate(inv.date)}</td>
+                  <td className="py-3 border-b border-line">{formatMoney(planPrice(inv.plan, currency), currency, locale)}</td>
                   <td className="py-3 border-b border-line">
                     <span className="bg-[#DCFCE7] text-[#166534] text-[11.5px] font-bold px-2.5 py-1 rounded-full">
-                      {inv.status}
+                      {t(inv.status)}
                     </span>
                   </td>
                   <td className="py-3 border-b border-line text-right">

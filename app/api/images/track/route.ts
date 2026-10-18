@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { UNSPLASH_DOWNLOAD_PREFIX } from "@/lib/stockPhotos";
@@ -6,9 +7,10 @@ import { UNSPLASH_DOWNLOAD_PREFIX } from "@/lib/stockPhotos";
 // väljs, genom att anropa fotots download_location. Ingen fil hämtas — det
 // är bara en räknare hos dem.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const accessKey = process.env.UNSPLASH_ACCESS_KEY;
   const { downloadLocation } = await request.json().catch(() => ({}));

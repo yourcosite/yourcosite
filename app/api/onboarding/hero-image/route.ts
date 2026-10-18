@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedImageUrl } from "@/lib/stockPhotos";
@@ -12,20 +13,21 @@ import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboard
 // Filen laddas upp direkt till Supabase Storage från webbläsaren (samma
 // mönster som FileDropzone) — den här rutten bara registrerar URL:en.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const { fileUrl } = body;
 
   if (!fileUrl || typeof fileUrl !== "string") {
-    return NextResponse.json({ error: "Ingen bild-URL skickades." }, { status: 400 });
+    return NextResponse.json({ error: t("Ingen bild-URL skickades.") }, { status: 400 });
   }
   // Samma skydd som den allmänna bilduppladdningen — bara filer i kundens
   // EGEN mapp i "uploads"-bucketen får registreras.
   if (!isAllowedImageUrl(fileUrl, user.id)) {
-    return NextResponse.json({ error: "Ogiltig filsökväg." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltig filsökväg.") }, { status: 400 });
   }
 
   let draft;
@@ -50,9 +52,10 @@ export async function POST(request: Request) {
 // Tar bort valet (kunden ändrade sig) — går tillbaka till att en av de
 // allmänna fotona lottas som hero istället.
 export async function DELETE() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   let draft;
   try {

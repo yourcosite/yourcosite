@@ -1,12 +1,14 @@
 "use client";
 
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import { BCP47 } from "@/lib/i18n/country";
 import { useEffect, useState } from "react";
-import { formatSwedish } from "@/lib/booking";
+import { formatWhen } from "@/lib/booking";
 
 // Kundens egen avbokningssida (länken i bekräftelsemejlet).
 export default function CancelBookingPage({ params }: { params: { token: string } }) {
   const t = useT();
+  const locale = useLocale();
   const [info, setInfo] = useState<{ packageName: string; startsAt: string; durationMin: number; status: string; siteName: string; timezone: string } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -16,7 +18,7 @@ export default function CancelBookingPage({ params }: { params: { token: string 
     fetch(`/api/public/booking/cancel?token=${encodeURIComponent(params.token)}`)
       .then(async (r) => ({ ok: r.ok, data: await r.json() }))
       .then(({ ok, data }) => {
-        if (!ok) return setError(data.error || t(t("Hittade ingen bokning.")));
+        if (!ok) return setError(data.error || t("Hittade ingen bokning."));
         setInfo({ ...data.booking, siteName: data.siteName, timezone: data.timezone });
         if (data.booking.status === "cancelled") setDone(true);
       })
@@ -50,7 +52,7 @@ export default function CancelBookingPage({ params }: { params: { token: string 
         {info && (
           <div className="text-[14px] mb-5">
             <div className="font-semibold">{info.packageName}</div>
-            <div className="text-ink-dim">{formatSwedish(new Date(info.startsAt), info.timezone)} · {info.durationMin} min</div>
+            <div className="text-ink-dim">{formatWhen(new Date(info.startsAt), info.timezone, BCP47[locale])} · {info.durationMin} min</div>
             {info.siteName && <div className="text-ink-dim">{info.siteName}</div>}
           </div>
         )}

@@ -80,11 +80,11 @@ export default function FileDropzone({
     // slipper överbelasta Supabase Storage med en stor bulk på en gång.
     for (const file of list) {
       if (!ALLOWED_TYPES.includes(file.type)) {
-        skipped.push(`${file.name} (filtyp stöds inte)`);
+        skipped.push(t("{name} (filtyp stöds inte)", { name: file.name }));
         continue;
       }
       if (file.size > MAX_BYTES) {
-        skipped.push(`${file.name} (större än 15 MB)`);
+        skipped.push(t("{name} (större än 15 MB)", { name: file.name }));
         continue;
       }
 
@@ -96,7 +96,7 @@ export default function FileDropzone({
         .upload(path, file, { contentType: file.type });
 
       if (uploadError) {
-        skipped.push(`${file.name} (gick inte att ladda upp: ${uploadError.message})`);
+        skipped.push(t("{name} (gick inte att ladda upp: {message})", { name: file.name, message: uploadError.message }));
         continue;
       }
 
@@ -112,7 +112,7 @@ export default function FileDropzone({
         if (!res.ok) throw new Error(data.error);
         newAssets.push(data.asset);
       } catch {
-        skipped.push(`${file.name} (gick inte att spara)`);
+        skipped.push(t("{name} (gick inte att spara)", { name: file.name }));
       }
     }
 

@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
@@ -15,9 +16,10 @@ const VALID_PLATFORM_IDS = SOCIAL_PLATFORMS.map((p) => p.id);
 // sidraderna och skriver in de valda på nytt — enklast eftersom kunden kan
 // lägga till/ta bort/döpa om fritt i steg 3 innan den här rutten anropas.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const pages: IncomingPage[] = Array.isArray(body.pages) ? body.pages : [];
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
     : [];
 
   if (pages.length === 0) {
-    return NextResponse.json({ error: "Minst en sida krävs." }, { status: 400 });
+    return NextResponse.json({ error: t("Minst en sida krävs.") }, { status: 400 });
   }
 
   let draft;

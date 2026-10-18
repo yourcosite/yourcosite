@@ -117,7 +117,7 @@ export default function WebsitePreviewFrame({
           <div className="flex-1 w-full overflow-hidden relative">
             <iframe
               src={contentPath}
-              title={siteName ? `Förhandsvisning av ${siteName}` : t("Förhandsvisning")}
+              title={siteName ? t("Förhandsvisning av {siteName}", { siteName }) : t("Förhandsvisning")}
               className="absolute top-0 left-0 border-0 bg-white"
               style={{
                 width: `${100 / DESKTOP_ZOOM}%`,
@@ -130,7 +130,7 @@ export default function WebsitePreviewFrame({
         ) : (
           <iframe
             src={contentPath}
-            title={siteName ? `Förhandsvisning av ${siteName}` : t("Förhandsvisning")}
+            title={siteName ? t("Förhandsvisning av {siteName}", { siteName }) : t("Förhandsvisning")}
             className="flex-1 w-full border-0 bg-white"
           />
         )}

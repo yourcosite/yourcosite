@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,9 +12,10 @@ export const maxDuration = 30;
 const MAX_CHARS = 20000;
 
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const fileUrl = typeof body.fileUrl === "string" ? body.fileUrl : "";
@@ -23,17 +25,17 @@ export async function POST(request: Request) {
   // bucket — annars skulle routen kunna missbrukas för att läsa in
   // godtyckliga externa filer via vår server.
   if (!fileUrl.includes(`/uploads/${user.id}/`)) {
-    return NextResponse.json({ error: "Ogiltig fil." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltig fil.") }, { status: 400 });
   }
 
   let fileRes: Response;
   try {
     fileRes = await fetch(fileUrl);
   } catch {
-    return NextResponse.json({ error: "Kunde inte hämta filen." }, { status: 502 });
+    return NextResponse.json({ error: t("Kunde inte hämta filen.") }, { status: 502 });
   }
   if (!fileRes.ok) {
-    return NextResponse.json({ error: "Kunde inte hämta filen." }, { status: 502 });
+    return NextResponse.json({ error: t("Kunde inte hämta filen.") }, { status: 502 });
   }
   const buf = Buffer.from(await fileRes.arrayBuffer());
 
@@ -50,17 +52,17 @@ export async function POST(request: Request) {
       text = result.value;
     } else {
       return NextResponse.json(
-        { error: "Den filtypen stöds inte för textutdrag — använd PDF, Word (.docx) eller en vanlig textfil." },
+        { error: t("Den filtypen stöds inte för textutdrag — använd PDF, Word (.docx) eller en vanlig textfil.") },
         { status: 400 }
       );
     }
   } catch {
-    return NextResponse.json({ error: "Kunde inte läsa innehållet i filen." }, { status: 500 });
+    return NextResponse.json({ error: t("Kunde inte läsa innehållet i filen.") }, { status: 500 });
   }
 
   text = text.trim();
   if (!text) {
-    return NextResponse.json({ error: "Hittade ingen text i filen." }, { status: 400 });
+    return NextResponse.json({ error: t("Hittade ingen text i filen.") }, { status: 400 });
   }
   if (text.length > MAX_CHARS) {
     text = text.slice(0, MAX_CHARS) + "\n\n… (avkortat)";

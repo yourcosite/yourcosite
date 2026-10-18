@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
@@ -8,6 +9,7 @@ import { logActivity } from "@/lib/supabase/activityLog";
 // anteckningar (anteckningarna räknas som personuppgifter om kunden
 // eftersom de innehåller bedömningar/information om personen).
 export async function GET(request: Request, { params }: { params: { id: string } }) {
+  const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
 
@@ -23,7 +25,7 @@ export async function GET(request: Request, { params }: { params: { id: string }
     .single();
 
   if (profileError || !profile) {
-    return NextResponse.json({ error: "Hittade ingen kund med det id:t." }, { status: 404 });
+    return NextResponse.json({ error: t("Hittade ingen kund med det id:t.") }, { status: 404 });
   }
 
   const { data: sites } = await admin

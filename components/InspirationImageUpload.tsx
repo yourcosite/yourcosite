@@ -41,7 +41,7 @@ export default function InspirationImageUpload({
     if (list.length === 0) return;
 
     if (urls.length >= MAX_IMAGES) {
-      setError(`Max ${MAX_IMAGES} inspirationsbilder — ta bort någon för att lägga till fler.`);
+      setError(t("Max {MAX_IMAGES} inspirationsbilder — ta bort någon för att lägga till fler.", { MAX_IMAGES }));
       return;
     }
 
@@ -67,11 +67,11 @@ export default function InspirationImageUpload({
         continue;
       }
       if (!ALLOWED_TYPES.includes(file.type)) {
-        skipped.push(`${file.name} (filtyp stöds inte)`);
+        skipped.push(t("{name} (filtyp stöds inte)", { name: file.name }));
         continue;
       }
       if (file.size > MAX_BYTES) {
-        skipped.push(`${file.name} (större än 5 MB)`);
+        skipped.push(t("{name} (större än 5 MB)", { name: file.name }));
         continue;
       }
 
@@ -82,7 +82,7 @@ export default function InspirationImageUpload({
         .from("uploads")
         .upload(path, file, { contentType: file.type });
       if (uploadError) {
-        skipped.push(`${file.name} (gick inte att ladda upp: ${uploadError.message})`);
+        skipped.push(t("{name} (gick inte att ladda upp: {message})", { name: file.name, message: uploadError.message }));
         continue;
       }
 

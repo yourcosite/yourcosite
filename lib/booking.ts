@@ -144,8 +144,22 @@ export function formatSwedish(instant: Date, tz: string): string {
   const wd = WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()];
   return `${wd} ${d} ${MONTHS[m - 1]} ${y} kl ${localTimeOf(instant, tz)}`;
 }
-export function formatPrice(price?: number | null): string {
-  return price == null ? "" : `${new Intl.NumberFormat("sv-SE").format(price)} kr`;
+export function formatPrice(price?: number | null, currency: string = "SEK", bcp47: string = "sv-SE"): string {
+  if (price == null) return "";
+  try {
+    return new Intl.NumberFormat(bcp47, { style: "currency", currency, maximumFractionDigits: Number.isInteger(price) ? 0 : 2 }).format(price);
+  } catch {
+    return `${price} ${currency}`;
+  }
+}
+
+// "Tisdag 3 november 2026 kl 10:00" på valfritt språk, i sajtens tidszon.
+// (formatSwedish ovan finns kvar för de svenska delarna av verktyget.)
+export function formatWhen(instant: Date, tz: string, bcp47: string): string {
+  if (bcp47.startsWith("sv")) return formatSwedish(instant, tz);
+  return new Intl.DateTimeFormat(bcp47, {
+    timeZone: tz, weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).format(instant);
 }
 
 // ---- Mejltexter som ägaren kan skriva själv ----
@@ -163,12 +177,16 @@ export const DEFAULT_CONFIRM_INTRO = "Hej {namn}! Tack för din bokning hos {saj
 export const DEFAULT_CANCEL_INTRO_CUSTOMER = "Hej {namn}! Din bokning hos {sajt} är nu avbokad.";
 export const DEFAULT_CANCEL_INTRO_OWNER = "Hej {namn}! {sajt} har tyvärr avbokat tiden nedan. Hör av dig till dem om du vill boka en ny.";
 
+// Platshållarna fungerar på svenska och engelska ({namn} eller {name} osv.),
+// så en mall skriven på något av språken alltid blir rätt.
+export const MAIL_PLACEHOLDERS_EN = ["{name}", "{service}", "{time}", "{duration}", "{price}", "{site}"];
+
 export function applyMailTemplate(template: string, v: { namn: string; tjänst: string; tid: string; längd: string; pris: string; sajt: string }): string {
   return template
-    .replace(/\{namn\}/gi, v.namn)
-    .replace(/\{tjänst\}/gi, v.tjänst)
-    .replace(/\{tid\}/gi, v.tid)
-    .replace(/\{längd\}/gi, v.längd)
-    .replace(/\{pris\}/gi, v.pris)
-    .replace(/\{sajt\}/gi, v.sajt);
+    .replace(/\{(namn|name)\}/gi, v.namn)
+    .replace(/\{(tjänst|service)\}/gi, v.tjänst)
+    .replace(/\{(tid|time)\}/gi, v.tid)
+    .replace(/\{(längd|duration)\}/gi, v.längd)
+    .replace(/\{(pris|price)\}/gi, v.pris)
+    .replace(/\{(sajt|site)\}/gi, v.sajt);
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { rich } from "@/lib/i18n/rich";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import { BCP47 } from "@/lib/i18n/country";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import StockPhotoModal from "@/components/StockPhotoModal";
@@ -29,11 +30,11 @@ function emptyComposer(defaultCategory: string): ComposerState {
   return { id: null, title: "", excerpt: "", body: "", imageUrl: "", category: defaultCategory, scheduledAt: "" };
 }
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("sv-SE", { year: "numeric", month: "short", day: "numeric" });
+function formatDate(iso: string, bcp47: string) {
+  return new Date(iso).toLocaleDateString(bcp47, { year: "numeric", month: "short", day: "numeric" });
 }
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleString("sv-SE", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+function formatDateTime(iso: string, bcp47: string) {
+  return new Date(iso).toLocaleString(bcp47, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 // Minsta tillåtna värde för <input type="datetime-local"> (lokal tid, utan
 // sekunder/tidszon) — en minut fram, så man inte råkar "schemalägga" något
@@ -54,6 +55,7 @@ export default function NewsClient({
   siteId: string;
 }) {
   const t = useT();
+  const bcp47 = BCP47[useLocale()];
   const [articles, setArticles] = useState<NewsArticle[]>(initialArticles);
   const [categories, setCategories] = useState<string[]>(initialCategories);
   const [composer, setComposer] = useState<ComposerState | null>(null);
@@ -98,7 +100,7 @@ export default function NewsClient({
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setError(`Bilden är större än ${Math.round(MAX_IMAGE_BYTES / (1024 * 1024))} MB.`);
+      setError(t("Bilden är större än {v1} MB.", { v1: Math.round(MAX_IMAGE_BYTES / (1024 * 1024)) }));
       return;
     }
     setUploading(true);
@@ -234,9 +236,9 @@ export default function NewsClient({
         {articles.map((a) => {
           const confirming = pendingDeleteId === a.id;
           const status = a.published
-            ? `Publicerad ${a.published_at ? formatDate(a.published_at) : ""}`
+            ? t("Publicerad {datum}", { datum: a.published_at ? formatDate(a.published_at, bcp47) : "" })
             : a.scheduled_at
-            ? `Schemalagd till ${formatDateTime(a.scheduled_at)}`
+            ? t("Schemalagd till {datum}", { datum: formatDateTime(a.scheduled_at, bcp47) })
             : t("Utkast");
           return (
             <div key={a.id} className="border border-line rounded-xl px-4 py-3.5 bg-surface">

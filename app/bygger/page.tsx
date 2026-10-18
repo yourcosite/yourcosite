@@ -108,7 +108,7 @@ export default function GeneratingPage() {
         {error
           ? t("Något gick fel")
           : siteName
-          ? `Bygger ${siteName}s nya sajt`
+          ? t("Bygger {siteName}s nya sajt", { siteName })
           : " "}
       </h1>
       <p className="text-[15px] text-[#9E9C97] mb-11">
@@ -128,7 +128,7 @@ export default function GeneratingPage() {
       {!error && siteName && (
         <div className="w-full max-w-[420px] mb-9">
           <div className="flex items-center justify-between text-[13px] mb-2">
-            <span className="text-[#9E9C97]">{percent >= 100 ? "Klart!" : pageInfo ? `Skriver sidan ${pageInfo.page} av ${pageInfo.pages}` : t("Förbereder")}</span>
+            <span className="text-[#9E9C97]">{percent >= 100 ? "Klart!" : pageInfo ? t("Skriver sidan {page} av {pages}", { page: pageInfo.page, pages: pageInfo.pages }) : t("Förbereder")}</span>
             <span className="font-semibold tabular-nums">{Math.round(percent)} %</span>
           </div>
           <div

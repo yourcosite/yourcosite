@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
@@ -6,6 +7,7 @@ import { logActivity } from "@/lib/supabase/activityLog";
 // Växlar en kunds primära sajt mellan "live" och "pausad". Rör inte
 // sajter som fortfarande är i utkastläge (de har inget att pausa).
 export async function POST(_request: Request, { params }: { params: { id: string } }) {
+  const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
 
@@ -21,7 +23,7 @@ export async function POST(_request: Request, { params }: { params: { id: string
 
   if (siteError || !site) {
     return NextResponse.json(
-      { error: "Kunden har ingen live eller pausad sajt att ändra." },
+      { error: t("Kunden har ingen live eller pausad sajt att ändra.") },
       { status: 400 }
     );
   }

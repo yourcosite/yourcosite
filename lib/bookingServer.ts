@@ -8,7 +8,7 @@ import {
   applyMailTemplate,
   type MailTexts,
   formatPrice,
-  formatSwedish,
+  formatWhen,
   type BookingBlock,
   type BookingBusy,
   type BookingPackage,
@@ -17,6 +17,8 @@ import {
   type BookingSlot,
 } from "@/lib/booking";
 import { emailLayout, sendEmail } from "@/lib/email";
+import { siteLocale } from "@/lib/i18n/site-server";
+import { BCP47 } from "@/lib/i18n/country";
 
 // Serverhjälp för bokning. Tar emot en klient (admin-klienten i de publika
 // rutterna) och läser allt som behövs för att räkna ut lediga tider.
@@ -103,20 +105,31 @@ export async function sendBookingEmails(opts: {
   origin: string;
 }) {
   const { db, siteId, siteName, booking: b, settings, origin } = opts;
-  const when = formatSwedish(new Date(b.starts_at), settings.timezone);
-  const price = formatPrice(b.price_sek);
+  // Kundens mejl skrivs på sajtens språk, ägarens på ägarens eget.
+  const L = await siteLocale(db, siteId);
+  const { t, ownerT } = L;
+  const when = formatWhen(new Date(b.starts_at), settings.timezone, L.bcp47);
+  const ownerWhen = formatWhen(new Date(b.starts_at), settings.timezone, BCP47[L.ownerLang]);
+  const price = formatPrice(b.price_sek, L.currency, L.bcp47);
+  const duration = t("{n} minuter", { n: b.duration_min });
   const rows: [string, string][] = [
-    ["Tjänst", b.package_name],
-    ["Tid", when],
-    ["Längd", `${b.duration_min} minuter`],
-    ["Pris", price],
+    [t("Tjänst"), b.package_name],
+    [t("Tid"), when],
+    [t("Längd"), duration],
+    [t("Pris"), price],
+  ];
+  const ownerRows: [string, string][] = [
+    [ownerT("Tjänst"), b.package_name],
+    [ownerT("Tid"), ownerWhen],
+    [ownerT("Längd"), ownerT("{n} minuter", { n: b.duration_min })],
+    [ownerT("Pris"), formatPrice(b.price_sek, L.currency, BCP47[L.ownerLang])],
   ];
   const cancelUrl = `${origin}/avboka/${b.cancel_token}`;
   const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
   const brand = await brandFor(db, siteId, siteName);
-  const vars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: `${b.duration_min} minuter`, pris: price, sajt: siteName };
-  const subject = applyMailTemplate(settings.confirm_subject?.trim() || DEFAULT_CONFIRM_SUBJECT, vars).replace(/\s+/g, " ").slice(0, 200);
-  const intro = applyMailTemplate(settings.confirm_intro?.trim() || DEFAULT_CONFIRM_INTRO, vars);
+  const vars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: duration, pris: price, sajt: siteName };
+  const subject = applyMailTemplate(settings.confirm_subject?.trim() || t(DEFAULT_CONFIRM_SUBJECT), vars).replace(/\s+/g, " ").slice(0, 200);
+  const intro = applyMailTemplate(settings.confirm_intro?.trim() || t(DEFAULT_CONFIRM_INTRO), vars);
   const extraText = settings.confirm_extra?.trim() ? applyMailTemplate(settings.confirm_extra.trim(), vars) : "";
 
   const customer = sendEmail({
@@ -124,35 +137,39 @@ export async function sendBookingEmails(opts: {
     subject,
     html: emailLayout({
       brand,
-      title: "Din bokning är bekräftad",
+      lang: L.lang,
+      poweredBy: t("Bokat via YourCoSite"),
+      title: t("Din bokning är bekräftad"),
       intro,
       rows,
-      extra: extraText ? { heading: "Bra att veta", text: extraText } : undefined,
-      button: { label: "Avboka tiden", url: cancelUrl },
-      footer: "Behöver du ändra något kan du avboka via knappen och boka en ny tid, eller svara på det här mejlet.",
+      extra: extraText ? { heading: t("Bra att veta"), text: extraText } : undefined,
+      button: { label: t("Avboka tiden"), url: cancelUrl },
+      footer: t("Behöver du ändra något kan du avboka via knappen och boka en ny tid, eller svara på det här mejlet."),
     }),
-    text: `${intro}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}${extraText ? `\n\nBra att veta:\n${extraText}` : ""}\n\nAvboka: ${cancelUrl}`,
+    text: `${intro}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}${extraText ? `\n\n${t("Bra att veta")}:\n${extraText}` : ""}\n\n${t("Avboka")}: ${cancelUrl}`,
     replyTo: ownerTo || undefined,
   });
 
   const owner = ownerTo
     ? sendEmail({
         to: ownerTo,
-        subject: `Ny bokning: ${b.customer_name}, ${when}`,
+        subject: ownerT("Ny bokning: {namn}, {tid}", { namn: b.customer_name, tid: ownerWhen }),
         html: emailLayout({
-      brand,
-          title: "Du har fått en ny bokning",
-          intro: `${b.customer_name} har bokat en tid på ${siteName}. Tiden är nu blockerad i din kalender.`,
+          brand,
+          lang: L.ownerLang,
+          poweredBy: ownerT("Bokat via YourCoSite"),
+          title: ownerT("Du har fått en ny bokning"),
+          intro: ownerT("{namn} har bokat en tid på {sajt}. Tiden är nu blockerad i din kalender.", { namn: b.customer_name, sajt: siteName }),
           rows: [
-            ...rows,
-            ["Namn", b.customer_name],
-            ["E-post", b.customer_email],
-            ["Telefon", b.customer_phone || ""],
-            ["Meddelande", b.message || ""],
+            ...ownerRows,
+            [ownerT("Namn"), b.customer_name],
+            [ownerT("E-post"), b.customer_email],
+            [ownerT("Telefon"), b.customer_phone || ""],
+            [ownerT("Meddelande"), b.message || ""],
           ],
-          button: { label: "Öppna bokningarna", url: `${origin}/bokningar?site=${siteId}` },
+          button: { label: ownerT("Öppna bokningarna"), url: `${origin}/bokningar?site=${siteId}` },
         }),
-        text: `Ny bokning på ${siteName}\n\n${[...rows, ["Namn", b.customer_name], ["E-post", b.customer_email], ["Telefon", b.customer_phone || ""], ["Meddelande", b.message || ""]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
+        text: `${ownerT("Ny bokning på {sajt}", { sajt: siteName })}\n\n${[...ownerRows, [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email], [ownerT("Telefon"), b.customer_phone || ""], [ownerT("Meddelande"), b.message || ""]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         replyTo: b.customer_email,
       })
     : Promise.resolve({ sent: false });
@@ -170,26 +187,31 @@ export async function sendCancellationEmails(opts: {
   cancelledBy: "customer" | "owner";
 }) {
   const { db, siteId, siteName, booking: b, settings, cancelledBy } = opts;
-  const when = formatSwedish(new Date(b.starts_at), settings.timezone);
-  const rows: [string, string][] = [["Tjänst", b.package_name], ["Tid", when]];
+  const L = await siteLocale(db, siteId);
+  const { t, ownerT } = L;
+  const when = formatWhen(new Date(b.starts_at), settings.timezone, L.bcp47);
+  const ownerWhen = formatWhen(new Date(b.starts_at), settings.timezone, BCP47[L.ownerLang]);
+  const rows: [string, string][] = [[t("Tjänst"), b.package_name], [t("Tid"), when]];
   const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
   const brand = await brandFor(db, siteId, siteName);
-  const cancelVars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: `${b.duration_min} minuter`, pris: formatPrice(b.price_sek), sajt: siteName };
+  const cancelVars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: t("{n} minuter", { n: b.duration_min }), pris: formatPrice(b.price_sek, L.currency, L.bcp47), sajt: siteName };
   const cancelIntro = applyMailTemplate(
-    settings.cancel_intro?.trim() || (cancelledBy === "owner" ? DEFAULT_CANCEL_INTRO_OWNER : DEFAULT_CANCEL_INTRO_CUSTOMER),
+    settings.cancel_intro?.trim() || t(cancelledBy === "owner" ? DEFAULT_CANCEL_INTRO_OWNER : DEFAULT_CANCEL_INTRO_CUSTOMER),
     cancelVars
   );
   const tasks: Promise<unknown>[] = [
     sendEmail({
       to: b.customer_email,
-      subject: `Avbokad: ${b.package_name}, ${when}`,
+      subject: t("Avbokad: {tjänst}, {tid}", { tjänst: b.package_name, tid: when }),
       html: emailLayout({
-      brand,
-        title: "Din bokning är avbokad",
+        brand,
+        lang: L.lang,
+        poweredBy: t("Bokat via YourCoSite"),
+        title: t("Din bokning är avbokad"),
         intro: cancelIntro,
         rows,
       }),
-      text: `${cancelIntro}\n\nTjänst: ${b.package_name}\nTid: ${when}`,
+      text: `${cancelIntro}\n\n${t("Tjänst")}: ${b.package_name}\n${t("Tid")}: ${when}`,
       replyTo: ownerTo || undefined,
     }),
   ];
@@ -197,9 +219,16 @@ export async function sendCancellationEmails(opts: {
     tasks.push(
       sendEmail({
         to: ownerTo,
-        subject: `Avbokning: ${b.customer_name}, ${when}`,
-        html: emailLayout({ brand, title: "En bokning har avbokats", intro: `${b.customer_name} har avbokat sin tid. Tiden är ledig igen.`, rows: [...rows, ["Namn", b.customer_name], ["E-post", b.customer_email]] }),
-        text: `${b.customer_name} har avbokat.\n\nTjänst: ${b.package_name}\nTid: ${when}`,
+        subject: ownerT("Avbokning: {namn}, {tid}", { namn: b.customer_name, tid: ownerWhen }),
+        html: emailLayout({
+          brand,
+          lang: L.ownerLang,
+          poweredBy: ownerT("Bokat via YourCoSite"),
+          title: ownerT("En bokning har avbokats"),
+          intro: ownerT("{namn} har avbokat sin tid. Tiden är ledig igen.", { namn: b.customer_name }),
+          rows: [[ownerT("Tjänst"), b.package_name], [ownerT("Tid"), ownerWhen], [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email]],
+        }),
+        text: `${ownerT("{namn} har avbokat.", { namn: b.customer_name })}\n\n${ownerT("Tjänst")}: ${b.package_name}\n${ownerT("Tid")}: ${ownerWhen}`,
         replyTo: b.customer_email,
       })
     );

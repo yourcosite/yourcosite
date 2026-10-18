@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
@@ -8,9 +9,10 @@ import { applyHomeRecipe, isHomeRecipeId } from "@/lib/homeRecipes";
 // valde på /forslag. Innehållet (texterna) är redan genererat — det här
 // ändrar bara theme.font/backgroundMode på den sajt kunden precis fick.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const { font, backgroundMode, buttonStyle, headerLayout, heroLayout, aboutLayout, gridLayout, ctaLayout, skin, homeRecipe } = body;
@@ -25,7 +27,7 @@ export async function POST(request: Request) {
     .maybeSingle();
 
   if (siteError || !site || !isValidSiteContent(site.content)) {
-    return NextResponse.json({ error: "Hittade ingen genererad sajt." }, { status: 400 });
+    return NextResponse.json({ error: t("Hittade ingen genererad sajt.") }, { status: 400 });
   }
 
   // Förstasidans sektionsordning enligt det valda förslagets recept

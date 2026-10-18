@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -13,9 +14,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // delete cascade" i supabase/schema.sql — ingen manuell upprensning behövs
 // här.
 export async function DELETE() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const admin = createAdminClient();
   const { error } = await admin.auth.admin.deleteUser(user.id);

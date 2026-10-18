@@ -1,11 +1,13 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const name = (body.name || "").trim();
@@ -14,7 +16,7 @@ export async function POST(request: Request) {
   const tone = body.tone || "Personlig";
 
   if (!name) {
-    return NextResponse.json({ error: "Företagsnamn krävs." }, { status: 400 });
+    return NextResponse.json({ error: t("Företagsnamn krävs.") }, { status: 400 });
   }
 
   let draft;

@@ -19,6 +19,8 @@ export default async function SettingsPage() {
   let notifyBilling = true;
   let notifyTips = false;
   let siteCount = 0;
+  let country = "SE";
+  let extras: Record<string, string> = {};
   const email = user?.email ?? "";
 
   if (user) {
@@ -41,6 +43,24 @@ export default async function SettingsPage() {
     notifyChangesPublished = profile?.notify_changes_published ?? true;
     notifyBilling = profile?.notify_billing ?? true;
     notifyTips = profile?.notify_tips ?? false;
+
+    // Nya kolumner (supabase/sprak.sql) hämtas separat så sidan fungerar
+    // även innan SQL-filen körts.
+    const { data: more } = await supabase
+      .from("profiles")
+      .select("country, vat_number, legal_form, company_register, company_capital, company_representative")
+      .eq("id", user.id)
+      .single();
+    if (more) {
+      country = more.country ?? "SE";
+      extras = {
+        vatNumber: more.vat_number ?? "",
+        legalForm: more.legal_form ?? "",
+        register: more.company_register ?? "",
+        capital: more.company_capital ?? "",
+        representative: more.company_representative ?? "",
+      };
+    }
 
     const { count } = await supabase
       .from("sites")
@@ -69,6 +89,8 @@ export default async function SettingsPage() {
           notifyBilling={notifyBilling}
           notifyTips={notifyTips}
           siteCount={siteCount}
+          country={country}
+          extras={extras}
         />
       </div>
     </div>

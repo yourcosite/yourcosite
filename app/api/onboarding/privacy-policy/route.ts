@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
@@ -11,9 +12,10 @@ import { generatePrivacyPolicyText } from "@/lib/privacyPolicyTemplate";
 // bort en ev. tidigare genererad text och tvärtom, så det alltid bara
 // finns EN aktiv policy åt gången.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const mode = body.mode;
@@ -35,7 +37,7 @@ export async function POST(request: Request) {
     // ligga under kundens egen mapp i Storage, annars kunde vem som helst
     // skicka in en godtycklig extern länk som "sin policy".
     if (!fileUrl || !fileUrl.includes(`/uploads/${user.id}/`)) {
-      return NextResponse.json({ error: "Ogiltig fil." }, { status: 400 });
+      return NextResponse.json({ error: t("Ogiltig fil.") }, { status: 400 });
     }
     update = {
       privacy_policy_mode: "uploaded",
@@ -48,15 +50,31 @@ export async function POST(request: Request) {
     const email = typeof body.email === "string" ? body.email.trim() : "";
     if (!orgNumber || !address || !email) {
       return NextResponse.json(
-        { error: "Fyll i organisationsnummer, adress och e-post." },
+        { error: t("Fyll i organisationsnummer, adress och e-post.") },
         { status: 400 }
       );
     }
+    // Land och företagsuppgifter från kontot (kolumnerna finns efter
+    // supabase/sprak.sql, annars blir de tomma) + sajtens språk.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("country, phone, vat_number, legal_form, company_register, company_capital, company_representative")
+      .eq("id", user.id)
+      .maybeSingle();
+    const p = (prof ?? {}) as Record<string, string | null>;
     const text = generatePrivacyPolicyText({
       companyName: draft.name,
       orgNumber,
       address,
       email,
+      lang: (draft as any).language || "sv",
+      country: p.country,
+      phone: p.phone,
+      vatNumber: p.vat_number,
+      legalForm: p.legal_form,
+      register: p.company_register,
+      capital: p.company_capital,
+      representative: p.company_representative,
     });
     update = {
       privacy_policy_mode: "generated",
@@ -74,7 +92,7 @@ export async function POST(request: Request) {
       privacy_policy_text: null,
     };
   } else {
-    return NextResponse.json({ error: "Ogiltigt läge." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltigt läge.") }, { status: 400 });
   }
 
   const { data: site, error } = await supabase

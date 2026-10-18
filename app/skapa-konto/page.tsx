@@ -1,7 +1,9 @@
 "use client";
 
 import { rich } from "@/lib/i18n/rich";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import CompanyFields, { type CompanyValues } from "@/components/CompanyFields";
+import { defaultCountryFor, type CountryCode } from "@/lib/i18n/country";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -11,6 +13,7 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function SignupPage() {
   const t = useT();
+  const locale = useLocale();
   const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -18,7 +21,8 @@ export default function SignupPage() {
   const [password2, setPassword2] = useState("");
   const [phone, setPhone] = useState("");
   const [companyName, setCompanyName] = useState("");
-  const [orgNumber, setOrgNumber] = useState("");
+  const [country, setCountry] = useState<CountryCode>(defaultCountryFor(locale));
+  const [company, setCompany] = useState<CompanyValues>({});
   const [addressStreet, setAddressStreet] = useState("");
   const [addressPostalCode, setAddressPostalCode] = useState("");
   const [addressCity, setAddressCity] = useState("");
@@ -60,7 +64,14 @@ export default function SignupPage() {
           full_name: name,
           phone,
           company_name: companyName,
-          org_number: orgNumber,
+          org_number: company.orgNumber ?? "",
+          country,
+          language: locale,
+          vat_number: company.vatNumber ?? "",
+          legal_form: company.legalForm ?? "",
+          company_register: company.register ?? "",
+          company_capital: company.capital ?? "",
+          company_representative: company.representative ?? "",
           address_street: addressStreet,
           address_postal_code: addressPostalCode,
           address_city: addressCity,
@@ -202,19 +213,14 @@ export default function SignupPage() {
                 className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
               />
             </div>
-            <div>
-              <label htmlFor="orgNumber" className="block text-[13.5px] font-semibold mb-1.5">
-                {t("Organisationsnummer")}
-              </label>
-              <input
-                id="orgNumber"
-                type="text"
-                value={orgNumber}
-                onChange={(e) => setOrgNumber(e.target.value)}
-                placeholder={t("XXXXXX-XXXX")}
-                className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
-              />
-            </div>
+            <CompanyFields
+              country={country}
+              onCountry={(c) => { setCountry(c); setCompany({}); }}
+              values={company}
+              onChange={(k, v) => setCompany((x) => ({ ...x, [k]: v }))}
+              labelClass="block text-[13.5px] font-semibold mb-1.5"
+              inputClass="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+            />
             <div>
               <label htmlFor="addressStreet" className="block text-[13.5px] font-semibold mb-1.5">
                 {t("Adress")}

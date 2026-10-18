@@ -159,8 +159,8 @@ export default function PagesManagePage() {
       setReparenting(null);
       setReparentNotice(
         parentPath
-          ? `"${label}" är nu en undersida. Dess adress är ${data.newPath}.`
-          : `"${label}" är nu en egen sida i huvudmenyn. Dess adress är ${data.newPath}.`
+          ? t("\"{label}\" är nu en undersida. Dess adress är {newPath}.", { label, newPath: data.newPath })
+          : t("\"{label}\" är nu en egen sida i huvudmenyn. Dess adress är {newPath}.", { label, newPath: data.newPath })
       );
       setJustAdded(null);
       setJustRemoved(null);
@@ -217,7 +217,7 @@ export default function PagesManagePage() {
       setJustAdded(null);
       setJustRemoved(null);
       setReparenting(null);
-      setReparentNotice(data.newPath !== path ? `"${label}" har flyttats. Dess nya adress är ${data.newPath}.` : "");
+      setReparentNotice(data.newPath !== path ? t("\"{label}\" har flyttats. Dess nya adress är {newPath}.", { label, newPath: data.newPath }) : "");
     } catch {
       setAddError(t("Kunde inte flytta sidan just nu."));
     } finally {
@@ -358,7 +358,7 @@ export default function PagesManagePage() {
                         <div className="flex-1">
                           <div className="font-semibold text-[14.5px]">{p.label}</div>
                           <div className="text-[12px] text-ink-dim mt-0.5">
-                            {isChild ? t("Undersida · ") : childCount > 0 ? `Huvudsida med ${childCount} ${childCount === 1 ? "undersida" : "undersidor"} · ` : ""}{p.path} · {empty ? t("Inget innehåll än") : `${p.sections.length} ${p.sections.length === 1 ? "sektion" : "sektioner"}`}
+                            {isChild ? t("Undersida · ") : childCount > 0 ? t(childCount === 1 ? "Huvudsida med {n} undersida · " : "Huvudsida med {n} undersidor · ", { n: childCount }) : ""}{p.path} · {empty ? t("Inget innehåll än") : t(p.sections.length === 1 ? "{n} sektion" : "{n} sektioner", { n: p.sections.length })}
                           </div>
                         </div>
                         {locked && (
@@ -369,7 +369,7 @@ export default function PagesManagePage() {
                             <button
                               onClick={() => move(p.path, "up")}
                               disabled={moving || !movePage(allPages, p.path, "up")}
-                              aria-label={`Flytta ${p.label} uppåt i menyn`}
+                              aria-label={t("Flytta {label} uppåt i menyn", { label: p.label })}
                               title={t("Flytta uppåt i menyn")}
                               className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink-dim disabled:opacity-30"
                             >
@@ -378,7 +378,7 @@ export default function PagesManagePage() {
                             <button
                               onClick={() => move(p.path, "down")}
                               disabled={moving || !movePage(allPages, p.path, "down")}
-                              aria-label={`Flytta ${p.label} nedåt i menyn`}
+                              aria-label={t("Flytta {label} nedåt i menyn", { label: p.label })}
                               title={t("Flytta nedåt i menyn")}
                               className="w-8 h-8 rounded-lg border border-line flex items-center justify-center text-ink-dim disabled:opacity-30"
                             >
@@ -478,7 +478,7 @@ export default function PagesManagePage() {
                         </div>
                       )}
                       {confirming && (
-                        <div className="mt-2.5 pt-2.5 border-t border-line text-[12.5px] text-warm font-semibold">{rich(t, "Detta tar bort sidan permanent från den publicerade sajten{v1}. Går inte att ångra.", {}, { v1: childCount > 0 ? `, tillsammans med dess ${childCount} ${childCount === 1 ? "undersida" : "undersidor"}` : "" })}</div>
+                        <div className="mt-2.5 pt-2.5 border-t border-line text-[12.5px] text-warm font-semibold">{rich(t, "Detta tar bort sidan permanent från den publicerade sajten{v1}. Går inte att ångra.", {}, { v1: childCount > 0 ? t(childCount === 1 ? ", tillsammans med dess {n} undersida" : ", tillsammans med dess {n} undersidor", { n: childCount }) : "" })}</div>
                       )}
                     </div>
                     {showSlot && (

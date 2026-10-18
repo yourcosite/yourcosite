@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { PLAN_LABELS, formatKr, planPrice } from "@/lib/pricing";
+import { PLAN_LABELS, formatKr, formatMoney, planPrice } from "@/lib/pricing";
+import { billingCurrencyFor, type Currency } from "@/lib/i18n/country";
 
 type SiteRow = { id: string; name: string; domain: string | null; status: string; plan: string };
 type CustomerRow = {
@@ -19,15 +20,26 @@ export default async function AdminEkonomiPage() {
 
   const list = (customers ?? []) as unknown as CustomerRow[];
 
+  // Land per kund (kolumnen kommer från supabase/sprak.sql). Kunder utanför
+  // Sverige faktureras i euro, så summorna räknas per valuta.
+  const { data: countryRows } = await supabase.from("profiles").select("id, country").eq("role", "customer");
+  const countryOf = new Map<string, string>((countryRows ?? []).map((r: any) => [r.id, r.country]));
+  const curOf = (customerId: string): Currency => billingCurrencyFor(countryOf.get(customerId));
+  const money = (sek: number, eur: number) =>
+    eur > 0 ? (sek > 0 ? `${formatKr(sek)} + ${formatMoney(eur, "EUR")}` : formatMoney(eur, "EUR")) : formatKr(sek);
+
   const payingCustomers = list
     .map((c) => ({ customer: c, site: (c.sites ?? []).find((s) => s.status === "live") }))
     .filter((x) => x.site) as { customer: CustomerRow; site: SiteRow }[];
 
   const waiting = list.filter((c) => !(c.sites ?? []).some((s) => s.status === "live"));
 
-  const mrr = payingCustomers.reduce((sum, x) => sum + planPrice(x.site.plan), 0);
-  const arr = mrr * 12;
-  const arpu = payingCustomers.length ? Math.round(mrr / payingCustomers.length) : 0;
+  const mrrSek = payingCustomers.reduce((sum, x) => sum + (curOf(x.customer.id) === "SEK" ? planPrice(x.site.plan, "SEK") : 0), 0);
+  const mrrEur = payingCustomers.reduce((sum, x) => sum + (curOf(x.customer.id) === "EUR" ? planPrice(x.site.plan, "EUR") : 0), 0);
+  const nSek = payingCustomers.filter((x) => curOf(x.customer.id) === "SEK").length;
+  const nEur = payingCustomers.length - nSek;
+  const arpuSek = nSek ? Math.round(mrrSek / nSek) : 0;
+  const arpuEur = nEur ? Math.round(mrrEur / nEur) : 0;
 
   const planCounts = (["bas", "standard", "premium"] as const).map((plan) => ({
     plan,
@@ -45,10 +57,10 @@ export default async function AdminEkonomiPage() {
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4.5 mb-6.5">
-        <StatCard label="MRR" value={formatKr(mrr)} />
-        <StatCard label="ARR" value={formatKr(arr)} />
+        <StatCard label="MRR" value={money(mrrSek, mrrEur)} />
+        <StatCard label="ARR" value={money(mrrSek * 12, mrrEur * 12)} />
         <StatCard label="Betalande kunder" value={String(payingCustomers.length)} />
-        <StatCard label="Snitt / kund (ARPU)" value={formatKr(arpu)} />
+        <StatCard label="Snitt / kund (ARPU)" value={money(arpuSek, arpuEur)} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-5">
@@ -72,7 +84,7 @@ export default async function AdminEkonomiPage() {
                     {PLAN_LABELS[site.plan] ?? site.plan}
                   </td>
                   <td className="py-2.5 border-b border-line font-semibold">
-                    {formatKr(planPrice(site.plan))}
+                    {formatMoney(planPrice(site.plan, curOf(customer.id)), curOf(customer.id))}
                   </td>
                 </tr>
               ))}

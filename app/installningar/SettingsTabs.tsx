@@ -27,6 +27,8 @@ export default function SettingsTabs({
   phone,
   companyName,
   orgNumber,
+  country,
+  extras,
   addressStreet,
   addressPostalCode,
   addressCity,
@@ -42,6 +44,8 @@ export default function SettingsTabs({
   phone: string;
   companyName: string;
   orgNumber: string;
+  country: string;
+  extras: Record<string, string>;
   addressStreet: string;
   addressPostalCode: string;
   addressCity: string;
@@ -85,6 +89,8 @@ export default function SettingsTabs({
           phone={phone}
           companyName={companyName}
           orgNumber={orgNumber}
+          country={country}
+          extras={extras}
           addressStreet={addressStreet}
           addressPostalCode={addressPostalCode}
           addressCity={addressCity}

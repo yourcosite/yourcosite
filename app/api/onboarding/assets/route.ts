@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedImageUrl, isUnsplashImageUrl } from "@/lib/stockPhotos";
@@ -11,9 +12,10 @@ const DOCUMENT_TYPES = [
 ];
 
 export async function GET() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   let draft;
   try {
@@ -38,27 +40,28 @@ export async function GET() {
 // server, så Vercels gräns för request-storlek (~4.5 MB) spelar ingen
 // roll längre, oavsett hur många filer eller hur stora de är.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const { fileName, fileUrl, mimeType } = body;
 
   if (!fileName || !fileUrl || !mimeType) {
-    return NextResponse.json({ error: "Ofullständig filinformation." }, { status: 400 });
+    return NextResponse.json({ error: t("Ofullständig filinformation.") }, { status: 400 });
   }
 
   const isImage = IMAGE_TYPES.includes(mimeType);
   const isDocument = DOCUMENT_TYPES.includes(mimeType);
   if (!isImage && !isDocument) {
-    return NextResponse.json({ error: "Filtypen stöds inte." }, { status: 400 });
+    return NextResponse.json({ error: t("Filtypen stöds inte.") }, { status: 400 });
   }
 
   // fileUrl måste vara en fil i kundens egen mapp i "uploads"-bucketen —
   // annars kunde man registrera en godtycklig extern URL som sin egen fil.
   if (!isAllowedImageUrl(fileUrl, user.id) || (isUnsplashImageUrl(fileUrl) && !isImage)) {
-    return NextResponse.json({ error: "Ogiltig filsökväg." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltig filsökväg.") }, { status: 400 });
   }
 
   let draft;

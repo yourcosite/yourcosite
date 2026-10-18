@@ -1,7 +1,8 @@
 "use client";
 
 import { msg } from "@/lib/i18n/config";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import { currencyForLocale, formatMoney, planPrice } from "@/lib/pricing";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import OnboardingShell from "@/components/OnboardingShell";
@@ -18,7 +19,6 @@ const PLANS = [
   {
     id: "bas",
     name: msg("Bas"),
-    price: "149 kr",
     body: msg("För er som vill komma igång enkelt med en sajt."),
     features: [msg("1 sajt"), msg("25 ändringar/månad"), msg("Egen domän")],
     popular: false,
@@ -26,7 +26,6 @@ const PLANS = [
   {
     id: "standard",
     name: msg("Standard"),
-    price: "249 kr",
     body: msg("För verksamheter som finslipar sajten löpande."),
     features: [msg("60 ändringar/månad"), msg("Nyhetsmodul med AI-förslag"), msg("Flerspråkigt (2 språk)")],
     popular: true,
@@ -34,7 +33,6 @@ const PLANS = [
   {
     id: "premium",
     name: msg("Premium"),
-    price: "399 kr",
     body: msg("För er med flera sajter eller högre tempo."),
     features: [msg("Upp till 3 sajter"), msg("150 ändringar/månad"), msg("Prioriterad support")],
     popular: false,
@@ -45,6 +43,8 @@ type PlanId = (typeof PLANS)[number]["id"];
 
 export default function SignupPlanPage() {
   const t = useT();
+  const locale = useLocale();
+  const currency = currencyForLocale(locale);
   const router = useRouter();
   const [plan, setPlan] = useState<PlanId | null>(null);
   const [saving, setSaving] = useState(false);
@@ -117,7 +117,7 @@ export default function SignupPlanPage() {
               )}
               <div className="font-semibold text-[15.5px] mb-1">{t(p.name)}</div>
               <div className="text-[20px] font-medium mb-1.5">
-                {p.price}
+                {formatMoney(planPrice(p.id, currency), currency, locale)}
                 <span className="text-[12.5px] text-ink-dim font-normal"> {t("/mån")}</span>
               </div>
               <p className="text-[12.5px] text-ink-dim mb-3 leading-relaxed">{t(p.body)}</p>

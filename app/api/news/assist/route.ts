@@ -1,7 +1,10 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { rateLimited } from "@/lib/rateLimit";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
+import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { LANGUAGE_ENGLISH } from "@/lib/i18n/config";
 
 // "Be Millie om hjälp med texten" i nyhetspanelen (app/nyheter/NewsClient.tsx)
 // — till skillnad från /api/sites/edit (som redigerar SAJTENS innehåll)
@@ -26,11 +29,12 @@ const ASSIST_TOOL = {
 };
 
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
   if (await rateLimited(`newsassist:user:${user.id}`, 100, 86400)) {
-    return NextResponse.json({ error: "Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten." }, { status: 429 });
+    return NextResponse.json({ error: t("Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten.") }, { status: 429 });
   }
 
   const body = await request.json();
@@ -40,7 +44,7 @@ export async function POST(request: Request) {
   const category = typeof body.category === "string" ? body.category.trim().slice(0, 40) : "";
 
   if (!instruction && !currentBody) {
-    return NextResponse.json({ error: "Skriv vad nyheten ska handla om, eller skriv ett utkast själv först." }, { status: 400 });
+    return NextResponse.json({ error: t("Skriv vad nyheten ska handla om, eller skriv ett utkast själv först.") }, { status: 400 });
   }
 
   let client;
@@ -50,6 +54,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
+  // Artikeln skrivs på sajtens språk.
+  const reqSiteId = typeof body.siteId === "string" ? body.siteId : null;
+  const siteRow = await getCurrentPublishedSite(supabase, user.id, reqSiteId).catch(() => null);
+  const langName = LANGUAGE_ENGLISH[(siteRow as any)?.language] ?? "Swedish";
   const hasDraft = !!currentBody;
   const prompt = `Du hjälper en kund skriva en nyhetsartikel till sin egen sajt (kategori: "${category || "Nyheter"}").
 
@@ -66,7 +74,7 @@ ${
 
 Sätt ALLTID både rubrik och ingress: kunden börjar ofta med bara en kort text och vill att du utökar eller skriver om den. Är kundens nuvarande rubrik tom, skriv en kort, tydlig rubrik utifrån texten (högst ca 8 ord). Ingressen är en mening (max ca 160 tecken) som lockar att läsa vidare.
 
-Svara via verktyget "draft_news_article" på svenska: en rubrik (behåll kundens egen om den redan är bra), en kort ingress, och brödtexten i stycken separerade med tomrad. Skriv ALLTID rena textstycken utan någon HTML eller markdown-formatering — inga taggar som <p>, <body> eller </html>, inga asterisker eller rubriktecken. Bara vanlig löptext.`;
+Svara via verktyget "draft_news_article" på ${langName} (artikeln skrivs på sajtens språk, även om instruktionen är på ett annat språk): en rubrik (behåll kundens egen om den redan är bra), en kort ingress, och brödtexten i stycken separerade med tomrad. Skriv ALLTID rena textstycken utan någon HTML eller markdown-formatering — inga taggar som <p>, <body> eller </html>, inga asterisker eller rubriktecken. Bara vanlig löptext.`;
 
   let response;
   try {
@@ -84,7 +92,7 @@ Svara via verktyget "draft_news_article" på svenska: en rubrik (behåll kundens
   const toolUse = response.content.find(
     (b): b is Extract<typeof response.content[number], { type: "tool_use" }> => b.type === "tool_use"
   );
-  if (!toolUse) return NextResponse.json({ error: "Fick inget förslag." }, { status: 502 });
+  if (!toolUse) return NextResponse.json({ error: t("Fick inget förslag.") }, { status: 502 });
 
   const draft = toolUse.input as { title?: string; excerpt?: string; body?: string };
   return NextResponse.json({

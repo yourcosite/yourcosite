@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
@@ -9,12 +10,13 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
+  const t = getT();
   const check = await requireRole(["superadmin"]);
   if (check.error) return check.error;
 
   if (check.user.id === params.id) {
     return NextResponse.json(
-      { error: "Du kan inte ta bort din egen adminbehörighet." },
+      { error: t("Du kan inte ta bort din egen adminbehörighet.") },
       { status: 400 }
     );
   }

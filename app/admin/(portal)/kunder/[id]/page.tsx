@@ -23,6 +23,29 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   if (!customer) notFound();
 
+  // Nya kolumner och supporthistoriken kommer från supabase/sprak.sql;
+  // sidan fungerar även innan den körts.
+  const { data: extra } = await supabase
+    .from("profiles")
+    .select("country, language, vat_number, legal_form, company_register, company_capital, company_representative")
+    .eq("id", params.id)
+    .maybeSingle();
+  let supportHistory: any[] = [];
+  const hist = await supabase
+    .from("support_messages")
+    .select("id, source, message, message_sv, language, status, created_at, replies:support_replies(id, body_sv, body_sent, language, emailed, created_at)")
+    .eq("user_id", params.id)
+    .order("created_at", { ascending: false });
+  if (hist.data) supportHistory = hist.data;
+  else {
+    const old = await supabase
+      .from("support_messages")
+      .select("id, source, message, status, created_at")
+      .eq("user_id", params.id)
+      .order("created_at", { ascending: false });
+    supportHistory = old.data ?? [];
+  }
+
   const { data: notes } = await supabase
     .from("customer_notes")
     .select("id, content, author_name, created_at")
@@ -45,7 +68,8 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   return (
     <CustomerDetailClient
-      customer={customer as any}
+      customer={{ ...(customer as any), ...(extra ?? {}) }}
+      supportHistory={supportHistory}
       initialNotes={notes ?? []}
       activity={activity}
       canEdit={canEdit}

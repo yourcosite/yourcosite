@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
@@ -13,6 +14,7 @@ import {
 // Bara superadmin, eftersom det här är den känsligaste admin-åtgärden
 // som finns — den byter faktiskt ut vems session webbläsaren har.
 export async function POST(request: Request, { params }: { params: { id: string } }) {
+  const t = getT();
   const check = await requireRole(["superadmin"]);
   if (check.error) return check.error;
 
@@ -24,7 +26,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
     .single();
 
   if (profileError || !profile?.email) {
-    return NextResponse.json({ error: "Hittade ingen kund med det id:t." }, { status: 404 });
+    return NextResponse.json({ error: t("Hittade ingen kund med det id:t.") }, { status: 404 });
   }
 
   const origin = new URL(request.url).origin;
@@ -48,7 +50,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
   });
 
   const hashed = data.properties?.hashed_token;
-  if (!hashed) return NextResponse.json({ error: "Kunde inte skapa inloggningslänken." }, { status: 500 });
+  if (!hashed) return NextResponse.json({ error: t("Kunde inte skapa inloggningslänken.") }, { status: 500 });
   const res = NextResponse.json({
     actionLink: `${origin}/auth/confirm?token_hash=${encodeURIComponent(hashed)}&next=${encodeURIComponent("/dashboard")}`,
   });

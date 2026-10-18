@@ -51,7 +51,7 @@ export async function sendEmail(opts: {
 }
 
 // Enkel, prydlig mejlmall (tabellbaserad, fungerar i alla mejlprogram).
-export function emailLayout(opts: { title: string; intro: string; rows: [string, string][]; extra?: { heading: string; text: string }; brand?: { name: string; logoUrl?: string | null }; footer?: string; button?: { label: string; url: string } }): string {
+export function emailLayout(opts: { title: string; intro: string; rows: [string, string][]; extra?: { heading: string; text: string }; brand?: { name: string; logoUrl?: string | null }; footer?: string; button?: { label: string; url: string }; poweredBy?: string; lang?: string }): string {
   const rows = opts.rows
     .filter(([, v]) => v)
     .map(
@@ -68,7 +68,7 @@ export function emailLayout(opts: { title: string; intro: string; rows: [string,
   const button = opts.button
     ? `<p style="margin:24px 0 0"><a href="${escapeHtml(opts.button.url)}" style="display:inline-block;background:#1a1a18;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:999px">${escapeHtml(opts.button.label)}</a></p>`
     : "";
-  return `<!doctype html><html><body style="margin:0;background:#f5f4f0;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
+  return `<!doctype html><html lang="${escapeHtml(opts.lang || "sv")}"><body style="margin:0;background:#f5f4f0;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
 <table width="100%" style="max-width:520px;background:#fff;border-radius:14px;padding:28px 28px 24px" cellpadding="0" cellspacing="0"><tr><td>
 ${brandHtml}<h1 style="margin:0 0 10px;font-size:21px;color:#1a1a18">${escapeHtml(opts.title)}</h1>
@@ -77,6 +77,6 @@ ${brandHtml}<h1 style="margin:0 0 10px;font-size:21px;color:#1a1a18">${escapeHtm
 ${extra ? `<div style="margin:22px 0 0;padding:14px 16px;background:#f5f4f0;border-radius:10px"><div style="font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:4px">${escapeHtml(extra.heading)}</div><div style="font-size:14px;line-height:1.55;color:#3a3a37;white-space:pre-line">${escapeHtml(extra.text)}</div></div>` : ""}
 ${button}
 ${opts.footer ? `<p style="margin:24px 0 0;font-size:12.5px;line-height:1.5;color:#8a8984">${escapeHtml(opts.footer)}</p>` : ""}
-<p style="margin:24px 0 0;padding-top:14px;border-top:1px solid #ecebe6;font-size:12px;color:#a09f99;text-align:center">Bokat via YourCoSite</p>
+<p style="margin:24px 0 0;padding-top:14px;border-top:1px solid #ecebe6;font-size:12px;color:#a09f99;text-align:center">${escapeHtml(opts.poweredBy ?? "Bokat via YourCoSite")}</p>
 </td></tr></table></td></tr></table></body></html>`;
 }

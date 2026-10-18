@@ -1,3 +1,5 @@
+import { getT, getLocale } from "@/lib/i18n/server";
+import { LANGUAGE_ENGLISH, isLocale } from "@/lib/i18n/config";
 import { childPagesOf } from "@/lib/pageTree";
 import { NextResponse } from "next/server";
 import { rateLimited } from "@/lib/rateLimit";
@@ -70,7 +72,13 @@ const EDIT_TOOL = {
       summary: {
         type: "string",
         description:
-          "En kort mening på svenska, riktad direkt till kunden (t.ex. \"Bytte rubriken och gjorde texten kortare.\"), som beskriver vad som ändrades — eller varför inget ändrades om önskemålet inte gick att utföra.",
+          "En kort mening på kundens språk (se avsnittet SPRÅK i instruktionen), riktad direkt till kunden (t.ex. \"Bytte rubriken och gjorde texten kortare.\"), som beskriver vad som ändrades — eller varför inget ändrades om önskemålet inte gick att utföra.",
+      },
+      siteLanguage: {
+        type: "string",
+        enum: ["sv", "en", "da", "fi", "de", "fr", "es"],
+        description:
+          "Sätt BARA när sajtens språk ska bytas (kunden ber t.ex. om att översätta sajten eller göra den tysk/engelsk/…): den språkkod sajten ska ha efteråt. Då MÅSTE du i samma svar översätta all synlig text på sajten (alla sidor som ändras) till det språket. Utelämna annars.",
       },
       exampleContentResolved: {
         type: "boolean",
@@ -113,6 +121,7 @@ type EditPatch = {
   pageOrder?: string[];
   changedPages?: SitePageContent[];
   removedPagePaths?: string[];
+  siteLanguage?: string;
   newsArticle?: {
     title: string;
     excerpt?: string;
@@ -468,16 +477,17 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
 }
 
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
   if (await rateLimited(`edit:user:${user.id}`, 100, 86400)) {
-    return NextResponse.json({ error: "Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten." }, { status: 429 });
+    return NextResponse.json({ error: t("Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten.") }, { status: 429 });
   }
 
   const body = await request.json();
   const message = typeof body.message === "string" ? body.message.trim() : "";
-  if (!message) return NextResponse.json({ error: "Skriv vad du vill ändra." }, { status: 400 });
+  if (!message) return NextResponse.json({ error: t("Skriv vad du vill ändra.") }, { status: 400 });
   // Vilken av kundens (eventuellt flera) sajter redigeringen gäller — skickas
   // med från app/redigera/page.tsx. Se getCurrentPublishedSite för varför
   // den annars kunde träffa fel sajt på ett konto med flera.
@@ -574,7 +584,7 @@ export async function POST(request: Request) {
 
   const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site || !isValidSiteContent(site.content)) {
-    return NextResponse.json({ error: "Hittade ingen sajt att redigera." }, { status: 400 });
+    return NextResponse.json({ error: t("Hittade ingen sajt att redigera.") }, { status: 400 });
   }
 
   let client;
@@ -585,7 +595,16 @@ export async function POST(request: Request) {
   }
 
   const existingNewsCategories = await getSiteNewsCategories(supabase, site.id);
-  const promptText = buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories);
+  const uiLang = getLocale();
+  const siteLang: string = isLocale((site as any).language) ? (site as any).language : "sv";
+  const languageRule = `SPRÅK — kunden använder verktyget på ${LANGUAGE_ENGLISH[uiLang]} och sajten är skriven på ${LANGUAGE_ENGLISH[siteLang]}.
+- Du förstår kundens önskemål på vilket språk som helst. Skriv "summary", frågor och "clarifyOptions" på samma språk som kundens senaste meddelande (annars ${LANGUAGE_ENGLISH[uiLang]}).
+- Allt nytt innehåll du skriver PÅ SAJTEN (texter, rubriker, knappar, menynamn, nyheter, frågor och svar) skrivs på sajtens språk (${LANGUAGE_ENGLISH[siteLang]}), även om kunden ber om ändringen på ett annat språk, om inte kunden uttryckligen ber om ett annat språk för just det stället.
+- Ber kunden om att sajten ska byta språk eller översättas, sätt "siteLanguage" till den nya språkkoden och översätt ALL synlig text på de sidor du ändrar (rubriker, brödtext, knappar, menynamn, sidnamn). Översätt aldrig namn på företag, personer, produkter eller adresser.
+- Lokal anpassning: tilltal, datum, telefonformat och valuta ska följa sajtens språk och land. Hitta aldrig på uppgifter.
+
+`;
+  const promptText = languageRule + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories);
 
   // Bara bildbilagor görs om till egna innehållsblock i ett multimodalt
   // meddelande (Claude ser själva bilderna, en efter en) — textdokument är
@@ -632,7 +651,7 @@ export async function POST(request: Request) {
     (b): b is Extract<typeof response.content[number], { type: "tool_use" }> => b.type === "tool_use"
   );
   if (!toolUse) {
-    return NextResponse.json({ error: "AI-svaret innehöll ingen uppdatering." }, { status: 502 });
+    return NextResponse.json({ error: t("AI-svaret innehöll ingen uppdatering.") }, { status: 502 });
   }
 
   const patch = toolUse.input as EditPatch;
@@ -654,12 +673,12 @@ export async function POST(request: Request) {
     });
   }
   if (patch.changedPages && !patch.changedPages.every(isValidSitePage)) {
-    return NextResponse.json({ error: "AI-svaret hade fel format." }, { status: 502 });
+    return NextResponse.json({ error: t("AI-svaret hade fel format.") }, { status: 502 });
   }
 
   const updatedContent = dedupeMaps(applyPatch(site.content, patch), "flatten-form");
   if (!updatedContent.pages.length) {
-    return NextResponse.json({ error: "Ändringen skulle lämna sajten utan sidor." }, { status: 502 });
+    return NextResponse.json({ error: t("Ändringen skulle lämna sajten utan sidor.") }, { status: 502 });
   }
 
   // Loggan och sociala länkar sätts i kod från onboardingen, aldrig av
@@ -744,6 +763,14 @@ export async function POST(request: Request) {
     .eq("id", site.id);
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
+
+  // Sajtens språk (cookiebanner, bokning, kundmejl) följer med när kunden
+  // bett Millie översätta sajten. Kolumnen finns efter supabase/sprak.sql.
+  let newSiteLanguage: string | null = null;
+  if (isLocale(patch.siteLanguage) && patch.siteLanguage !== siteLang) {
+    const { error: langError } = await supabase.from("sites").update({ language: patch.siteLanguage }).eq("id", site.id);
+    if (!langError) newSiteLanguage = patch.siteLanguage;
+  }
 
   // Skapar en ny nyhetsartikel i en EGEN tabell (site_news_articles) om
   // Claude bad om det (patch.newsArticle) — skild från sajtens sidinnehåll
@@ -830,5 +857,6 @@ export async function POST(request: Request) {
     newsArticle,
     warning,
     followUp,
+    siteLanguage: newSiteLanguage,
   });
 }

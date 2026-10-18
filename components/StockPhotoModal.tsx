@@ -117,7 +117,7 @@ export default function StockPhotoModal({
                   onClose();
                 }}
                 className="group relative aspect-[4/3] rounded-lg overflow-hidden bg-bg text-left"
-                title={`Använd fotot av ${p.photographer}`}
+                title={t("Använd fotot av {photographer}", { photographer: p.photographer })}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={p.thumbUrl} alt={p.alt} className="w-full h-full object-cover" loading="lazy" />

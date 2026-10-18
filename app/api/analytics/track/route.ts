@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIp, rateLimited } from "@/lib/rateLimit";
@@ -11,9 +12,10 @@ import { clientIp, rateLimited } from "@/lib/rateLimit";
 const MAX_FIELD_LENGTH = 300;
 
 export async function POST(request: Request) {
+  const t = getT();
   const body = await request.json().catch(() => ({}));
   const siteId = typeof body.siteId === "string" ? body.siteId : "";
-  if (!siteId) return NextResponse.json({ error: "Saknar siteId." }, { status: 400 });
+  if (!siteId) return NextResponse.json({ error: t("Saknar siteId.") }, { status: 400 });
 
   const path = typeof body.path === "string" && body.path ? body.path.slice(0, MAX_FIELD_LENGTH) : "/";
   // Bara referrerns ursprung (schema+host), aldrig hela URL:en — den kan
@@ -32,7 +34,7 @@ export async function POST(request: Request) {
 
   const admin = createAdminClient();
   const { data: site } = await admin.from("sites").select("id").eq("id", siteId).maybeSingle();
-  if (!site) return NextResponse.json({ error: "Okänd sajt." }, { status: 404 });
+  if (!site) return NextResponse.json({ error: t("Okänd sajt.") }, { status: 404 });
 
   await admin.from("site_pageviews").insert({ site_id: siteId, path, referrer });
   return NextResponse.json({ ok: true });

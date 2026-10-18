@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
@@ -13,9 +14,10 @@ const MAX_EXCERPT = 300;
 const MAX_BODY = 20000;
 
 export async function GET(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const requestedSiteId = new URL(request.url).searchParams.get("siteId");
   const site = await getCurrentPublishedSite(supabase, user.id, requestedSiteId);
@@ -29,9 +31,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   // Vilken av kundens (eventuellt flera) sajter artikeln hör till — se
@@ -40,7 +43,7 @@ export async function POST(request: Request) {
   const siteId = typeof body.siteId === "string" ? body.siteId : null;
   const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (!site) {
-    return NextResponse.json({ error: "Du har ingen genererad sajt ännu." }, { status: 400 });
+    return NextResponse.json({ error: t("Du har ingen genererad sajt ännu.") }, { status: 400 });
   }
 
   const title = typeof body.title === "string" ? body.title.trim().slice(0, MAX_TITLE) : "";
@@ -63,13 +66,13 @@ export async function POST(request: Request) {
   // bara skicka ettdera, men det här gör ordningen entydig ändå.
   const published = body.published === true && !scheduledAt;
 
-  if (!title) return NextResponse.json({ error: "Artikeln behöver en rubrik." }, { status: 400 });
-  if (!articleBody) return NextResponse.json({ error: "Artikeln behöver text." }, { status: 400 });
+  if (!title) return NextResponse.json({ error: t("Artikeln behöver en rubrik.") }, { status: 400 });
+  if (!articleBody) return NextResponse.json({ error: t("Artikeln behöver text.") }, { status: 400 });
 
   // Bilden måste ligga i kundens egen uppladdningsmapp — samma kontroll som
   // chattredigerarens bilagor (se app/api/sites/edit/route.ts).
   if (imageUrl && !isAllowedImageUrl(imageUrl, user.id)) {
-    return NextResponse.json({ error: "Ogiltig bild." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltig bild.") }, { status: 400 });
   }
 
   const slug = await uniqueSlugForSite(supabase, site.id, title);

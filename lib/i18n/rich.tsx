@@ -14,7 +14,7 @@ export function rich(
 ): ReactNode[] {
   const translated = t(text);
   const out: ReactNode[] = [];
-  const re = /<(\w+)>([\s\S]*?)<\/\1>|\{(\w+)\}/g;
+  const re = /<(\w+)>([\s\S]*?)<\/\1>|\{([\p{L}\p{N}_]+)\}/gu;
   let last = 0;
   let m: RegExpExecArray | null;
   let i = 0;

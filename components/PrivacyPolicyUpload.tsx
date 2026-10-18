@@ -61,7 +61,7 @@ export default function PrivacyPolicyUpload({
       .from("uploads")
       .upload(path, file, { contentType: file.type });
     if (uploadError) {
-      setError(`Gick inte att ladda upp: ${uploadError.message}`);
+      setError(t("Gick inte att ladda upp: {message}", { message: uploadError.message }));
       setUploading(false);
       onUploadingChange?.(false);
       return;

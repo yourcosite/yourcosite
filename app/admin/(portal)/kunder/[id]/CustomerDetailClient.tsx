@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PLAN_LABELS, formatKr, planPrice } from "@/lib/pricing";
+import { PLAN_LABELS, formatMoney, planPrice } from "@/lib/pricing";
+import { billingCurrencyFor, COUNTRY_NAMES, isCountry } from "@/lib/i18n/country";
 
 type Site = {
   id: string;
@@ -29,6 +30,24 @@ type Customer = {
   billing_setup_complete: boolean;
   created_at: string;
   sites: Site[];
+  country?: string | null;
+  language?: string | null;
+  vat_number?: string | null;
+  legal_form?: string | null;
+  company_register?: string | null;
+  company_capital?: string | null;
+  company_representative?: string | null;
+};
+
+type SupportItem = {
+  id: string;
+  source: string;
+  message: string;
+  message_sv?: string | null;
+  language?: string | null;
+  status: string;
+  created_at: string;
+  replies?: { id: string; body_sv: string; body_sent: string; language: string; emailed: boolean; created_at: string }[] | null;
 };
 
 type Note = { id: string; content: string; author_name: string | null; created_at: string };
@@ -44,12 +63,14 @@ function formatDateTime(iso: string) {
 export default function CustomerDetailClient({
   customer,
   initialNotes,
+  supportHistory,
   activity,
   canEdit,
   isSuperadmin,
 }: {
   customer: Customer;
   initialNotes: Note[];
+  supportHistory: SupportItem[];
   activity: Activity[];
   canEdit: boolean;
   isSuperadmin: boolean;
@@ -58,6 +79,7 @@ export default function CustomerDetailClient({
   const site = customer.sites?.[0];
 
   const [notes, setNotes] = useState(initialNotes);
+  const cur = billingCurrencyFor(customer.country);
   const [noteText, setNoteText] = useState("");
   const [savingNote, setSavingNote] = useState(false);
 
@@ -209,7 +231,7 @@ export default function CustomerDetailClient({
             {site && (
               <>
                 {" · "}
-                {PLAN_LABELS[site.plan] ?? site.plan} — {formatKr(planPrice(site.plan))}/mån
+                {PLAN_LABELS[site.plan] ?? site.plan} — {formatMoney(planPrice(site.plan, cur), cur)}/mån
               </>
             )}
             {!site && customer.chosen_plan && (
@@ -288,7 +310,14 @@ export default function CustomerDetailClient({
             <div className="font-semibold text-[15.5px] mb-3.5">Kontaktuppgifter</div>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13.5px]">
               <Field label="Telefon" value={customer.phone} />
+              <Field label="Land" value={customer.country && isCountry(customer.country) ? COUNTRY_NAMES[customer.country] : null} />
+              <Field label="Språk" value={customer.language} />
               <Field label="Org.nr" value={customer.org_number} />
+              <Field label="Momsnummer" value={customer.vat_number ?? null} />
+              <Field label="Bolagsform" value={customer.legal_form ?? null} />
+              <Field label="Register" value={customer.company_register ?? null} />
+              <Field label="Aktiekapital" value={customer.company_capital ?? null} />
+              <Field label="Företrädare" value={customer.company_representative ?? null} />
               <Field label="Adress" value={customer.address_street} />
               <Field
                 label="Postnr / ort"
@@ -319,9 +348,9 @@ export default function CustomerDetailClient({
                         onChange={(e) => setPlanValue(e.target.value)}
                         className="border border-line rounded-[9px] px-3 py-2 text-[13.5px] bg-surface"
                       >
-                        <option value="bas">Bas — {formatKr(planPrice("bas"))}/mån</option>
-                        <option value="standard">Standard — {formatKr(planPrice("standard"))}/mån</option>
-                        <option value="premium">Premium — {formatKr(planPrice("premium"))}/mån</option>
+                        <option value="bas">Bas — {formatMoney(planPrice("bas", cur), cur)}/mån</option>
+                        <option value="standard">Standard — {formatMoney(planPrice("standard", cur), cur)}/mån</option>
+                        <option value="premium">Premium — {formatMoney(planPrice("premium", cur), cur)}/mån</option>
                       </select>
                       <button
                         onClick={handleSavePlan}
@@ -339,6 +368,41 @@ export default function CustomerDetailClient({
             ) : (
               <p className="text-[13.5px] text-ink-dim">Har inte påbörjat onboardingen än.</p>
             )}
+          </div>
+
+          <div className="bg-surface border border-line rounded-2xl p-5.5">
+            <div className="font-semibold text-[15.5px] mb-3.5">Supporthistorik</div>
+            {supportHistory.length === 0 ? (
+              <p className="text-[13.5px] text-ink-dim">Inga meddelanden från kunden än.</p>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {supportHistory.map((m) => (
+                  <div key={m.id} className="border border-line rounded-xl px-3.5 py-3 text-[13px]">
+                    <div className="text-[11.5px] text-ink-dim mb-1">
+                      Kunden · {formatDateTime(m.created_at)}
+                      {m.language && m.language !== "sv" ? ` · ${m.language}` : ""} · {m.status}
+                    </div>
+                    <p className="whitespace-pre-wrap">{m.message_sv || m.message}</p>
+                    {m.message_sv && (
+                      <details className="mt-1 text-[12px] text-ink-dim">
+                        <summary className="cursor-pointer">Original</summary>
+                        <p className="mt-1 whitespace-pre-wrap">{m.message}</p>
+                      </details>
+                    )}
+                    {(m.replies ?? [])
+                      .slice()
+                      .sort((a, b) => a.created_at.localeCompare(b.created_at))
+                      .map((r) => (
+                        <div key={r.id} className="mt-2 bg-bg rounded-lg px-3 py-2.5">
+                          <div className="text-[11.5px] text-ink-dim mb-0.5">Vårt svar · {formatDateTime(r.created_at)}{r.emailed ? "" : " · inte mejlat"}</div>
+                          <p className="whitespace-pre-wrap">{r.body_sv}</p>
+                        </div>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            )}
+            <Link href="/admin/meddelanden" className="text-[12.5px] font-semibold text-ink underline mt-3 inline-block">Öppna inkorgen</Link>
           </div>
 
           {canEdit && (

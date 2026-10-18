@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
@@ -24,8 +25,9 @@ export async function GET() {
 // POST: tillbaka till adminvyn utan att logga in på nytt. Rollen kontrolleras
 // igen här — kakan räcker inte ensam.
 export async function POST(request: Request) {
+  const t = getT();
   const info = readImpersonationToken(cookies().get(IMPERSONATION_COOKIE)?.value);
-  if (!info) return NextResponse.json({ error: "Ingen pågående inloggning som kund." }, { status: 400 });
+  if (!info) return NextResponse.json({ error: t("Ingen pågående inloggning som kund.") }, { status: 400 });
 
   const admin = createAdminClient();
   const { data: adminProfile } = await admin
@@ -34,7 +36,7 @@ export async function POST(request: Request) {
     .eq("id", info.adminId)
     .maybeSingle();
   if (!adminProfile?.email || adminProfile.role !== "superadmin") {
-    return NextResponse.json({ error: "Adminkontot kunde inte återställas." }, { status: 403 });
+    return NextResponse.json({ error: t("Adminkontot kunde inte återställas.") }, { status: 403 });
   }
 
   const origin = new URL(request.url).origin;
@@ -55,7 +57,7 @@ export async function POST(request: Request) {
   });
 
   const hashed = data.properties?.hashed_token;
-  if (!hashed) return NextResponse.json({ error: "Kunde inte skapa inloggningslänken." }, { status: 500 });
+  if (!hashed) return NextResponse.json({ error: t("Kunde inte skapa inloggningslänken.") }, { status: 500 });
   const res = NextResponse.json({
     actionLink: `${origin}/auth/confirm?token_hash=${encodeURIComponent(hashed)}&next=${encodeURIComponent(`/admin/kunder/${info.customerId}`)}`,
   });

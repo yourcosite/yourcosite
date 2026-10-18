@@ -13,6 +13,17 @@ export const LOCALE_NAMES: Record<Locale, string> = {
   en: "English",
 };
 
+// Språkens namn på engelska — används i instruktioner till AI:n.
+export const LANGUAGE_ENGLISH: Record<string, string> = {
+  sv: "Swedish",
+  en: "English",
+  da: "Danish",
+  fi: "Finnish",
+  de: "German",
+  fr: "French",
+  es: "Spanish",
+};
+
 export function isLocale(v: unknown): v is Locale {
   return typeof v === "string" && (LOCALES as readonly string[]).includes(v);
 }
@@ -37,7 +48,7 @@ export function matchLocale(acceptLanguage: string | null | undefined): Locale {
 
 export function interpolate(text: string, vars?: Record<string, string | number>): string {
   if (!vars) return text;
-  return text.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m));
+  return text.replace(/\{([\p{L}\p{N}_]+)\}/gu, (m, k) => (k in vars ? String(vars[k]) : m));
 }
 
 export type TFunction = (text: string, vars?: Record<string, string | number>) => string;

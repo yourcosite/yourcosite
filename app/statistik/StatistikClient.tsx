@@ -1,7 +1,8 @@
 "use client";
 
 import { rich } from "@/lib/i18n/rich";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import { BCP47 } from "@/lib/i18n/country";
 import { useState } from "react";
 
 type Day = { date: string; label: string; count: number };
@@ -32,6 +33,7 @@ export default function StatistikClient({
   formSubmissions: FormSubmission[];
 }) {
   const t = useT();
+  const locale = useLocale();
   const [hover, setHover] = useState<number | null>(null);
   const max = Math.max(1, ...days.map((d) => d.count));
   const avgPerDay = days.length ? Math.round((total / days.length) * 10) / 10 : 0;
@@ -141,7 +143,7 @@ export default function StatistikClient({
                     {s.email ? ` · ${s.email}` : ""}
                   </span>
                   <span className="text-[11.5px] text-ink-dim flex-shrink-0">
-                    {new Date(s.createdAt).toLocaleString("sv-SE", { dateStyle: "short", timeStyle: "short" })}
+                    {new Date(s.createdAt).toLocaleString(BCP47[locale] ?? "sv-SE", { dateStyle: "short", timeStyle: "short" })}
                   </span>
                 </div>
                 <p className="text-[13px] text-ink-dim whitespace-pre-wrap">{s.message}</p>

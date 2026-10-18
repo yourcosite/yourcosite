@@ -3,6 +3,8 @@
 import { useT } from "@/components/I18nProvider";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
+import CompanyFields, { type CompanyValues } from "@/components/CompanyFields";
+import { isCountry, type CountryCode } from "@/lib/i18n/country";
 
 // Kontouppgifterna — namn, kontaktväg, företag/faktureringsadress. Bröts ut
 // ur den gamla SettingsForm.tsx (som bakade ihop allt på en enda sida) när
@@ -13,6 +15,8 @@ export default function AccountTab({
   phone,
   companyName,
   orgNumber,
+  country,
+  extras,
   addressStreet,
   addressPostalCode,
   addressCity,
@@ -23,6 +27,8 @@ export default function AccountTab({
   phone: string;
   companyName: string;
   orgNumber: string;
+  country: string;
+  extras: Record<string, string>;
   addressStreet: string;
   addressPostalCode: string;
   addressCity: string;
@@ -32,7 +38,8 @@ export default function AccountTab({
   const [name, setName] = useState(fullName);
   const [phoneValue, setPhoneValue] = useState(phone);
   const [companyNameValue, setCompanyNameValue] = useState(companyName);
-  const [orgNumberValue, setOrgNumberValue] = useState(orgNumber);
+  const [countryValue, setCountryValue] = useState<CountryCode>(isCountry(country) ? country : "SE");
+  const [company, setCompany] = useState<CompanyValues>({ ...extras, orgNumber });
   const [addressStreetValue, setAddressStreetValue] = useState(addressStreet);
   const [addressPostalCodeValue, setAddressPostalCodeValue] = useState(addressPostalCode);
   const [addressCityValue, setAddressCityValue] = useState(addressCity);
@@ -60,7 +67,13 @@ export default function AccountTab({
         full_name: name,
         phone: phoneValue,
         company_name: companyNameValue,
-        org_number: orgNumberValue,
+        org_number: company.orgNumber ?? "",
+        country: countryValue,
+        vat_number: company.vatNumber ?? "",
+        legal_form: company.legalForm ?? "",
+        company_register: company.register ?? "",
+        company_capital: company.capital ?? "",
+        company_representative: company.representative ?? "",
         address_street: addressStreetValue,
         address_postal_code: addressPostalCodeValue,
         address_city: addressCityValue,
@@ -121,13 +134,14 @@ export default function AccountTab({
             className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
           />
         </div>
-        <div className="mb-4">
-          <label className="block text-[13px] font-semibold mb-1.5">{t("Organisationsnummer")}</label>
-          <input
-            value={orgNumberValue}
-            onChange={(e) => setOrgNumberValue(e.target.value)}
-            placeholder={t("XXXXXX-XXXX")}
-            className="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
+        <div className="mb-4 flex flex-col gap-4">
+          <CompanyFields
+            country={countryValue}
+            onCountry={setCountryValue}
+            values={company}
+            onChange={(k, v) => setCompany((x) => ({ ...x, [k]: v }))}
+            labelClass="block text-[13px] font-semibold mb-1.5"
+            inputClass="w-full box-border px-3 py-2.5 border border-line rounded-[9px] text-[14px]"
           />
         </div>
         <div className="mb-4">

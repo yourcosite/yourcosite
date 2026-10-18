@@ -1,6 +1,7 @@
 import { rich } from "@/lib/i18n/rich";
 import { msg } from "@/lib/i18n/config";
-import { getT } from "@/lib/i18n/server";
+import { getT, getLocale } from "@/lib/i18n/server";
+import { currencyForLocale, formatMoney, planPrice } from "@/lib/pricing";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -37,14 +38,14 @@ const tiers = [
   {
     name: msg("Bas"),
     body: msg("För er som vill komma igång enkelt med en sajt."),
-    price: "149 kr",
+    plan: "bas",
     popular: false,
     features: ["1 sajt", msg("25 ändringar/månad"), msg("Egen domän"), msg("SSL och hosting ingår"), "E-postsupport"],
   },
   {
     name: msg("Standard"),
     body: msg("För verksamheter som vill fortsätta finslipa sajten löpande."),
-    price: "249 kr",
+    plan: "standard",
     popular: true,
     features: [
       { text: msg("Allt i Bas, plus:"), bold: true },
@@ -57,7 +58,7 @@ const tiers = [
   {
     name: msg("Premium"),
     body: msg("För er med flera sajter eller högre tempo i innehållet."),
-    price: "399 kr",
+    plan: "premium",
     popular: false,
     features: [
       { text: msg("Allt i Standard, plus:"), bold: true },
@@ -71,6 +72,8 @@ const tiers = [
 ];
 
 export default function PricingPage() {
+  const locale = getLocale();
+  const currency = currencyForLocale(locale);
   const t = getT();
   return (
     <div>
@@ -112,7 +115,7 @@ export default function PricingPage() {
                 </p>
                 <div className="flex items-baseline gap-1.5 mb-6.5">
                   <span className="font-serif text-[40px] font-medium">
-                    {tier.price}
+                    {formatMoney(planPrice(tier.plan, currency), currency, locale)}
                   </span>
                   <span className="text-[13.5px] text-ink-dim">{t("/mån")}</span>
                 </div>

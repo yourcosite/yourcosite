@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,9 +11,10 @@ const DAYS = 14;
 const TABLE_MISSING = "Delning är inte aktiverad ännu — tabellen share_links saknas i databasen.";
 
 export async function GET(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const siteId = new URL(request.url).searchParams.get("siteId") || "";
   const { data, error } = await supabase
@@ -32,9 +34,10 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
   const siteId = typeof body.siteId === "string" ? body.siteId : "";
@@ -45,7 +48,7 @@ export async function POST(request: Request) {
     .eq("owner_id", user.id)
     .not("content", "is", null)
     .maybeSingle();
-  if (!site) return NextResponse.json({ error: "Hittade ingen sajt." }, { status: 404 });
+  if (!site) return NextResponse.json({ error: t("Hittade ingen sajt.") }, { status: 404 });
 
   const expiresAt = new Date(Date.now() + DAYS * 24 * 3600 * 1000).toISOString();
   const { data: row, error } = await supabase
@@ -63,9 +66,10 @@ export async function POST(request: Request) {
 
 // Stänger av en länk direkt.
 export async function DELETE(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
   const id = typeof body.id === "string" ? body.id : "";
@@ -74,6 +78,6 @@ export async function DELETE(request: Request) {
     .update({ revoked_at: new Date().toISOString() })
     .eq("id", id)
     .eq("owner_id", user.id);
-  if (error) return NextResponse.json({ error: "Kunde inte stänga av länken." }, { status: 500 });
+  if (error) return NextResponse.json({ error: t("Kunde inte stänga av länken.") }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

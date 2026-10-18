@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -10,23 +11,24 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"]
 // det var lätt att den hamnade i en hög med "ett gäng bilder" annars. Gör
 // det alltid helt uppenbart vad som är loggan i resten av flödet.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const formData = await request.formData();
   const file = formData.get("file");
   if (!(file instanceof File)) {
-    return NextResponse.json({ error: "Ingen fil hittades." }, { status: 400 });
+    return NextResponse.json({ error: t("Ingen fil hittades.") }, { status: 400 });
   }
   if (!ALLOWED_TYPES.includes(file.type)) {
     return NextResponse.json(
-      { error: "Använd PNG, JPG, SVG eller WEBP." },
+      { error: t("Använd PNG, JPG, SVG eller WEBP.") },
       { status: 400 }
     );
   }
   if (file.size > MAX_BYTES) {
-    return NextResponse.json({ error: "Filen är större än 2 MB." }, { status: 400 });
+    return NextResponse.json({ error: t("Filen är större än 2 MB.") }, { status: 400 });
   }
 
   let draft;
@@ -66,9 +68,10 @@ export async function POST(request: Request) {
 
 // Tar bort en vald logga (kunden ändrade sig).
 export async function DELETE() {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   let draft;
   try {

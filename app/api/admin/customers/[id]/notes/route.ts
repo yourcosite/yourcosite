@@ -1,15 +1,17 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
+  const t = getT();
   const check = await requireRole(["support", "admin", "superadmin"]);
   if (check.error) return check.error;
 
   const body = await request.json();
   const content = (body.content ?? "").trim();
   if (!content) {
-    return NextResponse.json({ error: "Anteckningen får inte vara tom." }, { status: 400 });
+    return NextResponse.json({ error: t("Anteckningen får inte vara tom.") }, { status: 400 });
   }
 
   const admin = createAdminClient();

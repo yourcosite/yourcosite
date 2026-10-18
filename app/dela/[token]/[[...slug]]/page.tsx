@@ -51,6 +51,8 @@ export default async function SharedPreview({
       <SitePreview
         content={site.content}
         siteName={site.name}
+        lang={site.language}
+        currency={site.currency}
         activePath={requestedPath}
         basePath={`/dela/${params.token}`}
         privacyPolicyMode={site.privacy_policy_mode}

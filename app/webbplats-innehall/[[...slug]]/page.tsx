@@ -45,6 +45,8 @@ export default async function WebsiteRawContent({
       content={site.content}
       siteName={site.name}
       siteId={site.id}
+      lang={site.language}
+      currency={site.currency}
       activePath={requestedPath}
       basePath={basePath}
       privacyPolicyMode={site.privacy_policy_mode}

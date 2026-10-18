@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
@@ -14,18 +15,19 @@ const MAX_IMAGES = 6;
 // laddas upp direkt till Supabase Storage från webbläsaren, den här rutten
 // bara registrerar/avregistrerar URL:en i sites.inspiration_image_urls.
 export async function POST(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const { fileUrl } = body;
 
   if (!fileUrl || typeof fileUrl !== "string") {
-    return NextResponse.json({ error: "Ingen bild-URL skickades." }, { status: 400 });
+    return NextResponse.json({ error: t("Ingen bild-URL skickades.") }, { status: 400 });
   }
   if (!fileUrl.includes(`/uploads/${user.id}/`)) {
-    return NextResponse.json({ error: "Ogiltig filsökväg." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltig filsökväg.") }, { status: 400 });
   }
 
   let draft;
@@ -61,14 +63,15 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: "Inte inloggad." }, { status: 401 });
+  if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json();
   const { fileUrl } = body;
   if (!fileUrl || typeof fileUrl !== "string") {
-    return NextResponse.json({ error: "Ingen bild-URL skickades." }, { status: 400 });
+    return NextResponse.json({ error: t("Ingen bild-URL skickades.") }, { status: 400 });
   }
 
   let draft;

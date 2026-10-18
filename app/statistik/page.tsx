@@ -1,5 +1,6 @@
 import { rich } from "@/lib/i18n/rich";
-import { getT } from "@/lib/i18n/server";
+import { getT, getLocale } from "@/lib/i18n/server";
+import { BCP47 } from "@/lib/i18n/country";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import StatistikClient from "./StatistikClient";
@@ -66,7 +67,7 @@ export default async function StatistikPage() {
 
     days = Array.from(byDay.entries()).map(([date, count]) => ({
       date,
-      label: new Date(date + "T00:00:00Z").toLocaleDateString("sv-SE", { day: "numeric", month: "short" }),
+      label: new Date(date + "T00:00:00Z").toLocaleDateString(BCP47[getLocale()] ?? "sv-SE", { day: "numeric", month: "short" }),
       count,
     }));
     topPages = Array.from(byPath.entries())

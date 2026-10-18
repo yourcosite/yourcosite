@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
@@ -7,13 +8,14 @@ import { PLAN_LABELS } from "@/lib/pricing";
 const VALID_PLANS = ["bas", "standard", "premium"];
 
 export async function POST(request: Request, { params }: { params: { id: string } }) {
+  const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
 
   const body = await request.json();
   const plan = body.plan;
   if (!VALID_PLANS.includes(plan)) {
-    return NextResponse.json({ error: "Ogiltig plan." }, { status: 400 });
+    return NextResponse.json({ error: t("Ogiltig plan.") }, { status: 400 });
   }
 
   const admin = createAdminClient();
@@ -27,7 +29,7 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   if (siteError || !site) {
     return NextResponse.json(
-      { error: "Kunden har ingen sajt att ändra plan på än." },
+      { error: t("Kunden har ingen sajt att ändra plan på än.") },
       { status: 400 }
     );
   }
