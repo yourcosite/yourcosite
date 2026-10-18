@@ -45,7 +45,7 @@ export default async function SharedPreview({
   return (
     <div>
       <div className="bg-[#17171A] text-white text-[12.5px] text-center px-4 py-2">
-        Delad förhandsvisning av {site.name}. Sajten är inte publicerad ännu och ingenting kan ändras här.
+        Delad förhandsvisning av {site.name}. Sajten är inte publicerad ännu och ingenting kan ändras här. Bokningar som görs är riktiga och sparas hos ägaren.
       </div>
       {/* siteId skickas medvetet inte med: ett testinskick i kontaktformuläret ska inte sparas hos kunden. */}
       <SitePreview
@@ -57,6 +57,9 @@ export default async function SharedPreview({
         privacyPolicyFileUrl={site.privacy_policy_file_url}
         privacyPolicyText={site.privacy_policy_text}
         newsArticles={newsArticles}
+        // Delade förhandsvisningar får göra riktiga bokningar (de sparas i
+        // verktyget), så testare kan prova hela flödet. Inget annat sparas.
+        bookingSiteId={site.id}
       />
     </div>
   );

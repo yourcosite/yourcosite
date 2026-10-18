@@ -149,6 +149,7 @@ export default function SitePreview({
   content,
   siteName,
   siteId,
+  bookingSiteId,
   fontOverride,
   backgroundModeOverride,
   buttonStyleOverride,
@@ -182,6 +183,8 @@ export default function SitePreview({
   // aldrig från /forslag-miniatyrerna eller chattredigerarens egen
   // förhandsvisning — annars skulle ägarens egna klick räknas som besök.
   siteId?: string;
+  // Se SectionBlockInner: tillåter riktiga bokningar utan att övrig spårning/formulär sparas.
+  bookingSiteId?: string;
   fontOverride?: ThemeFont;
   backgroundModeOverride?: BackgroundMode;
   // Samma idé som ovan, för knappformen (pill/square/underline) — används
@@ -494,6 +497,7 @@ export default function SitePreview({
             heroEmphasis
             basePath={basePath}
             siteId={siteId}
+            bookingSiteId={bookingSiteId}
             onNavigate={onNavigate}
             pagePath={page.path}
             editable={editable}
@@ -548,6 +552,7 @@ export default function SitePreview({
             heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
             basePath={basePath}
             siteId={siteId}
+            bookingSiteId={bookingSiteId}
             onNavigate={onNavigate}
             pagePath={page.path}
             editable={editable}
@@ -2027,6 +2032,7 @@ function SectionBlockInner({
   heroEmphasis,
   basePath,
   siteId,
+  bookingSiteId,
   onNavigate,
   pagePath,
   editable,
@@ -2060,6 +2066,9 @@ function SectionBlockInner({
   // annars skulle ett testklick i förhandsvisningen spara en skarp rad i
   // kundens formulärsvar.
   siteId?: string;
+  // Satt på delade förhandsvisningar: där får besökaren göra RIKTIGA
+  // bokningar (som sparas i kalendern) fast inget annat sparas.
+  bookingSiteId?: string;
   onNavigate?: (path: string) => void;
   // Vilken sida sektionen tillhör — bara satt när editable (se nedan),
   // skickas med i selection-objektet så /api/sites/edit vet vilken sida
@@ -4912,7 +4921,7 @@ function SectionBlockInner({
               {section.body}
             </Field>
           )}
-          <BookingBlock section={section} palette={palette} accent={accent} siteId={siteId} active={!!basePath && !!siteId} />
+          <BookingBlock section={section} palette={palette} accent={accent} siteId={bookingSiteId ?? siteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
         </div>
       );
     }
