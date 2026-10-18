@@ -79,6 +79,12 @@ type BookingRow = {
   cancel_token: string;
 };
 
+// Sajtens logga (om kunden har laddat upp en) och namn, till mejlens topp.
+async function brandFor(db: SupabaseClient, siteId: string, siteName: string) {
+  const { data } = await db.from("sites").select("logo_url").eq("id", siteId).maybeSingle();
+  return { name: siteName, logoUrl: ((data as any)?.logo_url as string | null) ?? null };
+}
+
 // Mottagare av ägarens mejl: inställd adress, annars kontots inloggningsadress.
 export async function ownerEmailFor(db: SupabaseClient, siteId: string, notifyEmail: string | null): Promise<string | null> {
   if (notifyEmail) return notifyEmail;
@@ -107,6 +113,7 @@ export async function sendBookingEmails(opts: {
   ];
   const cancelUrl = `${origin}/avboka/${b.cancel_token}`;
   const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
+  const brand = await brandFor(db, siteId, siteName);
   const vars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: `${b.duration_min} minuter`, pris: price, sajt: siteName };
   const subject = applyMailTemplate(settings.confirm_subject?.trim() || DEFAULT_CONFIRM_SUBJECT, vars).replace(/\s+/g, " ").slice(0, 200);
   const intro = applyMailTemplate(settings.confirm_intro?.trim() || DEFAULT_CONFIRM_INTRO, vars);
@@ -116,6 +123,7 @@ export async function sendBookingEmails(opts: {
     to: b.customer_email,
     subject,
     html: emailLayout({
+      brand,
       title: "Din bokning är bekräftad",
       intro,
       rows,
@@ -132,6 +140,7 @@ export async function sendBookingEmails(opts: {
         to: ownerTo,
         subject: `Ny bokning: ${b.customer_name}, ${when}`,
         html: emailLayout({
+      brand,
           title: "Du har fått en ny bokning",
           intro: `${b.customer_name} har bokat en tid på ${siteName}. Tiden är nu blockerad i din kalender.`,
           rows: [
@@ -164,6 +173,7 @@ export async function sendCancellationEmails(opts: {
   const when = formatSwedish(new Date(b.starts_at), settings.timezone);
   const rows: [string, string][] = [["Tjänst", b.package_name], ["Tid", when]];
   const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
+  const brand = await brandFor(db, siteId, siteName);
   const cancelVars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: `${b.duration_min} minuter`, pris: formatPrice(b.price_sek), sajt: siteName };
   const cancelIntro = applyMailTemplate(
     settings.cancel_intro?.trim() || (cancelledBy === "owner" ? DEFAULT_CANCEL_INTRO_OWNER : DEFAULT_CANCEL_INTRO_CUSTOMER),
@@ -174,6 +184,7 @@ export async function sendCancellationEmails(opts: {
       to: b.customer_email,
       subject: `Avbokad: ${b.package_name}, ${when}`,
       html: emailLayout({
+      brand,
         title: "Din bokning är avbokad",
         intro: cancelIntro,
         rows,
@@ -187,7 +198,7 @@ export async function sendCancellationEmails(opts: {
       sendEmail({
         to: ownerTo,
         subject: `Avbokning: ${b.customer_name}, ${when}`,
-        html: emailLayout({ title: "En bokning har avbokats", intro: `${b.customer_name} har avbokat sin tid. Tiden är ledig igen.`, rows: [...rows, ["Namn", b.customer_name], ["E-post", b.customer_email]] }),
+        html: emailLayout({ brand, title: "En bokning har avbokats", intro: `${b.customer_name} har avbokat sin tid. Tiden är ledig igen.`, rows: [...rows, ["Namn", b.customer_name], ["E-post", b.customer_email]] }),
         text: `${b.customer_name} har avbokat.\n\nTjänst: ${b.package_name}\nTid: ${when}`,
         replyTo: b.customer_email,
       })
