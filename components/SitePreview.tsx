@@ -150,6 +150,7 @@ export default function SitePreview({
   siteName,
   siteId,
   bookingSiteId,
+  bookingPreviewSiteId,
   fontOverride,
   backgroundModeOverride,
   buttonStyleOverride,
@@ -185,6 +186,9 @@ export default function SitePreview({
   siteId?: string;
   // Se SectionBlockInner: tillåter riktiga bokningar utan att övrig spårning/formulär sparas.
   bookingSiteId?: string;
+  // Redigerarens förhandsvisning: visar sajtens RIKTIGA paket och lediga
+  // tider (så ägaren ser det besökaren ser) men sparar ingen bokning.
+  bookingPreviewSiteId?: string;
   fontOverride?: ThemeFont;
   backgroundModeOverride?: BackgroundMode;
   // Samma idé som ovan, för knappformen (pill/square/underline) — används
@@ -498,6 +502,7 @@ export default function SitePreview({
             basePath={basePath}
             siteId={siteId}
             bookingSiteId={bookingSiteId}
+            bookingPreviewSiteId={bookingPreviewSiteId}
             onNavigate={onNavigate}
             pagePath={page.path}
             editable={editable}
@@ -553,6 +558,7 @@ export default function SitePreview({
             basePath={basePath}
             siteId={siteId}
             bookingSiteId={bookingSiteId}
+            bookingPreviewSiteId={bookingPreviewSiteId}
             onNavigate={onNavigate}
             pagePath={page.path}
             editable={editable}
@@ -1642,7 +1648,8 @@ function BookingBlock({
   siteId?: string;
   active: boolean;
 }) {
-  const demo = !active || !siteId;
+  const demo = !siteId; // saknar datakälla: visa exempel
+  const preview = !!siteId && !active; // riktiga paket/tider, men ingen bokning sparas
   const [packages, setPackages] = useState<BookingPkg[] | null>(demo ? demoBookingData().packages : null);
   const [tz, setTz] = useState("Europe/Stockholm");
   const [pkg, setPkg] = useState<BookingPkg | null>(null);
@@ -1698,7 +1705,7 @@ function BookingBlock({
     e.preventDefault();
     if (!pkg || !time) return;
     setError("");
-    if (demo) {
+    if (demo || preview) {
       setConfirmed({ startsAt: time, packageName: pkg.name, emailSent: false });
       setStatus("sent");
       return;
@@ -1738,7 +1745,7 @@ function BookingBlock({
           {confirmed.packageName} · {fmtLong(confirmed.startsAt)}
         </div>
         <div className="text-[13px] mt-3" style={{ color: palette.textDim }}>
-          {demo ? "Det här är ett exempel, ingen bokning har sparats." : confirmed.emailSent ? "En bekräftelse är skickad till din e-post." : "Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu."}
+          {demo || preview ? "Det här är en förhandsvisning, ingen bokning har sparats." : confirmed.emailSent ? "En bekräftelse är skickad till din e-post." : "Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu."}
         </div>
       </div>
     );
@@ -1750,7 +1757,9 @@ function BookingBlock({
   if (packages.length === 0) {
     return (
       <div className="rounded-2xl border p-6 text-center text-[14px]" style={{ ...card, color: palette.textDim }}>
-        Det finns inga bokningsbara tider just nu. Kom gärna tillbaka snart.
+        {preview
+          ? "Du har inga synliga paket än. Lägg upp dem under Bokningar, så visas de här precis som besökarna ser dem."
+          : "Det finns inga bokningsbara tider just nu. Kom gärna tillbaka snart."}
       </div>
     );
   }
@@ -1762,6 +1771,11 @@ function BookingBlock({
       {demo && (
         <div className="text-[12px] rounded-lg px-3 py-2 border border-dashed" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
           Exempel: så här ser bokningen ut för besökarna. Era egna paket och tider lägger ni upp under Bokningar.
+        </div>
+      )}
+      {preview && (
+        <div className="text-[12px] rounded-lg px-3 py-2 border border-dashed" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+          Förhandsvisning: det här är dina riktiga paket och lediga tider, så som besökarna ser dem. Ingen bokning sparas härifrån.
         </div>
       )}
       <div>
@@ -2033,6 +2047,7 @@ function SectionBlockInner({
   basePath,
   siteId,
   bookingSiteId,
+  bookingPreviewSiteId,
   onNavigate,
   pagePath,
   editable,
@@ -2069,6 +2084,9 @@ function SectionBlockInner({
   // Satt på delade förhandsvisningar: där får besökaren göra RIKTIGA
   // bokningar (som sparas i kalendern) fast inget annat sparas.
   bookingSiteId?: string;
+  // Redigerarens förhandsvisning: visar sajtens RIKTIGA paket och lediga
+  // tider (så ägaren ser det besökaren ser) men sparar ingen bokning.
+  bookingPreviewSiteId?: string;
   onNavigate?: (path: string) => void;
   // Vilken sida sektionen tillhör — bara satt när editable (se nedan),
   // skickas med i selection-objektet så /api/sites/edit vet vilken sida
@@ -4921,7 +4939,7 @@ function SectionBlockInner({
               {section.body}
             </Field>
           )}
-          <BookingBlock section={section} palette={palette} accent={accent} siteId={bookingSiteId ?? siteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
+          <BookingBlock section={section} palette={palette} accent={accent} siteId={bookingSiteId ?? siteId ?? bookingPreviewSiteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
         </div>
       );
     }

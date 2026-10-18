@@ -1227,6 +1227,7 @@ export default function EditorPage() {
                   }}
                 >
                 <SitePreview
+                  bookingPreviewSiteId={site?.id}
                   content={content}
                   siteName={site?.name}
                   activePath={activePath}
