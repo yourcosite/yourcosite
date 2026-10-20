@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteNewsArticles } from "@/lib/newsArticles";
@@ -15,6 +16,7 @@ export default async function SharedPreview({
 }: {
   params: { token: string; slug?: string[] };
 }) {
+  const t = getT();
   const admin = createAdminClient();
   // Länken är id:t på en rad i share_links — giltig bara om den inte
   // stängts av och inte gått ut.
@@ -24,7 +26,7 @@ export default async function SharedPreview({
   if (!link || link.revoked_at || new Date(link.expires_at).getTime() < Date.now()) {
     return (
       <div className="min-h-screen flex items-center justify-center text-center px-6 text-[15px] text-ink-dim">
-        Den här länken fungerar inte längre. Be avsändaren skapa en ny.
+        {t("Den här länken fungerar inte längre. Be avsändaren skapa en ny.")}
       </div>
     );
   }
@@ -34,7 +36,7 @@ export default async function SharedPreview({
   if (!site || !isValidSiteContent(site.content)) {
     return (
       <div className="min-h-screen flex items-center justify-center text-center px-6 text-[15px] text-ink-dim">
-        Sajten finns inte längre.
+        {t("Sajten finns inte längre.")}
       </div>
     );
   }

@@ -22,13 +22,13 @@ function walk(dir) {
 }
 function scan(file) {
   const src = fs.readFileSync(file, "utf8");
-  if (!/\b(t|msg|rich)\(/.test(src)) return;
+  if (!/\b(t|te|msg|rich|getT)\(/.test(src)) return;
   const sf = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
   (function visit(node) {
     if (ts.isCallExpression(node)) {
       const callee = node.expression.getText();
       let arg = null;
-      if ((callee === "t" || callee === "msg") && node.arguments.length >= 1) arg = node.arguments[0];
+      if ((callee === "t" || callee === "te" || callee === "msg" || callee === "getT()") && node.arguments.length >= 1) arg = node.arguments[0];
       else if (callee === "rich" && node.arguments.length >= 2) arg = node.arguments[1];
       if (arg && (ts.isStringLiteral(arg) || ts.isNoSubstitutionTemplateLiteral(arg))) keys.add(arg.text);
     }

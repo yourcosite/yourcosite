@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
@@ -20,13 +21,14 @@ export default async function WebsitePreviewPage({
   params: { slug?: string[] };
   searchParams?: { site?: string };
 }) {
+  const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center text-ink-dim text-[14.5px]">
-        Du måste vara inloggad för att se detta.
+        {t("Du måste vara inloggad för att se detta.")}
       </div>
     );
   }
@@ -38,10 +40,10 @@ export default async function WebsitePreviewPage({
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-center px-6 gap-3">
         <p className="text-[15px] text-ink-dim">
-          Du har ingen genererad sajt ännu.
+          {t("Du har ingen genererad sajt ännu.")}
         </p>
         <Link href="/onboarding/1" className="text-[14px] font-semibold underline">
-          Gå till onboardingen →
+          {t("Gå till onboardingen →")}
         </Link>
       </div>
     );
@@ -60,13 +62,13 @@ export default async function WebsitePreviewPage({
           href="/forslag"
           className="text-[13px] font-semibold text-ink-dim flex-shrink-0"
         >
-          ← Välj en annan variant
+          {t("← Välj en annan variant")}
         </Link>
         <Link
           href={`/redigera?site=${site.id}`}
           className="text-[13px] font-semibold bg-accent text-accent-ink px-4 py-2 rounded-lg flex-shrink-0"
         >
-          Fortsätt till redigeraren →
+          {t("Fortsätt till redigeraren →")}
         </Link>
       </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useT } from "@/components/I18nProvider";
+import { msg } from "@/lib/i18n/config";
 import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n";
 import { useState, useEffect, createContext, useContext, createElement } from "react";
 import Script from "next/script";
@@ -1405,6 +1406,7 @@ function ImageOrArt({
   selected?: boolean;
   onSelect?: () => void;
 }) {
+  const t = useT();
   return (
     <div
       className={`${fill ? "absolute inset-0" : "relative"} overflow-hidden group ${selectable ? "cursor-pointer" : ""} ${className || ""}`}
@@ -1431,7 +1433,7 @@ function ImageOrArt({
             className="text-[12px] font-bold px-3 py-1.5 rounded-full"
             style={{ background: selected ? "#C6FF5E" : "#FFFFFF", color: "#0C1004" }}
           >
-            {selected ? "✓ Vald" : "Klicka för att välja"}
+            {selected ? t("✓ Vald") : t("Klicka för att välja")}
           </span>
         </div>
       )}
@@ -1771,7 +1773,7 @@ function FieldBadge({
 // ägaren ser hur det blir, utan att något sparas.
 type BookingPkg = { id: string; name: string; description?: string | null; duration_min: number; price_sek?: number | null; image_url?: string | null };
 
-function demoBookingData(): { packages: BookingPkg[]; availability: Record<string, string[]> } {
+function demoBookingData(t: (k: string) => string): { packages: BookingPkg[]; availability: Record<string, string[]> } {
   const availability: Record<string, string[]> = {};
   const base = new Date();
   base.setUTCHours(0, 0, 0, 0);
@@ -1786,8 +1788,8 @@ function demoBookingData(): { packages: BookingPkg[]; availability: Record<strin
   }
   return {
     packages: [
-      { id: "demo-1", name: "Första samtalet", description: "Vi går igenom era behov.", duration_min: 30, price_sek: 0 },
-      { id: "demo-2", name: "Fördjupning", description: "Tid för en grundlig genomgång.", duration_min: 60, price_sek: 1200 },
+      { id: "demo-1", name: t("Första samtalet"), description: t("Vi går igenom era behov."), duration_min: 30, price_sek: 0 },
+      { id: "demo-2", name: t("Fördjupning"), description: t("Tid för en grundlig genomgång."), duration_min: 60, price_sek: 1200 },
     ],
     availability,
   };
@@ -1809,7 +1811,7 @@ function BookingBlock({
   const { bcp47, currency } = useSiteLocale();
   const demo = !siteId; // saknar datakälla: visa exempel
   const preview = !!siteId && !active; // riktiga paket/tider, men ingen bokning sparas
-  const [packages, setPackages] = useState<BookingPkg[] | null>(demo ? demoBookingData().packages : null);
+  const [packages, setPackages] = useState<BookingPkg[] | null>(demo ? demoBookingData(t).packages : null);
   const [tz, setTz] = useState("Europe/Stockholm");
   const [pkg, setPkg] = useState<BookingPkg | null>(null);
   const [avail, setAvail] = useState<Record<string, string[]> | null>(null);
@@ -1843,7 +1845,7 @@ function BookingBlock({
     setError("");
     setMonthKey("");
     setAvail(null);
-    if (demo) return setAvail(demoBookingData().availability);
+    if (demo) return setAvail(demoBookingData(t).availability);
     try {
       const d = await (await fetch(`/api/public/booking?siteId=${siteId}&packageId=${p.id}`)).json();
       setAvail(d.availability || {});
@@ -2373,38 +2375,29 @@ function SocialFeedBlock({
   return box(<div className="w-full">{createElement("div", { className: `elfsight-app-${embed.appId}`, "data-elfsight-app-lazy": "" })}</div>);
 }
 
-function sectionLabel(section: Section): string {
+// Fältbeskrivningar som skickas till fieldSel — msg() registrerar nycklarna.
+const FIELD_DESC_KEYS = [msg("rubriken"), msg("brödtexten"), msg("knapptexten"), msg("förtexten"), msg("texten i rutan"), msg("rubriken i rutan"), msg("citatet"), msg("namnet"), msg("adressen"), msg("den kursiva raden"), msg("telefonnumret"), msg("e-postadressen"), msg("bildtexten"), msg("texten"), msg("svaret"), msg("introtexten"), msg("frågan"), msg("nyckeltalet")];
+void FIELD_DESC_KEYS;
+
+function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
+  const h = "heading" in section ? (section as { heading?: string }).heading ?? "" : "";
   switch (section.type) {
     case "hero":
-      return section.headline ? `hero-sektionen ("${section.headline}")` : "hero-sektionen";
-    case "about":
-      return `sektionen "${section.heading}"`;
-    case "grid":
-      return `sektionen "${section.heading}"`;
-    case "testimonials":
-      return `sektionen "${section.heading}"`;
-    case "cta":
-      return `sektionen "${section.heading}"`;
-    case "contact":
-      return `sektionen "${section.heading}"`;
-    case "gallery":
-      return `sektionen "${section.heading}"`;
-    case "faq":
-      return `sektionen "${section.heading}"`;
+      return section.headline ? te("hero-sektionen (“{h}”)", { h: section.headline }) : te("hero-sektionen");
     case "map":
-      return section.heading ? `kartsektionen "${section.heading}"` : "kartsektionen";
+      return h ? te("kartsektionen “{h}”", { h }) : te("kartsektionen");
     case "video":
-      return section.heading ? `videosektionen "${section.heading}"` : "videosektionen";
+      return h ? te("videosektionen “{h}”", { h }) : te("videosektionen");
     case "social":
-      return section.heading ? `flödessektionen "${section.heading}"` : "flödessektionen";
-    case "contactForm":
-      return `sektionen "${section.heading}"`;
+      return h ? te("flödessektionen “{h}”", { h }) : te("flödessektionen");
     case "newsList":
-      return `nyhetssektionen "${section.heading}"`;
+      return te("nyhetssektionen “{h}”", { h });
     case "booking":
-      return `bokningssektionen "${section.heading}"`;
+      return te("bokningssektionen “{h}”", { h });
+    case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "faq": case "contactForm":
+      return te("sektionen “{h}”", { h });
     default:
-      return "den här sektionen";
+      return te("den här sektionen");
   }
 }
 
@@ -2478,6 +2471,7 @@ function SectionBlockInner({
   newsArticles?: NewsArticle[];
 }) {
   const t = useSiteT();
+  const te = useT();
   // Sektionens EGEN fria hex-bakgrundsfärg (Millie, se Section.bgColor i
   // lib/contentModel.ts) — satt via chattredigeraren, oberoende av sidans
   // (SitePageContent.backgroundMode) eller sajtens (theme.backgroundMode)
@@ -2525,7 +2519,7 @@ function SectionBlockInner({
       pagePath,
       sectionId: section.id,
       field: fullField,
-      label: `${desc} ("${snippet(text)}")`,
+      label: `${te(desc)} (“${snippet(text)}”)`,
     };
   };
 
@@ -5519,6 +5513,7 @@ function SectionBlock(
     onSelectSection?: (sel: { key: string; pagePath: string; sectionId: string; label: string }) => void;
   }
 ) {
+  const te = useT();
   const { selectedSectionKey, onSelectSection, ...inner } = props;
   const rendered = <SectionBlockInner {...inner} />;
 
@@ -5528,7 +5523,7 @@ function SectionBlock(
     key: `${inner.pagePath}::section::${inner.section.id}`,
     pagePath: inner.pagePath,
     sectionId: inner.section.id,
-    label: sectionLabel(inner.section),
+    label: sectionLabel(inner.section, te),
   };
   const selected = selectedSectionKey === sel.key;
 
@@ -5554,7 +5549,7 @@ function SectionBlock(
           className="text-[11px] font-bold px-2.5 py-1 rounded-full inline-block"
           style={{ background: selected ? "#C6FF5E" : "#FFFFFF", color: "#0C1004" }}
         >
-          {selected ? `✓ Vald: ${sel.label}` : "Klicka för att välja hela sektionen"}
+          {selected ? `${te("✓ Vald")}: ${sel.label}` : te("Klicka för att välja hela sektionen")}
         </span>
       </div>
     </div>

@@ -1517,7 +1517,7 @@ export default function EditorPage() {
                   {selection.target === "image" ? "🖼️" : selection.target === "field" ? "✏️" : "📝"}
                 </span>
                 <span className="text-[12.5px] truncate flex-1">
-                  Vald: {selection.label}
+                  {t("Vald")}: {selection.label}
                 </span>
                 {selection.target === "image" && selectedImageUrl && (
                   <button
@@ -1722,7 +1722,7 @@ export default function EditorPage() {
           src={attachments[editAtt].url}
           saving={savingAtt}
           title={t("Redigera bilden")}
-          saveLabel="Använd den redigerade bilden"
+          saveLabel={t("Använd den redigerade bilden")}
           onClose={() => setEditAtt(null)}
           onSave={saveEditedAttachment}
         />

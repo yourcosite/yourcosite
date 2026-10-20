@@ -48,7 +48,7 @@ export async function GET(request: Request) {
     thumbUrl: p.urls?.small,
     url: p.urls?.regular,
     alt: p.alt_description || p.description || "",
-    photographer: p.user?.name || "Okänd fotograf",
+    photographer: p.user?.name || t("Okänd fotograf"),
     profileUrl: `${p.user?.links?.html}?utm_source=YourCoSite&utm_medium=referral`,
     downloadLocation: p.links?.download_location,
   }));

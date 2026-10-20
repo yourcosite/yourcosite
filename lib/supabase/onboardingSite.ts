@@ -1,3 +1,4 @@
+import { getT } from "@/lib/i18n/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
@@ -24,7 +25,7 @@ export const MAX_SITES_PER_ACCOUNT = 5;
 export class DraftLimitError extends Error {
   constructor() {
     super(
-      `Du har redan ${MAX_SITES_PER_ACCOUNT} sajter på kontot. Ta bort en på dashboarden innan du skapar en ny.`
+      getT()("Du har redan {max} sajter på kontot. Ta bort en på dashboarden innan du skapar en ny.", { max: MAX_SITES_PER_ACCOUNT })
     );
     this.name = "DraftLimitError";
   }
