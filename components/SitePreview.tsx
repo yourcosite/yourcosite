@@ -924,7 +924,7 @@ function Header({
     </div>
   ) : (
     <span className={`font-heading italic text-[19px] ${overlay ? "text-white" : ""}`}>
-      {siteName || "Ditt företag"}
+      {siteName || t("Ditt företag")}
     </span>
   );
 
@@ -1011,7 +1011,7 @@ function Header({
     <button
       type="button"
       onClick={() => setMenuOpen((v) => !v)}
-      aria-label={menuOpen ? "Stäng meny" : "Öppna meny"}
+      aria-label={menuOpen ? t("Stäng meny") : t("Öppna meny")}
       aria-expanded={menuOpen}
       className={`${hideBurger} flex flex-col items-center justify-center gap-[5px] w-9 h-9 flex-shrink-0`}
     >
@@ -1905,7 +1905,7 @@ function BookingBlock({
           {confirmed.packageName} · {fmtLong(confirmed.startsAt)}
         </div>
         <div className="text-[13px] mt-3" style={{ color: palette.textDim }}>
-          {demo || preview ? "Det här är en förhandsvisning, ingen bokning har sparats." : confirmed.emailSent ? "En bekräftelse är skickad till din e-post." : "Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu."}
+          {demo || preview ? t("Det här är en förhandsvisning, ingen bokning har sparats.") : confirmed.emailSent ? t("En bekräftelse är skickad till din e-post.") : t("Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu.")}
         </div>
       </div>
     );
@@ -1918,8 +1918,8 @@ function BookingBlock({
     return (
       <div className="rounded-2xl border p-6 text-center text-[14px]" style={{ ...card, color: palette.textDim }}>
         {preview
-          ? "Du har inga synliga paket än. Lägg upp dem under Bokningar, så visas de här precis som besökarna ser dem."
-          : "Det finns inga bokningsbara tider just nu. Kom gärna tillbaka snart."}
+          ? t("Du har inga synliga paket än. Lägg upp dem under Bokningar, så visas de här precis som besökarna ser dem.")
+          : t("Det finns inga bokningsbara tider just nu. Kom gärna tillbaka snart.")}
       </div>
     );
   }
@@ -2087,7 +2087,7 @@ function BookingBlock({
           <textarea placeholder={t("Meddelande (valfritt)")} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
           {error && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
           <button type="submit" disabled={status === "sending"} className="self-start px-6 py-3 rounded-full text-[14px] font-semibold text-white disabled:opacity-60" style={{ background: accent }}>
-            {status === "sending" ? "Bokar …" : "Boka tiden"}
+            {status === "sending" ? t("Bokar …") : t("Boka tiden")}
           </button>
         </form>
       )}
@@ -3559,7 +3559,7 @@ function SectionBlockInner({
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
                 style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
               >
-                {(section as any).linkLabel || "Läs mer"} →
+                {(section as any).linkLabel || t("Läs mer")} →
               </CtaLink>
               </FieldBadge>
             </div>
@@ -3622,7 +3622,7 @@ function SectionBlockInner({
                 className="inline-flex items-center gap-4 mt-7 px-5 py-3 rounded-full text-[12px] w-fit"
                 style={{ border: `1px solid ${palette.cardBorder}`, color: palette.text }}
               >
-                {(section as any).linkLabel || "Läs mer"} →
+                {(section as any).linkLabel || t("Läs mer")} →
               </CtaLink>
               </FieldBadge>
             </div>
@@ -3952,7 +3952,7 @@ function SectionBlockInner({
                       className="mt-4 inline-block text-[12px] font-medium"
                       style={{ color: ip.text }}
                     >
-                      {(item as any).linkLabel || "Läs mer"} →
+                      {(item as any).linkLabel || t("Läs mer")} →
                     </CtaLink>
                     </FieldBadge>
                   </div>
@@ -4977,7 +4977,7 @@ function SectionBlockInner({
                   e.stopPropagation();
                   setFaqOpenIndex(open ? null : i);
                 }}
-                aria-label={open ? "Dölj svaret" : "Visa svaret"}
+                aria-label={open ? t("Dölj svaret") : t("Visa svaret")}
                 className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-[13px] font-bold"
                 style={{ background: palette.bgAlt, color: palette.textDim }}
               >

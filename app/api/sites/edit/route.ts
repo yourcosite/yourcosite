@@ -1,5 +1,5 @@
 import { getT, getLocale } from "@/lib/i18n/server";
-import { LANGUAGE_ENGLISH, isLocale } from "@/lib/i18n/config";
+import { LANGUAGE_ENGLISH, isLocale, msg } from "@/lib/i18n/config";
 import { childPagesOf } from "@/lib/pageTree";
 import { NextResponse } from "next/server";
 import { rateLimited } from "@/lib/rateLimit";
@@ -923,7 +923,7 @@ export async function POST(request: Request) {
         newsDropped.push(...r.dropped);
         const sched = existing.scheduled_at ? new Date(existing.scheduled_at).getTime() : 0;
         if (r.unpublish_at && new Date(r.unpublish_at).getTime() > sched && (existing.published || existing.scheduled_at)) upd.unpublish_at = r.unpublish_at;
-        else if (r.unpublish_at) newsDropped.push("avpubliceringen kunde inte sättas på en artikel som inte är publicerad eller schemalagd");
+        else if (r.unpublish_at) newsDropped.push(msg("avpubliceringen kunde inte sättas på en artikel som inte är publicerad eller schemalagd"));
       }
       if (u.clearUnpublish === true) upd.unpublish_at = null;
       const { data: updated, error: updErr } = await supabase.from("site_news_articles").update(upd).eq("id", existing.id).eq("site_id", site.id).select("*").single();
@@ -941,16 +941,18 @@ export async function POST(request: Request) {
   let warning: string | undefined;
   let followUp: string[] | undefined;
   if (newsUpdateMiss) {
-    warning = "Jag hittade ingen nyhet med den rubriken, så inget ändrades. Kolla rubriken under Nyheter i panelen och försök igen.";
+    warning = t("Jag hittade ingen nyhet med den rubriken, så inget ändrades. Kolla rubriken under Nyheter i panelen och försök igen.");
   } else if (newsDropped.length > 0) {
-    warning = `En del av tiderna sparades inte (${Array.from(new Set(newsDropped)).join("; ")}). Berätta gärna datum och klockslag igen så fixar jag det.`;
+    warning = t("En del av tiderna sparades inte ({orsaker}). Berätta gärna datum och klockslag igen så fixar jag det.", { orsaker: Array.from(new Set(newsDropped)).map((n) => t(n)).join("; ") });
   } else if (newsSaveFailed) {
-    warning = "Nyheten gick inte att spara just nu, så den finns inte med. Försök igen om en stund, eller skriv den under Nyheter i panelen.";
+    warning = t("Nyheten gick inte att spara just nu, så den finns inte med. Försök igen om en stund, eller skriv den under Nyheter i panelen.");
   } else if (newsArticle && !hasNewsList(updatedContent)) {
-    warning = `Nyheten "${newsArticle.title}" är sparad som ${newsArticle.published ? "publicerad" : "utkast"}, men ingen sida på sajten har en nyhetslista, så den syns inte för besökarna än. Vill du att jag lägger till en?`;
+    warning = newsArticle.published
+      ? t("Nyheten \"{titel}\" är sparad som publicerad, men ingen sida på sajten har en nyhetslista, så den syns inte för besökarna än. Vill du att jag lägger till en?", { titel: newsArticle.title })
+      : t("Nyheten \"{titel}\" är sparad som utkast, men ingen sida på sajten har en nyhetslista, så den syns inte för besökarna än. Vill du att jag lägger till en?", { titel: newsArticle.title });
     followUp = [
-      newsPage ? `Lägg till nyhetslistan på sidan ${newsPage.label}` : "Skapa en ny sida som heter Nyheter med nyhetslistan",
-      "Lägg till en nyhetslista längst ner på startsidan",
+      newsPage ? t("Lägg till nyhetslistan på sidan {sida}", { sida: newsPage.label }) : t("Skapa en ny sida som heter Nyheter med nyhetslistan"),
+      t("Lägg till en nyhetslista längst ner på startsidan"),
     ];
   } else if (hasNewsList(site.content) && !hasNewsList(updatedContent)) {
     const { count } = await supabase
@@ -958,15 +960,15 @@ export async function POST(request: Request) {
       .select("id", { count: "exact", head: true })
       .eq("site_id", site.id);
     if (count && count > 0) {
-      warning = `Nyhetslistan är borttagen från sajten, så dina ${count} nyheter syns inte längre för besökarna. Vill du ha tillbaka den?`;
+      warning = t("Nyhetslistan är borttagen från sajten, så dina {antal} nyheter syns inte längre för besökarna. Vill du ha tillbaka den?", { antal: count });
       // Sidan som tidigare hade listan, annars en sida som heter något med "nyhet".
       const formerPage = (site.content as SiteContent).pages.find(
         (pg) => pg.sections.some((sec) => sec.type === "newsList") && updatedContent.pages.some((u) => u.path === pg.path)
       );
       const target = formerPage || newsPage;
       followUp = [
-        target ? `Lägg tillbaka nyhetslistan på sidan ${target.label}` : "Skapa en ny sida som heter Nyheter med nyhetslistan",
-        "Nej, låt den vara borta",
+        target ? t("Lägg tillbaka nyhetslistan på sidan {sida}", { sida: target.label }) : t("Skapa en ny sida som heter Nyheter med nyhetslistan"),
+        t("Nej, låt den vara borta"),
       ];
     }
   }

@@ -49,20 +49,20 @@ export default function WhatsNewModal({
             <div key={e.id} className="border border-line rounded-xl p-4">
               <div className="flex items-baseline justify-between gap-3">
                 <div className="font-semibold text-[14px]">
-                  {e.icon} {e.title}
+                  {e.icon} {t(e.title)}
                 </div>
                 <div className="text-[11.5px] text-ink-dim flex-shrink-0">{e.date}</div>
               </div>
-              <p className="text-[13px] text-ink-dim mt-1.5 leading-relaxed">{e.text}</p>
+              <p className="text-[13px] text-ink-dim mt-1.5 leading-relaxed">{t(e.text)}</p>
               {e.try && (
                 <button
                   type="button"
                   onClick={() => {
-                    onTry(e.try!);
+                    onTry(t(e.try!));
                     onClose();
                   }}
                   className="mt-2.5 text-[12px] font-semibold bg-bg border border-line rounded-full px-3 py-1 text-ink hover:border-ink"
-                >{rich(t, "Prova: ”{v1}”", {}, { v1: e.try })}</button>
+                >{rich(t, "Prova: ”{v1}”", {}, { v1: t(e.try) })}</button>
               )}
             </div>
           ))}

@@ -1,4 +1,5 @@
 import { zonedTimeToUtc } from "@/lib/booking";
+import { msg } from "@/lib/i18n/config";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Delad typ för en nyhetsartikel (tabellen site_news_articles, se
@@ -185,18 +186,18 @@ export function resolveNewsTiming(i: {
   const now = i.now ?? new Date();
   const dropped: string[] = [];
   let scheduled: Date | null = parseLocalDateTime(i.publishAt, i.tz);
-  if (i.publishAt && !scheduled) dropped.push("publiceringstiden gick inte att tolka");
+  if (i.publishAt && !scheduled) dropped.push(msg("publiceringstiden gick inte att tolka"));
   if (scheduled && scheduled.getTime() <= now.getTime()) {
-    dropped.push("publiceringstiden låg redan bakåt i tiden");
+    dropped.push(msg("publiceringstiden låg redan bakåt i tiden"));
     scheduled = null;
   }
   const published = i.publishNow === true && !scheduled;
   let unpublish: Date | null = parseLocalDateTime(i.unpublishAt, i.tz);
-  if (i.unpublishAt && !unpublish) dropped.push("avpubliceringstiden gick inte att tolka");
+  if (i.unpublishAt && !unpublish) dropped.push(msg("avpubliceringstiden gick inte att tolka"));
   if (unpublish) {
     const from = scheduled ? scheduled.getTime() : now.getTime();
     if (unpublish.getTime() <= from) {
-      dropped.push("avpubliceringen låg före publiceringen eller bakåt i tiden");
+      dropped.push(msg("avpubliceringen låg före publiceringen eller bakåt i tiden"));
       unpublish = null;
     } else if (!published && !scheduled) {
       unpublish = null; // ett utkast har ingen avpublicering
