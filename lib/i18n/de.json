@@ -1294,5 +1294,11 @@
   "Spara bokningen": "Buchung speichern",
   "+ Lägg in bokning manuellt": "+ Buchung manuell hinzufügen",
   "Tid till nästa bokning (minuter)": "Zeit bis zur nächsten Buchung (Minuten)",
-  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "Eine Pause, die du nach dem Termin brauchst. Der Kunde sieht nur die Dauer oben, aber der nächste Termin beginnt erst nach der Pause."
+  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "Eine Pause, die du nach dem Termin brauchst. Der Kunde sieht nur die Dauer oben, aber der nächste Termin beginnt erst nach der Pause.",
+  "Avpubliceringen måste ligga i framtiden.": "Der Zeitpunkt der Depublizierung muss in der Zukunft liegen.",
+  "Avpubliceringen måste ligga efter publiceringen.": "Die Depublizierung muss nach der Veröffentlichung liegen.",
+  " · avpubliceras {datum}": " · wird depubliziert am {datum}",
+  "Avpublicerad {datum}": "Depubliziert {datum}",
+  "Avpublicera automatiskt <span>(valfritt)</span>": "Automatisch depublizieren <span>(optional)</span>",
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Zum Beispiel, wenn eine Aktion endet. Der Artikel wird dann automatisch von der Website genommen und wird zum Entwurf."
 }

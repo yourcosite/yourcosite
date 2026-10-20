@@ -66,6 +66,15 @@ export async function POST(request: Request) {
   // bara skicka ettdera, men det här gör ordningen entydig ändå.
   const published = body.published === true && !scheduledAt;
 
+  // Automatisk avpublicering (t.ex. en kampanj som tar slut): måste ligga i
+  // framtiden och efter publiceringstiden.
+  const rawUnpublish = typeof body.unpublishAt === "string" ? body.unpublishAt : "";
+  const unpublishDate = rawUnpublish ? new Date(rawUnpublish) : null;
+  const unpublishAt = unpublishDate && !isNaN(unpublishDate.getTime()) ? unpublishDate : null;
+  if (unpublishAt && (unpublishAt.getTime() <= Date.now() || (scheduledAt && unpublishAt.getTime() <= new Date(scheduledAt).getTime()))) {
+    return NextResponse.json({ error: t("Avpubliceringen måste ligga efter publiceringen.") }, { status: 400 });
+  }
+
   if (!title) return NextResponse.json({ error: t("Artikeln behöver en rubrik.") }, { status: 400 });
   if (!articleBody) return NextResponse.json({ error: t("Artikeln behöver text.") }, { status: 400 });
 
@@ -90,6 +99,7 @@ export async function POST(request: Request) {
       category,
       published,
       scheduled_at: scheduledAt,
+      unpublish_at: unpublishAt && (published || scheduledAt) ? unpublishAt.toISOString() : null,
       published_at: published ? now : null,
     })
     .select("*")

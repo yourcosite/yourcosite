@@ -24,10 +24,20 @@ type ComposerState = {
   // ("ÅÅÅÅ-MM-DDTTT:mm") kunden valt — se save() för hur den styr vilken
   // åtgärd huvudknappen utför.
   scheduledAt: string;
+  // Tomt = avpubliceras aldrig. Annars när artikeln automatiskt tas ner
+  // (t.ex. en kampanj som tar slut).
+  unpublishAt: string;
 };
 
 function emptyComposer(defaultCategory: string): ComposerState {
-  return { id: null, title: "", excerpt: "", body: "", imageUrl: "", category: defaultCategory, scheduledAt: "" };
+  return { id: null, title: "", excerpt: "", body: "", imageUrl: "", category: defaultCategory, scheduledAt: "", unpublishAt: "" };
+}
+
+// ISO (UTC) -> värde för <input type="datetime-local"> i webbläsarens egen tid.
+function isoToLocalInput(iso: string) {
+  const d = new Date(iso);
+  const p = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 }
 
 function formatDate(iso: string, bcp47: string) {
@@ -89,7 +99,8 @@ export default function NewsClient({
       body: a.body,
       imageUrl: a.image_url || "",
       category: a.category || DEFAULT_NEWS_CATEGORY,
-      scheduledAt: a.scheduled_at ? a.scheduled_at.slice(0, 16) : "",
+      scheduledAt: a.scheduled_at ? isoToLocalInput(a.scheduled_at) : "",
+      unpublishAt: a.unpublish_at && new Date(a.unpublish_at).getTime() > Date.now() ? isoToLocalInput(a.unpublish_at) : "",
     });
   };
   const closeComposer = () => setComposer(null);
@@ -170,6 +181,14 @@ export default function NewsClient({
       setError(t("Välj ett datum och klockslag att schemalägga till."));
       return;
     }
+    if (mode !== "draft" && composer.unpublishAt) {
+      const un = new Date(composer.unpublishAt).getTime();
+      const from = mode === "schedule" ? new Date(composer.scheduledAt).getTime() : Date.now();
+      if (un <= from) {
+        setError(t("Avpubliceringen måste ligga efter publiceringen."));
+        return;
+      }
+    }
     setSaving(true);
     setError("");
     try {
@@ -181,6 +200,7 @@ export default function NewsClient({
         category: composer.category,
         published: mode === "publish",
         scheduledAt: mode === "schedule" ? new Date(composer.scheduledAt).toISOString() : null,
+        unpublishAt: mode !== "draft" && composer.unpublishAt ? new Date(composer.unpublishAt).toISOString() : null,
         siteId,
       };
       const res = await fetch(composer.id ? `/api/news/${composer.id}` : "/api/news", {
@@ -235,10 +255,14 @@ export default function NewsClient({
         )}
         {articles.map((a) => {
           const confirming = pendingDeleteId === a.id;
+          const unpubFuture = !!a.unpublish_at && new Date(a.unpublish_at).getTime() > Date.now();
+          const unpubNote = unpubFuture ? t(" · avpubliceras {datum}", { datum: formatDateTime(a.unpublish_at!, bcp47) }) : "";
           const status = a.published
-            ? t("Publicerad {datum}", { datum: a.published_at ? formatDate(a.published_at, bcp47) : "" })
+            ? t("Publicerad {datum}", { datum: a.published_at ? formatDate(a.published_at, bcp47) : "" }) + unpubNote
             : a.scheduled_at
-            ? t("Schemalagd till {datum}", { datum: formatDateTime(a.scheduled_at, bcp47) })
+            ? t("Schemalagd till {datum}", { datum: formatDateTime(a.scheduled_at, bcp47) }) + unpubNote
+            : a.unpublish_at && !unpubFuture
+            ? t("Avpublicerad {datum}", { datum: formatDateTime(a.unpublish_at, bcp47) })
             : t("Utkast");
           return (
             <div key={a.id} className="border border-line rounded-xl px-4 py-3.5 bg-surface">
@@ -510,6 +534,17 @@ export default function NewsClient({
               onChange={(e) => setComposer({ ...composer, scheduledAt: e.target.value })}
               className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-1.5 bg-bg"
             />
+
+            <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5 mt-3">{rich(t, "Avpublicera automatiskt <span>(valfritt)</span>", { span: (c) => <span className="font-normal">{c}</span> })}
+            </label>
+            <input
+              type="datetime-local"
+              value={composer.unpublishAt}
+              min={composer.scheduledAt && composer.scheduledAt > minDateTimeLocal() ? composer.scheduledAt : minDateTimeLocal()}
+              onChange={(e) => setComposer({ ...composer, unpublishAt: e.target.value })}
+              className="w-full border border-line rounded-lg px-3 py-2 text-[14px] mb-1 bg-bg"
+            />
+            <p className="text-[12px] text-ink-dim mb-1">{t("Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.")}</p>
 
             {error && <p className="text-[13px] text-warm font-semibold mb-3 mt-1.5">{error}</p>}
 

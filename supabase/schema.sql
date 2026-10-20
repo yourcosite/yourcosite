@@ -766,3 +766,8 @@ create policy "Kunden kan läsa egna meddelanden"
 -- Tid till nästa bokning (paus efter varje tid) och manuella bokningar (körs en gång).
 alter table booking_packages add column if not exists buffer_min int not null default 0 check (buffer_min between 0 and 240);
 alter table bookings add column if not exists buffer_min int not null default 0;
+
+
+-- Schemalagd publicering och automatisk avpublicering av nyheter (körs en gång).
+alter table site_news_articles add column if not exists scheduled_at timestamptz;
+alter table site_news_articles add column if not exists unpublish_at timestamptz;

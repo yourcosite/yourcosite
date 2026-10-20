@@ -37,6 +37,9 @@ export interface NewsArticle {
   // klockslag istället för att publicera direkt — se isArticleLive/
   // syncScheduledArticles nedan för hur den faktiskt blir synlig.
   scheduled_at: string | null;
+  // Valfri automatisk avpublicering (t.ex. slutet på en kampanj). När tiden
+  // passerat blir artikeln ett utkast igen — se syncScheduledArticles.
+  unpublish_at: string | null;
   published_at: string | null;
   created_at: string;
   updated_at: string;
@@ -47,7 +50,9 @@ export interface NewsArticle {
 // syncScheduledArticles — den "låser upp" en sådan permanent i databasen
 // nästa gång någon hämtar sajtens artiklar, men den här funktionen gör
 // att gränsen känns exakt även mellan de hämtningarna).
-export function isArticleLive(article: Pick<NewsArticle, "published" | "scheduled_at">): boolean {
+export function isArticleLive(article: Pick<NewsArticle, "published" | "scheduled_at"> & { unpublish_at?: string | null }): boolean {
+  // Avpubliceringstiden går före allt annat: efter den syns artikeln aldrig.
+  if (article.unpublish_at && new Date(article.unpublish_at).getTime() <= Date.now()) return false;
   if (article.published) return true;
   if (article.scheduled_at && new Date(article.scheduled_at).getTime() <= Date.now()) return true;
   return false;
@@ -115,13 +120,26 @@ export async function uniqueSlugForSite(
 // tillfälligt rätt via isArticleLive() ovan för just den här visningen.
 async function syncScheduledArticles(supabase: SupabaseClient, siteId: string) {
   const nowIso = new Date().toISOString();
+  // 1. Avpublicera det vars avpubliceringstid passerat (kampanjen är slut):
+  //    tillbaka till utkast, men unpublish_at behålls så panelen kan visa
+  //    "Avpublicerad".
+  await supabase
+    .from("site_news_articles")
+    .update({ published: false, scheduled_at: null })
+    .eq("site_id", siteId)
+    .not("unpublish_at", "is", null)
+    .lte("unpublish_at", nowIso)
+    .or("published.eq.true,scheduled_at.not.is.null");
+  // 2. Publicera det schemalagda vars tid kommit (och som inte redan hunnit
+  //    gå ut).
   await supabase
     .from("site_news_articles")
     .update({ published: true, published_at: nowIso })
     .eq("site_id", siteId)
     .eq("published", false)
     .not("scheduled_at", "is", null)
-    .lte("scheduled_at", nowIso);
+    .lte("scheduled_at", nowIso)
+    .or(`unpublish_at.is.null,unpublish_at.gt.${nowIso}`);
 }
 
 // Hämtar ALLA artiklar (utkast + publicerade) för sajten, nyast först —

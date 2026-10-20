@@ -1294,5 +1294,11 @@
   "Spara bokningen": "Tallenna varaus",
   "+ Lägg in bokning manuellt": "+ Lisää varaus manuaalisesti",
   "Tid till nästa bokning (minuter)": "Aika seuraavaan varaukseen (minuuttia)",
-  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "Tauko, jonka tarvitset ajan jälkeen. Asiakas näkee vain yllä olevan keston, mutta seuraava aika alkaa vasta tauon jälkeen."
+  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "Tauko, jonka tarvitset ajan jälkeen. Asiakas näkee vain yllä olevan keston, mutta seuraava aika alkaa vasta tauon jälkeen.",
+  "Avpubliceringen måste ligga i framtiden.": "Julkaisun poisto -ajan on oltava tulevaisuudessa.",
+  "Avpubliceringen måste ligga efter publiceringen.": "Julkaisun poisto -ajan on oltava julkaisun jälkeen.",
+  " · avpubliceras {datum}": " · poistuu julkaisusta {datum}",
+  "Avpublicerad {datum}": "Julkaisu poistettu {datum}",
+  "Avpublicera automatiskt <span>(valfritt)</span>": "Poista julkaisu automaattisesti <span>(valinnainen)</span>",
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Esimerkiksi kun kampanja päättyy. Artikkeli poistetaan silloin sivustolta automaattisesti ja siitä tulee luonnos."
 }

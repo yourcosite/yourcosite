@@ -1294,5 +1294,11 @@
   "Spara bokningen": "Gem bookingen",
   "+ Lägg in bokning manuellt": "+ Læg en booking ind manuelt",
   "Tid till nästa bokning (minuter)": "Tid til næste booking (minutter)",
-  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "En pause du har brug for efter aftalen. Kunden ser kun længden ovenfor, men næste tid starter først efter pausen."
+  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "En pause du har brug for efter aftalen. Kunden ser kun længden ovenfor, men næste tid starter først efter pausen.",
+  "Avpubliceringen måste ligga i framtiden.": "Afpubliceringen skal ligge i fremtiden.",
+  "Avpubliceringen måste ligga efter publiceringen.": "Afpubliceringen skal ligge efter publiceringen.",
+  " · avpubliceras {datum}": " · afpubliceres {datum}",
+  "Avpublicerad {datum}": "Afpubliceret {datum}",
+  "Avpublicera automatiskt <span>(valfritt)</span>": "Afpublicer automatisk <span>(valgfrit)</span>",
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "For eksempel når en kampagne slutter. Artiklen tages så ned fra sitet af sig selv og bliver en kladde."
 }

@@ -88,6 +88,30 @@ export async function PATCH(request: Request, { params }: { params: { id: string
     }
   }
 
+  // Automatisk avpublicering: ISO-klockslag (sätt/ändra) eller null (ta bort).
+  // Avpublicerar man för hand rensas den också — annars blir statusen
+  // missvisande.
+  if (body.unpublishAt === null || body.published === false) {
+    update.unpublish_at = null;
+  } else if (typeof body.unpublishAt === "string" && body.unpublishAt) {
+    const u = new Date(body.unpublishAt);
+    if (isNaN(u.getTime()) || u.getTime() <= Date.now()) {
+      return NextResponse.json({ error: t("Avpubliceringen måste ligga i framtiden.") }, { status: 400 });
+    }
+    const publishFrom = typeof update.scheduled_at === "string" ? new Date(update.scheduled_at).getTime() : Date.now();
+    if (u.getTime() <= publishFrom) {
+      return NextResponse.json({ error: t("Avpubliceringen måste ligga efter publiceringen.") }, { status: 400 });
+    }
+    update.unpublish_at = u.toISOString();
+  } else if (body.published === true && existing.unpublish_at && new Date(existing.unpublish_at).getTime() <= Date.now()) {
+    // Publicerar om en artikel vars avpubliceringstid redan passerat.
+    update.unpublish_at = null;
+  }
+  // Utkast ska inte ha någon avpubliceringstid.
+  if (update.unpublish_at && update.published !== true && !update.scheduled_at && !existing.published && !existing.scheduled_at) {
+    update.unpublish_at = null;
+  }
+
   const { data: article, error } = await supabase
     .from("site_news_articles")
     .update(update)

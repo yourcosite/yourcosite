@@ -1294,5 +1294,11 @@
   "Spara bokningen": "Guardar reserva",
   "+ Lägg in bokning manuellt": "+ Añadir una reserva manualmente",
   "Tid till nästa bokning (minuter)": "Tiempo hasta la siguiente reserva (minutos)",
-  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "Una pausa que necesitas después de la cita. El cliente solo ve la duración indicada arriba, pero la siguiente hora empieza después de la pausa."
+  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "Una pausa que necesitas después de la cita. El cliente solo ve la duración indicada arriba, pero la siguiente hora empieza después de la pausa.",
+  "Avpubliceringen måste ligga i framtiden.": "La hora de despublicación debe estar en el futuro.",
+  "Avpubliceringen måste ligga efter publiceringen.": "La despublicación debe ser posterior a la publicación.",
+  " · avpubliceras {datum}": " · se despublica {datum}",
+  "Avpublicerad {datum}": "Despublicado {datum}",
+  "Avpublicera automatiskt <span>(valfritt)</span>": "Despublicar automáticamente <span>(opcional)</span>",
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Por ejemplo cuando termina una campaña. El artículo se retira del sitio automáticamente y pasa a ser un borrador."
 }

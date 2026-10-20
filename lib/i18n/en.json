@@ -1294,5 +1294,11 @@
   "Spara bokningen": "Save booking",
   "+ Lägg in bokning manuellt": "+ Add a booking manually",
   "Tid till nästa bokning (minuter)": "Time to next booking (minutes)",
-  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "A break you need after the appointment. The customer only sees the length above, but the next time starts after the break."
+  "Paus du behöver efter tiden. Kunden ser bara längden ovan, men nästa tid börjar först efter pausen.": "A break you need after the appointment. The customer only sees the length above, but the next time starts after the break.",
+  "Avpubliceringen måste ligga i framtiden.": "The unpublish time must be in the future.",
+  "Avpubliceringen måste ligga efter publiceringen.": "The unpublish time must be after the publish time.",
+  " · avpubliceras {datum}": " · unpublishes {datum}",
+  "Avpublicerad {datum}": "Unpublished {datum}",
+  "Avpublicera automatiskt <span>(valfritt)</span>": "Unpublish automatically <span>(optional)</span>",
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "For example when a campaign ends. The article is then taken down from the site automatically and becomes a draft."
 }
