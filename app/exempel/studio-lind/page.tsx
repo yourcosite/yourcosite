@@ -1,11 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Exempel: Studio Lind",
-  description: "Studio Lind — exempel byggt med YourCoSite, i stilvarianten \"Redaktionell och bildrik\".",
-};
+import { getT } from "@/lib/i18n/server";
 
 const colors = {
   bg: "#FBF4ED",
@@ -18,7 +14,15 @@ const colors = {
   darkInkDim: "rgba(245,239,230,0.72)",
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT();
+  return { title: t("Exempel: Studio Lind"), description: t("Studio Lind — exempel byggt med YourCoSite, i stilvarianten \"Redaktionell och bildrik\".") };
+}
+
 export default function StudioLindExamplePage() {
+  const t = getT();
+
+
   return (
     <div style={{ background: colors.bg, color: colors.ink, fontFamily: "'Work Sans', system-ui, sans-serif" }}>
       <Link
@@ -26,7 +30,7 @@ export default function StudioLindExamplePage() {
         className="fixed top-5 left-5 z-20 inline-flex items-center gap-2 text-[12.5px] font-semibold px-3.5 py-2 rounded-full"
         style={{ background: "rgba(0,0,0,0.5)", color: "#fff", backdropFilter: "blur(4px)" }}
       >
-        ← Alla exempel
+        {t("← Alla exempel")}
       </Link>
 
       {/* Hero — fullbredsbild med meny flytande ovanpå, stor rubrik i
@@ -34,7 +38,7 @@ export default function StudioLindExamplePage() {
           precis mönstret från referensskärmdumpen. */}
       <section className="relative">
         <div className="relative h-[640px] md:h-[760px]">
-          <Image src="/images/inredning-hero.jpg" alt="Studio Lind" fill priority className="object-cover" />
+          <Image src="/images/inredning-hero.jpg" alt={t("Studio Lind")} fill priority className="object-cover" />
           <div
             className="absolute inset-0"
             style={{ background: "linear-gradient(180deg, rgba(23,17,10,0.55) 0%, rgba(23,17,10,0.15) 32%, rgba(23,17,10,0.35) 75%, rgba(23,17,10,0.75) 100%)" }}
@@ -45,54 +49,52 @@ export default function StudioLindExamplePage() {
                 (fixed top-5 left-5) som annars skär genom loggan här, eftersom
                 headern (till skillnad från de andra exempelsidorna) ligger
                 ovanpå själva herobilden istället för en egen rad under. */}
-            <div className="text-[15px] font-semibold tracking-[0.18em] ml-28">STUDIO LIND</div>
+            <div className="text-[15px] font-semibold tracking-[0.18em] ml-28">{t("STUDIO LIND")}</div>
             <nav className="hidden md:flex items-center gap-9 text-[13.5px] font-medium" style={{ color: "rgba(255,255,255,0.82)" }}>
-              <span style={{ color: "#fff" }}>Hem</span>
-              <span>Om oss</span>
-              <span>Tjänster</span>
-              <span>Projekt</span>
-              <span>Kontakt</span>
+              <span style={{ color: "#fff" }}>{t("Hem")}</span>
+              <span>{t("Om oss")}</span>
+              <span>{t("Tjänster")}</span>
+              <span>{t("Projekt")}</span>
+              <span>{t("Kontakt")}</span>
             </nav>
             <div
               className="text-[13px] font-semibold px-5 py-2.5 rounded-full"
               style={{ background: "#fff", color: colors.ink }}
             >
-              Boka möte →
+              {t("Boka möte →")}
             </div>
           </header>
 
           <div className="relative px-8 md:px-16 mt-20 md:mt-28 text-white max-w-xl">
             <div className="text-[12px] tracking-[0.14em] font-semibold mb-5" style={{ color: "rgba(255,255,255,0.85)" }}>
-              EN VACKRARE VARDAG
+              {t("EN VACKRARE VARDAG")}
             </div>
             <h1 className="font-serif leading-[1.08] text-[44px] md:text-[62px] mb-6">
-              Ditt hem,
+              {t("Ditt hem,")}
               <br />
               <span className="italic">format med omsorg</span>
             </h1>
             <p className="text-[16px] leading-relaxed mb-9" style={{ color: "rgba(255,255,255,0.85)" }}>
-              Studio Lind är inredningsarkitekten för dig som vill ha ett hem som
-              känns lika bra som det ser ut — ritat efter ditt liv, inte efter
-              en trend.
+              {t("Studio Lind är inredningsarkitekten för dig som vill ha ett hem som känns lika bra som det ser ut — ritat efter ditt liv, inte efter en trend.")}
             </p>
             <div className="flex items-center gap-5">
               <div
                 className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
                 style={{ background: "#fff", color: colors.ink }}
               >
-                Boka konsultation
+                {t("Boka konsultation")}
               </div>
               <span className="text-[13.5px] font-semibold border-b border-white/50 pb-0.5">
-                Se vårt arbete
+                {t("Se vårt arbete")}
               </span>
             </div>
           </div>
 
           <div className="relative px-8 md:px-16 mt-16 md:mt-20 pb-10 flex flex-wrap items-center gap-6 md:gap-10 text-white">
             {[
-              { value: "Sedan 2011", label: "i Linköping" },
-              { value: "120+", label: "genomförda projekt" },
-              { value: "Familjeägt", label: "två generationer" },
+              { value: t("Sedan 2011"), label: t("i Linköping") },
+              { value: "120+", label: t("genomförda projekt") },
+              { value: t("Familjeägt"), label: t("två generationer") },
             ].map((s, i) => (
               <div key={s.label} className={i > 0 ? "pl-6 md:pl-10 border-l border-white/25" : ""}>
                 <div className="text-[18px] font-serif font-semibold">{s.value}</div>
@@ -120,7 +122,7 @@ export default function StudioLindExamplePage() {
             className="absolute -right-2 -bottom-6 md:right-4 md:-bottom-8 text-[13px] italic z-30 rotate-[-3deg]"
             style={{ color: colors.inkDim }}
           >
-            Varje rum, ritat för hand
+            {t("Varje rum, ritat för hand")}
           </div>
         </div>
 
@@ -128,24 +130,22 @@ export default function StudioLindExamplePage() {
           <div className="flex items-center gap-3 mb-4">
             <span className="w-8 h-px" style={{ background: colors.accent }} />
             <span className="text-[11.5px] tracking-[0.14em] font-semibold" style={{ color: colors.inkDim }}>
-              SÅ ARBETAR VI
+              {t("SÅ ARBETAR VI")}
             </span>
           </div>
           <h2 className="font-serif text-[32px] md:text-[40px] leading-[1.12] mb-5">
-            Design utan
+            {t("Design utan")}
             <br />
-            <span className="italic">genvägar</span>
+            <span className="italic">{t("genvägar")}</span>
           </h2>
           <p className="text-[15px] leading-relaxed mb-8" style={{ color: colors.inkDim, maxWidth: 420 }}>
-            Från första skiss till sista textil — vi tar hela ansvaret för
-            helheten, så du slipper hålla ihop hantverkare, leverantörer och
-            tidsplaner själv.
+            {t("Från första skiss till sista textil — vi tar hela ansvaret för helheten, så du slipper hålla ihop hantverkare, leverantörer och tidsplaner själv.")}
           </p>
           <div
             className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
             style={{ background: colors.ink, color: "#fff" }}
           >
-            Utforska tjänster →
+            {t("Utforska tjänster →")}
           </div>
         </div>
       </section>
@@ -157,21 +157,21 @@ export default function StudioLindExamplePage() {
           <div className="flex items-center gap-3 mb-4">
             <span className="w-8 h-px" style={{ background: "#C9A77C" }} />
             <span className="text-[11.5px] tracking-[0.14em] font-semibold" style={{ color: colors.darkInkDim }}>
-              ALLT DU BEHÖVER
+              {t("ALLT DU BEHÖVER")}
             </span>
           </div>
           <h2 className="font-serif text-[32px] md:text-[40px] leading-[1.15] mb-3 max-w-lg">
-            Rita. Möblera. Flytta in.
+            {t("Rita. Möblera. Flytta in.")}
           </h2>
           <p className="text-[15px] mb-12 max-w-md" style={{ color: colors.darkInkDim }}>
-            Tre steg, en kontaktperson genom hela resan.
+            {t("Tre steg, en kontaktperson genom hela resan.")}
           </p>
 
           <div className="grid md:grid-cols-3 gap-5">
             {[
-              { title: "Rumsritningar", body: "Skalenliga ritningar anpassade efter hur du faktiskt lever.", img: "/images/inredning-feature-1.jpg" },
-              { title: "Personlig stilguidning", body: "Vi sätter en palett och en riktning du känner igen dig i.", img: "/images/inredning-feature-2.jpg" },
-              { title: "Installation på plats", body: "Vi monterar och styler — du kommer hem till ett färdigt rum.", img: "/images/inredning-feature-3.jpg" },
+              { title: t("Rumsritningar"), body: t("Skalenliga ritningar anpassade efter hur du faktiskt lever."), img: "/images/inredning-feature-1.jpg" },
+              { title: t("Personlig stilguidning"), body: t("Vi sätter en palett och en riktning du känner igen dig i."), img: "/images/inredning-feature-2.jpg" },
+              { title: t("Installation på plats"), body: t("Vi monterar och styler — du kommer hem till ett färdigt rum."), img: "/images/inredning-feature-3.jpg" },
             ].map((f) => (
               <div key={f.title} className="relative h-[280px] rounded-2xl overflow-hidden">
                 <Image src={f.img} alt={f.title} fill className="object-cover" />
@@ -190,12 +190,12 @@ export default function StudioLindExamplePage() {
       </section>
 
       <section className="text-center px-6 py-20">
-        <h2 className="font-serif text-[26px] mb-6">Redo att börja rita på ditt rum?</h2>
+        <h2 className="font-serif text-[26px] mb-6">{t("Redo att börja rita på ditt rum?")}</h2>
         <div
           className="inline-block font-semibold text-[14px] px-7 py-3.5 rounded-full"
           style={{ background: colors.ink, color: "#fff" }}
         >
-          Boka kostnadsfri konsultation →
+          {t("Boka kostnadsfri konsultation →")}
         </div>
       </section>
 
@@ -203,9 +203,9 @@ export default function StudioLindExamplePage() {
         className="flex flex-col sm:flex-row gap-3 items-center justify-between px-8 md:px-16 py-6 text-[12.5px]"
         style={{ borderTop: `1px solid ${colors.line}`, color: colors.inkDim }}
       >
-        <span>Studio Lind · Exempelsajt byggd med YourCoSite</span>
+        <span>{t("Studio Lind · Exempelsajt byggd med YourCoSite")}</span>
         <Link href="/exempel" style={{ color: colors.inkDim }}>
-          ← Fler exempel
+          {t("← Fler exempel")}
         </Link>
       </footer>
     </div>

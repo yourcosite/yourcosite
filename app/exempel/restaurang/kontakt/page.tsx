@@ -1,11 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Kontakt — Björkängens Kök",
-  description: "Boka bord — Björkängens Kök, exempel byggt med YourCoSite.",
-};
+import { getT } from "@/lib/i18n/server";
 
 const colors = {
   bg: "#1B120D",
@@ -17,7 +13,15 @@ const colors = {
   accentInk: "#241808",
 };
 
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT();
+  return { title: t("Kontakt — Björkängens Kök"), description: t("Boka bord — Björkängens Kök, exempel byggt med YourCoSite.") };
+}
+
 export default function RestaurantContactPage() {
+  const t = getT();
+
+
   return (
     <div style={{ background: colors.bg, color: colors.ink, fontFamily: "'Work Sans', system-ui, sans-serif" }}>
       <Link
@@ -25,24 +29,24 @@ export default function RestaurantContactPage() {
         className="fixed top-5 left-5 z-10 inline-flex items-center gap-2 text-[12.5px] font-semibold px-3.5 py-2 rounded-full"
         style={{ background: "rgba(0,0,0,0.5)", color: "#fff", backdropFilter: "blur(4px)" }}
       >
-        ← Alla exempel
+        {t("← Alla exempel")}
       </Link>
 
       <header className="flex items-center justify-between px-8 md:px-16 py-6" style={{ borderBottom: `1px solid ${colors.line}` }}>
         <Link href="/exempel/restaurang" className="font-serif italic text-[21px]">
-          Björkängens Kök
+          {t("Björkängens Kök")}
         </Link>
         <nav className="hidden md:flex items-center gap-9 text-[13.5px] font-semibold" style={{ color: colors.inkDim }}>
-          <Link href="/exempel/restaurang">Hem</Link>
-          <Link href="/exempel/restaurang/meny">Meny</Link>
-          <Link href="/exempel/restaurang/om-oss">Om oss</Link>
-          <span style={{ color: "#fff" }}>Kontakt</span>
+          <Link href="/exempel/restaurang">{t("Hem")}</Link>
+          <Link href="/exempel/restaurang/meny">{t("Meny")}</Link>
+          <Link href="/exempel/restaurang/om-oss">{t("Om oss")}</Link>
+          <span style={{ color: "#fff" }}>{t("Kontakt")}</span>
         </nav>
         <span
           className="text-[13px] font-semibold px-5 py-2.5 rounded-full"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
-          Boka bord
+          {t("Boka bord")}
         </span>
       </header>
 
@@ -53,38 +57,38 @@ export default function RestaurantContactPage() {
           style={{ background: "rgba(27,18,13,0.45)" }}
         >
           <div className="text-[12.5px] tracking-[0.1em] mb-3" style={{ color: colors.inkDim }}>
-            KVÄLLENS KÄLLARE
+            {t("KVÄLLENS KÄLLARE")}
           </div>
-          <h1 className="font-serif text-[32px] md:text-[38px]">Boka ett bord hos oss</h1>
+          <h1 className="font-serif text-[32px] md:text-[38px]">{t("Boka ett bord hos oss")}</h1>
         </div>
       </div>
 
       <section className="max-w-5xl mx-auto px-6 md:px-16 py-16 grid md:grid-cols-[1.3fr_1fr] gap-12">
         <div className="rounded-2xl p-7" style={{ background: colors.surface }}>
           <div className="text-[12.5px] tracking-[0.1em] mb-2" style={{ color: colors.accent }}>
-            BOKA BORD
+            {t("BOKA BORD")}
           </div>
-          <h2 className="font-serif text-[23px] mb-6">Vi ses för middag</h2>
+          <h2 className="font-serif text-[23px] mb-6">{t("Vi ses för middag")}</h2>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <input
-              placeholder="Namn"
+              placeholder={t("Namn")}
               className="px-3.5 py-3 rounded-lg text-[14px] bg-transparent outline-none"
               style={{ border: `1px solid ${colors.line}`, color: colors.ink }}
             />
             <input
-              placeholder="Antal gäster"
+              placeholder={t("Antal gäster")}
               className="px-3.5 py-3 rounded-lg text-[14px] bg-transparent outline-none"
               style={{ border: `1px solid ${colors.line}`, color: colors.ink }}
             />
           </div>
           <div className="grid grid-cols-2 gap-4 mb-5">
             <input
-              placeholder="Datum"
+              placeholder={t("Datum")}
               className="px-3.5 py-3 rounded-lg text-[14px] bg-transparent outline-none"
               style={{ border: `1px solid ${colors.line}`, color: colors.ink }}
             />
             <input
-              placeholder="Klockslag"
+              placeholder={t("Klockslag")}
               className="px-3.5 py-3 rounded-lg text-[14px] bg-transparent outline-none"
               style={{ border: `1px solid ${colors.line}`, color: colors.ink }}
             />
@@ -94,7 +98,7 @@ export default function RestaurantContactPage() {
             className="font-semibold text-[14px] px-6 py-3 rounded-lg"
             style={{ background: colors.accent, color: colors.accentInk }}
           >
-            Skicka bokningsförfrågan
+            {t("Skicka bokningsförfrågan")}
           </button>
         </div>
 
@@ -104,26 +108,26 @@ export default function RestaurantContactPage() {
           </div>
           <div>
             <div className="text-[12px] font-bold tracking-[0.08em] mb-1.5" style={{ color: colors.accent }}>
-              ADRESS
+              {t("ADRESS")}
             </div>
             <div className="text-[14.5px]" style={{ color: colors.inkDim }}>
-              Björkängsvägen 4<br />591 33 Motala
+              {t("Björkängsvägen 4")}<br />{t("591 33 Motala")}
             </div>
           </div>
           <div>
             <div className="text-[12px] font-bold tracking-[0.08em] mb-1.5" style={{ color: colors.accent }}>
-              ÖPPETTIDER
+              {t("ÖPPETTIDER")}
             </div>
             <div className="text-[14.5px]" style={{ color: colors.inkDim }}>
-              Torsdag–lördag, 17–23
+              {t("Torsdag–lördag, 17–23")}
             </div>
           </div>
           <div>
             <div className="text-[12px] font-bold tracking-[0.08em] mb-1.5" style={{ color: colors.accent }}>
-              KONTAKT
+              {t("KONTAKT")}
             </div>
             <div className="text-[14.5px]" style={{ color: colors.inkDim }}>
-              013 – 123 45 67<br />hej@bjorkangenskok.se
+              013 – 123 45 67<br />{t("hej@bjorkangenskok.se")}
             </div>
           </div>
         </div>
@@ -133,9 +137,9 @@ export default function RestaurantContactPage() {
         className="flex flex-col sm:flex-row gap-3 items-center justify-between px-8 md:px-16 py-6 text-[12.5px]"
         style={{ borderTop: `1px solid ${colors.line}`, color: colors.inkDim }}
       >
-        <span>Björkängens Kök · Exempelsajt byggd med YourCoSite</span>
+        <span>{t("Björkängens Kök · Exempelsajt byggd med YourCoSite")}</span>
         <Link href="/exempel" style={{ color: colors.inkDim }}>
-          ← Fler exempel
+          {t("← Fler exempel")}
         </Link>
       </footer>
     </div>

@@ -1,11 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Referensprojekt — Ekfast Snickeri",
-  description: "Referensprojekt — Ekfast Snickeri, exempel byggt med YourCoSite.",
-};
+import { getT } from "@/lib/i18n/server";
 
 const colors = {
   bg: "#14201A",
@@ -17,16 +13,22 @@ const colors = {
   accentInk: "#1B2921",
 };
 
-const projects = [
-  { title: "Kök i massiv ek", meta: "Villa, Vadstena · 2025", img: "/images/snickeri-ref-kok-ek.jpg" },
-  { title: "Matbord och bänkar", meta: "Restaurang, Motala · 2024", img: "/images/snickeri-ref-matbord.jpg" },
-  { title: "Vindsinredning", meta: "Villa, Linköping · 2024", img: "/images/snickeri-ref-vindsinredning.jpg" },
-  { title: "Skjutdörrsgarderob", meta: "Lägenhet, Motala · 2023", img: "/images/snickeri-ref-skjutdorr.jpg" },
-  { title: "Uterum i furu", meta: "Villa, Borensberg · 2023", img: "/images/snickeri-ref-uterum.jpg" },
-  { title: "Butiksinredning", meta: "Nordlys Inredning, Motala · 2022", img: "/images/snickeri-ref-butiksinredning.jpg" },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT();
+  return { title: t("Referensprojekt — Ekfast Snickeri"), description: t("Referensprojekt — Ekfast Snickeri, exempel byggt med YourCoSite.") };
+}
 
 export default function SnickeriReferensPage() {
+  const t = getT();
+  const projects = [
+    { title: t("Kök i massiv ek"), meta: t("Villa, Vadstena · 2025"), img: "/images/snickeri-ref-kok-ek.jpg" },
+    { title: t("Matbord och bänkar"), meta: t("Restaurang, Motala · 2024"), img: "/images/snickeri-ref-matbord.jpg" },
+    { title: t("Vindsinredning"), meta: t("Villa, Linköping · 2024"), img: "/images/snickeri-ref-vindsinredning.jpg" },
+    { title: t("Skjutdörrsgarderob"), meta: t("Lägenhet, Motala · 2023"), img: "/images/snickeri-ref-skjutdorr.jpg" },
+    { title: t("Uterum i furu"), meta: t("Villa, Borensberg · 2023"), img: "/images/snickeri-ref-uterum.jpg" },
+    { title: t("Butiksinredning"), meta: t("Nordlys Inredning, Motala · 2022"), img: "/images/snickeri-ref-butiksinredning.jpg" },
+  ];
+
   return (
     <div style={{ background: colors.bg, color: colors.ink, fontFamily: "'Work Sans', system-ui, sans-serif" }}>
       <Link
@@ -34,33 +36,33 @@ export default function SnickeriReferensPage() {
         className="fixed top-5 left-5 z-10 inline-flex items-center gap-2 text-[12.5px] font-semibold px-3.5 py-2 rounded-full"
         style={{ background: "rgba(0,0,0,0.45)", color: "#fff" }}
       >
-        ← Alla exempel
+        {t("← Alla exempel")}
       </Link>
 
       <header className="flex items-center justify-between px-8 md:px-16 py-6" style={{ borderBottom: `1px solid ${colors.line}` }}>
         <Link href="/exempel/snickeri" className="font-serif text-[21px] font-medium">
-          Ekfast Snickeri
+          {t("Ekfast Snickeri")}
         </Link>
         <nav className="hidden md:flex items-center gap-9 text-[13.5px] font-semibold" style={{ color: colors.inkDim }}>
-          <Link href="/exempel/snickeri">Hem</Link>
-          <Link href="/exempel/snickeri/vad-vi-gor">Vad vi gör</Link>
-          <span style={{ color: "#fff" }}>Referensprojekt</span>
-          <Link href="/exempel/snickeri/kontakt">Kontakt</Link>
+          <Link href="/exempel/snickeri">{t("Hem")}</Link>
+          <Link href="/exempel/snickeri/vad-vi-gor">{t("Vad vi gör")}</Link>
+          <span style={{ color: "#fff" }}>{t("Referensprojekt")}</span>
+          <Link href="/exempel/snickeri/kontakt">{t("Kontakt")}</Link>
         </nav>
         <Link
           href="/exempel/snickeri/kontakt"
           className="text-[13px] font-semibold px-5 py-2.5 rounded-md"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
-          Begär offert
+          {t("Begär offert")}
         </Link>
       </header>
 
       <section className="px-8 md:px-16 py-16 text-center">
         <div className="text-[12.5px] tracking-[0.1em] mb-3" style={{ color: colors.accent }}>
-          VÅRA PROJEKT
+          {t("VÅRA PROJEKT")}
         </div>
-        <h1 className="font-serif text-[32px] md:text-[38px]">Ett urval av vad vi byggt</h1>
+        <h1 className="font-serif text-[32px] md:text-[38px]">{t("Ett urval av vad vi byggt")}</h1>
       </section>
 
       <section className="px-8 md:px-16 pb-20 grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
@@ -81,9 +83,9 @@ export default function SnickeriReferensPage() {
         className="flex flex-col sm:flex-row gap-3 items-center justify-between px-8 md:px-16 py-6 text-[12.5px]"
         style={{ borderTop: `1px solid ${colors.line}`, color: colors.inkDim }}
       >
-        <span>Ekfast Snickeri · Exempelsajt byggd med YourCoSite</span>
+        <span>{t("Ekfast Snickeri · Exempelsajt byggd med YourCoSite")}</span>
         <Link href="/exempel" style={{ color: colors.inkDim }}>
-          ← Fler exempel
+          {t("← Fler exempel")}
         </Link>
       </footer>
     </div>

@@ -1,11 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
-
-export const metadata: Metadata = {
-  title: "Meny — Björkängens Kök",
-  description: "Meny — Björkängens Kök, exempel byggt med YourCoSite.",
-};
+import { getT } from "@/lib/i18n/server";
 
 const colors = {
   bg: "#1B120D",
@@ -16,33 +12,39 @@ const colors = {
   accentInk: "#241808",
 };
 
-const courses = [
-  {
-    label: "FÖRRÄTTER",
-    dishes: [
-      { name: "Rostad pumpa", desc: "Brynt smör, salvia, hasselnötter", price: "165 kr", img: "/images/restaurant-meny-dish-1.jpg" },
-      { name: "Handskuren tartar", desc: "Kalv, kapris, äggula, rostat bröd", price: "185 kr", img: "/images/restaurant-meny-dish-2.jpg" },
-      { name: "Kantarellsoppa", desc: "Gräddig, timjan, brödcrouton", price: "145 kr" },
-    ],
-  },
-  {
-    label: "HUVUDRÄTTER",
-    dishes: [
-      { name: "Kalvytterfilé", desc: "Rotselleri, svartkål, rödvinsjus", price: "285 kr" },
-      { name: "Ugnsbakad torsk", desc: "Musselsås, dillolja, potatispuré", price: "255 kr" },
-      { name: "Rotfruktsgryta", desc: "Höstens rotfrukter, örtolja (vegan)", price: "215 kr" },
-    ],
-  },
-  {
-    label: "EFTERRÄTTER",
-    dishes: [
-      { name: "Äppelkaka", desc: "Vaniljglass, kolasås", price: "95 kr" },
-      { name: "Chokladfondant", desc: "Havtornssorbet", price: "105 kr" },
-    ],
-  },
-];
+export async function generateMetadata(): Promise<Metadata> {
+  const t = getT();
+  return { title: t("Meny — Björkängens Kök"), description: t("Meny — Björkängens Kök, exempel byggt med YourCoSite.") };
+}
 
 export default function RestaurantMenuPage() {
+  const t = getT();
+  const courses = [
+    {
+      label: t("FÖRRÄTTER"),
+      dishes: [
+        { name: t("Rostad pumpa"), desc: t("Brynt smör, salvia, hasselnötter"), price: "165 kr", img: "/images/restaurant-meny-dish-1.jpg" },
+        { name: t("Handskuren tartar"), desc: t("Kalv, kapris, äggula, rostat bröd"), price: "185 kr", img: "/images/restaurant-meny-dish-2.jpg" },
+        { name: t("Kantarellsoppa"), desc: t("Gräddig, timjan, brödcrouton"), price: "145 kr" },
+      ],
+    },
+    {
+      label: t("HUVUDRÄTTER"),
+      dishes: [
+        { name: t("Kalvytterfilé"), desc: t("Rotselleri, svartkål, rödvinsjus"), price: "285 kr" },
+        { name: t("Ugnsbakad torsk"), desc: t("Musselsås, dillolja, potatispuré"), price: "255 kr" },
+        { name: t("Rotfruktsgryta"), desc: t("Höstens rotfrukter, örtolja (vegan)"), price: "215 kr" },
+      ],
+    },
+    {
+      label: t("EFTERRÄTTER"),
+      dishes: [
+        { name: t("Äppelkaka"), desc: t("Vaniljglass, kolasås"), price: "95 kr" },
+        { name: t("Chokladfondant"), desc: t("Havtornssorbet"), price: "105 kr" },
+      ],
+    },
+  ];
+
   return (
     <div style={{ background: colors.bg, color: colors.ink, fontFamily: "'Work Sans', system-ui, sans-serif" }}>
       <Link
@@ -50,25 +52,25 @@ export default function RestaurantMenuPage() {
         className="fixed top-5 left-5 z-10 inline-flex items-center gap-2 text-[12.5px] font-semibold px-3.5 py-2 rounded-full"
         style={{ background: "rgba(0,0,0,0.5)", color: "#fff", backdropFilter: "blur(4px)" }}
       >
-        ← Alla exempel
+        {t("← Alla exempel")}
       </Link>
 
       <header className="flex items-center justify-between px-8 md:px-16 py-6" style={{ borderBottom: `1px solid ${colors.line}` }}>
         <Link href="/exempel/restaurang" className="font-serif italic text-[21px]">
-          Björkängens Kök
+          {t("Björkängens Kök")}
         </Link>
         <nav className="hidden md:flex items-center gap-9 text-[13.5px] font-semibold" style={{ color: colors.inkDim }}>
-          <Link href="/exempel/restaurang">Hem</Link>
-          <span style={{ color: "#fff" }}>Meny</span>
-          <Link href="/exempel/restaurang/om-oss">Om oss</Link>
-          <Link href="/exempel/restaurang/kontakt">Kontakt</Link>
+          <Link href="/exempel/restaurang">{t("Hem")}</Link>
+          <span style={{ color: "#fff" }}>{t("Meny")}</span>
+          <Link href="/exempel/restaurang/om-oss">{t("Om oss")}</Link>
+          <Link href="/exempel/restaurang/kontakt">{t("Kontakt")}</Link>
         </nav>
         <Link
           href="/exempel/restaurang/kontakt"
           className="text-[13px] font-semibold px-5 py-2.5 rounded-full"
           style={{ background: colors.accent, color: colors.accentInk }}
         >
-          Boka bord
+          {t("Boka bord")}
         </Link>
       </header>
 
@@ -79,11 +81,11 @@ export default function RestaurantMenuPage() {
           style={{ background: "rgba(27,18,13,0.45)" }}
         >
           <div className="text-[12.5px] tracking-[0.1em] mb-3" style={{ color: colors.inkDim }}>
-            HÖSTMENY
+            {t("HÖSTMENY")}
           </div>
-          <h1 className="font-serif text-[34px] md:text-[40px]">Menyn just nu</h1>
+          <h1 className="font-serif text-[34px] md:text-[40px]">{t("Menyn just nu")}</h1>
           <p className="text-[14px] mt-2" style={{ color: colors.inkDim }}>
-            Byts när säsongen gör det. Fråga oss gärna om allergier.
+            {t("Byts när säsongen gör det. Fråga oss gärna om allergier.")}
           </p>
         </div>
       </div>
@@ -128,9 +130,9 @@ export default function RestaurantMenuPage() {
         className="flex flex-col sm:flex-row gap-3 items-center justify-between px-8 md:px-16 py-6 text-[12.5px]"
         style={{ borderTop: `1px solid ${colors.line}`, color: colors.inkDim }}
       >
-        <span>Björkängens Kök · Exempelsajt byggd med YourCoSite</span>
+        <span>{t("Björkängens Kök · Exempelsajt byggd med YourCoSite")}</span>
         <Link href="/exempel" style={{ color: colors.inkDim }}>
-          ← Fler exempel
+          {t("← Fler exempel")}
         </Link>
       </footer>
     </div>
