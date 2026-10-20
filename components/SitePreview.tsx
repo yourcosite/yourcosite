@@ -1813,6 +1813,8 @@ function BookingBlock({
   const preview = !!siteId && !active; // riktiga paket/tider, men ingen bokning sparas
   const [packages, setPackages] = useState<BookingPkg[] | null>(demo ? demoBookingData(t).packages : null);
   const [tz, setTz] = useState("Europe/Stockholm");
+  const [terms, setTerms] = useState<string | null>(null);
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [pkg, setPkg] = useState<BookingPkg | null>(null);
   const [avail, setAvail] = useState<Record<string, string[]> | null>(null);
   const [date, setDate] = useState("");
@@ -1833,6 +1835,7 @@ function BookingBlock({
       .then((r) => r.json())
       .then((d) => {
         setPackages(d.packages || []);
+        setTerms(typeof d.terms === "string" && d.terms.trim() ? d.terms : null);
         if (d.timezone) setTz(d.timezone);
       })
       .catch(() => setPackages([]));
@@ -1877,7 +1880,7 @@ function BookingBlock({
       const res = await fetch("/api/public/booking", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId, packageId: pkg.id, startsAt: time, name, email, phone, message, website: hp }),
+        body: JSON.stringify({ siteId, packageId: pkg.id, startsAt: time, name, email, phone, message, website: hp, acceptTerms }),
       });
       const d = await res.json();
       if (!res.ok) {
@@ -2087,6 +2090,16 @@ function BookingBlock({
           <input type="email" placeholder={t("E-post (hit skickas bekräftelsen)")} required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
           <input type="tel" placeholder={t("Telefon")} required value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
           <textarea placeholder={t("Meddelande (valfritt)")} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
+          {terms && (
+            <div className="rounded-xl border p-3.5" style={{ borderColor: palette.cardBorder, background: palette.cardBg }}>
+              <div className="text-[12px] font-semibold uppercase tracking-wide mb-1.5" style={{ color: palette.textDim }}>{t("Villkor")}</div>
+              <div className="whitespace-pre-line text-[13px] leading-relaxed max-h-[180px] overflow-y-auto pr-1" style={{ color: palette.text }}>{terms}</div>
+              <label className="flex items-start gap-2.5 mt-3 text-[13.5px] font-semibold cursor-pointer">
+                <input type="checkbox" required checked={acceptTerms} onChange={(e) => setAcceptTerms(e.target.checked)} className="mt-0.5 w-4 h-4 flex-shrink-0" style={{ accentColor: accent }} />
+                <span>{t("Jag har läst och godkänner villkoren")}</span>
+              </label>
+            </div>
+          )}
           {error && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
           <button type="submit" disabled={status === "sending"} className="self-start px-6 py-3 rounded-full text-[14px] font-semibold text-white disabled:opacity-60" style={{ background: accent }}>
             {status === "sending" ? t("Bokar …") : t("Boka tiden")}

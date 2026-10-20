@@ -59,6 +59,8 @@ export async function loadSiteBookingData(db: SupabaseClient, siteId: string): P
       confirm_intro: s?.confirm_intro ?? null,
       confirm_extra: s?.confirm_extra ?? null,
       cancel_intro: s?.cancel_intro ?? null,
+      // Villkoren gäller först när ägaren intygat dem (terms_ack_at).
+      terms_text: s?.terms_ack_at && s?.terms_text?.trim() ? s.terms_text.trim() : null,
     },
     packages: (packages.data as BookingPackage[]) || [],
     rules: ((rules.data as BookingRule[]) || []).map((r) => ({ ...r, start_time: String(r.start_time).slice(0, 5), end_time: String(r.end_time).slice(0, 5) })),
@@ -132,7 +134,11 @@ export async function sendBookingEmails(opts: {
   const vars = { namn: b.customer_name, tjänst: b.package_name, tid: when, längd: duration, pris: price, sajt: siteName };
   const subject = applyMailTemplate(settings.confirm_subject?.trim() || t(DEFAULT_CONFIRM_SUBJECT), vars).replace(/\s+/g, " ").slice(0, 200);
   const intro = applyMailTemplate(settings.confirm_intro?.trim() || t(DEFAULT_CONFIRM_INTRO), vars);
-  const extraText = settings.confirm_extra?.trim() ? applyMailTemplate(settings.confirm_extra.trim(), vars) : "";
+  const baseExtra = settings.confirm_extra?.trim() ? applyMailTemplate(settings.confirm_extra.trim(), vars) : "";
+  // Villkoren besökaren godkände följer med bekräftelsen.
+  const termsText: string = (b as any).terms_snapshot || "";
+  const extraText = termsText ? (baseExtra ? `${baseExtra}\n\n${t("Villkor")}:\n${termsText}` : termsText) : baseExtra;
+  const extraHeading = termsText && !baseExtra ? t("Villkor") : t("Bra att veta");
 
   const customer = sendEmail({
     to: b.customer_email,
@@ -144,11 +150,11 @@ export async function sendBookingEmails(opts: {
       title: t("Din bokning är bekräftad"),
       intro,
       rows,
-      extra: extraText ? { heading: t("Bra att veta"), text: extraText } : undefined,
+      extra: extraText ? { heading: extraHeading, text: extraText } : undefined,
       button: { label: t("Avboka tiden"), url: cancelUrl },
       footer: t("Behöver du ändra något kan du avboka via knappen och boka en ny tid, eller svara på det här mejlet."),
     }),
-    text: `${intro}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}${extraText ? `\n\n${t("Bra att veta")}:\n${extraText}` : ""}\n\n${t("Avboka")}: ${cancelUrl}`,
+    text: `${intro}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}${extraText ? `\n\n${extraHeading}:\n${extraText}` : ""}\n\n${t("Avboka")}: ${cancelUrl}`,
     replyTo: ownerTo || undefined,
   });
 

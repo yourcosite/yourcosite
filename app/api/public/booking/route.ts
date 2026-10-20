@@ -34,6 +34,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       packages: packages.map((p) => ({ id: p.id, name: p.name, description: p.description, duration_min: p.duration_min, price_sek: p.price_sek, image_url: p.image_url ?? null })),
       timezone: data.settings.timezone,
+      terms: (data.settings as any).terms_text ?? null,
     });
   }
   const pkg = packages.find((p) => p.id === packageId);
@@ -96,6 +97,13 @@ export async function POST(request: Request) {
   }
   const end = new Date(start.getTime() + pkg.duration_min * 60000);
 
+  // Har sajten egna villkor måste besökaren ha godkänt dem; den godkända
+  // texten sparas på bokningen.
+  const terms: string | null = (data.settings as any).terms_text ?? null;
+  if (terms && body.acceptTerms !== true) {
+    return NextResponse.json({ error: t("Du behöver godkänna villkoren för att boka.") }, { status: 400 });
+  }
+
   const { data: row, error } = await db
     .from("bookings")
     .insert({
@@ -111,6 +119,7 @@ export async function POST(request: Request) {
       customer_email: email,
       customer_phone: phone,
       message: message || null,
+      ...(terms ? { terms_accepted_at: new Date().toISOString(), terms_snapshot: terms } : {}),
     })
     .select("id, package_name, duration_min, price_sek, starts_at, customer_name, customer_email, customer_phone, message, cancel_token")
     .single();
@@ -127,7 +136,7 @@ export async function POST(request: Request) {
     db,
     siteId,
     siteName: (site as any).name || "sajten",
-    booking: row as any,
+    booking: { ...(row as any), terms_snapshot: terms },
     settings: data.settings,
     origin: new URL(request.url).origin,
   }).catch(() => ({ customerSent: false, ownerSent: false }));

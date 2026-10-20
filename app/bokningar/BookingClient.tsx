@@ -30,7 +30,7 @@ type Data = {
   siteName?: string;
   siteLang?: string;
   currency?: string;
-  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string };
+  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string; terms_text?: string; terms_ack_at?: string | null };
   packages: Pkg[]; rules: Rule[]; slots: Slot[]; blocks: Block[]; bookings: Booking[]; mailConfigured: boolean;
 };
 
@@ -127,7 +127,7 @@ export default function BookingClient({ siteId }: { siteId: string }) {
       {tab === "bookings" && <BookingsTab data={data} tz={tz} busy={busy} act={act} />}
       {tab === "packages" && <PackagesTab data={data} busy={busy} act={act} />}
       {tab === "times" && <TimesTab data={data} tz={tz} busy={busy} act={act} pkgName={pkgName} />}
-      {tab === "settings" && <SettingsTab data={data} busy={busy} act={act} />}
+      {tab === "settings" && <SettingsTab data={data} busy={busy} act={act} siteId={siteId} />}
     </div>
   );
 }
@@ -528,7 +528,7 @@ function TimesTab({ data, tz, busy, act, pkgName }: { data: Data; tz: string; bu
   );
 }
 
-function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act }) {
+function SettingsTab({ data, busy, act, siteId }: { data: Data; busy: boolean; act: Act; siteId: string }) {
   const t = useT();
   const uiLocale = useLocale();
   const bcp47 = BCP47[uiLocale];
@@ -639,9 +639,88 @@ function SettingsTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
         </div>
       </div>
 
+      <TermsCard data={data} busy={busy} act={act} siteId={siteId} />
+
       <div>
         <button className={btnPrimary} disabled={busy} onClick={() => act({ action: "saveSettings", ...s }, t("Inställningarna är sparade."))}>{busy ? t("Sparar …") : t("Spara inställningar")}</button>
       </div>
+    </div>
+  );
+}
+
+// Egna villkor (t.ex. avbokningsvillkor). Ägaren skriver texten, eventuellt
+// med hjälp av Millie, och måste kryssa i att hen själv ansvarar för den
+// innan den sparas och visas för besökarna.
+function TermsCard({ data, busy, act, siteId }: { data: Data; busy: boolean; act: Act; siteId: string }) {
+  const t = useT();
+  const saved = data.settings.terms_text || "";
+  const savedAck = !!data.settings.terms_ack_at;
+  const [text, setText] = useState(saved);
+  const [ack, setAck] = useState(false);
+  const [ask, setAsk] = useState("");
+  const [asking, setAsking] = useState(false);
+  const [askErr, setAskErr] = useState("");
+  const unchanged = text.trim() === saved.trim();
+  // En redan intygad, oförändrad text behöver inget nytt kryss.
+  const needAck = text.trim() !== "" && !(unchanged && savedAck);
+  const live = savedAck && saved.trim() !== "";
+  const label = "block text-[11.5px] font-semibold text-ink-dim mb-1";
+
+  const draft = async () => {
+    setAsking(true);
+    setAskErr("");
+    try {
+      const res = await fetch("/api/booking/terms-assist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId, instruction: ask, current: text }),
+      });
+      const d = await res.json();
+      if (!res.ok) { setAskErr(d.error || t("Något gick fel.")); return; }
+      setText(d.terms || text);
+      setAck(false);
+    } catch {
+      setAskErr(t("Något gick fel, försök igen."));
+    } finally {
+      setAsking(false);
+    }
+  };
+
+  return (
+    <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[760px]">
+      <h2 className="text-[15px] font-semibold mb-1">{t("Bokningsvillkor")}</h2>
+      <p className="text-[13px] text-ink-dim mb-3">{t("Skriv dina egna villkor, till exempel avbokningsvillkor. Besökarna ser texten när de bokar och måste kryssa i att de godkänner den. Villkoren följer också med bekräftelsemejlet. Lämna fältet tomt om du inte vill ha några villkor.")}</p>
+      <div className={`text-[12px] font-semibold mb-3 ${live ? "text-ink" : "text-ink-dim"}`}>
+        {live ? t("✓ Villkoren visas för besökarna när de bokar.") : t("Inga villkor visas just nu.")}
+      </div>
+
+      <div className="rounded-lg bg-bg border border-line p-3 mb-3">
+        <label className="block">
+          <span className={label}>{t("Be Millie skriva ett utkast")}</span>
+          <div className="flex gap-2 flex-wrap">
+            <input className={`${input} flex-1 min-w-[200px]`} value={ask} onChange={(e) => setAsk(e.target.value)} placeholder={t("t.ex. avbokning senast 24 timmar innan, annars debiteras halva priset")} />
+            <button type="button" className={btnGhost} disabled={asking || busy} onClick={draft}>{asking ? t("Millie skriver …") : text.trim() ? t("Låt Millie förbättra texten") : t("Skriv utkast")}</button>
+          </div>
+        </label>
+        {askErr && <div className="text-[12.5px] text-red-600 mt-2">{askErr}</div>}
+        <p className="text-[12px] text-ink-dim mt-2">{t("Millie ger bara ett förslag. Läs igenom, ändra och fyll i det som står inom [hakparentes] innan du sparar.")}</p>
+      </div>
+
+      <label className="block mb-3">
+        <span className={label}>{t("Dina villkor")}</span>
+        <textarea rows={8} maxLength={8000} className={`${input} w-full`} value={text} onChange={(e) => { setText(e.target.value); setAck(false); }} placeholder={t("t.ex. Avbokning är kostnadsfri senast 24 timmar före tiden.")} />
+      </label>
+
+      {needAck && (
+        <label className="flex items-start gap-2.5 mb-3 text-[13px] leading-snug cursor-pointer">
+          <input type="checkbox" className="mt-0.5 w-4 h-4 flex-shrink-0" checked={ack} onChange={(e) => setAck(e.target.checked)} />
+          <span>{t("Jag har läst texten och godkänner den. Jag är själv ansvarig för att villkoren stämmer med min verksamhet och gällande lagar. YourCoSite och Millie ansvarar inte för innehållet.")}</span>
+        </label>
+      )}
+
+      <button className={btnPrimary} disabled={busy || unchanged && !needAck || (needAck && !ack)} onClick={() => act({ action: "saveTerms", terms_text: text, terms_ack: ack }, text.trim() ? t("Villkoren är sparade.") : t("Villkoren är borttagna."))}>
+        {text.trim() ? t("Spara villkor") : saved ? t("Ta bort villkor") : t("Spara villkor")}
+      </button>
     </div>
   );
 }

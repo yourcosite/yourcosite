@@ -59,6 +59,8 @@ export async function GET(request: Request) {
       confirm_intro: s?.confirm_intro ?? "",
       confirm_extra: s?.confirm_extra ?? "",
       cancel_intro: s?.cancel_intro ?? "",
+      terms_text: s?.terms_text ?? "",
+      terms_ack_at: s?.terms_ack_at ?? null,
     },
     packages: packages.data || [],
     rules: ((rules.data as any[]) || []).map((r) => ({ ...r, start_time: String(r.start_time).slice(0, 5), end_time: String(r.end_time).slice(0, 5) })),
@@ -210,6 +212,27 @@ export async function POST(request: Request) {
         cancel_intro: txt(body.cancel_intro, 1000) || null,
       });
       if (error) return fail(t("Kunde inte spara inställningarna."), 500);
+      return NextResponse.json({ ok: true });
+    }
+    case "saveTerms": {
+      // Ägarens egna villkor. Texten publiceras först när ägaren intygat att
+      // hen själv ansvarar för den (terms_ack). Ändras texten krävs ett nytt
+      // intygande.
+      const text = txt(body.terms_text, 8000);
+      if (!text) {
+        const { error } = await supabase.from("booking_settings").upsert({ site_id: site.id, terms_text: null, terms_ack_at: null });
+        if (error) return fail(t("Kunde inte spara villkoren."), 500);
+        return NextResponse.json({ ok: true });
+      }
+      const { data: cur } = await supabase.from("booking_settings").select("terms_text, terms_ack_at").eq("site_id", site.id).maybeSingle();
+      const unchanged = !!cur && (cur as any).terms_ack_at && ((cur as any).terms_text || "").trim() === text;
+      if (!unchanged && body.terms_ack !== true) return fail(t("Du måste kryssa i att du ansvarar för villkoren för att kunna spara dem."));
+      const { error } = await supabase.from("booking_settings").upsert({
+        site_id: site.id,
+        terms_text: text,
+        terms_ack_at: unchanged ? (cur as any).terms_ack_at : new Date().toISOString(),
+      });
+      if (error) return fail(t("Kunde inte spara villkoren."), 500);
       return NextResponse.json({ ok: true });
     }
     case "addBooking": {

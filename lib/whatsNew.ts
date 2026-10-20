@@ -15,6 +15,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-20-bokningsvillkor",
+    date: "2026-10-20",
+    icon: "📜",
+    title: msg("Egna villkor i bokningen"),
+    text: msg("Under Bokningar och Inställningar kan du lägga in egna villkor, till exempel avbokningsvillkor. Millie kan skriva ett utkast åt dig. Du läser igenom och kryssar i att du själv ansvarar för texten. Besökarna ser villkoren och måste godkänna dem innan de bokar, och villkoren följer med bekräftelsemejlet."),
+  },
+  {
     id: "2026-10-20-nyheter-tider",
     date: "2026-10-20",
     icon: "⏰",

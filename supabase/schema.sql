@@ -771,3 +771,11 @@ alter table bookings add column if not exists buffer_min int not null default 0;
 -- Schemalagd publicering och automatisk avpublicering av nyheter (körs en gång).
 alter table site_news_articles add column if not exists scheduled_at timestamptz;
 alter table site_news_articles add column if not exists unpublish_at timestamptz;
+
+-- Egna bokningsvillkor (t.ex. avbokningsvillkor). Ägaren skriver texten och
+-- kryssar i att hen ansvarar för den (terms_ack_at). Besökaren godkänner
+-- villkoren vid bokning; den godkända texten sparas på bokningen. Körs en gång.
+alter table booking_settings add column if not exists terms_text text;
+alter table booking_settings add column if not exists terms_ack_at timestamptz;
+alter table bookings add column if not exists terms_accepted_at timestamptz;
+alter table bookings add column if not exists terms_snapshot text;
