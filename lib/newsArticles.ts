@@ -1,3 +1,4 @@
+import { zonedTimeToUtc } from "@/lib/booking";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Delad typ för en nyhetsartikel (tabellen site_news_articles, se
@@ -157,4 +158,49 @@ export async function getSiteNewsArticles(
     .eq("site_id", siteId)
     .order("created_at", { ascending: false });
   return (data as NewsArticle[]) || [];
+}
+
+
+// ---- Tider som Millie anger i chatten ----
+// Millie skriver klockslag som lokal tid ("ÅÅÅÅ-MM-DDTTT:mm", utan tidszon);
+// koden gör om dem till UTC i sajtens tidszon.
+export function parseLocalDateTime(v: unknown, tz: string): Date | null {
+  if (typeof v !== "string") return null;
+  const m = v.trim().match(/^(\d{4}-\d{2}-\d{2})[T ](\d{2}:\d{2})/);
+  if (!m) return null;
+  const d = zonedTimeToUtc(m[1], m[2], tz);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Räknar ut publicerings- och avpubliceringstid från det Millie bett om.
+// Tider i det förflutna, eller en avpublicering före publiceringen, släpps
+// och rapporteras i "dropped" så kunden får veta det.
+export function resolveNewsTiming(i: {
+  publishNow?: boolean;
+  publishAt?: unknown;
+  unpublishAt?: unknown;
+  tz: string;
+  now?: Date;
+}): { published: boolean; scheduled_at: string | null; unpublish_at: string | null; dropped: string[] } {
+  const now = i.now ?? new Date();
+  const dropped: string[] = [];
+  let scheduled: Date | null = parseLocalDateTime(i.publishAt, i.tz);
+  if (i.publishAt && !scheduled) dropped.push("publiceringstiden gick inte att tolka");
+  if (scheduled && scheduled.getTime() <= now.getTime()) {
+    dropped.push("publiceringstiden låg redan bakåt i tiden");
+    scheduled = null;
+  }
+  const published = i.publishNow === true && !scheduled;
+  let unpublish: Date | null = parseLocalDateTime(i.unpublishAt, i.tz);
+  if (i.unpublishAt && !unpublish) dropped.push("avpubliceringstiden gick inte att tolka");
+  if (unpublish) {
+    const from = scheduled ? scheduled.getTime() : now.getTime();
+    if (unpublish.getTime() <= from) {
+      dropped.push("avpubliceringen låg före publiceringen eller bakåt i tiden");
+      unpublish = null;
+    } else if (!published && !scheduled) {
+      unpublish = null; // ett utkast har ingen avpublicering
+    }
+  }
+  return { published, scheduled_at: scheduled ? scheduled.toISOString() : null, unpublish_at: unpublish ? unpublish.toISOString() : null, dropped };
 }

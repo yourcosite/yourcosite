@@ -1005,7 +1005,7 @@ export default function EditorPage() {
           from: "bot",
           text: data.summary || t("Klart!"),
           unsupported: !!data.unsupported,
-          options: isQuestion ? data.options : undefined,
+          options: isQuestion ? data.options : Array.isArray(data.nextOptions) && data.nextOptions.length >= 2 ? data.nextOptions : undefined,
           optionPreviews: isQuestion && Array.isArray(data.optionPreviews) && data.optionPreviews.length === data.options.length ? data.optionPreviews : undefined,
           requestText: text || currentAttachments.map((a) => a.name).join(", "),
         },

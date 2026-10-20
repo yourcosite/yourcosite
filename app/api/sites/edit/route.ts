@@ -9,7 +9,8 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { HEADER_LAYOUTS, isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
-import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, type NewsArticle } from "@/lib/newsArticles";
+import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, getSiteNewsArticles, resolveNewsTiming, type NewsArticle } from "@/lib/newsArticles";
+import { DEFAULT_TIMEZONE } from "@/lib/booking";
 import { fillMissingImages, pagesNeedingImages } from "@/lib/ensureImageSlots";
 import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
 import { isSkinId } from "@/lib/skins";
@@ -66,8 +67,39 @@ const EDIT_TOOL = {
             description:
               "true om kunden uttryckligen vill publicera direkt (t.ex. \"publicera\", \"lägg upp nu\"). false (eller utelämnat) om de vill spara som utkast, eller inte sagt något om det — nämn då i \"summary\" att de kan publicera den på Nyheter-sidan i panelen när de är nöjda.",
           },
+          publishAt: {
+            type: "string",
+            description:
+              "Schemalagd publicering: klockslaget artikeln ska bli synlig, som lokal tid i formatet ÅÅÅÅ-MM-DDTTT:mm (t.ex. 2026-11-01T08:00), UTAN tidszon. Sätt BARA när kunden uttryckligen angett när den ska publiceras (då ska \"published\" utelämnas). Anges bara ett datum utan klockslag, använd 08:00 och säg det i \"summary\".",
+          },
+          unpublishAt: {
+            type: "string",
+            description:
+              "Automatisk avpublicering (t.ex. när en kampanj tar slut): klockslaget artikeln tas ner, lokal tid ÅÅÅÅ-MM-DDTTT:mm utan tidszon. Sätt BARA när kunden uttryckligen angett när den ska tas ner. Anges bara ett slutdatum (\"till och med 30 november\"), använd det datumet kl 23:59 och säg det i \"summary\". Måste ligga efter publiceringen.",
+          },
         },
         required: ["title", "body", "category"],
+      },
+      newsUpdate: {
+        type: "object",
+        description:
+          "Ändrar publiceringen av en BEFINTLIG nyhetsartikel (se listan över sajtens artiklar i instruktionen): publicera nu, schemalägga, ta bort schemaläggning, sätta eller ta bort automatisk avpublicering, eller göra den till utkast. Används när kunden ber om det för en artikel som redan finns (t.ex. efter att du skapat den som utkast). Skapa aldrig en ny artikel för det.",
+        properties: {
+          title: { type: "string", description: "Den befintliga artikelns rubrik, EXAKT som den står i listan." },
+          published: { type: "boolean", description: "true = publicera direkt." },
+          publishAt: { type: "string", description: "Schemalägg publicering, lokal tid ÅÅÅÅ-MM-DDTTT:mm utan tidszon." },
+          unpublishAt: { type: "string", description: "Sätt automatisk avpublicering, lokal tid ÅÅÅÅ-MM-DDTTT:mm utan tidszon (efter publiceringen)." },
+          clearUnpublish: { type: "boolean", description: "true = ta bort en satt avpubliceringstid." },
+          makeDraft: { type: "boolean", description: "true = ta ner artikeln nu och gör den till utkast (tar bort schemaläggning och avpublicering)." },
+        },
+        required: ["title"],
+      },
+      nextOptions: {
+        type: "array",
+        items: { type: "string" },
+        maxItems: 3,
+        description:
+          "Klickbara förslag på nästa steg, på kundens språk, varje ett KOMPLETT önskemål som går att skicka som det är. Används efter att du skapat en nyhet som utkast utan att kunden sagt när den ska ut: erbjud t.ex. publicera direkt, schemalägga och behålla som utkast. Annars utelämnas fältet.",
       },
       summary: {
         type: "string",
@@ -134,7 +166,18 @@ type EditPatch = {
     body: string;
     category: string;
     published?: boolean;
+    publishAt?: string;
+    unpublishAt?: string;
   };
+  newsUpdate?: {
+    title: string;
+    published?: boolean;
+    publishAt?: string;
+    unpublishAt?: string;
+    clearUnpublish?: boolean;
+    makeDraft?: boolean;
+  };
+  nextOptions?: string[];
   summary: string;
   clarifyOptions?: string[];
   clarifyPreview?: "menu";
@@ -177,7 +220,8 @@ function buildEditPrompt(
   attachmentNote: string,
   currentPath: string | undefined,
   selection: Selection | undefined,
-  existingNewsCategories: string[]
+  existingNewsCategories: string[],
+  newsContext: string
 ) {
   const pagePaths = content.pages.map((p) => `${p.path} ("${p.label}")`).join(", ");
   const currentPage = currentPath ? content.pages.find((p) => p.path === currentPath) : undefined;
@@ -268,7 +312,7 @@ FRÅGA FÖRST om menyn: ber kunden att byta eller ändra menyns design/utseende/
 
 VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
 
-VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik får ALDRIG hittas på — se fältbeskrivningen. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället. Sajtens befintliga kategorier just nu: ${existingNewsCategories.join(", ")} — matcha en av dessa EXAKT om kunden syftar på samma sak, annars kan du sätta en ny kategori med kundens egen benämning (lista då gärna de befintliga som förslag om du istället behöver fråga). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. Schemalagd publicering går INTE att be om här i chatten än — vill kunden schemalägga, hänvisa till Nyheter-sidan i panelen istället. Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också. ${content.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList")) ? "Sajten HAR en nyhetslista." : "Sajten har just nu INGEN nyhetslista — skapar du en artikel MÅSTE du i samma svar lägga till en \"newsList\"-sektion (på en befintlig nyhetssida om en finns, annars på en ny sida \"Nyheter\" med path \"/nyheter\"), annars syns artikeln inte för besökarna."} Ta ALDRIG bort en befintlig "newsList"-sektion eller nyhetssida om inte kunden uttryckligen ber om det — skriver du om en sida som innehåller en, ska den följa med oförändrad.
+VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik får ALDRIG hittas på — se fältbeskrivningen. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället. Sajtens befintliga kategorier just nu: ${existingNewsCategories.join(", ")} — matcha en av dessa EXAKT om kunden syftar på samma sak, annars kan du sätta en ny kategori med kundens egen benämning (lista då gärna de befintliga som förslag om du istället behöver fråga). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. ${newsContext} Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också. ${content.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList")) ? "Sajten HAR en nyhetslista." : "Sajten har just nu INGEN nyhetslista — skapar du en artikel MÅSTE du i samma svar lägga till en \"newsList\"-sektion (på en befintlig nyhetssida om en finns, annars på en ny sida \"Nyheter\" med path \"/nyheter\"), annars syns artikeln inte för besökarna."} Ta ALDRIG bort en befintlig "newsList"-sektion eller nyhetssida om inte kunden uttryckligen ber om det — skriver du om en sida som innehåller en, ska den följa med oförändrad.
 
 VIKTIGT — Google Analytics/Meta Pixel: ber kunden att koppla på Google Analytics eller Meta (Facebook) Pixel och GER dig ett ID i samma meddelande, sätt det i "gaMeasurementId" respektive "metaPixelId". Ber kunden om det men utan att ange något ID, svara i "summary" och be om ID:t istället — hitta aldrig på ett. Vill kunden koppla BORT en redan kopplad tagg, sätt motsvarande fält till en tom sträng. Scripten laddas bara in på sajten efter att besökaren godkänt "Alla cookies" i cookiebannern — nämn det kort om kunden undrar varför de inte ser något direkt i förhandsvisningen utan att godkänna den.
 
@@ -613,6 +657,17 @@ export async function POST(request: Request) {
   }
 
   const existingNewsCategories = await getSiteNewsCategories(supabase, site.id);
+  // Sajtens tidszon och befintliga artiklar — Millie behöver båda för att
+  // kunna schemalägga ("nästa måndag") och ändra publicering på rätt artikel.
+  const { data: bookingSt } = await supabase.from("booking_settings").select("timezone").eq("site_id", site.id).maybeSingle();
+  const newsTz: string = (bookingSt as any)?.timezone || DEFAULT_TIMEZONE;
+  const existingArticles = (await getSiteNewsArticles(supabase, site.id)).slice(0, 15);
+  const nowLocal = new Intl.DateTimeFormat("sv-SE", { timeZone: newsTz, weekday: "long", year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(new Date());
+  const fmtArt = (iso: string | null) => (iso ? new Intl.DateTimeFormat("sv-SE", { timeZone: newsTz, dateStyle: "medium", timeStyle: "short" }).format(new Date(iso)) : "");
+  const articleList = existingArticles.length
+    ? existingArticles.map((a) => `"${a.title}" (${a.published ? "publicerad" : a.scheduled_at ? "schemalagd " + fmtArt(a.scheduled_at) : "utkast"}${a.unpublish_at && new Date(a.unpublish_at).getTime() > Date.now() ? ", avpubliceras " + fmtArt(a.unpublish_at) : ""})`).join("; ")
+    : "inga artiklar än";
+  const newsContext = `PUBLICERING OCH SCHEMALÄGGNING av nyheter: klockan är nu ${nowLocal} (sajtens tidszon ${newsTz}) — räkna ut relativa datum ("nästa måndag", "om två veckor", "1 november") från det och ange klockslag som lokal tid ÅÅÅÅ-MM-DDTTT:mm i "publishAt"/"unpublishAt". Kunden kan be om att en nyhet publiceras vid en viss tid ("publishAt") och/eller tas ner automatiskt vid en viss tid ("unpublishAt", t.ex. när en kampanj tar slut). Säg alltid i "summary" exakt vilka datum och klockslag du satt, så kunden kan rätta dig. Skapar du en nyhet och kunden INTE har sagt något om när den ska ut, sparas den som utkast (published false) och du frågar i "summary" kort om de vill publicera direkt, schemalägga den (och i så fall när) eller behålla den som utkast, och om den ska tas ner automatiskt vid ett visst datum (t.ex. för en kampanj) — och ger 2-3 klickbara svar i "nextOptions" (t.ex. "Publicera nyheten direkt", "Schemalägg nyheten", "Behåll som utkast"). Har kunden redan sagt hur den ska ut, fråga inte. Svarar kunden på din fråga (eller ber om ändrad publicering av en artikel som redan finns) ändrar du den BEFINTLIGA artikeln med "newsUpdate" — skapa aldrig en ny artikel för det, och utelämna "newsArticle" då. Skriver kunden bara "schemalägg" utan tid, fråga efter datum och klockslag i "summary" och gör inga ändringar. Sajtens artiklar just nu: ${articleList}.`;
   const uiLang = getLocale();
   const siteLang: string = isLocale((site as any).language) ? (site as any).language : "sv";
   const languageRule = `SPRÅK — kunden använder verktyget på ${LANGUAGE_ENGLISH[uiLang]} och sajten är skriven på ${LANGUAGE_ENGLISH[siteLang]}.
@@ -622,7 +677,7 @@ export async function POST(request: Request) {
 - Lokal anpassning: tilltal, datum, telefonformat och valuta ska följa sajtens språk och land. Hitta aldrig på uppgifter.
 
 `;
-  const promptText = languageRule + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories);
+  const promptText = languageRule + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories, newsContext);
 
   // Bara bildbilagor görs om till egna innehållsblock i ett multimodalt
   // meddelande (Claude ser själva bilderna, en efter en) — textdokument är
@@ -732,7 +787,7 @@ export async function POST(request: Request) {
   // skicka önskemålet till oss.
   const baseline = dedupeMaps(applyPatch(site.content, { summary: "" } as EditPatch), "flatten-form");
   const contentChanged = JSON.stringify(updatedContent) !== JSON.stringify(baseline);
-  const hasNews = !!(patch.newsArticle && normalizeCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim());
+  const hasNews = !!(patch.newsArticle && normalizeCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) || !!(patch.newsUpdate?.title?.trim());
   const didSomething = contentChanged || hasNews || newLogoUrl !== undefined || patch.exampleContentResolved === true;
   if (!didSomething && patch.answerOnly !== true && patch.unsupported !== true) {
     return NextResponse.json({
@@ -800,6 +855,8 @@ export async function POST(request: Request) {
   // ombeds aldrig ange en bild-URL själv (se verktygets fältbeskrivning).
   let newsArticle: NewsArticle | null = null;
   let newsSaveFailed = false;
+  const newsDropped: string[] = [];
+  let newsUpdateMiss = false;
   const newsCategory = patch.newsArticle ? normalizeCategory(patch.newsArticle.category) : null;
   if (patch.newsArticle && newsCategory && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
     const title = patch.newsArticle.title.trim().slice(0, 120);
@@ -813,6 +870,8 @@ export async function POST(request: Request) {
         : firstAttachment.url
       : null;
     const nowIso = new Date().toISOString();
+    const newsTiming = resolveNewsTiming({ publishNow: patch.newsArticle.published === true, publishAt: patch.newsArticle.publishAt, unpublishAt: patch.newsArticle.unpublishAt, tz: newsTz });
+    newsDropped.push(...newsTiming.dropped);
     const { data: inserted, error: newsError } = await supabase
       .from("site_news_articles")
       .insert({
@@ -823,8 +882,10 @@ export async function POST(request: Request) {
         body: patch.newsArticle.body.trim().slice(0, 20000),
         image_url: firstImage,
         category: newsCategory,
-        published: patch.newsArticle.published === true,
-        published_at: patch.newsArticle.published === true ? nowIso : null,
+        published: newsTiming.published,
+        published_at: newsTiming.published ? nowIso : null,
+        scheduled_at: newsTiming.scheduled_at,
+        unpublish_at: newsTiming.unpublish_at,
       })
       .select("*")
       .single();
@@ -835,6 +896,42 @@ export async function POST(request: Request) {
     else newsSaveFailed = true;
   }
 
+  // Ändrad publicering av en BEFINTLIG artikel (patch.newsUpdate).
+  if (patch.newsUpdate?.title && !patch.newsArticle) {
+    const wanted = patch.newsUpdate.title.trim().toLowerCase();
+    const all = await getSiteNewsArticles(supabase, site.id);
+    const existing = all.find((a) => a.title.trim().toLowerCase() === wanted) || all.find((a) => a.title.toLowerCase().includes(wanted));
+    if (!existing) {
+      newsUpdateMiss = true;
+    } else {
+      const u = patch.newsUpdate;
+      const nowIso = new Date().toISOString();
+      const upd: Record<string, unknown> = { updated_at: nowIso };
+      if (u.makeDraft === true) {
+        Object.assign(upd, { published: false, scheduled_at: null, unpublish_at: null });
+      } else if (u.published === true || u.publishAt) {
+        const r = resolveNewsTiming({ publishNow: u.published === true, publishAt: u.publishAt, unpublishAt: u.unpublishAt, tz: newsTz });
+        newsDropped.push(...r.dropped);
+        if (r.published || r.scheduled_at) {
+          upd.published = r.published;
+          upd.scheduled_at = r.scheduled_at;
+          upd.unpublish_at = u.clearUnpublish === true ? null : r.unpublish_at;
+          if (r.published && !existing.published) upd.published_at = nowIso;
+        }
+      } else if (u.unpublishAt) {
+        const r = resolveNewsTiming({ publishNow: existing.published, publishAt: existing.scheduled_at ? undefined : undefined, unpublishAt: u.unpublishAt, tz: newsTz });
+        newsDropped.push(...r.dropped);
+        const sched = existing.scheduled_at ? new Date(existing.scheduled_at).getTime() : 0;
+        if (r.unpublish_at && new Date(r.unpublish_at).getTime() > sched && (existing.published || existing.scheduled_at)) upd.unpublish_at = r.unpublish_at;
+        else if (r.unpublish_at) newsDropped.push("avpubliceringen kunde inte sättas på en artikel som inte är publicerad eller schemalagd");
+      }
+      if (u.clearUnpublish === true) upd.unpublish_at = null;
+      const { data: updated, error: updErr } = await supabase.from("site_news_articles").update(upd).eq("id", existing.id).eq("site_id", site.id).select("*").single();
+      if (!updErr && updated) newsArticle = updated as NewsArticle;
+      else newsSaveFailed = true;
+    }
+  }
+
   // Varningar kunden ska få veta om direkt: en nyhet som inte syns någonstans,
   // en nyhet som inte gick att spara, eller en borttagen nyhetslista.
   const hasNewsList = (c: SiteContent) => c.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList"));
@@ -843,7 +940,11 @@ export async function POST(request: Request) {
   const newsPage = updatedContent.pages.find((pg) => /nyhet/i.test(pg.label) || /nyhet/i.test(pg.path));
   let warning: string | undefined;
   let followUp: string[] | undefined;
-  if (newsSaveFailed) {
+  if (newsUpdateMiss) {
+    warning = "Jag hittade ingen nyhet med den rubriken, så inget ändrades. Kolla rubriken under Nyheter i panelen och försök igen.";
+  } else if (newsDropped.length > 0) {
+    warning = `En del av tiderna sparades inte (${Array.from(new Set(newsDropped)).join("; ")}). Berätta gärna datum och klockslag igen så fixar jag det.`;
+  } else if (newsSaveFailed) {
     warning = "Nyheten gick inte att spara just nu, så den finns inte med. Försök igen om en stund, eller skriv den under Nyheter i panelen.";
   } else if (newsArticle && !hasNewsList(updatedContent)) {
     warning = `Nyheten "${newsArticle.title}" är sparad som ${newsArticle.published ? "publicerad" : "utkast"}, men ingen sida på sajten har en nyhetslista, så den syns inte för besökarna än. Vill du att jag lägger till en?`;
@@ -875,6 +976,7 @@ export async function POST(request: Request) {
     summary: logoNote ? logoNote : patch.summary,
     unsupported: patch.unsupported === true,
     newsArticle,
+    nextOptions: Array.isArray(patch.nextOptions) ? patch.nextOptions.filter((o): o is string => typeof o === "string" && !!o.trim()).map((o) => o.trim().slice(0, 120)).slice(0, 3) : undefined,
     warning,
     followUp,
     siteLanguage: newSiteLanguage,
