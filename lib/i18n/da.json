@@ -1300,5 +1300,14 @@
   " · avpubliceras {datum}": " · afpubliceres {datum}",
   "Avpublicerad {datum}": "Afpubliceret {datum}",
   "Avpublicera automatiskt <span>(valfritt)</span>": "Afpublicer automatisk <span>(valgfrit)</span>",
-  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "For eksempel når en kampagne slutter. Artiklen tages så ned fra sitet af sig selv og bliver en kladde."
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "For eksempel når en kampagne slutter. Artiklen tages så ned fra sitet af sig selv og bliver en kladde.",
+  "Byt menyn till en med en tydlig bokningsknapp": "Skift menuen til en med en tydelig bookingknap",
+  "Ändra knappen i menyn till Boka tid": "Ret knappen i menuen til Book tid",
+  "Bokning": "Booking",
+  "Paket, tider och bokningar sköter du under Bokningar i menyn. Millie bestämmer var bokningen visas på sajten.": "Du styrer pakker, tider og bookinger under Bookinger i menuen. Millie bestemmer, hvor bookingen vises på sitet.",
+  "Skapa en bokningssida": "Opret en bookingside",
+  "Lägg till bokningen längst ned på sidan Kontakt": "Læg bookingen nederst på siden Kontakt",
+  "Byt bokningen till bild bredvid": "Skift bookingen til billede ved siden af",
+  "Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november": "Skriv en nyhed om vores kampagne, publicer den 1. november kl. 8 og tag den ned den 30. november",
+  "Ta ner nyheten om vår kampanj automatiskt den 30 november": "Tag nyheden om vores kampagne automatisk ned den 30. november"
 }

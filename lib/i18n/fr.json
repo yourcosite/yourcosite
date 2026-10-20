@@ -1300,5 +1300,14 @@
   " · avpubliceras {datum}": " · dépublié le {datum}",
   "Avpublicerad {datum}": "Dépublié le {datum}",
   "Avpublicera automatiskt <span>(valfritt)</span>": "Dépublier automatiquement <span>(facultatif)</span>",
-  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Par exemple à la fin d'une campagne. L'article est alors retiré du site automatiquement et redevient un brouillon."
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Par exemple à la fin d'une campagne. L'article est alors retiré du site automatiquement et redevient un brouillon.",
+  "Byt menyn till en med en tydlig bokningsknapp": "Passe le menu à un menu avec un bouton de réservation bien visible",
+  "Ändra knappen i menyn till Boka tid": "Change le bouton du menu en Réserver",
+  "Bokning": "Réservation",
+  "Paket, tider och bokningar sköter du under Bokningar i menyn. Millie bestämmer var bokningen visas på sajten.": "Vous gérez les formules, les horaires et les réservations sous Réservations dans le menu. Millie décide où la réservation apparaît sur le site.",
+  "Skapa en bokningssida": "Crée une page de réservation",
+  "Lägg till bokningen längst ned på sidan Kontakt": "Ajoute la réservation en bas de la page Contact",
+  "Byt bokningen till bild bredvid": "Passe la réservation à image sur le côté",
+  "Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november": "Rédige une actualité sur notre campagne, publie-la le 1er novembre à 8 h et retire-la le 30 novembre",
+  "Ta ner nyheten om vår kampanj automatiskt den 30 november": "Retire automatiquement l'actualité sur notre campagne le 30 novembre"
 }

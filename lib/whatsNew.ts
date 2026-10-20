@@ -13,6 +13,36 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-20-nyheter-tider",
+    date: "2026-10-20",
+    icon: "⏰",
+    title: "Schemalägg och avpublicera nyheter",
+    text: "Du kan nu bestämma när en nyhet ska publiceras och när den ska tas ner av sig själv, till exempel när en kampanj tar slut. Det gör du under Nyheter, eller genom att be Millie. Hon frågar också när du skapar en nyhet, och kan ändra publiceringen på en nyhet som redan finns.",
+    try: "Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november",
+  },
+  {
+    id: "2026-10-18-menyer-med-knapp",
+    date: "2026-10-18",
+    icon: "🔘",
+    title: "Meny med en tydlig knapp",
+    text: "Fem nya menyer där en knapp som Bokning står ut: klassisk, meny i mitten, centrerad logga, flytande pillermeny och en minimal. Knappen går automatiskt till din bokningssida (annars kontaktsidan), och du kan byta text eller sida. Fråga Millie om menyn så visar hon förslagen.",
+    try: "Kan vi ändra menyn?",
+  },
+  {
+    id: "2026-10-18-bokning-manuell",
+    date: "2026-10-18",
+    icon: "✍️",
+    title: "Lägg in bokningar själv och pausa mellan tider",
+    text: "Under Bokningar kan du lägga in en bokning manuellt, till exempel när en kund ringt. Du kan också ange tid till nästa bokning per paket, så en behandling på 25 minuter med 5 minuters paus ger nästa tid 30 minuter senare, medan kunden bara ser 25 minuter. Besökare måste nu fylla i namn, e-post och telefon när de bokar.",
+  },
+  {
+    id: "2026-10-18-sju-sprak",
+    date: "2026-10-18",
+    icon: "🌍",
+    title: "Verktyget på sju språk",
+    text: "Verktyget finns nu på svenska, engelska, danska, finska, tyska, franska och spanska. Byt språk under Inställningar, fliken Språk, eller med språkväljaren i menyn.",
+  },
+  {
     id: "2026-10-18-bokningsmallar",
     date: "2026-10-18",
     icon: "🖼️",

@@ -1300,5 +1300,14 @@
   " · avpubliceras {datum}": " · poistuu julkaisusta {datum}",
   "Avpublicerad {datum}": "Julkaisu poistettu {datum}",
   "Avpublicera automatiskt <span>(valfritt)</span>": "Poista julkaisu automaattisesti <span>(valinnainen)</span>",
-  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Esimerkiksi kun kampanja päättyy. Artikkeli poistetaan silloin sivustolta automaattisesti ja siitä tulee luonnos."
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "Esimerkiksi kun kampanja päättyy. Artikkeli poistetaan silloin sivustolta automaattisesti ja siitä tulee luonnos.",
+  "Byt menyn till en med en tydlig bokningsknapp": "Vaihda valikko sellaiseen, jossa on selkeä varauspainike",
+  "Ändra knappen i menyn till Boka tid": "Muuta valikon painikkeen tekstiksi Varaa aika",
+  "Bokning": "Varaus",
+  "Paket, tider och bokningar sköter du under Bokningar i menyn. Millie bestämmer var bokningen visas på sajten.": "Hallitset paketteja, aikoja ja varauksia valikon kohdassa Varaukset. Millie päättää, missä varaus näkyy sivustolla.",
+  "Skapa en bokningssida": "Luo varaussivu",
+  "Lägg till bokningen längst ned på sidan Kontakt": "Lisää varaus Yhteystiedot-sivun alaosaan",
+  "Byt bokningen till bild bredvid": "Vaihda varaus kuvaksi sivulle",
+  "Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november": "Kirjoita uutinen kampanjastamme, julkaise se 1. marraskuuta klo 8 ja poista se 30. marraskuuta",
+  "Ta ner nyheten om vår kampanj automatiskt den 30 november": "Poista uutinen kampanjastamme automaattisesti 30. marraskuuta"
 }

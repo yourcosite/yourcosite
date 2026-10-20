@@ -53,6 +53,18 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
       msg("Centrera texten i den här sektionen"),
       msg("Vänsterställ all text på sidan"),
       msg("Låt knappen leda till kontaktsidan"),
+      msg("Byt menyn till en med en tydlig bokningsknapp"),
+      msg("Ändra knappen i menyn till Boka tid"),
+    ],
+  },
+  {
+    icon: "📅",
+    title: msg("Bokning"),
+    hint: msg("Paket, tider och bokningar sköter du under Bokningar i menyn. Millie bestämmer var bokningen visas på sajten."),
+    examples: [
+      msg("Skapa en bokningssida"),
+      msg("Lägg till bokningen längst ned på sidan Kontakt"),
+      msg("Byt bokningen till bild bredvid"),
     ],
   },
   {
@@ -82,6 +94,8 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
       msg("Lägg till en ny sida som heter Priser"),
       msg("Ta bort sidan Galleri"),
       msg("Skriv en nyhet om vår nya öppettid (börja gärna med en kort text – Millie utökar den och sätter rubrik och ingress)"),
+      msg("Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november"),
+      msg("Ta ner nyheten om vår kampanj automatiskt den 30 november"),
       msg("Koppla på Google Analytics: G-XXXXXXXXXX"),
     ],
   },

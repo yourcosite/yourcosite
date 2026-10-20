@@ -1300,5 +1300,14 @@
   " · avpubliceras {datum}": " · unpublishes {datum}",
   "Avpublicerad {datum}": "Unpublished {datum}",
   "Avpublicera automatiskt <span>(valfritt)</span>": "Unpublish automatically <span>(optional)</span>",
-  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "For example when a campaign ends. The article is then taken down from the site automatically and becomes a draft."
+  "Till exempel när en kampanj tar slut. Artikeln tas då ner från sajten av sig själv och blir ett utkast.": "For example when a campaign ends. The article is then taken down from the site automatically and becomes a draft.",
+  "Byt menyn till en med en tydlig bokningsknapp": "Switch the menu to one with a clear booking button",
+  "Ändra knappen i menyn till Boka tid": "Change the menu button to Book now",
+  "Bokning": "Booking",
+  "Paket, tider och bokningar sköter du under Bokningar i menyn. Millie bestämmer var bokningen visas på sajten.": "You manage packages, times and bookings under Bookings in the menu. Millie decides where the booking appears on the site.",
+  "Skapa en bokningssida": "Create a booking page",
+  "Lägg till bokningen längst ned på sidan Kontakt": "Add the booking at the bottom of the Contact page",
+  "Byt bokningen till bild bredvid": "Change the booking to image on the side",
+  "Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november": "Write a news article about our campaign, publish it on 1 November at 8 am and take it down on 30 November",
+  "Ta ner nyheten om vår kampanj automatiskt den 30 november": "Automatically take down the news article about our campaign on 30 November"
 }
