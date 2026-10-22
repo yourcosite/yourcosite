@@ -1276,14 +1276,13 @@ function Footer({
         className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 @3xl:px-12 pt-6 pb-8 text-[12px]"
         style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
       >
-        <span className="flex items-center gap-4 flex-wrap justify-center">
-          <span className="flex items-center gap-2">
-            {/* Samma logga som headern, bara litet skalad ner — en liten,
-                diskret upprepning är det kunder faktiskt förväntar sig i en
-                sidfot, inte en kopia i headerstorlek. */}
+        <span className="flex items-center gap-x-4 gap-y-3 flex-wrap justify-center">
+          {/* Loggan ligger större, med företagsnamnet under (kundönskemål: den
+              blev för liten). På smal skärm centreras allt. */}
+          <span className="flex flex-col items-center sm:items-start gap-2.5">
             {logoUrl && (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName || t("Logga")} className="h-5 max-w-[90px] object-contain" />
+              <img src={logoUrl} alt={siteName || t("Logga")} className="h-12 @3xl:h-14 max-w-[200px] @3xl:max-w-[240px] object-contain object-left" />
             )}
             <span>{siteName || t("Ditt företag")} · {t("Byggd med YourCoSite")}</span>
           </span>
