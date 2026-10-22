@@ -1,3 +1,4 @@
+import { logAiUsage } from "@/lib/aiUsage";
 import { getT, getLocale } from "@/lib/i18n/server";
 import { LANGUAGE_ENGLISH, isLocale, msg } from "@/lib/i18n/config";
 import { childPagesOf } from "@/lib/pageTree";
@@ -721,6 +722,8 @@ export async function POST(request: Request) {
       { status: 502 }
     );
   }
+
+  await logAiUsage({ kind: "edit", model: CLAUDE_MODEL, usage: response.usage, userId: user.id, siteId: site.id });
 
   const toolUse = response.content.find(
     (b): b is Extract<typeof response.content[number], { type: "tool_use" }> => b.type === "tool_use"

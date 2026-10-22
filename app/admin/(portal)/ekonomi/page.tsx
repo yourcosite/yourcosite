@@ -47,7 +47,7 @@ export default async function AdminEkonomiPage() {
   }));
 
   return (
-    <div className="px-11 py-7.5">
+    <div className="px-4 md:px-11 py-7.5">
       <div className="mb-6.5">
         <h1 className="text-[28px] font-medium font-serif">Ekonomi</h1>
         <p className="text-[14.5px] text-ink-dim mt-1.5">
@@ -66,7 +66,7 @@ export default async function AdminEkonomiPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-5">
         <div className="bg-surface border border-line rounded-2xl p-5.5">
           <div className="font-semibold text-[15.5px] mb-4">Betalande kunder och deras plan</div>
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto"><table className="w-full border-collapse min-w-[520px]">
             <thead>
               <tr className="text-left text-[11.5px] text-ink-dim uppercase tracking-wide">
                 <th className="py-1.5 font-semibold border-b border-line">Kund</th>
@@ -96,7 +96,7 @@ export default async function AdminEkonomiPage() {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         <div className="flex flex-col gap-5">

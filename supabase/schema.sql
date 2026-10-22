@@ -779,3 +779,25 @@ alter table booking_settings add column if not exists terms_text text;
 alter table booking_settings add column if not exists terms_ack_at timestamptz;
 alter table bookings add column if not exists terms_accepted_at timestamptz;
 alter table bookings add column if not exists terms_snapshot text;
+
+-- Verklig AI-förbrukning per anrop (generate, edit, news, terms, translate),
+-- så admin kan se vad varje kund kostar. Bara servern skriver (service role);
+-- personal får läsa. Körs en gång.
+create table if not exists ai_usage (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  user_id uuid references auth.users (id) on delete set null,
+  site_id uuid references sites (id) on delete set null,
+  kind text not null,
+  model text,
+  input_tokens int not null default 0,
+  output_tokens int not null default 0,
+  cache_read_tokens int not null default 0,
+  cache_write_tokens int not null default 0,
+  cost_usd numeric(10, 5) not null default 0
+);
+create index if not exists ai_usage_created_idx on ai_usage (created_at desc);
+create index if not exists ai_usage_user_idx on ai_usage (user_id, created_at desc);
+alter table ai_usage enable row level security;
+drop policy if exists "Staff kan läsa AI-förbrukning" on ai_usage;
+create policy "Staff kan läsa AI-förbrukning" on ai_usage for select using (public.is_staff());

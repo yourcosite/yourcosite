@@ -1,3 +1,4 @@
+import { logAiUsage } from "@/lib/aiUsage";
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { rateLimited } from "@/lib/rateLimit";
@@ -73,6 +74,8 @@ Svara via verktyget "draft_booking_terms" på ${langName} (sajtens språk, även
   } catch (e: any) {
     return NextResponse.json({ error: t("Kunde inte hämta ett förslag just nu.") }, { status: 502 });
   }
+  await logAiUsage({ kind: "terms", model: CLAUDE_MODEL, usage: response.usage, userId: user.id, siteId });
+
   const toolUse = response.content.find(
     (b): b is Extract<typeof response.content[number], { type: "tool_use" }> => b.type === "tool_use"
   );

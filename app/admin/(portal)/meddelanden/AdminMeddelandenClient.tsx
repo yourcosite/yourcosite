@@ -128,7 +128,7 @@ export default function AdminMeddelandenClient({ initialMessages }: { initialMes
   const newCount = messages.filter((m) => m.status === "ny").length;
 
   return (
-    <div className="px-11 py-7.5">
+    <div className="px-4 md:px-11 py-7.5">
       <div className="mb-6.5">
         <h1 className="text-[28px] font-medium font-serif">Meddelanden</h1>
         <p className="text-[14.5px] text-ink-dim mt-1.5">

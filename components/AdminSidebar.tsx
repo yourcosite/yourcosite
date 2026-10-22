@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -61,6 +62,17 @@ const NAV_ITEMS: { href: string; label: string; roles: StaffRole[]; icon: (c: st
     ),
   },
   {
+    href: "/admin/ai-kostnad",
+    label: "AI-kostnad",
+    roles: ["admin", "superadmin"],
+    icon: (c: string) => (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 3v18h18" />
+        <path d="M7 15l4-4 3 3 5-6" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/team",
     label: "Team",
     roles: ["superadmin"],
@@ -113,9 +125,12 @@ export default function AdminSidebar({
     router.refresh();
   };
 
-  return (
-    <div className="w-[232px] flex-shrink-0 bg-[#0E0E10] text-white flex flex-col py-6">
-      <Link href="/admin" className="flex items-center gap-2.5 px-5 mb-1.5">
+  const [open, setOpen] = useState(false);
+  useEffect(() => { setOpen(false); }, [pathname]);
+
+  const body = (
+    <>
+      <Link href="/admin" className="hidden md:flex items-center gap-2.5 px-5 mb-1.5">
         <svg viewBox="0 0 32 32" width="26" height="26" aria-hidden="true">
           <rect x="2" y="4" width="28" height="18" rx="7" fill="#C6FF5E" />
           <path d="M10 22 L10 29 L17 22 Z" fill="#C6FF5E" />
@@ -125,7 +140,7 @@ export default function AdminSidebar({
         </svg>
         <span className="font-serif font-semibold text-[16px] text-white">YourCoSite</span>
       </Link>
-      <div className="px-5 mb-6">
+      <div className="hidden md:block px-5 mb-6">
         <span className="text-[10px] font-bold tracking-wide uppercase text-accent bg-accent/15 px-2 py-1 rounded-full">
           Admin
         </span>
@@ -184,6 +199,43 @@ export default function AdminSidebar({
           </div>
         </div>
       </div>
-    </div>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobil: smalt toppfält med meny-knapp, panelen fälls ut under. */}
+      <div className="md:hidden bg-[#0E0E10] text-white">
+        <div className="flex items-center justify-between px-4 h-14">
+          <Link href="/admin" className="flex items-center gap-2.5">
+            <svg viewBox="0 0 32 32" width="24" height="24" aria-hidden="true">
+              <rect x="2" y="4" width="28" height="18" rx="7" fill="#C6FF5E" />
+              <path d="M10 22 L10 29 L17 22 Z" fill="#C6FF5E" />
+              <circle cx="11" cy="13" r="1.6" fill="#0C1004" />
+              <circle cx="16" cy="13" r="1.6" fill="#0C1004" />
+              <circle cx="21" cy="13" r="1.6" fill="#0C1004" />
+            </svg>
+            <span className="font-serif font-semibold text-[15px]">YourCoSite</span>
+            <span className="text-[10px] font-bold tracking-wide uppercase text-accent bg-accent/15 px-2 py-0.5 rounded-full">Admin</span>
+          </Link>
+          <button
+            type="button"
+            aria-label={open ? "Stäng menyn" : "Öppna menyn"}
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+            className="w-10 h-10 flex items-center justify-center rounded-lg text-white"
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              {open ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+            </svg>
+          </button>
+        </div>
+        {open && <div className="flex flex-col pb-4 border-t border-white/10 pt-3">{body}</div>}
+      </div>
+      {/* Dator: fast sidomeny. */}
+      <div className="hidden md:flex w-[232px] flex-shrink-0 bg-[#0E0E10] text-white flex-col py-6">
+        {body}
+      </div>
+    </>
   );
 }

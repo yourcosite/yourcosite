@@ -30,7 +30,7 @@ export default async function AdminPortalLayout({
   }
 
   return (
-    <div className="min-h-screen bg-bg font-sans flex">
+    <div className="min-h-screen bg-bg font-sans flex flex-col md:flex-row">
       <AdminSidebar
         adminName={fullName}
         adminEmail={user?.email ?? ""}
@@ -38,7 +38,7 @@ export default async function AdminPortalLayout({
         newMessageCount={newMessageCount}
       />
       <div className="flex-1 min-w-0 flex flex-col">
-        <div className="px-11 pt-5 flex-shrink-0">
+        <div className="px-4 md:px-11 pt-5 flex-shrink-0">
           <AdminSearchBar />
         </div>
         <main className="flex-1 min-w-0">{children}</main>

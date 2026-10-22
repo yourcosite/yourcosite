@@ -1,3 +1,4 @@
+import { logAiUsage } from "@/lib/aiUsage";
 import { getT } from "@/lib/i18n/server";
 import { LANGUAGE_ENGLISH } from "@/lib/i18n/config";
 import { NextResponse } from "next/server";
@@ -429,6 +430,8 @@ async function generateSite(emit: (p: Progress) => void) {
       { status: 502 }
     );
   }
+
+  await logAiUsage({ kind: "generate", model: CLAUDE_MODEL, usage: message.usage, userId: user.id, siteId: site.id });
 
   const toolUse = message.content.find(
     (b): b is Extract<typeof message.content[number], { type: "tool_use" }> => b.type === "tool_use"

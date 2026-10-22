@@ -269,7 +269,7 @@ export default function AdminCustomersClient({
         <div className="text-[13.5px] text-warm font-medium mb-4">{error}</div>
       )}
 
-      <div className="flex items-center gap-2 bg-surface border border-line rounded-[10px] px-3.5 py-2 w-[280px] mb-5">
+      <div className="flex items-center gap-2 bg-surface border border-line rounded-[10px] px-3.5 py-2 w-full md:w-[280px] mb-5">
         <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6B6A66" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <circle cx="11" cy="11" r="7" />
           <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -283,7 +283,7 @@ export default function AdminCustomersClient({
       </div>
 
       <div className="bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto"><table className="w-full border-collapse min-w-[520px]">
           <thead>
             <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
               <th className="py-3 px-5 font-semibold">Namn</th>
@@ -373,7 +373,7 @@ export default function AdminCustomersClient({
               </tr>
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
 
       {/* Lägg till-modal */}

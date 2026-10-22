@@ -23,7 +23,7 @@ export default async function AdminActivityPage() {
   const entries = log ?? [];
 
   return (
-    <div className="px-11 py-7.5">
+    <div className="px-4 md:px-11 py-7.5">
       <div className="mb-6.5">
         <h1 className="text-[28px] font-medium font-serif">Aktivitet</h1>
         <p className="text-[14.5px] text-ink-dim mt-1.5">
@@ -32,7 +32,7 @@ export default async function AdminActivityPage() {
       </div>
 
       <div className="bg-surface border border-line rounded-2xl overflow-hidden">
-        <table className="w-full border-collapse">
+        <div className="overflow-x-auto"><table className="w-full border-collapse min-w-[520px]">
           <thead>
             <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
               <th className="py-3 px-5 font-semibold">Vem</th>
@@ -66,7 +66,7 @@ export default async function AdminActivityPage() {
               </tr>
             )}
           </tbody>
-        </table>
+        </table></div>
       </div>
     </div>
   );

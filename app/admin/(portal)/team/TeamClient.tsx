@@ -118,7 +118,7 @@ export default function TeamClient({
   };
 
   return (
-    <div className="px-11 py-7.5">
+    <div className="px-4 md:px-11 py-7.5">
       <div className="flex items-end justify-between flex-wrap gap-4 mb-6.5">
         <div>
           <h1 className="text-[28px] font-medium font-serif">Team</h1>
@@ -136,7 +136,7 @@ export default function TeamClient({
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_1fr] gap-5.5">
         <div className="bg-surface border border-line rounded-2xl overflow-hidden h-fit">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto"><table className="w-full border-collapse min-w-[520px]">
             <thead>
               <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
                 <th className="py-3 px-5 font-semibold">Namn</th>
@@ -190,7 +190,7 @@ export default function TeamClient({
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         <div className="flex flex-col gap-3.5">

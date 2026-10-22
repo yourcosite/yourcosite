@@ -51,7 +51,7 @@ export default async function AdminOverviewPage() {
   const waitingToBuild = list.filter((c) => (c.sites ?? []).length === 0).slice(0, 4);
 
   return (
-    <div className="px-11 py-7.5">
+    <div className="px-4 md:px-11 py-7.5">
       <div className="flex items-end justify-between flex-wrap gap-4 mb-6.5">
         <div>
           <h1 className="text-[28px] font-medium font-serif">Översikt</h1>
@@ -84,7 +84,7 @@ export default async function AdminOverviewPage() {
               Se alla →
             </Link>
           </div>
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto"><table className="w-full border-collapse min-w-[520px]">
             <thead>
               <tr className="text-left text-[11.5px] text-ink-dim uppercase tracking-wide">
                 <th className="py-1.5 font-semibold border-b border-line">Kund</th>
@@ -130,7 +130,7 @@ export default async function AdminOverviewPage() {
                 </tr>
               )}
             </tbody>
-          </table>
+          </table></div>
         </div>
 
         <div className="flex flex-col gap-5">

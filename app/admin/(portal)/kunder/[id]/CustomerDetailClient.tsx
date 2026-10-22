@@ -216,7 +216,7 @@ export default function CustomerDetailClient({
       : "bg-line text-ink-dim";
 
   return (
-    <div className="px-11 py-7.5 max-w-[1100px]">
+    <div className="px-4 md:px-11 py-7.5 max-w-[1100px]">
       <Link href="/admin/kunder" className="text-[13px] font-semibold text-ink-dim mb-4 inline-block">
         ← Tillbaka till kunder
       </Link>
