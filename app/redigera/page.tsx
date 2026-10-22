@@ -367,6 +367,7 @@ export default function EditorPage() {
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [stockOpen, setStockOpen] = useState(false);
   const [myImagesOpen, setMyImagesOpen] = useState(false);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
   // Prick på "Nytt"-knappen tills kunden öppnat rutan efter senaste nyheten.
@@ -2030,50 +2031,42 @@ export default function EditorPage() {
                   e.target.value = "";
                 }}
               />
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={sending || attaching || !content}
-                aria-label={t("Bifoga filer")}
-                title={t("Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri")}
-                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
-              >
-                {attaching ? (
-                  <span className="text-[11px]">…</span>
-                ) : (
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                  </svg>
+              <div className="relative flex-shrink-0">
+                              <button
+                  type="button"
+                  onClick={() => setAttachMenuOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={attachMenuOpen}
+                  disabled={sending || attaching || !content}
+                  aria-label={t("Bifoga filer")}
+                  title={t("Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri")}
+                  className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
+                >
+                  {attaching ? (
+                    <span className="text-[11px]">…</span>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  )}
+                </button>
+                {attachMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setAttachMenuOpen(false)} />
+                    <div role="menu" className="absolute bottom-full left-0 mb-2 z-40 w-[230px] bg-surface border border-line rounded-xl shadow-lg p-1.5 flex flex-col">
+                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); fileInputRef.current?.click(); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
+                        {t("📎 Ladda upp från datorn")}
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setMyImagesOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
+                        {t("🗂 Mina bilder")}
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setStockOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
+                        {t("🖼 Stockbilder")}
+                      </button>
+                    </div>
+                  </>
                 )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setMyImagesOpen(true)}
-                disabled={sending || attaching || !content}
-                aria-label={t("Mina bilder")}
-                title={t("Välj bland bilder du redan har laddat upp")}
-                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
-                  <circle cx="9" cy="12" r="1.3" />
-                  <polyline points="21 16 16 12 8 18" />
-                </svg>
-              </button>
-              <button
-                type="button"
-                onClick={() => setStockOpen(true)}
-                disabled={sending || attaching || !content}
-                aria-label={t("Sök stockbilder")}
-                title={t("Sök gratis stockbilder")}
-                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
-              >
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="3" width="18" height="18" rx="2" />
-                  <circle cx="8.5" cy="8.5" r="1.5" />
-                  <polyline points="21 15 16 10 5 21" />
-                </svg>
-              </button>
+              </div>
               {micSupported && (
                 <button
                   type="button"

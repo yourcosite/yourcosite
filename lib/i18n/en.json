@@ -1765,5 +1765,8 @@
   "Hämtar dina bilder …": "Fetching your images …",
   "Du har inte laddat upp några bilder än.": "You have not uploaded any images yet.",
   "Valda: {n} av högst {max}": "Selected: {n} of at most {max}",
-  "Bifoga": "Attach"
+  "Bifoga": "Attach",
+  "📎 Ladda upp från datorn": "📎 Upload from computer",
+  "🗂 Mina bilder": "🗂 My images",
+  "🖼 Stockbilder": "🖼 Stock photos"
 }
