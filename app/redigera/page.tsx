@@ -18,6 +18,7 @@ import SitePreview, { FieldEditContext } from "@/components/SitePreview";
 const MemoSitePreview = memo(SitePreview);
 import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
+import MyImagesModal, { type MyImage } from "@/components/MyImagesModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import ImageEditorModal from "@/components/ImageEditorModal";
 import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
@@ -365,6 +366,7 @@ export default function EditorPage() {
   // bildgalleri) — se handleFiles nedan.
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [stockOpen, setStockOpen] = useState(false);
+  const [myImagesOpen, setMyImagesOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [newsOpen, setNewsOpen] = useState(false);
   // Prick på "Nytt"-knappen tills kunden öppnat rutan efter senaste nyheten.
@@ -568,6 +570,21 @@ export default function EditorPage() {
     if (uploaded.length > 0) setAttachments((prev) => [...prev, ...uploaded]);
     if (errors.length > 0) setAttachError(errors.join(" "));
     setAttaching(false);
+  };
+
+  // Tidigare uppladdade bilder: bifogas som vanliga egna bilder (samma regler
+  // som en ny uppladdning — de ligger redan i kundens egen mapp).
+  const pickMyImages = (imgs: MyImage[]) => {
+    const room = MAX_ATTACHMENTS - attachments.length;
+    setAttachError(imgs.length > room ? `Max ${MAX_ATTACHMENTS} bilagor i samma meddelande.` : "");
+    setAttachments((prev) => [
+      ...prev,
+      ...imgs
+        .filter((im) => !prev.some((a) => a.url === im.url))
+        .slice(0, Math.max(0, room))
+        .map((im): Attachment => ({ kind: "image", url: im.url, name: im.name.slice(0, 100), mimeType: /\.png$/i.test(im.name) ? "image/png" : /\.webp$/i.test(im.name) ? "image/webp" : /\.gif$/i.test(im.name) ? "image/gif" : "image/jpeg" })),
+    ]);
+    draftInputRef.current?.focus();
   };
 
   const pickStockPhoto = (photo: StockPhoto) => {
@@ -2031,6 +2048,20 @@ export default function EditorPage() {
               </button>
               <button
                 type="button"
+                onClick={() => setMyImagesOpen(true)}
+                disabled={sending || attaching || !content}
+                aria-label={t("Mina bilder")}
+                title={t("Välj bland bilder du redan har laddat upp")}
+                className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
+              >
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z" />
+                  <circle cx="9" cy="12" r="1.3" />
+                  <polyline points="21 16 16 12 8 18" />
+                </svg>
+              </button>
+              <button
+                type="button"
                 onClick={() => setStockOpen(true)}
                 disabled={sending || attaching || !content}
                 aria-label={t("Sök stockbilder")}
@@ -2148,6 +2179,7 @@ export default function EditorPage() {
           onSave={saveEditedAttachment}
         />
       )}
+      <MyImagesModal open={myImagesOpen} onClose={() => setMyImagesOpen(false)} onPick={pickMyImages} maxPick={Math.max(0, MAX_ATTACHMENTS - attachments.length)} />
       <StockPhotoModal open={stockOpen} onClose={() => setStockOpen(false)} onPick={pickStockPhoto} />
 
       <ContactSupportModal

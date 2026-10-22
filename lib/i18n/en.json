@@ -1756,5 +1756,14 @@
   "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Your own photos (PNG/JPG/WEBP) and texts (Word .docx, PDF or .txt), max 15 MB per file, several at a time is fine. If your text has headings named like your pages, each part ends up on the right page. (Logo? Upload it separately above instead.)",
   "Läste {n} dokument ({words} ord) och använde texten.": "Read {n} documents ({words} words) and used the text.",
   "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "{n} documents could not be read. Save them as .docx, PDF or .txt and try again.",
-  "{n} bilder blev över och samlades i ett galleri.": "{n} leftover images were collected in a gallery."
+  "{n} bilder blev över och samlades i ett galleri.": "{n} leftover images were collected in a gallery.",
+  "Du laddade upp {images} bilder och {docs} textfiler med totalt {chars} tecken.": "You uploaded {images} images and {docs} text files with a total of {chars} characters.",
+  "Texten i dokumenten har använts på sajten.": "The text in the documents has been used on the site.",
+  "Mina bilder": "My images",
+  "Välj bland bilder du redan har laddat upp": "Choose among images you have already uploaded",
+  "Bilder du redan har laddat upp. Välj en eller flera att bifoga i chatten.": "Images you have already uploaded. Choose one or more to attach in the chat.",
+  "Hämtar dina bilder …": "Fetching your images …",
+  "Du har inte laddat upp några bilder än.": "You have not uploaded any images yet.",
+  "Valda: {n} av högst {max}": "Selected: {n} of at most {max}",
+  "Bifoga": "Attach"
 }

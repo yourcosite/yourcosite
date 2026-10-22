@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspiration";
-import { assignUploadedImagesDetailed } from "@/lib/assignUploadedImages";
+import { assignUploadedImages } from "@/lib/assignUploadedImages";
 import { ensureImageSlots, enforceHomepageImageRichness, dedupeMaps } from "@/lib/ensureImageSlots";
 import { ensureShowcaseSections } from "@/lib/showcaseContent";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
@@ -557,12 +557,7 @@ async function generateSite(emit: (p: Progress) => void) {
   });
 
   const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
-  const { content: finalContent, galleryCount: galleryImages } = assignUploadedImagesDetailed(
-    contentWithImageSlots,
-    imageUrls,
-    site.hero_image_url,
-    (site as any).language
-  );
+  const finalContent = assignUploadedImages(contentWithImageSlots, imageUrls, site.hero_image_url);
 
   // Inspirationsbilderna (skärmdumpar av ANDRA sajter kunden visat som
   // referens) har nu gjort sitt jobb — de användes ovan bara för att styra
@@ -606,7 +601,8 @@ async function generateSite(emit: (p: Progress) => void) {
     documentsRead: documents.length,
     documentWords: documents.reduce((n, d) => n + d.text.split(/\s+/).filter(Boolean).length, 0),
     documentsFailed: failedDocuments.length,
-    galleryImages,
+    imagesUploaded: imageUrls.length + (site.hero_image_url && !imageUrls.includes(site.hero_image_url) ? 1 : 0),
+    documentChars: documents.reduce((n, d) => n + d.text.length, 0),
   });
 }
 

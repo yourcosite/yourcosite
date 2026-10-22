@@ -1756,5 +1756,14 @@
   "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Egne fotos (PNG/JPG/WEBP) og tekster (Word .docx, PDF eller .txt), maks. 15 MB pr. fil, flere ad gangen er fint. Har du en tekst med overskrifter, der hedder det samme som dine sider, havner hver del på den rigtige side. (Logo? Upload det separat ovenfor i stedet.)",
   "Läste {n} dokument ({words} ord) och använde texten.": "Læste {n} dokumenter ({words} ord) og brugte teksten.",
   "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "{n} dokumenter kunne ikke læses. Gem dem som .docx, PDF eller .txt, og prøv igen.",
-  "{n} bilder blev över och samlades i ett galleri.": "{n} overskydende billeder blev samlet i et galleri."
+  "{n} bilder blev över och samlades i ett galleri.": "{n} overskydende billeder blev samlet i et galleri.",
+  "Du laddade upp {images} bilder och {docs} textfiler med totalt {chars} tecken.": "Du uploadede {images} billeder og {docs} tekstfiler med i alt {chars} tegn.",
+  "Texten i dokumenten har använts på sajten.": "Teksten i dokumenterne er brugt på sitet.",
+  "Mina bilder": "Mine billeder",
+  "Välj bland bilder du redan har laddat upp": "Vælg blandt billeder, du allerede har uploadet",
+  "Bilder du redan har laddat upp. Välj en eller flera att bifoga i chatten.": "Billeder, du allerede har uploadet. Vælg et eller flere, der skal vedhæftes i chatten.",
+  "Hämtar dina bilder …": "Henter dine billeder …",
+  "Du har inte laddat upp några bilder än.": "Du har ikke uploadet nogen billeder endnu.",
+  "Valda: {n} av högst {max}": "Valgt: {n} af højst {max}",
+  "Bifoga": "Vedhæft"
 }

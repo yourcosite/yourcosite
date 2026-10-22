@@ -1756,5 +1756,14 @@
   "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Fotos propias (PNG/JPG/WEBP) y textos (Word .docx, PDF o .txt), máx. 15 MB por archivo; se pueden subir varios a la vez. Si tu texto tiene títulos con el nombre de tus páginas, cada parte acaba en la página correcta. (¿Logotipo? Súbelo por separado más arriba.)",
   "Läste {n} dokument ({words} ord) och använde texten.": "Se leyeron {n} documentos ({words} palabras) y se usó el texto.",
   "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "No se pudieron leer {n} documentos. Guárdalos como .docx, PDF o .txt e inténtalo de nuevo.",
-  "{n} bilder blev över och samlades i ett galleri.": "{n} imágenes sobrantes se reunieron en una galería."
+  "{n} bilder blev över och samlades i ett galleri.": "{n} imágenes sobrantes se reunieron en una galería.",
+  "Du laddade upp {images} bilder och {docs} textfiler med totalt {chars} tecken.": "Subiste {images} imágenes y {docs} archivos de texto con un total de {chars} caracteres.",
+  "Texten i dokumenten har använts på sajten.": "El texto de los documentos se ha usado en el sitio.",
+  "Mina bilder": "Mis imágenes",
+  "Välj bland bilder du redan har laddat upp": "Elegir entre imágenes que ya has subido",
+  "Bilder du redan har laddat upp. Välj en eller flera att bifoga i chatten.": "Imágenes que ya has subido. Elige una o varias para adjuntar en el chat.",
+  "Hämtar dina bilder …": "Cargando tus imágenes …",
+  "Du har inte laddat upp några bilder än.": "Aún no has subido ninguna imagen.",
+  "Valda: {n} av högst {max}": "Seleccionadas: {n} de un máximo de {max}",
+  "Bifoga": "Adjuntar"
 }

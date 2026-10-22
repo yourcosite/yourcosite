@@ -1756,5 +1756,14 @@
   "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Photos personnelles (PNG/JPG/WEBP) et textes (Word .docx, PDF ou .txt), 15 Mo max. par fichier, plusieurs à la fois sont possibles. Si votre texte contient des titres portant le nom de vos pages, chaque partie se retrouve sur la bonne page. (Un logo ? Importez-le plutôt séparément ci-dessus.)",
   "Läste {n} dokument ({words} ord) och använde texten.": "{n} documents lus ({words} mots) et texte utilisé.",
   "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "{n} documents n'ont pas pu être lus. Enregistrez-les en .docx, PDF ou .txt et réessayez.",
-  "{n} bilder blev över och samlades i ett galleri.": "{n} images restantes ont été réunies dans une galerie."
+  "{n} bilder blev över och samlades i ett galleri.": "{n} images restantes ont été réunies dans une galerie.",
+  "Du laddade upp {images} bilder och {docs} textfiler med totalt {chars} tecken.": "Vous avez téléversé {images} images et {docs} fichiers texte, soit {chars} caractères au total.",
+  "Texten i dokumenten har använts på sajten.": "Le texte des documents a été utilisé sur le site.",
+  "Mina bilder": "Mes images",
+  "Välj bland bilder du redan har laddat upp": "Choisir parmi les images déjà téléversées",
+  "Bilder du redan har laddat upp. Välj en eller flera att bifoga i chatten.": "Images que vous avez déjà téléversées. Choisissez-en une ou plusieurs à joindre dans le chat.",
+  "Hämtar dina bilder …": "Chargement de vos images …",
+  "Du har inte laddat upp några bilder än.": "Vous n'avez pas encore téléversé d'images.",
+  "Valda: {n} av högst {max}": "Sélectionnées : {n} sur {max} au maximum",
+  "Bifoga": "Joindre"
 }

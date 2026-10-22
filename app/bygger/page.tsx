@@ -84,9 +84,17 @@ export default function GeneratingPage() {
           setPercent(100);
           const b = r.body || {};
           const lines: string[] = [];
-          if (b.documentsRead > 0) lines.push(t("Läste {n} dokument ({words} ord) och använde texten.", { n: b.documentsRead, words: b.documentWords }));
+          if (b.imagesUploaded > 0 || b.documentsRead > 0) {
+            lines.push(
+              t("Du laddade upp {images} bilder och {docs} textfiler med totalt {chars} tecken.", {
+                images: b.imagesUploaded ?? 0,
+                docs: b.documentsRead ?? 0,
+                chars: Number(b.documentChars ?? 0).toLocaleString("sv-SE"),
+              })
+            );
+          }
+          if (b.documentsRead > 0) lines.push(t("Texten i dokumenten har använts på sajten."));
           if (b.documentsFailed > 0) lines.push(t("{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.", { n: b.documentsFailed }));
-          if (b.galleryImages > 0) lines.push(t("{n} bilder blev över och samlades i ett galleri.", { n: b.galleryImages }));
           setNotes(lines);
           // En kort stund på 100 % så man hinner se att det blev klart —
           // längre när det finns en sammanfattning att läsa.

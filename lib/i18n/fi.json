@@ -1756,5 +1756,14 @@
   "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Omat valokuvat (PNG/JPG/WEBP) ja tekstit (Word .docx, PDF tai .txt), enintään 15 Mt tiedostoa kohden, useita kerralla käy. Jos tekstissäsi on otsikoita, jotka on nimetty sivujesi mukaan, jokainen osa päätyy oikealle sivulle. (Logo? Lataa se erikseen yllä.)",
   "Läste {n} dokument ({words} ord) och använde texten.": "Luettiin {n} dokumenttia ({words} sanaa) ja käytettiin teksti.",
   "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "{n} dokumenttia ei voitu lukea. Tallenna ne muodossa .docx, PDF tai .txt ja yritä uudelleen.",
-  "{n} bilder blev över och samlades i ett galleri.": "{n} ylimääräistä kuvaa koottiin galleriaan."
+  "{n} bilder blev över och samlades i ett galleri.": "{n} ylimääräistä kuvaa koottiin galleriaan.",
+  "Du laddade upp {images} bilder och {docs} textfiler med totalt {chars} tecken.": "Latasit {images} kuvaa ja {docs} tekstitiedostoa, yhteensä {chars} merkkiä.",
+  "Texten i dokumenten har använts på sajten.": "Dokumenttien teksti on käytetty sivustolla.",
+  "Mina bilder": "Omat kuvat",
+  "Välj bland bilder du redan har laddat upp": "Valitse jo lataamistasi kuvista",
+  "Bilder du redan har laddat upp. Välj en eller flera att bifoga i chatten.": "Kuvat, jotka olet jo ladannut. Valitse yksi tai useampi liitettäväksi chattiin.",
+  "Hämtar dina bilder …": "Haetaan kuviasi …",
+  "Du har inte laddat upp några bilder än.": "Et ole vielä ladannut yhtään kuvaa.",
+  "Valda: {n} av högst {max}": "Valittu: {n} / enintään {max}",
+  "Bifoga": "Liitä"
 }
