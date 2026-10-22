@@ -1,4 +1,4 @@
-import type { GridLayout } from "@/lib/contentModel";
+import type { GalleryLayout, GridLayout } from "@/lib/contentModel";
 
 // Små schematiska förhandsbilder av rutnätssektionens layouter, till
 // layoutväljaren i redigeraren. Ritade med två toner: färgen för detaljer
@@ -16,7 +16,7 @@ function Lines({ x, y, w, n = 2, c }: { x: number; y: number; w: number; n?: num
   );
 }
 
-export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout: GridLayout; accent?: string }) {
+export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout: GridLayout | GalleryLayout; accent?: string }) {
   const dim = "currentColor";
   const dimOp = 0.28;
   const cols3 = [8, 45, 82];
@@ -143,6 +143,44 @@ export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout
               <g opacity={dimOp}><Lines x={71} y={20 + r * 19} w={38} n={2} c={dim} /></g>
             </g>
           ))}
+        </>
+      );
+      break;
+    case "grid":
+      body = [0, 1, 2, 3].map((k) => (
+        <rect key={k} x={14 + (k % 2) * 49} y={10 + Math.floor(k / 2) * 33} width={43} height={28} rx={3} fill={accent} fillOpacity={0.4} />
+      ));
+      break;
+    case "tiles":
+      body = [0, 1, 2, 3, 4, 5, 6, 7, 8].map((k) => (
+        <rect key={k} x={10 + (k % 3) * 36} y={9 + Math.floor(k / 3) * 21} width={32} height={18} rx={2} fill={accent} fillOpacity={0.3 + (k % 3) * 0.1} />
+      ));
+      break;
+    case "masonry":
+      body = (
+        <>
+          {[[8, 8, 32, 30], [8, 42, 32, 26], [44, 8, 32, 20], [44, 32, 32, 36], [80, 8, 32, 34], [80, 46, 32, 22]].map(([x, y, w, h], k) => (
+            <rect key={k} x={x} y={y} width={w} height={h} rx={3} fill={accent} fillOpacity={0.3 + (k % 3) * 0.12} />
+          ))}
+        </>
+      );
+      break;
+    case "mosaic":
+      body = (
+        <>
+          {[[8, 8, 50, 38], [62, 8, 24, 38], [90, 8, 22, 17], [90, 29, 22, 17], [8, 50, 24, 18], [36, 50, 50, 18], [90, 50, 22, 18]].map(([x, y, w, h], k) => (
+            <rect key={k} x={x} y={y} width={w} height={h} rx={3} fill={accent} fillOpacity={0.3 + (k % 3) * 0.12} />
+          ))}
+        </>
+      );
+      break;
+    case "carousel":
+      body = (
+        <>
+          {[0, 1, 2].map((k) => (
+            <rect key={k} x={8 + k * 42} y={18} width={38} height={38} rx={4} fill={accent} fillOpacity={0.3 + k * 0.12} />
+          ))}
+          <rect x={44} y={62} width={32} height={3} rx={1.5} fill={dim} opacity={0.35} />
         </>
       );
       break;

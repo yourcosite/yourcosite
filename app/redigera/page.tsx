@@ -24,7 +24,7 @@ import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
-import { isValidSiteContent, GRID_LAYOUTS, type GridLayout, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, MAX_GALLERY_IMAGES, type GalleryLayout, type GridLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -95,6 +95,14 @@ const GRID_LAYOUT_LABELS: Record<GridLayout, string> = {
   "icon-circles": msg("Ikoncirklar"),
   "icon-list": msg("Ikonlista"),
   "icon-top-rule": msg("Ikoner med linje"),
+};
+
+const GALLERY_LAYOUT_LABELS: Record<GalleryLayout, string> = {
+  grid: msg("Två kolumner"),
+  tiles: msg("Tätt rutnät"),
+  masonry: msg("Murverk"),
+  mosaic: msg("Mosaik"),
+  carousel: msg("Svepbar rad"),
 };
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -861,7 +869,7 @@ export default function EditorPage() {
   const [layoutPickerOpen, setLayoutPickerOpen] = useState(false);
   const [savingPick, setSavingPick] = useState(false);
   const pickedSection = (() => {
-    if (!content || !selection || selection.target === "image") return null;
+    if (!content || !selection) return null;
     return (content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any) ?? null;
   })();
   const iconFieldMatch = selection?.target === "field" ? selection.field.match(/^items\.(\d+)\.icon$/) : null;
@@ -869,9 +877,10 @@ export default function EditorPage() {
   const pickedIconId =
     pickedIconIndex !== null && pickedSection?.type === "grid" ? iconsForItems(pickedSection.items)[pickedIconIndex] ?? null : null;
   const canPickIcon = pickedIconIndex !== null && pickedSection?.type === "grid";
-  const canPickLayout = !!selection && selection.target !== "image" && pickedSection?.type === "grid";
+  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery");
+  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : GRID_LAYOUTS;
   const savePick = async (url: string, payload: Record<string, unknown>, okText: string) => {
-    if (!selection || selection.target === "image" || !content) return;
+    if (!selection || !content) return;
     setSavingPick(true);
     try {
       const res = await fetch(url, {
@@ -897,7 +906,46 @@ export default function EditorPage() {
   };
   const saveIcon = (icon: string | null) =>
     savePick("/api/sites/edit-icon", { itemIndex: pickedIconIndex, icon }, t("Klart! Ikonen är bytt. Du kan ångra med knappen om du ändrar dig."));
-  const saveLayout = (layout: GridLayout) =>
+  // Galleri: lägg till många bilder på en gång (utan AI) och ta bort enskilda.
+  const galleryFileRef = useRef<HTMLInputElement>(null);
+  const [galleryBusy, setGalleryBusy] = useState(false);
+  const canAddGalleryImages = !!selection && pickedSection?.type === "gallery";
+  const selectedGalleryIndex =
+    selection?.target === "image" && selection.kind === "galleryItem" && selection.itemIndex !== undefined ? selection.itemIndex : null;
+  const addGalleryImages = async (files: File[]) => {
+    if (!selection || !content || files.length === 0 || pickedSection?.type !== "gallery") return;
+    const have = (pickedSection.items as any[]).length;
+    const room = MAX_GALLERY_IMAGES - have + (pickedSection.items as any[]).filter((i) => !i.imageUrl).length;
+    if (room <= 0) {
+      setMessages((m) => [...m, { from: "bot", text: t("Ett galleri kan ha högst {max} bilder.", { max: MAX_GALLERY_IMAGES }) }]);
+      return;
+    }
+    setGalleryBusy(true);
+    const urls: string[] = [];
+    const errors: string[] = [];
+    for (const file of files.slice(0, Math.min(room, 40))) {
+      if (!file.type.startsWith("image/")) { errors.push(t("{name}: filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.", { name: file.name })); continue; }
+      try {
+        urls.push((await uploadOneFile(file)).url);
+      } catch (e: any) {
+        errors.push(e.message);
+      }
+    }
+    try {
+      if (urls.length > 0) {
+        await savePick("/api/sites/edit-gallery", { action: "add", urls }, t("Klart! {n} bilder är tillagda i galleriet. Du kan ångra med knappen om du ändrar dig.", { n: urls.length }));
+      }
+      if (errors.length > 0) setMessages((m) => [...m, { from: "bot", text: errors.join(" ") }]);
+    } finally {
+      setGalleryBusy(false);
+      if (galleryFileRef.current) galleryFileRef.current.value = "";
+    }
+  };
+  const removeGalleryImage = () =>
+    selectedGalleryIndex !== null
+      ? savePick("/api/sites/edit-gallery", { action: "remove", index: selectedGalleryIndex }, t("Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig."))
+      : undefined;
+  const saveLayout = (layout: string) =>
     savePick("/api/sites/edit-layout", { layout }, t("Klart! Layouten är bytt. Du kan ångra med knappen om du ändrar dig."));
 
   // Byta länk för en knapp eller "Läs mer"-rad — samma flöde som texten.
@@ -1607,7 +1655,7 @@ export default function EditorPage() {
                   <div className="text-[14px] font-semibold mb-1">{t("Välj layout")}</div>
                   <div className="text-[12px] text-ink-dim mb-3">{t("Texterna och ikonerna behålls, bara uppställningen byts.")}</div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto pr-1">
-                    {GRID_LAYOUTS.map((l) => (
+                    {layoutChoices.map((l) => (
                       <button
                         key={l}
                         type="button"
@@ -1615,8 +1663,8 @@ export default function EditorPage() {
                         onClick={() => saveLayout(l)}
                         className={`rounded-xl border p-2 text-left disabled:opacity-60 ${l === pickedSection?.layout ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
                       >
-                        <GridLayoutThumb layout={l} accent={content?.theme.accentColor} />
-                        <div className="text-[12.5px] font-semibold mt-1.5">{t(GRID_LAYOUT_LABELS[l])}</div>
+                        <GridLayoutThumb layout={l as GridLayout | GalleryLayout} accent={content?.theme.accentColor} />
+                        <div className="text-[12.5px] font-semibold mt-1.5">{t((GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l)}</div>
                       </button>
                     ))}
                   </div>
@@ -1703,6 +1751,36 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     {t("✂️ Redigera bild")}
+                  </button>
+                )}
+                {canAddGalleryImages && (
+                  <>
+                    <input
+                      ref={galleryFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => addGalleryImages(Array.from(e.target.files || []))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => galleryFileRef.current?.click()}
+                      disabled={sending || galleryBusy || savingPick}
+                      className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                    >
+                      {galleryBusy || savingPick ? t("Laddar upp …") : t("➕ Lägg till bilder")}
+                    </button>
+                  </>
+                )}
+                {selectedGalleryIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={removeGalleryImage}
+                    disabled={sending || galleryBusy || savingPick}
+                    className="text-[12px] font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("🗑 Ta bort bilden")}
                   </button>
                 )}
                 {canPickLayout && (

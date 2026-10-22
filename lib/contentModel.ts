@@ -328,7 +328,9 @@ export interface ContactSection {
   bgColor?: string;
 }
 
-export type GalleryLayout = "grid" | "carousel";
+export type GalleryLayout = "grid" | "carousel" | "masonry" | "mosaic" | "tiles";
+export const GALLERY_LAYOUTS: GalleryLayout[] = ["grid", "tiles", "masonry", "mosaic", "carousel"];
+export const MAX_GALLERY_IMAGES = 60;
 
 export interface GalleryItem {
   // Samma princip som GridItem.imageUrl — tilldelas i kod (eller av Millie

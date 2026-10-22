@@ -3,7 +3,7 @@
 import { useT } from "@/components/I18nProvider";
 import { msg } from "@/lib/i18n/config";
 import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n";
-import { useState, useEffect, createContext, useContext, createElement } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext, createElement } from "react";
 import Script from "next/script";
 import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
 import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
@@ -1392,6 +1392,99 @@ function HeroTint({ mode }: { mode: BackgroundMode }) {
 // den i ord ("byt bilden på A2…"). Det löste en verklig förväxlingsrisk:
 // ett otydligt "byt bilden" i chatten gav AI:n inget sätt att veta VILKEN
 // bild på sidan kunden menade (se selection-fältet i app/api/sites/edit).
+// Förstoring av galleribilder på den riktiga sajten: mörk fullskärmsvy med
+// pilar, tangentbord (vänster/höger/Esc) och svep på mobil. Bara bilder som
+// faktiskt finns går att bläddra bland.
+function GalleryLightbox({
+  images,
+  start,
+  onClose,
+}: {
+  images: { url: string; caption?: string }[];
+  start: number;
+  onClose: () => void;
+}) {
+  const t = useSiteT();
+  const [i, setI] = useState(start);
+  const touchX = useRef<number | null>(null);
+  const n = images.length;
+  const go = useCallback((d: number) => setI((v) => (v + d + n) % n), [n]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+      else if (e.key === "ArrowRight") go(1);
+      else if (e.key === "ArrowLeft") go(-1);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [go, onClose]);
+  const cur = images[i];
+  if (!cur) return null;
+  const btn = "absolute top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-[22px] text-white";
+  return (
+    <div
+      className="fixed inset-0 z-[200] flex items-center justify-center"
+      style={{ background: "rgba(8,8,10,0.92)" }}
+      role="dialog"
+      aria-modal="true"
+      onClick={onClose}
+      onTouchStart={(e) => { touchX.current = e.touches[0].clientX; }}
+      onTouchEnd={(e) => {
+        if (touchX.current === null) return;
+        const dx = e.changedTouches[0].clientX - touchX.current;
+        touchX.current = null;
+        if (Math.abs(dx) > 50) go(dx < 0 ? 1 : -1);
+      }}
+    >
+      <div className="flex flex-col items-center max-w-[94vw] max-h-[92vh]" onClick={(e) => e.stopPropagation()}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={cur.url} alt={cur.caption || ""} className="max-w-[94vw] max-h-[82vh] object-contain rounded-md" />
+        <div className="mt-3 text-center text-white/85 text-[13.5px] min-h-[20px]">
+          {cur.caption}
+          {n > 1 && <span className="ml-3 text-white/50 text-[12px]">{i + 1} / {n}</span>}
+        </div>
+      </div>
+      <button type="button" onClick={(e) => { e.stopPropagation(); onClose(); }} aria-label={t("Stäng")} className="absolute top-4 right-4 w-11 h-11 rounded-full flex items-center justify-center text-[22px] text-white" style={{ background: "rgba(255,255,255,0.14)" }}>
+        ×
+      </button>
+      {n > 1 && (
+        <>
+          <button type="button" onClick={(e) => { e.stopPropagation(); go(-1); }} aria-label={t("Föregående bild")} className={`${btn} left-3`} style={{ background: "rgba(255,255,255,0.14)" }}>‹</button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); go(1); }} aria-label={t("Nästa bild")} className={`${btn} right-3`} style={{ background: "rgba(255,255,255,0.14)" }}>›</button>
+        </>
+      )}
+    </div>
+  );
+}
+
+// Håller förstoringsläget för ett galleri. Barnet får en open(i)-funktion att
+// koppla på bilderna. I redigeraren (enabled = false) händer inget: där
+// markerar ett klick bilden i stället.
+function GalleryView({
+  items,
+  enabled,
+  children,
+}: {
+  items: { imageUrl?: string; caption?: string }[];
+  enabled: boolean;
+  children: (open: ((i: number) => void) | undefined) => React.ReactNode;
+}) {
+  const [at, setAt] = useState<number | null>(null);
+  const shown = items.map((it, idx) => ({ idx, url: it.imageUrl, caption: it.caption })).filter((x): x is { idx: number; url: string; caption: string | undefined } => !!x.url);
+  const open = enabled ? (idx: number) => { const pos = shown.findIndex((x) => x.idx === idx); if (pos >= 0) setAt(pos); } : undefined;
+  return (
+    <>
+      {children(open)}
+      {at !== null && <GalleryLightbox images={shown.map((x) => ({ url: x.url, caption: x.caption }))} start={at} onClose={() => setAt(null)} />}
+    </>
+  );
+}
+
 function ImageOrArt({
   imageUrl,
   art,
@@ -1401,6 +1494,9 @@ function ImageOrArt({
   selectable,
   selected,
   onSelect,
+  natural,
+  onOpen,
+  lazy,
 }: {
   imageUrl?: string;
   art: string;
@@ -1410,20 +1506,33 @@ function ImageOrArt({
   selectable?: boolean;
   selected?: boolean;
   onSelect?: () => void;
+  // Bilden behåller sina egna proportioner (murverksgalleriet).
+  natural?: boolean;
+  // Klick på bilden på den riktiga sajten (förstoring i galleriet).
+  onOpen?: () => void;
+  // Ladda bilden först när den är nära synlig (långa gallerier).
+  lazy?: boolean;
 }) {
   const t = useT();
+  const openable = !selectable && !!onOpen && !!imageUrl;
   return (
     <div
-      className={`${fill ? "absolute inset-0" : "relative"} overflow-hidden group ${selectable ? "cursor-pointer" : ""} ${className || ""}`}
+      className={`${fill ? "absolute inset-0" : "relative"} overflow-hidden group ${selectable ? "cursor-pointer" : ""} ${openable ? "cursor-zoom-in" : ""} ${className || ""}`}
       style={{ background: art, outline: selected ? "3px solid #C6FF5E" : undefined, outlineOffset: selected ? "-3px" : undefined }}
-      onClick={selectable ? (e) => { e.stopPropagation(); onSelect?.(); } : undefined}
-      role={selectable ? "button" : undefined}
+      onClick={selectable ? (e) => { e.stopPropagation(); onSelect?.(); } : openable ? (e) => { e.stopPropagation(); onOpen?.(); } : undefined}
+      onKeyDown={openable ? (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen?.(); } } : undefined}
+      tabIndex={openable ? 0 : undefined}
+      role={selectable || openable ? "button" : undefined}
       aria-pressed={selectable ? !!selected : undefined}
     >
-      {imageUrl && (
+      {imageUrl && natural && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={imageUrl} alt="" loading="lazy" className="block w-full h-auto" />
+      )}
+      {imageUrl && !natural && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={imageUrl} alt="" loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" />
           {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
         </>
       )}
@@ -5035,103 +5144,147 @@ function SectionBlockInner({
 
     case "gallery": {
       const layout = section.layout || "grid";
-
-      if (layout === "carousel") {
-        return (
-          <div className="py-16" style={{ background: sectionBg }}>
-            <Field
-              editable={editable}
-              as="h2"
-              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center px-10"
-              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
-              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
-            >
-              {section.heading}
-            </Field>
-            {/* Rent CSS-horisontalskroll med snap, inget JS-tillstånd
-                behövs — fungerar direkt som ett svep-bildspel på mobil. */}
-            <div className="flex gap-4 overflow-x-auto px-10 pb-2" style={{ scrollSnapType: "x mandatory" }}>
-              {section.items.map((item, i) => {
-                const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
-                const itemSel = galleryItemSelection(i);
-                return (
-                  <div key={i} className="flex-shrink-0 w-[260px] @3xl:w-[320px]" style={{ scrollSnapAlign: "start" }}>
-                    <ImageOrArt
-                      imageUrl={item.imageUrl}
-                      art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
-                      className="h-[200px] @3xl:h-[240px] rounded-2xl"
-                      selectable={editable}
-                      selected={!!itemSel && selectedImageKey === itemSel.key}
-                      onSelect={() => itemSel && onSelectImage?.(itemSel)}
-                    />
-                    {item.caption && (
-                      <Field
-                        editable={editable}
-                        as="div"
-                        className="text-[12.5px] mt-2"
-                        style={{ color: palette.textDim }}
-                        selected={selectedFieldKey === fieldSel("caption", item.caption, "bildtexten", i)?.key}
-                        onSelect={() => { const s = fieldSel("caption", item.caption, "bildtexten", i); s && onSelectField?.(s); }}
-                      >
-                        {item.caption}
-                      </Field>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        );
-      }
-
-      // grid (default)
-      return (
-        <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
+      const hueOf = (i: number) => [accent, secondary[0], secondary[1]][i % 3] || accent;
+      const headingEl = (cls: string) => (
+        <Field
+          editable={editable}
+          as="h2"
+          className={cls}
+          selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+          onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+        >
+          {section.heading}
+        </Field>
+      );
+      const captionEl = (item: { caption?: string }, i: number) =>
+        item.caption ? (
           <Field
             editable={editable}
-            as="h2"
-            className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
-            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
-            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            as="div"
+            className="text-[12.5px] mt-2"
+            style={{ color: palette.textDim }}
+            selected={selectedFieldKey === fieldSel("caption", item.caption, "bildtexten", i)?.key}
+            onSelect={() => { const s = fieldSel("caption", item.caption, "bildtexten", i); s && onSelectField?.(s); }}
           >
-            {section.heading}
+            {item.caption}
           </Field>
-          {/* Alltid 2 kolumner (inte 3 på desktop) — med 3 kolumner och ett
-              udda antal bilder (t.ex. 4) hamnade en ensam bild på en egen
-              rad under två mycket bredare, vilket gav ett skevt, ofärdigt
-              intryck. 2 kolumner ger "2 och 2" (eller "2 och 1") som alltid
-              ser balanserat ut. */}
-          <div className="grid grid-cols-2 gap-4">
-            {section.items.map((item, i) => {
-              const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+        ) : null;
+      // Ett mönster av stora, höga och breda rutor bland små (mosaik).
+      const mosaicSpan = (i: number) => {
+        const k = i % 7;
+        if (k === 0) return "col-span-2 row-span-2";
+        if (k === 3) return "row-span-2";
+        if (k === 5) return "col-span-2";
+        return "";
+      };
+
+      return (
+        <GalleryView items={section.items} enabled={!editable}>
+          {(open) => {
+            const tile = (item: { imageUrl?: string; caption?: string }, i: number, className: string, natural = false, fill = false) => {
               const itemSel = galleryItemSelection(i);
               return (
-                <div key={i}>
-                  <ImageOrArt
-                    imageUrl={item.imageUrl}
-                    art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
-                    className="aspect-square rounded-xl"
-                    selectable={editable}
-                    selected={!!itemSel && selectedImageKey === itemSel.key}
-                    onSelect={() => itemSel && onSelectImage?.(itemSel)}
-                  />
-                  {item.caption && (
-                    <Field
-                      editable={editable}
-                      as="div"
-                      className="text-[12.5px] mt-2"
-                      style={{ color: palette.textDim }}
-                      selected={selectedFieldKey === fieldSel("caption", item.caption, "bildtexten", i)?.key}
-                      onSelect={() => { const s = fieldSel("caption", item.caption, "bildtexten", i); s && onSelectField?.(s); }}
-                    >
-                      {item.caption}
-                    </Field>
-                  )}
+                <ImageOrArt
+                  imageUrl={item.imageUrl}
+                  art={`linear-gradient(145deg, ${hueOf(i)}55, ${hueOf(i)}15)`}
+                  className={className}
+                  natural={natural}
+                  fill={fill}
+                  lazy
+                  selectable={editable}
+                  selected={!!itemSel && selectedImageKey === itemSel.key}
+                  onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                  onOpen={open ? () => open(i) : undefined}
+                />
+              );
+            };
+
+            if (layout === "carousel") {
+              return (
+                <div className="py-16" style={{ background: sectionBg }}>
+                  {headingEl("font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center px-10")}
+                  {/* Rent CSS-horisontalskroll med snap, inget JS-tillstånd
+                      behövs — fungerar direkt som ett svep-bildspel på mobil. */}
+                  <div className="flex gap-4 overflow-x-auto px-10 pb-2" style={{ scrollSnapType: "x mandatory" }}>
+                    {section.items.map((item, i) => (
+                      <div key={i} className="flex-shrink-0 w-[260px] @3xl:w-[320px]" style={{ scrollSnapAlign: "start" }}>
+                        {tile(item, i, "h-[200px] @3xl:h-[240px] rounded-2xl")}
+                        {captionEl(item, i)}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               );
-            })}
-          </div>
-        </div>
+            }
+
+            if (layout === "masonry") {
+              // CSS-kolumner: bilderna behåller sina proportioner och
+              // staplas i kolumner, så höjderna varierar.
+              const ratios = ["aspect-[4/5]", "aspect-square", "aspect-[4/3]", "aspect-[3/4]"];
+              return (
+                <div className="px-6 @3xl:px-10 py-16 max-w-[1100px] mx-auto" style={{ background: sectionBg }}>
+                  {headingEl("font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center")}
+                  <div className="columns-2 @3xl:columns-3 gap-3 @3xl:gap-4">
+                    {section.items.map((item, i) => (
+                      <div key={i} className="break-inside-avoid mb-3 @3xl:mb-4">
+                        {tile(item, i, `rounded-xl ${item.imageUrl ? "" : ratios[i % ratios.length]}`, true)}
+                        {captionEl(item, i)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            if (layout === "mosaic") {
+              return (
+                <div className="px-6 @3xl:px-10 py-16 max-w-[1180px] mx-auto" style={{ background: sectionBg }}>
+                  {headingEl("font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center")}
+                  <div className="grid grid-cols-2 @3xl:grid-cols-4 grid-flow-dense auto-rows-[130px] @3xl:auto-rows-[170px] gap-2.5 @3xl:gap-3">
+                    {section.items.map((item, i) => (
+                      <div key={i} className={`relative ${mosaicSpan(i)}`}>
+                        {tile(item, i, "rounded-xl", false, true)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            if (layout === "tiles") {
+              return (
+                <div className="px-6 @3xl:px-10 py-16 max-w-[1100px] mx-auto" style={{ background: sectionBg }}>
+                  {headingEl("font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center")}
+                  <div className="grid grid-cols-2 @3xl:grid-cols-3 gap-2.5 @3xl:gap-3">
+                    {section.items.map((item, i) => (
+                      <div key={i}>{tile(item, i, "aspect-square rounded-lg")}</div>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            // grid (default)
+            return (
+              <div className="px-10 py-16 max-w-[980px] mx-auto" style={{ background: sectionBg }}>
+                {headingEl("font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center")}
+                {/* Alltid 2 kolumner (inte 3 på desktop) — med 3 kolumner och ett
+                    udda antal bilder (t.ex. 4) hamnade en ensam bild på en egen
+                    rad under två mycket bredare, vilket gav ett skevt, ofärdigt
+                    intryck. 2 kolumner ger "2 och 2" (eller "2 och 1") som alltid
+                    ser balanserat ut. */}
+                <div className="grid grid-cols-2 gap-4">
+                  {section.items.map((item, i) => (
+                    <div key={i}>
+                      {tile(item, i, "aspect-square rounded-xl")}
+                      {captionEl(item, i)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }}
+        </GalleryView>
       );
     }
 

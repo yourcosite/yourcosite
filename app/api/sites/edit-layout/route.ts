@@ -1,7 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { isValidSiteContent, GRID_LAYOUTS, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { withErrorLog } from "@/lib/errorLog";
 
@@ -15,7 +15,7 @@ async function POST_handler(request: Request) {
   if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  if (typeof body.pagePath !== "string" || typeof body.sectionId !== "string" || !GRID_LAYOUTS.includes(body.layout)) {
+  if (typeof body.pagePath !== "string" || typeof body.sectionId !== "string" || !(GRID_LAYOUTS as string[]).concat(GALLERY_LAYOUTS).includes(body.layout)) {
     return NextResponse.json({ error: t("Det gick inte att avgöra vilken layout som ska användas.") }, { status: 400 });
   }
 
@@ -26,14 +26,15 @@ async function POST_handler(request: Request) {
   const content: SiteContent = JSON.parse(JSON.stringify(site.content));
   const page = content.pages.find((p) => p.path === body.pagePath);
   const section = page?.sections.find((s) => s.id === body.sectionId) as any;
-  if (!section || section.type !== "grid") {
+  const allowed: string[] = section?.type === "grid" ? GRID_LAYOUTS : section?.type === "gallery" ? GALLERY_LAYOUTS : [];
+  if (!section || !allowed.includes(body.layout)) {
     return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
   }
   section.layout = body.layout;
 
   // Startsidans valda stil (theme.gridLayout) skriver annars över layouten på
   // förstasidans första rutnät, så valet skulle aldrig synas.
-  if (page?.path === "/" && content.theme.gridLayout && page.sections.find((s) => s.type === "grid")?.id === section.id) {
+  if (section.type === "grid" && page?.path === "/" && content.theme.gridLayout && page.sections.find((s) => s.type === "grid")?.id === section.id) {
     delete content.theme.gridLayout;
   }
   if (!isValidSiteContent(content)) return NextResponse.json({ error: t("Ändringen blev ogiltig.") }, { status: 400 });

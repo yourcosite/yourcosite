@@ -1703,5 +1703,20 @@
   "Texterna och ikonerna behålls, bara uppställningen byts.": "Vos textes et icônes sont conservés, seule la disposition change.",
   "🎨 Byt layout": "🎨 Changer la mise en page",
   "✎ Byt ikon": "✎ Changer l’icône",
-  "ikonen i rutan": "l’icône du bloc"
+  "ikonen i rutan": "l’icône du bloc",
+  "Föregående bild": "Image précédente",
+  "Nästa bild": "Image suivante",
+  "Två kolumner": "Deux colonnes",
+  "Tätt rutnät": "Grille serrée",
+  "Murverk": "Maçonnerie",
+  "Svepbar rad": "Rangée à faire défiler",
+  "➕ Lägg till bilder": "➕ Ajouter des images",
+  "🗑 Ta bort bilden": "🗑 Supprimer l’image",
+  "Det gick inte att avgöra vilket galleri som ska ändras.": "Impossible de déterminer quelle galerie modifier.",
+  "Hittade inte galleriet på sidan.": "Impossible de trouver la galerie sur la page.",
+  "Inga bilder att lägga till.": "Aucune image à ajouter.",
+  "Ett galleri kan ha högst {max} bilder.": "Une galerie peut contenir au maximum {max} images.",
+  "Hittade inte bilden i galleriet.": "Impossible de trouver l’image dans la galerie.",
+  "Klart! {n} bilder är tillagda i galleriet. Du kan ångra med knappen om du ändrar dig.": "C’est fait ! {n} images ont été ajoutées à la galerie. Vous pouvez annuler avec le bouton si vous changez d’avis.",
+  "Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig.": "C’est fait ! L’image a été retirée de la galerie. Vous pouvez annuler avec le bouton si vous changez d’avis."
 }

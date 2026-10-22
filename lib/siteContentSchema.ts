@@ -242,7 +242,12 @@ const RAW_SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "gallery" },
-        layout: { type: "string", enum: ["grid", "carousel"] },
+        layout: {
+          type: "string",
+          enum: ["grid", "carousel", "masonry", "mosaic", "tiles"],
+          description:
+            "\"grid\": två kolumner med kvadratiska bilder (få bilder, 2-6). \"tiles\": tätt rutnät i tre kolumner med små kvadrater (många bilder, 8 eller fler). \"masonry\": kolumner där bilderna behåller sina egna proportioner, så höjderna varierar (naturligt för foton i olika format). \"mosaic\": oregelbundet rutnät med några stora och några höga bilder bland små, som en collage. \"carousel\": en rad man sveper i sidled. Besökaren kan alltid klicka på en bild för att se den större. Kunden lägger själv till fler bilder i redigeraren.",
+        },
         heading: { type: "string" },
         items: {
           type: "array",

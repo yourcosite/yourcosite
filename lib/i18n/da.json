@@ -1703,5 +1703,20 @@
   "Texterna och ikonerna behålls, bara uppställningen byts.": "Tekster og ikoner beholdes, kun opstillingen skiftes.",
   "🎨 Byt layout": "🎨 Skift layout",
   "✎ Byt ikon": "✎ Skift ikon",
-  "ikonen i rutan": "ikonet i boksen"
+  "ikonen i rutan": "ikonet i boksen",
+  "Föregående bild": "Forrige billede",
+  "Nästa bild": "Næste billede",
+  "Två kolumner": "To kolonner",
+  "Tätt rutnät": "Tæt gitter",
+  "Murverk": "Murværk",
+  "Svepbar rad": "Stryg-række",
+  "➕ Lägg till bilder": "➕ Tilføj billeder",
+  "🗑 Ta bort bilden": "🗑 Fjern billedet",
+  "Det gick inte att avgöra vilket galleri som ska ändras.": "Kunne ikke afgøre, hvilket galleri der skal ændres.",
+  "Hittade inte galleriet på sidan.": "Kunne ikke finde galleriet på siden.",
+  "Inga bilder att lägga till.": "Ingen billeder at tilføje.",
+  "Ett galleri kan ha högst {max} bilder.": "Et galleri kan højst have {max} billeder.",
+  "Hittade inte bilden i galleriet.": "Kunne ikke finde billedet i galleriet.",
+  "Klart! {n} bilder är tillagda i galleriet. Du kan ångra med knappen om du ändrar dig.": "Færdig! {n} billeder er tilføjet til galleriet. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig.": "Færdig! Billedet er fjernet fra galleriet. Du kan fortryde med knappen, hvis du ombestemmer dig."
 }

@@ -1703,5 +1703,20 @@
   "Texterna och ikonerna behålls, bara uppställningen byts.": "Texte und Symbole bleiben erhalten, nur die Anordnung ändert sich.",
   "🎨 Byt layout": "🎨 Layout ändern",
   "✎ Byt ikon": "✎ Symbol ändern",
-  "ikonen i rutan": "das Symbol im Feld"
+  "ikonen i rutan": "das Symbol im Feld",
+  "Föregående bild": "Vorheriges Bild",
+  "Nästa bild": "Nächstes Bild",
+  "Två kolumner": "Zwei Spalten",
+  "Tätt rutnät": "Dichtes Raster",
+  "Murverk": "Mauerwerk",
+  "Svepbar rad": "Wischbare Reihe",
+  "➕ Lägg till bilder": "➕ Bilder hinzufügen",
+  "🗑 Ta bort bilden": "🗑 Bild entfernen",
+  "Det gick inte att avgöra vilket galleri som ska ändras.": "Es konnte nicht festgestellt werden, welche Galerie geändert werden soll.",
+  "Hittade inte galleriet på sidan.": "Die Galerie wurde auf der Seite nicht gefunden.",
+  "Inga bilder att lägga till.": "Keine Bilder zum Hinzufügen.",
+  "Ett galleri kan ha högst {max} bilder.": "Eine Galerie kann höchstens {max} Bilder enthalten.",
+  "Hittade inte bilden i galleriet.": "Das Bild wurde in der Galerie nicht gefunden.",
+  "Klart! {n} bilder är tillagda i galleriet. Du kan ångra med knappen om du ändrar dig.": "Fertig! {n} Bilder wurden zur Galerie hinzugefügt. Mit der Schaltfläche kannst du es rückgängig machen.",
+  "Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig.": "Fertig! Das Bild wurde aus der Galerie entfernt. Mit der Schaltfläche kannst du es rückgängig machen."
 }

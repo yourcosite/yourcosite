@@ -1703,5 +1703,20 @@
   "Texterna och ikonerna behålls, bara uppställningen byts.": "Your texts and icons are kept, only the arrangement changes.",
   "🎨 Byt layout": "🎨 Change layout",
   "✎ Byt ikon": "✎ Change icon",
-  "ikonen i rutan": "the icon in the box"
+  "ikonen i rutan": "the icon in the box",
+  "Föregående bild": "Previous image",
+  "Nästa bild": "Next image",
+  "Två kolumner": "Two columns",
+  "Tätt rutnät": "Dense grid",
+  "Murverk": "Masonry",
+  "Svepbar rad": "Swipe row",
+  "➕ Lägg till bilder": "➕ Add images",
+  "🗑 Ta bort bilden": "🗑 Remove image",
+  "Det gick inte att avgöra vilket galleri som ska ändras.": "Could not tell which gallery to change.",
+  "Hittade inte galleriet på sidan.": "Could not find the gallery on the page.",
+  "Inga bilder att lägga till.": "No images to add.",
+  "Ett galleri kan ha högst {max} bilder.": "A gallery can have at most {max} images.",
+  "Hittade inte bilden i galleriet.": "Could not find the image in the gallery.",
+  "Klart! {n} bilder är tillagda i galleriet. Du kan ångra med knappen om du ändrar dig.": "Done! {n} images have been added to the gallery. You can undo with the button if you change your mind.",
+  "Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig.": "Done! The image has been removed from the gallery. You can undo with the button if you change your mind."
 }
