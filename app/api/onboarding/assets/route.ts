@@ -9,6 +9,8 @@ const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const DOCUMENT_TYPES = [
   "application/pdf",
   "application/msword",
+  "text/plain",
+  "text/markdown",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 

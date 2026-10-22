@@ -21,6 +21,8 @@ const ALLOWED_TYPES = [
   "image/webp",
   "application/pdf",
   "application/msword",
+  "text/plain",
+  "text/markdown",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
@@ -183,13 +185,13 @@ export default function FileDropzone({
           {uploading ? t("Laddar upp …") : t("Släpp filer här, eller bläddra")}
         </div>
         <div className="text-[13px] text-ink-dim mt-1.5">
-          {t("Egna foton (PNG/JPG/WEBP), Word eller PDF, max 15 MB per fil, flera åt gången går bra. (Logga? Ladda upp den separat ovanför istället.)")}
+          {t("Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)")}
         </div>
         <input
           ref={inputRef}
           type="file"
           multiple
-          accept="image/png,image/jpeg,image/webp,application/pdf,.doc,.docx"
+          accept="image/png,image/jpeg,image/webp,application/pdf,.doc,.docx,.txt,.md"
           className="hidden"
           onChange={(e) => {
             if (e.target.files?.length) upload(e.target.files);

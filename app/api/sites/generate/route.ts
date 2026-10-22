@@ -14,6 +14,7 @@ import { ensureShowcaseSections } from "@/lib/showcaseContent";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
 import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteContentSchema";
 import { withErrorLog } from "@/lib/errorLog";
+import { extractDocumentText } from "@/lib/docText";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -174,11 +175,65 @@ function randomizeSectionLayouts(content: SiteContent, homePath: string): SiteCo
   return content;
 }
 
+// Kundens uppladdade textmaterial (PDF, Word, textfil) från onboarding. Läses
+// ut som ren text och skickas med så att genereringen kan använda kundens
+// egna ord istället för att bara utgå från de korta sidbeskrivningarna.
+const MAX_DOC_CHARS_EACH = 40000;
+const MAX_DOC_CHARS_TOTAL = 90000;
+
+async function loadCustomerDocuments(
+  supabase: any,
+  siteId: string,
+  userId: string
+): Promise<{ name: string; text: string }[]> {
+  const { data: docs } = await supabase
+    .from("site_assets")
+    .select("file_name, file_url, mime_type")
+    .eq("site_id", siteId)
+    .eq("kind", "document")
+    .order("created_at", { ascending: true });
+  const out: { name: string; text: string }[] = [];
+  let total = 0;
+  for (const d of docs ?? []) {
+    if (total >= MAX_DOC_CHARS_TOTAL) break;
+    if (typeof d.file_url !== "string" || !d.file_url.includes(`/uploads/${userId}/`)) continue;
+    try {
+      const res = await fetch(d.file_url);
+      if (!res.ok) continue;
+      let text = await extractDocumentText(Buffer.from(await res.arrayBuffer()), d.mime_type, d.file_name);
+      if (!text) continue;
+      text = text.slice(0, Math.min(MAX_DOC_CHARS_EACH, MAX_DOC_CHARS_TOTAL - total));
+      total += text.length;
+      out.push({ name: String(d.file_name), text });
+    } catch (e) {
+      // Ett dokument som inte går att läsa (t.ex. gammalt .doc) hoppas över.
+      console.error("generate: kunde inte läsa dokument", { siteId, name: d.file_name, error: (e as Error)?.message });
+    }
+  }
+  return out;
+}
+
+function documentsPrompt(docs: { name: string; text: string }[]) {
+  if (docs.length === 0) return "";
+  const body = docs.map((d) => `=== Dokument: ${d.name} ===\n${d.text}\n=== Slut på ${d.name} ===`).join("\n\n");
+  return `
+KUNDENS EGET TEXTMATERIAL — kunden har laddat upp text som ska bli innehållet på sajten. Det är den VIKTIGASTE källan för sidornas text, viktigare än bransch och egen fantasi. Så här använder du det:
+• Rubriker eller avsnitt i materialet som motsvarar en sidas namn (se sidlistan ovan, jämför även med menynamnen) betyder att texten under rubriken HÖR TILL DEN SIDAN. Lägg varje avsnitts text på rätt sida.
+• Använd texten FULLT UT. Behåll kundens egna formuleringar nära ordagrant, och behåll ALLA sakuppgifter, namn, siffror, listor, priser och stycken. Korta aldrig ner och sammanfatta aldrig bort innehåll — hellre långa, rika textstycken än tunna sidor.
+• Fördela texten naturligt över sidans sektioner: löpande text i "about" eller "body", uppräkningar som rutor i "grid", frågor och svar i "faq", omdömen i "testimonials", kontaktuppgifter i "contact". Är texten längre än en sektion klarar, använd flera sektioner på samma sida.
+• Du får lägga till egna rubriker, knapptexter och korta bryggor där det behövs, men hitta INTE på fakta som inte finns i materialet. Text som inte hör hemma på någon enskild sida läggs på den sida där den passar bäst.
+• Materialet kan vara skrivet på ett annat språk än sajtens; översätt då troget utan att korta ner.
+
+${body}
+`;
+}
+
 function buildPrompt(
   site: any,
   pages: any[],
   inspiration: { promptText: string; heroImageSignal: "yes" | "no" | "unknown" },
-  inspirationImageCount: number
+  inspirationImageCount: number,
+  documents: { name: string; text: string }[] = []
 ) {
   const pagesDesc = pages
     .map((p) => {
@@ -246,7 +301,7 @@ ${inspirationText}
 ${inspirationImageCount > 0 ? `\nKunden har också bifogat ${inspirationImageCount} egna inspirationsbild${inspirationImageCount === 1 ? "" : "er"} till det här meddelandet (skärmdumpar/foton av sajter eller stilar de gillar) — titta på dem för KÄNSLA, TON och STRUKTUR precis som referenslänkarna ovan, kopiera aldrig text eller exakta formuleringar.\n` : ""}
 Sidor som ska skapas, i denna ordning:
 ${pagesDesc}
-${subPagesInstruction}
+${documentsPrompt(documents)}${subPagesInstruction}
 ${textFillInstruction} Varje sida ska ha minst 2-3 sektioner som passar innehållet (t.ex. en hero längst upp, sedan about/grid/testimonials/cta/contact/gallery/faq/map/contactForm där det är relevant) — du väljer fritt vilka sektionstyper som passar varje sida bäst, så länge du håller dig till de sektionstyper verktyget stödjer. "gallery" (bildspel/galleri), "faq" (vanliga frågor), "map" (inbäddad karta) och "contactForm" (ett riktigt ifyllbart kontaktformulär) är valfria extrasektioner — lägg bara in dem där de faktiskt passar innehållet, inte på varje sajt.
 
 VIKTIGT — en sida vars syfte (se briefen ovan) är att låta besökare BOKA TID (typiskt en sida som heter "Boka tid" eller "Bokning"): lägg till EXAKT EN "booking"-sektion där (en rubrik, t.ex. "Boka din tid", och gärna en kort "body"). Hitta ALDRIG på paket, priser, öppettider eller tider — kunden lägger upp dem själv på sidan "Bokningar" i panelen efter att sajten är byggd, och sektionen visar dem automatiskt. Sidan ska i övrigt ha en kort introduktion (hero eller about) som berättar vad man kan boka, utan påhittade detaljer. Gäller INTE andra sidor — lägg ALDRIG till "booking" på en sida vars syfte inte är just detta.
@@ -371,6 +426,7 @@ async function generateSite(emit: (p: Progress) => void) {
 
   const inspiration = await summarizeInspirationLinks(site.inspiration_links || []);
   const inspirationImages = await fetchInspirationImages(site.inspiration_image_urls || []);
+  const documents = await loadCustomerDocuments(supabase, site.id, user.id);
 
   // Bilderna läggs FÖRE textprompten i samma meddelande — Claude väger in
   // bilder bättre när de kommer innan texten som refererar till dem, enligt
@@ -382,7 +438,7 @@ async function generateSite(emit: (p: Progress) => void) {
         source: { type: "base64", media_type: img.mediaType as any, data: img.base64 },
       })
     ),
-    { type: "text", text: buildPrompt(site, pages, inspiration, inspirationImages.length) },
+    { type: "text", text: buildPrompt(site, pages, inspiration, inspirationImages.length, documents) },
   ];
 
   let message;
@@ -390,7 +446,8 @@ async function generateSite(emit: (p: Progress) => void) {
     emit({ value: 0.02, page: 0, pages: pages.length });
     const stream = client.messages.stream({
       model: CLAUDE_MODEL,
-      max_tokens: 8000,
+      // Gott om utrymme: kundens egna texter ska få plats i sin helhet.
+      max_tokens: documents.length > 0 ? 32000 : 12000,
       tools: [GENERATE_TOOL],
       tool_choice: { type: "tool", name: "generate_site" },
       messages: [{ role: "user", content: promptContent }],

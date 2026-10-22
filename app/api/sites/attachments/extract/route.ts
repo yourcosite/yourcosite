@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { withErrorLog } from "@/lib/errorLog";
+import { extractDocumentText } from "@/lib/docText";
 
 // Läser ut ren text ur en bifogad PDF eller Word-fil (redan uppladdad till
 // Storage av klienten, se app/redigera/page.tsx) så chattredigeraren kan
@@ -42,22 +43,14 @@ async function POST_handler(request: Request) {
 
   let text = "";
   try {
-    if (mimeType === "application/pdf") {
-      const { extractText, getDocumentProxy } = await import("unpdf");
-      const pdf = await getDocumentProxy(new Uint8Array(buf));
-      const result = await extractText(pdf, { mergePages: true });
-      text = Array.isArray(result.text) ? result.text.join("\n") : result.text;
-    } else if (mimeType === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
-      const mammoth = await import("mammoth");
-      const result = await mammoth.extractRawText({ buffer: buf });
-      text = result.value;
-    } else {
+    text = await extractDocumentText(buf, mimeType, typeof body.fileName === "string" ? body.fileName : "");
+  } catch (e) {
+    if ((e as Error)?.message === "unsupported") {
       return NextResponse.json(
         { error: t("Den filtypen stöds inte för textutdrag — använd PDF, Word (.docx) eller en vanlig textfil.") },
         { status: 400 }
       );
     }
-  } catch {
     return NextResponse.json({ error: t("Kunde inte läsa innehållet i filen.") }, { status: 500 });
   }
 
