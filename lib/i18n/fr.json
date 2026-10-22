@@ -1766,7 +1766,7 @@
   "Du har inte laddat upp några bilder än.": "Vous n'avez pas encore téléversé d'images.",
   "Valda: {n} av högst {max}": "Sélectionnées : {n} sur {max} au maximum",
   "Bifoga": "Joindre",
-  "📎 Ladda upp från datorn": "📎 Téléverser depuis l'ordinateur",
   "🗂 Mina bilder": "🗂 Mes images",
-  "🖼 Stockbilder": "🖼 Photos de stock"
+  "🖼 Stockbilder": "🖼 Photos de stock",
+  "📎 Ladda upp": "📎 Téléverser"
 }

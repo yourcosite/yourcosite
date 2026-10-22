@@ -2055,7 +2055,7 @@ export default function EditorPage() {
                     <div className="fixed inset-0 z-30" onClick={() => setAttachMenuOpen(false)} />
                     <div role="menu" className="absolute bottom-full left-0 mb-2 z-40 w-[230px] bg-surface border border-line rounded-xl shadow-lg p-1.5 flex flex-col">
                       <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); fileInputRef.current?.click(); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("📎 Ladda upp från datorn")}
+                        {t("📎 Ladda upp")}
                       </button>
                       <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setMyImagesOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
                         {t("🗂 Mina bilder")}
