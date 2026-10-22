@@ -12,7 +12,7 @@ export default function Page() {
   return (
     <LegalLayout
       title={t("Integritetspolicy")}
-      updated="2026-10-10"
+      updated="2026-10-22"
       intro={
         <>
           {t("Detta är mallar baserade på svensk och EU-rättslig standardpraxis (GDPR m.fl.) — inte juridisk rådgivning. CS Kommunikationsbyrå AB granskar och uppdaterar denna policy löpande.")}
