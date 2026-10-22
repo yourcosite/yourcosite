@@ -1,5 +1,5 @@
-import { msg } from "@/lib/i18n/config";
-import { getT } from "@/lib/i18n/server";
+import { msg, localizedPath } from "@/lib/i18n/config";
+import { getT, getLocale } from "@/lib/i18n/server";
 import Link from "next/link";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import Logo from "./Logo";
@@ -19,21 +19,22 @@ const navLinks = [
 // Nu är den async och kollar sessionen, precis som sidorna under
 // /dashboard m.fl. redan gör.
 export default async function Header({ active }: { active?: string }) {
-  const t = getT();
+  const locale = getLocale();
+  const t = getT(locale);
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   return (
     <div className="bg-ink">
       <div className="flex items-center justify-between px-6 md:px-12 py-5">
-        <Link href="/">
+        <Link href={localizedPath("/", locale)}>
           <Logo />
         </Link>
         <nav className="hidden md:flex items-center gap-7 text-sm text-[#C9C7C2]">
           {navLinks.map((l) => (
             <Link
               key={l.href}
-              href={l.href}
+              href={localizedPath(l.href, locale)}
               className={active === l.href ? "text-white" : "hover:text-white transition-colors"}
             >
               {t(l.label)}

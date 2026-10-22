@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { LOCALES, LOCALE_COOKIE, LOCALE_NAMES, type Locale } from "@/lib/i18n/config";
+import { usePathname, useRouter } from "next/navigation";
+import { LOCALES, LOCALE_COOKIE, LOCALE_NAMES, isLocalizedPath, localizedPath, splitLocalePrefix, type Locale } from "@/lib/i18n/config";
 import { useLocale } from "@/components/I18nProvider";
 
 // Språkväljare för hela verktyget. Valet sparas i en kaka i ett år och gäller
@@ -39,6 +39,7 @@ export default function LanguageSwitcher({
 }) {
   const locale = useLocale();
   const router = useRouter();
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [up, setUp] = useState(false);
   const [active, setActive] = useState(0);
@@ -48,7 +49,15 @@ export default function LanguageSwitcher({
   const change = (next: Locale) => {
     document.cookie = `${LOCALE_COOKIE}=${next}; path=/; max-age=31536000; samesite=lax`;
     setOpen(false);
-    if (next !== locale) router.refresh();
+    if (next === locale) return;
+    // Publika sidor byter adress (/priser <-> /en/priser), övriga laddas om på plats.
+    const { rest } = splitLocalePrefix(pathname || "/");
+    if (isLocalizedPath(rest)) {
+      router.push(localizedPath(rest, next) + window.location.search);
+      router.refresh();
+    } else {
+      router.refresh();
+    }
   };
 
   useEffect(() => {

@@ -66,3 +66,31 @@ export function makeT(dict: Record<string, string> | undefined): TFunction {
 // i filen) så att översättningsskriptet hittar den. Gör ingenting själv:
 // visa texten med t(...) där den ritas ut.
 export const msg = (text: string): string => text;
+
+// ---------- Språkprefix i adresser ----------
+// Verktygets publika sidor finns på svenska utan prefix (/priser) och på de
+// andra språken med prefix (/en/priser). Middleware skriver om prefixet
+// internt, så sidorna själva är desamma. Inloggade delar och kundernas
+// sajter får aldrig prefix.
+export const LOCALIZED_PATHS = ["/", "/priser", "/funktioner", "/om-oss", "/kontakt", "/anvandarvillkor", "/integritetspolicy", "/exempel"];
+export const LOCALIZED_SITEMAP_PATHS = [
+  "/", "/priser", "/funktioner", "/om-oss", "/kontakt", "/anvandarvillkor", "/integritetspolicy",
+  "/exempel", "/exempel/inredning", "/exempel/restaurang", "/exempel/snickeri", "/exempel/studio-lind",
+];
+
+export function isLocalizedPath(path: string): boolean {
+  return LOCALIZED_PATHS.some((p) => (p === "/" ? path === "/" : path === p || path.startsWith(p + "/")));
+}
+
+// Delar upp "/en/priser" i { locale: "en", rest: "/priser" }. Saknas prefix är locale null.
+export function splitLocalePrefix(path: string): { locale: Locale | null; rest: string } {
+  const m = path.match(/^\/([a-z]{2})(\/.*)?$/);
+  if (m && isLocale(m[1])) return { locale: m[1], rest: m[2] || "/" };
+  return { locale: null, rest: path };
+}
+
+// Adressen för en publik sida på ett visst språk: svenska utan prefix.
+export function localizedPath(path: string, locale: Locale): string {
+  if (locale === DEFAULT_LOCALE || !isLocalizedPath(path)) return path;
+  return path === "/" ? `/${locale}` : `/${locale}${path}`;
+}

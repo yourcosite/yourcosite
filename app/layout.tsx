@@ -4,6 +4,8 @@ import ImpersonationBanner from "@/components/ImpersonationBanner";
 import ErrorReporter from "@/components/ErrorReporter";
 import { I18nProvider } from "@/components/I18nProvider";
 import { getLocale } from "@/lib/i18n/server";
+import { headers } from "next/headers";
+import { LOCALES, localizedPath } from "@/lib/i18n/config";
 import { DICTIONARIES } from "@/lib/i18n/dictionaries";
 // Typsnitt för sajt-skinsen (lib/skins.ts), självhostade via npm så de
 // fungerar utan externa anrop. Webbläsaren hämtar bara de som faktiskt används.
@@ -55,8 +57,21 @@ const META: Record<string, { title: string; description: string }> = {
 };
 
 export function generateMetadata(): Metadata {
-  const m = META[getLocale()] || META.sv;
+  const locale = getLocale();
+  const m = META[locale] || META.sv;
+  // Publika sidor: adress per språk så att sökmotorerna hittar rätt version.
+  let alternates: Metadata["alternates"];
+  try {
+    const route = headers().get("x-ycs-route");
+    if (route) {
+      const languages: Record<string, string> = {};
+      for (const l of LOCALES) languages[l] = localizedPath(route, l);
+      languages["x-default"] = localizedPath(route, "sv");
+      alternates = { canonical: localizedPath(route, locale), languages };
+    }
+  } catch {}
   return {
+    alternates,
     metadataBase: new URL("https://yourcosite.vercel.app"),
     title: { default: m.title, template: "%s — YourCoSite" },
     description: m.description,
