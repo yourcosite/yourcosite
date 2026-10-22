@@ -1768,5 +1768,21 @@
   "Bifoga": "Adjuntar",
   "🗂 Mina bilder": "🗂 Mis imágenes",
   "🖼 Stockbilder": "🖼 Fotos de stock",
-  "📎 Ladda upp": "📎 Subir"
+  "📎 Ladda upp": "📎 Subir",
+  "Det gick inte att avgöra vilken inbäddning som ska ändras.": "No se pudo determinar qué incrustación cambiar.",
+  "Koden är för lång (högst {max} tecken).": "El código es demasiado largo (máximo {max} caracteres).",
+  "Hittade inte inbäddningen på sidan.": "No se encontró la incrustación en la página.",
+  "Höjden ska vara mellan 100 och 3000 pixlar, eller tom för automatisk höjd.": "La altura debe estar entre 100 y 3000 píxeles, o vacía para altura automática.",
+  "Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig.": "¡Listo! El código está guardado. Puedes deshacerlo con el botón si cambias de opinión.",
+  "Inbäddad kod": "Código incrustado",
+  "Klistra in koden från ditt bokningssystem eller din widget (script eller iframe), eller bara adressen till sidan som börjar med https://. Koden körs i en säker, isolerad ruta på sidan. Tjänster som kräver cookies eller lagring på din egen sajt kan behöva visas via sin egen länk i stället.": "Pega el código de tu sistema de reservas o widget (script o iframe), o solo la dirección de la página que empieza por https://. El código se ejecuta en una caja segura y aislada en la página. Los servicios que necesitan cookies o almacenamiento en tu propio sitio pueden tener que mostrarse mediante su propio enlace.",
+  "Höjd i pixlar (tomt = automatisk)": "Altura en píxeles (vacío = automática)",
+  "</> Klistra in kod": "</> Pegar código",
+  "inbäddningen “{h}”": "la incrustación «{h}»",
+  "inbäddningen": "la incrustación",
+  "Här visas din inbäddade kod. Klicka på sektionen och välj ”Klistra in kod”.": "Tu código incrustado aparecerá aquí. Haz clic en la sección y elige «Pegar código».",
+  "Eget bokningssystem och kod": "Sistema de reservas propio y código",
+  "Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen.": "Millie añade un recuadro para el código. El código lo pegas tú: haz clic en el recuadro en la vista previa y elige Pegar código. Sirve un script, un iframe o solo la dirección.",
+  "Lägg in mitt eget bokningssystem på sidan Boka": "Añade mi propio sistema de reservas a la página Reservar",
+  "Lägg till en ruta för inbäddad kod längst ned på startsidan": "Añade al final de la página de inicio un recuadro para código incrustado"
 }

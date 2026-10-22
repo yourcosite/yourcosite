@@ -508,6 +508,19 @@ export interface BookingSection {
   bgColor?: string;
 }
 
+// Inbäddad kod från tredje part, t.ex. ett eget bokningssystem. Koden klistras
+// in av kunden själv (aldrig av Millie) och körs i en isolerad ram, se
+// lib/embedDoc.ts. "height" saknas = ramen anpassar sin höjd automatiskt.
+export interface EmbedSection {
+  id: string;
+  type: "embed";
+  heading?: string;
+  body?: string;
+  code?: string;
+  height?: number;
+  bgColor?: string;
+}
+
 // Sektionsegna reglage som Millie kan sätta på VILKEN sektion som helst.
 // "spacing": tätare/luftigare lodrätt avstånd i just den sektionen (hero
 // rörs inte). "textAlign": text vänster/mitten/höger i just den sektionen.
@@ -534,6 +547,7 @@ export type Section = (
   | ContactFormSection
   | NewsListSection
   | BookingSection
+  | EmbedSection
 ) &
   SectionExtras;
 
@@ -640,6 +654,7 @@ const VALID_SECTION_TYPES = [
   "contactForm",
   "newsList",
   "booking",
+  "embed",
 ];
 
 // Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så

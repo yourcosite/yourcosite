@@ -1768,5 +1768,21 @@
   "Bifoga": "Joindre",
   "🗂 Mina bilder": "🗂 Mes images",
   "🖼 Stockbilder": "🖼 Photos de stock",
-  "📎 Ladda upp": "📎 Téléverser"
+  "📎 Ladda upp": "📎 Téléverser",
+  "Det gick inte att avgöra vilken inbäddning som ska ändras.": "Impossible de déterminer quelle intégration modifier.",
+  "Koden är för lång (högst {max} tecken).": "Le code est trop long ({max} caractères au maximum).",
+  "Hittade inte inbäddningen på sidan.": "Intégration introuvable sur la page.",
+  "Höjden ska vara mellan 100 och 3000 pixlar, eller tom för automatisk höjd.": "La hauteur doit être comprise entre 100 et 3000 pixels, ou vide pour une hauteur automatique.",
+  "Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! Le code est enregistré. Vous pouvez annuler avec le bouton si vous changez d'avis.",
+  "Inbäddad kod": "Code intégré",
+  "Klistra in koden från ditt bokningssystem eller din widget (script eller iframe), eller bara adressen till sidan som börjar med https://. Koden körs i en säker, isolerad ruta på sidan. Tjänster som kräver cookies eller lagring på din egen sajt kan behöva visas via sin egen länk i stället.": "Collez le code de votre système de réservation ou de votre widget (script ou iframe), ou simplement l'adresse de la page commençant par https://. Le code s'exécute dans une boîte sécurisée et isolée sur la page. Les services qui ont besoin de cookies ou de stockage sur votre propre site devront peut-être s'afficher via leur propre lien.",
+  "Höjd i pixlar (tomt = automatisk)": "Hauteur en pixels (vide = automatique)",
+  "</> Klistra in kod": "</> Coller le code",
+  "inbäddningen “{h}”": "l'intégration « {h} »",
+  "inbäddningen": "l'intégration",
+  "Här visas din inbäddade kod. Klicka på sektionen och välj ”Klistra in kod”.": "Votre code intégré s'affichera ici. Cliquez sur la section et choisissez « Coller le code ».",
+  "Eget bokningssystem och kod": "Système de réservation et code personnels",
+  "Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen.": "Millie ajoute une zone pour le code. Vous collez le code vous-même : cliquez sur la zone dans l'aperçu et choisissez Coller le code. Un script, un iframe ou simplement l'adresse fonctionnent.",
+  "Lägg in mitt eget bokningssystem på sidan Boka": "Ajoute mon propre système de réservation sur la page Réserver",
+  "Lägg till en ruta för inbäddad kod längst ned på startsidan": "Ajoute en bas de la page d'accueil une zone pour du code intégré"
 }

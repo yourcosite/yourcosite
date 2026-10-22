@@ -426,6 +426,19 @@ const RAW_SECTION_SCHEMA = {
       description:
         "Bokningssektion: besökaren väljer paket, dag och tid och bokar direkt på sidan, och får en bekräftelse på mejl. Lägg bara till en \"heading\" (och gärna en kort \"body\") — paketen, priserna, tiderna och bokningarna hanteras av kunden själv på \"Bokningar\"-sidan i panelen, aldrig av dig. Hittar ALDRIG på paket, priser eller tider. Högst en sådan sektion per sida.",
     },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
+        type: { const: "embed" },
+        heading: { type: "string" },
+        body: { type: "string" },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type"],
+      description:
+        "Inbäddad kod från en tredje part, t.ex. kundens eget bokningssystem, ett formulär eller en widget. Lägg till sektionen med en passande \"heading\" (valfri) och utelämna \"code\" helt — själva koden klistrar kunden in själv med knappen \"Klistra in kod\" när sektionen är vald. Skriv ALDRIG egen kod i sektionen och ändra aldrig en befintlig sektions kod.",
+    },
   ],
 };
 

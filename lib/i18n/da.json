@@ -1768,5 +1768,21 @@
   "Bifoga": "Vedhæft",
   "🗂 Mina bilder": "🗂 Mine billeder",
   "🖼 Stockbilder": "🖼 Stockfotos",
-  "📎 Ladda upp": "📎 Upload"
+  "📎 Ladda upp": "📎 Upload",
+  "Det gick inte att avgöra vilken inbäddning som ska ändras.": "Kunne ikke afgøre, hvilken indlejring der skal ændres.",
+  "Koden är för lång (högst {max} tecken).": "Koden er for lang (højst {max} tegn).",
+  "Hittade inte inbäddningen på sidan.": "Kunne ikke finde indlejringen på siden.",
+  "Höjden ska vara mellan 100 och 3000 pixlar, eller tom för automatisk höjd.": "Højden skal være mellem 100 og 3000 pixel, eller tom for automatisk højde.",
+  "Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig.": "Færdigt! Koden er gemt. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "Inbäddad kod": "Indlejret kode",
+  "Klistra in koden från ditt bokningssystem eller din widget (script eller iframe), eller bara adressen till sidan som börjar med https://. Koden körs i en säker, isolerad ruta på sidan. Tjänster som kräver cookies eller lagring på din egen sajt kan behöva visas via sin egen länk i stället.": "Indsæt koden fra dit bookingsystem eller din widget (script eller iframe), eller bare adressen på siden, der starter med https://. Koden kører i en sikker, isoleret boks på siden. Tjenester, der kræver cookies eller lagring på dit eget site, skal måske vises via deres eget link i stedet.",
+  "Höjd i pixlar (tomt = automatisk)": "Højde i pixel (tom = automatisk)",
+  "</> Klistra in kod": "</> Indsæt kode",
+  "inbäddningen “{h}”": "indlejringen “{h}”",
+  "inbäddningen": "indlejringen",
+  "Här visas din inbäddade kod. Klicka på sektionen och välj ”Klistra in kod”.": "Din indlejrede kode vises her. Klik på sektionen og vælg “Indsæt kode”.",
+  "Eget bokningssystem och kod": "Eget bookingsystem og kode",
+  "Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen.": "Millie tilføjer en boks til koden. Selve koden indsætter du selv: klik på boksen i forhåndsvisningen og vælg Indsæt kode. Script, iframe eller bare adressen virker alle.",
+  "Lägg in mitt eget bokningssystem på sidan Boka": "Læg mit eget bookingsystem ind på siden Book",
+  "Lägg till en ruta för inbäddad kod längst ned på startsidan": "Tilføj en boks til indlejret kode nederst på forsiden"
 }

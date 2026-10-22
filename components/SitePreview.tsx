@@ -10,6 +10,7 @@ import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, Butto
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
+import { buildEmbedDoc } from "@/lib/embedDoc";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { GridIcon, iconsForItems } from "@/lib/gridIcons";
@@ -1485,6 +1486,39 @@ function GalleryView({
   );
 }
 
+// Isolerad ram för kundens inbäddade kod (sektionen "embed"). Sandlådan har
+// INTE allow-same-origin, så koden körs utan åtkomst till vår sajt, vår
+// inloggning eller några av våra cookies. Höjden följer innehållet via
+// postMessage, om inte kunden satt en fast höjd.
+function EmbedFrame({ id, code, height, title }: { id: string; code: string; height?: number; title: string }) {
+  const ref = useRef<HTMLIFrameElement>(null);
+  const [h, setH] = useState(height || 400);
+  const doc = buildEmbedDoc(code, id);
+  useEffect(() => {
+    if (height) { setH(height); return; }
+    const onMsg = (e: MessageEvent) => {
+      if (e.source !== ref.current?.contentWindow) return;
+      const d = e.data as { ycsEmbed?: string; h?: number } | null;
+      if (d && d.ycsEmbed === id.replace(/[^a-zA-Z0-9_-]/g, "") && typeof d.h === "number") {
+        setH(Math.min(4000, Math.max(80, Math.ceil(d.h))));
+      }
+    };
+    window.addEventListener("message", onMsg);
+    return () => window.removeEventListener("message", onMsg);
+  }, [id, height]);
+  return (
+    <iframe
+      ref={ref}
+      title={title}
+      srcDoc={doc}
+      sandbox="allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox allow-modals"
+      loading="lazy"
+      referrerPolicy="no-referrer"
+      style={{ width: "100%", height: h, border: 0, display: "block" }}
+    />
+  );
+}
+
 function ImageOrArt({
   imageUrl,
   art,
@@ -2555,6 +2589,8 @@ function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
       return te("nyhetssektionen “{h}”", { h });
     case "booking":
       return te("bokningssektionen “{h}”", { h });
+    case "embed":
+      return h ? te("inbäddningen “{h}”", { h }) : te("inbäddningen");
     case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "team": case "faq": case "contactForm":
       return te("sektionen “{h}”", { h });
     default:
@@ -5146,6 +5182,50 @@ function SectionBlockInner({
           {socialLinks && socialLinks.length > 0 && (
             <div className="flex justify-center">
               <SocialIcons socialLinks={socialLinks} palette={palette} />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    case "embed": {
+      const code = (section.code || "").trim();
+      // Tom ruta syns bara i redigeraren — besökarna ser ingenting förrän koden finns.
+      if (!code && !editable) return null;
+      return (
+        <div className="px-6 @3xl:px-10 py-12 max-w-[1000px] mx-auto" style={{ background: sectionBg }}>
+          {section.heading && (
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+          )}
+          {section.body && (
+            <Field
+              editable={editable}
+              as="p"
+              className="text-[15px] text-center max-w-[560px] mx-auto mb-4"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "texten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "texten"); s && onSelectField?.(s); }}
+            >
+              {section.body}
+            </Field>
+          )}
+          {code ? (
+            <div className="relative">
+              <EmbedFrame id={section.id} code={code} height={section.height} title={section.heading || "Embedded"} />
+              {/* I redigeraren fångar ett lager klicken så att sektionen kan väljas. */}
+              {editable && <div className="absolute inset-0 cursor-pointer" aria-hidden="true" />}
+            </div>
+          ) : (
+            <div className="rounded-xl border-2 border-dashed p-8 text-center text-[14px]" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+              {te("Här visas din inbäddade kod. Klicka på sektionen och välj ”Klistra in kod”.")}
             </div>
           )}
         </div>

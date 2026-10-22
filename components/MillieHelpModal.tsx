@@ -94,6 +94,15 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
     ],
   },
   {
+    icon: "🔌",
+    title: msg("Eget bokningssystem och kod"),
+    hint: msg("Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen."),
+    examples: [
+      msg("Lägg in mitt eget bokningssystem på sidan Boka"),
+      msg("Lägg till en ruta för inbäddad kod längst ned på startsidan"),
+    ],
+  },
+  {
     icon: "🔍",
     title: msg("Google och delning"),
     examples: [

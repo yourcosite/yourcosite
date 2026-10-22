@@ -1768,5 +1768,21 @@
   "Bifoga": "Liitä",
   "🗂 Mina bilder": "🗂 Omat kuvat",
   "🖼 Stockbilder": "🖼 Kuvapankin kuvat",
-  "📎 Ladda upp": "📎 Lataa"
+  "📎 Ladda upp": "📎 Lataa",
+  "Det gick inte att avgöra vilken inbäddning som ska ändras.": "Ei voitu päätellä, mitä upotusta muutetaan.",
+  "Koden är för lång (högst {max} tecken).": "Koodi on liian pitkä (enintään {max} merkkiä).",
+  "Hittade inte inbäddningen på sidan.": "Upotusta ei löytynyt sivulta.",
+  "Höjden ska vara mellan 100 och 3000 pixlar, eller tom för automatisk höjd.": "Korkeuden tulee olla 100–3000 pikseliä, tai tyhjä automaattista korkeutta varten.",
+  "Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig.": "Valmis! Koodi on tallennettu. Voit peruuttaa painikkeella, jos muutat mielesi.",
+  "Inbäddad kod": "Upotettu koodi",
+  "Klistra in koden från ditt bokningssystem eller din widget (script eller iframe), eller bara adressen till sidan som börjar med https://. Koden körs i en säker, isolerad ruta på sidan. Tjänster som kräver cookies eller lagring på din egen sajt kan behöva visas via sin egen länk i stället.": "Liitä koodi varausjärjestelmästäsi tai widgetistäsi (script tai iframe), tai pelkkä sivun osoite, joka alkaa https://. Koodi toimii turvallisessa, eristetyssä laatikossa sivulla. Palvelut, jotka tarvitsevat evästeitä tai tallennustilaa omalla sivustollasi, on ehkä näytettävä oman linkkinsä kautta.",
+  "Höjd i pixlar (tomt = automatisk)": "Korkeus pikseleinä (tyhjä = automaattinen)",
+  "</> Klistra in kod": "</> Liitä koodi",
+  "inbäddningen “{h}”": "upotus “{h}”",
+  "inbäddningen": "upotus",
+  "Här visas din inbäddade kod. Klicka på sektionen och välj ”Klistra in kod”.": "Upotettu koodisi näkyy tässä. Klikkaa osiota ja valitse “Liitä koodi”.",
+  "Eget bokningssystem och kod": "Oma varausjärjestelmä ja koodi",
+  "Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen.": "Millie lisää laatikon koodille. Koodin liität itse: klikkaa laatikkoa esikatselussa ja valitse Liitä koodi. Script, iframe tai pelkkä osoite kelpaa.",
+  "Lägg in mitt eget bokningssystem på sidan Boka": "Lisää oma varausjärjestelmäni Varaa-sivulle",
+  "Lägg till en ruta för inbäddad kod längst ned på startsidan": "Lisää laatikko upotetulle koodille etusivun alaosaan"
 }

@@ -924,6 +924,7 @@ export default function EditorPage() {
       setIconPickerOpen(false);
       setLayoutPickerOpen(false);
       setTeamOpen(false);
+      setEmbedOpen(false);
       setSelection(null);
       setMessages((m) => [...m, { from: "bot", text: okText }]);
     } catch (e: any) {
@@ -980,6 +981,28 @@ export default function EditorPage() {
   const [teamOpen, setTeamOpen] = useState(false);
   const [teamDraft, setTeamDraft] = useState<TeamDraft[]>([]);
   const [teamError, setTeamError] = useState("");
+  // Inbäddad kod (embed): kunden klistrar in kod från t.ex. sitt bokningssystem.
+  const [embedOpen, setEmbedOpen] = useState(false);
+  const [embedCode, setEmbedCode] = useState("");
+  const [embedHeight, setEmbedHeight] = useState("");
+  const [embedError, setEmbedError] = useState("");
+  const canEditEmbed = !!selection && pickedSection?.type === "embed";
+  const openEmbedEditor = () => {
+    if (pickedSection?.type !== "embed") return;
+    setEmbedCode(pickedSection.code || "");
+    setEmbedHeight(pickedSection.height ? String(pickedSection.height) : "");
+    setEmbedError("");
+    setEmbedOpen(true);
+  };
+  const saveEmbed = async () => {
+    const h = embedHeight.trim();
+    if (h && !(Number(h) >= 100 && Number(h) <= 3000)) {
+      setEmbedError(t("Höjden ska vara mellan 100 och 3000 pixlar, eller tom för automatisk höjd."));
+      return;
+    }
+    setEmbedError("");
+    await savePick("/api/sites/edit-embed", { code: embedCode, height: h ? Number(h) : null }, t("Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig."));
+  };
   const canEditTeam = !!selection && pickedSection?.type === "team";
   const teamKeyRef = useRef(0);
   const newTeamRow = (m?: Partial<TeamDraft>): TeamDraft => ({
@@ -1742,6 +1765,44 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
+            {embedOpen && canEditEmbed && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-xl shadow-xl max-h-[90vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Inbäddad kod")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">
+                    {t("Klistra in koden från ditt bokningssystem eller din widget (script eller iframe), eller bara adressen till sidan som börjar med https://. Koden körs i en säker, isolerad ruta på sidan. Tjänster som kräver cookies eller lagring på din egen sajt kan behöva visas via sin egen länk i stället.")}
+                  </div>
+                  <textarea
+                    value={embedCode}
+                    onChange={(e) => setEmbedCode(e.target.value)}
+                    rows={9}
+                    spellCheck={false}
+                    placeholder={'<script src="https://…"></script>'}
+                    aria-label={t("Inbäddad kod")}
+                    className="w-full bg-bg border border-line rounded-lg p-2 text-[12.5px] font-mono outline-none resize-y"
+                  />
+                  <label className="flex items-center gap-2 mt-3 text-[12.5px]">
+                    <span className="text-ink-dim">{t("Höjd i pixlar (tomt = automatisk)")}</span>
+                    <input
+                      value={embedHeight}
+                      onChange={(e) => setEmbedHeight(e.target.value.replace(/[^0-9]/g, ""))}
+                      inputMode="numeric"
+                      placeholder="700"
+                      className="w-24 bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none"
+                    />
+                  </label>
+                  {embedError && <div className="text-[12.5px] text-red-600 mt-2" role="alert">{embedError}</div>}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button type="button" onClick={() => setEmbedOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      {t("Avbryt")}
+                    </button>
+                    <button type="button" onClick={saveEmbed} disabled={savingPick} className="text-[13px] font-semibold px-3 py-1.5 rounded-full bg-accent text-accent-ink disabled:opacity-60">
+                      {savingPick ? t("Sparar …") : t("Spara")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {teamOpen && canEditTeam && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-xl shadow-xl max-h-[90vh] flex flex-col">
@@ -1936,6 +1997,16 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     {t("🗑 Ta bort bilden")}
+                  </button>
+                )}
+                {canEditEmbed && (
+                  <button
+                    type="button"
+                    onClick={openEmbedEditor}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("</> Klistra in kod")}
                   </button>
                 )}
                 {canEditTeam && (

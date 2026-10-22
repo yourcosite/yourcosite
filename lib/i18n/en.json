@@ -1768,5 +1768,21 @@
   "Bifoga": "Attach",
   "🗂 Mina bilder": "🗂 My images",
   "🖼 Stockbilder": "🖼 Stock photos",
-  "📎 Ladda upp": "📎 Upload"
+  "📎 Ladda upp": "📎 Upload",
+  "Det gick inte att avgöra vilken inbäddning som ska ändras.": "Could not tell which embed to change.",
+  "Koden är för lång (högst {max} tecken).": "The code is too long (at most {max} characters).",
+  "Hittade inte inbäddningen på sidan.": "Could not find the embed on the page.",
+  "Höjden ska vara mellan 100 och 3000 pixlar, eller tom för automatisk höjd.": "The height must be between 100 and 3000 pixels, or empty for automatic height.",
+  "Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig.": "Done! The code is saved. You can undo with the button if you change your mind.",
+  "Inbäddad kod": "Embedded code",
+  "Klistra in koden från ditt bokningssystem eller din widget (script eller iframe), eller bara adressen till sidan som börjar med https://. Koden körs i en säker, isolerad ruta på sidan. Tjänster som kräver cookies eller lagring på din egen sajt kan behöva visas via sin egen länk i stället.": "Paste the code from your booking system or widget (script or iframe), or just the address of the page starting with https://. The code runs in a safe, isolated box on the page. Services that need cookies or storage on your own site may need to be shown through their own link instead.",
+  "Höjd i pixlar (tomt = automatisk)": "Height in pixels (empty = automatic)",
+  "</> Klistra in kod": "</> Paste code",
+  "inbäddningen “{h}”": "the embed “{h}”",
+  "inbäddningen": "the embed",
+  "Här visas din inbäddade kod. Klicka på sektionen och välj ”Klistra in kod”.": "Your embedded code will appear here. Click the section and choose “Paste code”.",
+  "Eget bokningssystem och kod": "Own booking system and code",
+  "Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen.": "Millie adds a box for the code. You paste the code yourself: click the box in the preview and choose Paste code. Script, iframe or just the address all work.",
+  "Lägg in mitt eget bokningssystem på sidan Boka": "Add my own booking system to the Book page",
+  "Lägg till en ruta för inbäddad kod längst ned på startsidan": "Add a box for embedded code at the bottom of the home page"
 }
