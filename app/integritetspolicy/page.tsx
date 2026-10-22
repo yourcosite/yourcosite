@@ -94,12 +94,12 @@ export default function Page() {
 
       <h3>{t("4. Vem vi delar uppgifter med")}</h3>
       <p>
-        {t("Vi delar uppgifter med underleverantörer (personuppgiftsbiträden) som hjälper oss leverera tjänsten: betallösning (Stripe), molnhosting/serverdrift, en AI-leverantör (Anthropic) som bearbetar de texter, bilder och dokument Kunden skickar till Millie och de uppgifter som behövs för att skapa och ändra webbplatsen, bildtjänsten Unsplash när Kunden söker och väljer stockbilder, och eventuella analys- eller supportverktyg. Alla biträden regleras av personuppgiftsbiträdesavtal (DPA). Vi säljer aldrig personuppgifter till tredje part.")}
+        {t("Vi delar uppgifter med underleverantörer (personuppgiftsbiträden) som hjälper oss leverera tjänsten: databas och inloggning (Supabase), molnhosting/serverdrift (Vercel), betallösning (Stripe), en AI-leverantör (Anthropic) som bearbetar de texter, bilder och dokument Kunden skickar till Millie och de uppgifter som behövs för att skapa och ändra webbplatsen, bildtjänsten Unsplash när Kunden söker och väljer stockbilder, och eventuella tjänster för e-postutskick, analys eller support. Alla biträden regleras av personuppgiftsbiträdesavtal (DPA). Vi säljer aldrig personuppgifter till tredje part.")}
       </p>
 
       <h3>{t("5. Överföring utanför EU/EES")}</h3>
       <p>
-        {t("Om någon underleverantör behandlar data utanför EU/EES säkerställer vi lämpliga skyddsmekanismer, t.ex. EU-kommissionens standardavtalsklausuler (SCC).")}
+        {t("Kundens uppgifter och sajtinnehåll lagras i en databas hos Supabase i Irland (inom EU), och våra serverfunktioner körs hos Vercel i Dublin. Vissa underleverantörer, framför allt Anthropic (AI-leverantören bakom Millie), Stripe och Unsplash samt bolagen bakom Vercel och Supabase, har sitt säte eller kan behandla uppgifter även utanför EU/EES, bland annat i USA. Det gäller särskilt de texter, bilder och dokument Kunden skickar till Millie, som bearbetas av Anthropic och kan behandlas utanför EU/EES. Vid sådan överföring säkerställer vi lämpliga skyddsmekanismer, t.ex. EU-kommissionens standardavtalsklausuler (SCC) eller att mottagaren är certifierad enligt dataskyddsramverket EU–USA (Data Privacy Framework).")}
       </p>
 
       <h3>{t("6. Lagringstid")}</h3>
