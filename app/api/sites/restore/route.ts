@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { isAllowedImageUrl } from "@/lib/stockPhotos";
+import { withErrorLog } from "@/lib/errorLog";
 
 // "Ångra" i chattredigeraren: webbläsaren håller de senaste versionerna av
 // sajten och skickar tillbaka en av dem hit. Eftersom innehållet kommer från
@@ -26,7 +27,7 @@ function collectUrls(value: unknown, out: string[]) {
   }
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -75,3 +76,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ content: restored });
 }
+
+export const POST = withErrorLog("POST /api/sites/restore", POST_handler);

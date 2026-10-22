@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { loadSiteBookingData, sendCancellationEmails } from "@/lib/bookingServer";
 import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Kundens egen avbokning via länken i bekräftelsemejlet (/avboka/<token>).
 // Token är lång och slumpmässig; den som har länken kan avboka just den tiden.
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic";
 
 const validToken = (t: unknown): t is string => typeof t === "string" && /^[0-9a-f]{40,80}$/i.test(t);
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const t = getT();
   const token = new URL(request.url).searchParams.get("token");
   if (!validToken(token)) return NextResponse.json({ error: t("Ogiltig länk.") }, { status: 400 });
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const body = await request.json().catch(() => ({}));
   if (!validToken(body.token)) return NextResponse.json({ error: t("Ogiltig länk.") }, { status: 400 });
@@ -58,3 +59,6 @@ export async function POST(request: Request) {
   await sendCancellationEmails({ db, siteId: (b as any).site_id, siteName: (site as any)?.name || "sajten", booking: b as any, settings: data.settings, cancelledBy: "customer" }).catch(() => {});
   return NextResponse.json({ ok: true });
 }
+
+export const GET = withErrorLog("GET /api/public/booking/cancel", GET_handler);
+export const POST = withErrorLog("POST /api/public/booking/cancel", POST_handler);

@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Max antal inspirationsbilder per sajt — fler än så ger marginell nytta
 // för AI:n men kostar onödigt mycket i Claude-anropet (varje bild kostar
@@ -14,7 +15,7 @@ const MAX_IMAGES = 6;
 // inspiration_links. Samma mönster som /api/onboarding/hero-image: filen
 // laddas upp direkt till Supabase Storage från webbläsaren, den här rutten
 // bara registrerar/avregistrerar URL:en i sites.inspiration_image_urls.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
   return NextResponse.json({ inspirationImageUrls: updated });
 }
 
-export async function DELETE(request: Request) {
+async function DELETE_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -97,3 +98,6 @@ export async function DELETE(request: Request) {
 
   return NextResponse.json({ inspirationImageUrls: updated });
 }
+
+export const POST = withErrorLog("POST /api/onboarding/inspiration-images", POST_handler);
+export const DELETE = withErrorLog("DELETE /api/onboarding/inspiration-images", DELETE_handler);

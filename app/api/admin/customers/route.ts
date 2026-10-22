@@ -5,8 +5,9 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import { withErrorLog } from "@/lib/errorLog";
 
-export async function GET() {
+async function GET_handler() {
   const check = await requireRole(["support", "admin", "superadmin"]);
   if (check.error) return check.error;
 
@@ -20,7 +21,7 @@ export async function GET() {
   return NextResponse.json({ customers: data });
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
@@ -81,3 +82,6 @@ export async function POST(request: Request) {
     tempPassword,
   });
 }
+
+export const GET = withErrorLog("GET /api/admin/customers", GET_handler);
+export const POST = withErrorLog("POST /api/admin/customers", POST_handler);

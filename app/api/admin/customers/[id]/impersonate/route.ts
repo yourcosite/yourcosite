@@ -9,11 +9,12 @@ import {
   IMPERSONATION_MAX_AGE,
   makeImpersonationToken,
 } from "@/lib/impersonation";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Genererar en engångslänk som loggar in webbläsaren som kunden.
 // Bara superadmin, eftersom det här är den känsligaste admin-åtgärden
 // som finns — den byter faktiskt ut vems session webbläsaren har.
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+async function POST_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["superadmin"]);
   if (check.error) return check.error;
@@ -66,3 +67,5 @@ export async function POST(request: Request, { params }: { params: { id: string 
   res.cookies.set(IMPERSONATION_FLAG_COOKIE, "1", { sameSite: "lax", secure, path: "/", maxAge: IMPERSONATION_MAX_AGE });
   return res;
 }
+
+export const POST = withErrorLog("POST /api/admin/customers/[id]/impersonate", POST_handler);

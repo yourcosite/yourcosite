@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Tar bort adminbehörighet (nedgraderar till vanlig kund). Tar aldrig bort
 // själva kontot, och man kan inte ta bort sin egen adminbehörighet härifrån.
-export async function DELETE(
+async function DELETE_handler(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
@@ -46,3 +47,5 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = withErrorLog("DELETE /api/admin/team/[id]", DELETE_handler);

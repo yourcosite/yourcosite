@@ -16,6 +16,7 @@ import { fillMissingImages, pagesNeedingImages } from "@/lib/ensureImageSlots";
 import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } from "@/lib/stockPhotos";
 import { isSkinId } from "@/lib/skins";
 import { dedupeMaps } from "@/lib/ensureImageSlots";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -539,7 +540,7 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
   return merged;
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -989,3 +990,5 @@ export async function POST(request: Request) {
     siteLanguage: newSiteLanguage,
   });
 }
+
+export const POST = withErrorLog("POST /api/sites/edit", POST_handler);

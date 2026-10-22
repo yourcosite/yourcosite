@@ -13,6 +13,7 @@ import { ensureImageSlots, enforceHomepageImageRichness, dedupeMaps } from "@/li
 import { ensureShowcaseSections } from "@/lib/showcaseContent";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
 import { SITE_CONTENT_PROPERTIES, SITE_CONTENT_REQUIRED } from "@/lib/siteContentSchema";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Sajtgenerering kan ta längre än Vercels standardtimeout (10s) eftersom
 // Claude ska skriva texter för flera sidor i ett svar. Förlänger till 60s.
@@ -300,7 +301,7 @@ function estimateProgress(acc: string, totalPages: number): Progress {
 // Med rubriken "x-progress: 1" strömmas framstegen som rader med JSON
 // (NDJSON) och sist en rad med själva resultatet. Utan rubriken fungerar
 // anropet som förut.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   if (request.headers.get("x-progress") !== "1") {
     return generateSite(() => {});
   }
@@ -537,3 +538,5 @@ async function generateSite(emit: (p: Progress) => void) {
 
   return NextResponse.json({ ok: true, siteId: site.id });
 }
+
+export const POST = withErrorLog("POST /api/sites/generate", POST_handler);

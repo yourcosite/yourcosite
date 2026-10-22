@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
 import { siteLocale } from "@/lib/i18n/site-server";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Tar emot ett inskick från en "contactForm"-sektion (components/
 // SitePreview.tsx, ContactFormBlock). Publik rutt (besökare på en
@@ -12,7 +13,7 @@ import { siteLocale } from "@/lib/i18n/site-server";
 const MAX_FIELD_LENGTH = 300;
 const MAX_MESSAGE_LENGTH = 5000;
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   let t = getT();
   const body = await request.json().catch(() => ({}));
   if (typeof body.website === "string" && body.website.trim()) return NextResponse.json({ ok: true });
@@ -50,3 +51,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/public/form-submit", POST_handler);

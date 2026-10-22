@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Hämtar kundens sajt med genererat innehåll. Tar ett valfritt ?id= — utan
 // det (eller om id:t inte matchar en egen sajt) faller den tillbaka på
@@ -9,7 +10,7 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 // (app/dashboard) och redigeraren så att varje sajt-kort faktiskt öppnar
 // SIN egen sajt när kontot har flera — se kommentaren i
 // lib/supabase/currentSite.ts för bakgrunden till buggen det fixar.
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -34,3 +35,5 @@ export async function GET(request: Request) {
 
   return NextResponse.json({ site, uploadedPhotoCount });
 }
+
+export const GET = withErrorLog("GET /api/sites/mine", GET_handler);

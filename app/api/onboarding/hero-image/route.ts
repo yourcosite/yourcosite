@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedImageUrl } from "@/lib/stockPhotos";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Kundens eget val av HUVUDBILD — den bild som alltid blir startsidans
 // hero, istället för att bara bli "den som råkar lottas först" bland de
@@ -12,7 +13,7 @@ import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboard
 //
 // Filen laddas upp direkt till Supabase Storage från webbläsaren (samma
 // mönster som FileDropzone) — den här rutten bara registrerar URL:en.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
 
 // Tar bort valet (kunden ändrade sig) — går tillbaka till att en av de
 // allmänna fotona lottas som hero istället.
-export async function DELETE() {
+async function DELETE_handler() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -71,3 +72,6 @@ export async function DELETE() {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/onboarding/hero-image", POST_handler);
+export const DELETE = withErrorLog("DELETE /api/onboarding/hero-image", DELETE_handler);

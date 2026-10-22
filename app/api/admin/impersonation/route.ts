@@ -5,10 +5,11 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/supabase/activityLog";
 import { IMPERSONATION_COOKIE, IMPERSONATION_FLAG_COOKIE, readImpersonationToken } from "@/lib/impersonation";
+import { withErrorLog } from "@/lib/errorLog";
 
 // GET: visar om den här webbläsaren just nu är inloggad "som kund" via
 // adminportalen (och vilken kund), så att en knapp för att gå tillbaka kan visas.
-export async function GET() {
+async function GET_handler() {
   const info = readImpersonationToken(cookies().get(IMPERSONATION_COOKIE)?.value);
   if (!info) return NextResponse.json({ active: false });
 
@@ -24,7 +25,7 @@ export async function GET() {
 
 // POST: tillbaka till adminvyn utan att logga in på nytt. Rollen kontrolleras
 // igen här — kakan räcker inte ensam.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const info = readImpersonationToken(cookies().get(IMPERSONATION_COOKIE)?.value);
   if (!info) return NextResponse.json({ error: t("Ingen pågående inloggning som kund.") }, { status: 400 });
@@ -65,3 +66,6 @@ export async function POST(request: Request) {
   res.cookies.delete(IMPERSONATION_FLAG_COOKIE);
   return res;
 }
+
+export const GET = withErrorLog("GET /api/admin/impersonation", GET_handler);
+export const POST = withErrorLog("POST /api/admin/impersonation", POST_handler);

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { isAllowedImageUrl } from "@/lib/stockPhotos";
 import { getSiteNewsArticles, getSiteNewsCategories, uniqueSlugForSite, normalizeCategory, DEFAULT_NEWS_CATEGORY } from "@/lib/newsArticles";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Nyhetsartiklar för den inloggade kundens egen sajt — skapas och
 // publiceras här av kunden själv (app/nyheter/page.tsx), aldrig av Millie
@@ -13,7 +14,7 @@ const MAX_TITLE = 120;
 const MAX_EXCERPT = 300;
 const MAX_BODY = 20000;
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ articles, categories, siteId: site.id });
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -108,3 +109,6 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ article });
 }
+
+export const GET = withErrorLog("GET /api/news", GET_handler);
+export const POST = withErrorLog("POST /api/news", POST_handler);

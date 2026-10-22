@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Skickar ett återställningsmail till kunden så de kan sätta ett nytt
 // lösenord själva (landar på /aterstall-losenord).
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+async function POST_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
@@ -42,3 +43,5 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/admin/customers/[id]/reset-password", POST_handler);

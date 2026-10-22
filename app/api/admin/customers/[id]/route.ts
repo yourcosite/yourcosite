@@ -2,8 +2,9 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import { withErrorLog } from "@/lib/errorLog";
 
-export async function PATCH(
+async function PATCH_handler(
   request: Request,
   { params }: { params: { id: string } }
 ) {
@@ -59,7 +60,7 @@ export async function PATCH(
   return NextResponse.json({ ok: true });
 }
 
-export async function DELETE(
+async function DELETE_handler(
   _request: Request,
   { params }: { params: { id: string } }
 ) {
@@ -87,3 +88,6 @@ export async function DELETE(
 
   return NextResponse.json({ ok: true });
 }
+
+export const PATCH = withErrorLog("PATCH /api/admin/customers/[id]", PATCH_handler);
+export const DELETE = withErrorLog("DELETE /api/admin/customers/[id]", DELETE_handler);

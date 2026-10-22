@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Bildredigeraren i chattredigeraren (components/ImageEditorModal.tsx):
 // webbläsaren beskär/vrider/justerar bilden, laddar upp resultatet till
@@ -10,7 +11,7 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 // adressen på EXAKT den markerade bilden. Inget går via AI:n.
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -57,3 +58,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ content });
 }
+
+export const POST = withErrorLog("POST /api/sites/replace-image", POST_handler);

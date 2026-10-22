@@ -1,6 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Delningslänkar till förhandsvisningen av kundens egen sajt. Varje länk är en
 // rad i tabellen share_links, så den kan stängas av när som helst. Länken
@@ -10,7 +11,7 @@ const DAYS = 14;
 
 const TABLE_MISSING = "Delning är inte aktiverad ännu — tabellen share_links saknas i databasen.";
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,7 +34,7 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -65,7 +66,7 @@ export async function POST(request: Request) {
 }
 
 // Stänger av en länk direkt.
-export async function DELETE(request: Request) {
+async function DELETE_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -81,3 +82,7 @@ export async function DELETE(request: Request) {
   if (error) return NextResponse.json({ error: t("Kunde inte stänga av länken.") }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+export const GET = withErrorLog("GET /api/sites/share", GET_handler);
+export const POST = withErrorLog("POST /api/sites/share", POST_handler);
+export const DELETE = withErrorLog("DELETE /api/sites/share", DELETE_handler);

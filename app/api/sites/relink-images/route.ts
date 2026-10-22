@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
 import { assignUploadedImages } from "@/lib/assignUploadedImages";
 import { ensureImageSlots } from "@/lib/ensureImageSlots";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Kopplar om kundens uppladdade foton till en REDAN byggd sajt, utan att
 // skriva om några texter (inget nytt AI-anrop — helt gratis och snabbt).
@@ -11,7 +12,7 @@ import { ensureImageSlots } from "@/lib/ensureImageSlots";
 // ursprungliga genereringen (t.ex. laddades upp efter att sajten byggdes),
 // så kunden slipper bygga om — och betala för — hela sajten på nytt bara
 // för att få in bilderna.
-export async function POST() {
+async function POST_handler() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -61,3 +62,5 @@ export async function POST() {
 
   return NextResponse.json({ ok: true, imagesLinked: imageUrls.length });
 }
+
+export const POST = withErrorLog("POST /api/sites/relink-images", POST_handler);

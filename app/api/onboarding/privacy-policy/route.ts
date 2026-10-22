@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 import { generatePrivacyPolicyText } from "@/lib/privacyPolicyTemplate";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Onboarding steg 5 — kundens integritetspolicy för SIN sajt. Två lägen:
 // "uploaded" (kunden har redan en fil, t.ex. från sin jurist — vi sparar
@@ -11,7 +12,7 @@ import { generatePrivacyPolicyText } from "@/lib/privacyPolicyTemplate";
 // lib/privacyPolicyTemplate.ts). Att skicka in mode "uploaded" rensar
 // bort en ev. tidigare genererad text och tvärtom, så det alltid bara
 // finns EN aktiv policy åt gången.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -105,3 +106,5 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ site });
 }
+
+export const POST = withErrorLog("POST /api/onboarding/privacy-policy", POST_handler);

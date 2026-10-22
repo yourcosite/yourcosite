@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { LANGUAGE_ENGLISH } from "@/lib/i18n/config";
+import { withErrorLog } from "@/lib/errorLog";
 
 // "Be Millie om hjälp med texten" i nyhetspanelen (app/nyheter/NewsClient.tsx)
 // — till skillnad från /api/sites/edit (som redigerar SAJTENS innehåll)
@@ -29,7 +30,7 @@ const ASSIST_TOOL = {
   },
 };
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -112,3 +113,5 @@ function stripStrayTags(value: string | undefined): string {
   if (!value) return "";
   return value.replace(/<\/?[a-zA-Z][a-zA-Z0-9]*(\s[^>]*)?>/g, "").trim();
 }
+
+export const POST = withErrorLog("POST /api/news/assist", POST_handler);

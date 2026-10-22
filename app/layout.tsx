@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
+import ErrorReporter from "@/components/ErrorReporter";
 import { I18nProvider } from "@/components/I18nProvider";
 import { getLocale } from "@/lib/i18n/server";
 import { DICTIONARIES } from "@/lib/i18n/dictionaries";
@@ -80,6 +81,7 @@ export default function RootLayout({
         <I18nProvider locale={locale} dict={DICTIONARIES[locale]}>
           {children}
           <ImpersonationBanner />
+          <ErrorReporter />
         </I18nProvider>
       </body>
     </html>

@@ -2,11 +2,12 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentDraftSite } from "@/lib/supabase/onboardingSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Hämtar kundens pågående onboarding-utkast + de sidor som redan valts,
 // så att varje steg kan fylla i fälten igen om kunden går fram och tillbaka
 // eller laddar om sidan.
-export async function GET() {
+async function GET_handler() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,3 +25,5 @@ export async function GET() {
 
   return NextResponse.json({ site, pages: pages ?? [] });
 }
+
+export const GET = withErrorLog("GET /api/onboarding/current", GET_handler);

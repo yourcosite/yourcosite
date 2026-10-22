@@ -7,6 +7,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { siteLocale } from "@/lib/i18n/site-server";
 import { LANGUAGE_ENGLISH } from "@/lib/i18n/config";
+import { withErrorLog } from "@/lib/errorLog";
 
 // "Be Millie skriva ett utkast" bland bokningsvillkoren (app/bokningar).
 // Skriver bara ett FÖRSLAG som kunden själv läser, ändrar och tar ansvar för
@@ -26,7 +27,7 @@ const TOOL = {
   },
 };
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -83,3 +84,5 @@ Svara via verktyget "draft_booking_terms" på ${langName} (sajtens språk, även
   const terms = String((toolUse.input as any).terms || "").replace(/<\/?[a-zA-Z][a-zA-Z0-9]*(\s[^>]*)?>/g, "").replace(/^[*#]+\s?/gm, "").trim();
   return NextResponse.json({ terms });
 }
+
+export const POST = withErrorLog("POST /api/booking/terms-assist", POST_handler);

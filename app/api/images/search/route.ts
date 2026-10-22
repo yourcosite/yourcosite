@@ -1,11 +1,12 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Sökning bland Unsplashs licensfria foton. Åtkomstnyckeln (Access Key) ligger
 // bara som miljövariabel på servern (UNSPLASH_ACCESS_KEY i Vercel) och når
 // aldrig webbläsaren eller git.
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -54,3 +55,5 @@ export async function GET(request: Request) {
   }));
   return NextResponse.json({ photos, totalPages: data.total_pages || 0 });
 }
+
+export const GET = withErrorLog("GET /api/images/search", GET_handler);

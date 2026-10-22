@@ -2,10 +2,11 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
+import { withErrorLog } from "@/lib/errorLog";
 
 const ALLOWED_STATUSES = ["ny", "laser", "klar"] as const;
 
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+async function PATCH_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["support", "admin", "superadmin"]);
   if (check.error) return check.error;
@@ -21,3 +22,5 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+export const PATCH = withErrorLog("PATCH /api/admin/support/[id]", PATCH_handler);

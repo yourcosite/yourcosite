@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Sätter Google Analytics/Meta Pixel-ID direkt (sajtinställningarna i
 // chattredigeraren) — samma fält som Millie kan sätta via /api/sites/edit
@@ -11,7 +12,7 @@ import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 const GA_ID_PATTERN = /^(G|UA)-[A-Za-z0-9-]+$/;
 const META_PIXEL_ID_PATTERN = /^\d{10,20}$/;
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -53,3 +54,5 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ content: updatedContent });
 }
+
+export const POST = withErrorLog("POST /api/sites/tracking", POST_handler);

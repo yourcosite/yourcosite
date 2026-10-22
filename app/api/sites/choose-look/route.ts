@@ -4,11 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
 import { isSkinId } from "@/lib/skins";
 import { applyHomeRecipe, isHomeRecipeId } from "@/lib/homeRecipes";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Sparar vilken av de tre stilvarianterna (lib/themeVariants.ts) kunden
 // valde på /forslag. Innehållet (texterna) är redan genererat — det här
 // ändrar bara theme.font/backgroundMode på den sajt kunden precis fick.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -67,3 +68,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/sites/choose-look", POST_handler);

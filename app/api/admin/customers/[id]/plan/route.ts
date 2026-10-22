@@ -4,10 +4,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
 import { PLAN_LABELS } from "@/lib/pricing";
+import { withErrorLog } from "@/lib/errorLog";
 
 const VALID_PLANS = ["bas", "standard", "premium"];
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+async function POST_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
@@ -54,3 +55,5 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
   return NextResponse.json({ ok: true, plan });
 }
+
+export const POST = withErrorLog("POST /api/admin/customers/[id]/plan", POST_handler);

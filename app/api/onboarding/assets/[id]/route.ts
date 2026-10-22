@@ -1,8 +1,9 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { withErrorLog } from "@/lib/errorLog";
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+async function DELETE_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,3 +16,5 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = withErrorLog("DELETE /api/onboarding/assets/[id]", DELETE_handler);

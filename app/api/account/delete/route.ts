@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Självbetjänad, permanent radering av DET EGNA kontot — knappen "Ta bort
 // konto" på /installningar (se app/installningar/DeleteAccountTab.tsx).
@@ -13,7 +14,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // undertabeller (nyheter, besöksstatistik, formulärsvar m.m.) via "on
 // delete cascade" i supabase/schema.sql — ingen manuell upprensning behövs
 // här.
-export async function DELETE() {
+async function DELETE_handler() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -25,3 +26,5 @@ export async function DELETE() {
 
   return NextResponse.json({ ok: true });
 }
+
+export const DELETE = withErrorLog("DELETE /api/account/delete", DELETE_handler);

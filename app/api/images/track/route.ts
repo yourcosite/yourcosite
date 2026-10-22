@@ -2,11 +2,12 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { UNSPLASH_DOWNLOAD_PREFIX } from "@/lib/stockPhotos";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Unsplashs API-regler kräver att vi "räknar" varje gång ett foto faktiskt
 // väljs, genom att anropa fotots download_location. Ingen fil hämtas — det
 // är bara en räknare hos dem.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -24,3 +25,5 @@ export async function POST(request: Request) {
   }
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/images/track", POST_handler);

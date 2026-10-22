@@ -3,10 +3,11 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Växlar en kunds primära sajt mellan "live" och "pausad". Rör inte
 // sajter som fortfarande är i utkastläge (de har inget att pausa).
-export async function POST(_request: Request, { params }: { params: { id: string } }) {
+async function POST_handler(_request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
@@ -50,3 +51,5 @@ export async function POST(_request: Request, { params }: { params: { id: string
 
   return NextResponse.json({ ok: true, status: nextStatus });
 }
+
+export const POST = withErrorLog("POST /api/admin/customers/[id]/toggle-pause", POST_handler);

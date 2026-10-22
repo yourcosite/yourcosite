@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { clientIp, rateLimited } from "@/lib/rateLimit";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Tar emot en sidvisning från PageviewBeacon (components/SitePreview.tsx).
 // Publik rutt (besökare på en kundsajt är aldrig inloggade hos oss) —
@@ -11,7 +12,7 @@ import { clientIp, rateLimited } from "@/lib/rateLimit";
 // besökstrafik, till skillnad från t.ex. support-meddelanden.
 const MAX_FIELD_LENGTH = 300;
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const body = await request.json().catch(() => ({}));
   const siteId = typeof body.siteId === "string" ? body.siteId : "";
@@ -39,3 +40,5 @@ export async function POST(request: Request) {
   await admin.from("site_pageviews").insert({ site_id: siteId, path, referrer });
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/analytics/track", POST_handler);

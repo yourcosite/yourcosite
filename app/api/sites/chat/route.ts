@@ -2,6 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Chatthistoriken med Millie (de senaste 20 ändringarna = 40 meddelanden)
 // sparas på sajten (kolumnen sites.chat_history) så den följer med mellan
@@ -37,7 +38,7 @@ function sanitize(input: unknown): StoredMessage[] {
   return out;
 }
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -49,7 +50,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ messages: sanitize(site.chat_history) });
 }
 
-export async function PUT(request: Request) {
+async function PUT_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -64,3 +65,6 @@ export async function PUT(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+export const GET = withErrorLog("GET /api/sites/chat", GET_handler);
+export const PUT = withErrorLog("PUT /api/sites/chat", PUT_handler);

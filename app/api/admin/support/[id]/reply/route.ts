@@ -6,13 +6,14 @@ import { translateText } from "@/lib/translate";
 import { emailLayout, sendEmail } from "@/lib/email";
 import { tFor } from "@/lib/i18n/site-server";
 import { isLocale, type Locale } from "@/lib/i18n/config";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Personalens svar på ett kundmeddelande. Personalen skriver på svenska;
 // svaret översätts till kundens språk (språket kunden skrev på), sparas
 // i support_replies (historiken per kund) och mejlas till kunden.
 export const maxDuration = 30;
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+async function POST_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["support", "admin", "superadmin"]);
   if (check.error) return check.error;
@@ -86,3 +87,5 @@ export async function POST(request: Request, { params }: { params: { id: string 
     status,
   });
 }
+
+export const POST = withErrorLog("POST /api/admin/support/[id]/reply", POST_handler);

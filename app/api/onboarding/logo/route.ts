@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 const MAX_BYTES = 2 * 1024 * 1024; // 2 MB
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"];
@@ -10,7 +11,7 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/svg+xml", "image/webp"]
 // Ladda upp en logga, separat från den generella bild-dropzonen i steg 3 —
 // det var lätt att den hamnade i en hög med "ett gäng bilder" annars. Gör
 // det alltid helt uppenbart vad som är loggan i resten av flödet.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -67,7 +68,7 @@ export async function POST(request: Request) {
 }
 
 // Tar bort en vald logga (kunden ändrade sig).
-export async function DELETE() {
+async function DELETE_handler() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -86,3 +87,6 @@ export async function DELETE() {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/onboarding/logo", POST_handler);
+export const DELETE = withErrorLog("DELETE /api/onboarding/logo", DELETE_handler);

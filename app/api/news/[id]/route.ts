@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { isAllowedImageUrl } from "@/lib/stockPhotos";
 import { uniqueSlugForSite, normalizeCategory } from "@/lib/newsArticles";
+import { withErrorLog } from "@/lib/errorLog";
 
 const MAX_TITLE = 120;
 const MAX_EXCERPT = 300;
@@ -14,7 +15,7 @@ const MAX_BODY = 20000;
 // garanterar att man bara kan röra artiklar på sin egen sajt — men vi
 // kollar även explicit här så ett 404 känns rimligt istället för ett
 // tyst "0 rader uppdaterade".
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+async function PATCH_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -123,7 +124,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
   return NextResponse.json({ article });
 }
 
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+async function DELETE_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -142,3 +143,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+export const PATCH = withErrorLog("PATCH /api/news/[id]", PATCH_handler);
+export const DELETE = withErrorLog("DELETE /api/news/[id]", DELETE_handler);

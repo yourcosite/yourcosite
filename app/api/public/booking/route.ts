@@ -5,6 +5,7 @@ import { computeAvailability, isStartAvailable } from "@/lib/booking";
 import { loadSiteBookingData, sendBookingEmails } from "@/lib/bookingServer";
 import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
 import { siteLocale } from "@/lib/i18n/site-server";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Publika bokningsrutten för en kundsajt (besökare är inte inloggade hos
 // oss, därför service role med egen koll av siteId — samma mönster som
@@ -18,7 +19,7 @@ export const dynamic = "force-dynamic";
 const isUuid = (s: unknown): s is string => typeof s === "string" && /^[0-9a-f-]{36}$/i.test(s);
 const clean = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   let t = getT();
   const url = new URL(request.url);
   const siteId = url.searchParams.get("siteId");
@@ -43,7 +44,7 @@ export async function GET(request: Request) {
   return NextResponse.json({ availability, timezone: data.settings.timezone });
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   let t = getT();
   const body = await request.json().catch(() => ({}));
   // Dolt fält som riktiga besökare aldrig fyller i; botar gör det ofta.
@@ -148,3 +149,6 @@ export async function POST(request: Request) {
     emailSent: mail.customerSent,
   });
 }
+
+export const GET = withErrorLog("GET /api/public/booking", GET_handler);
+export const POST = withErrorLog("POST /api/public/booking", POST_handler);

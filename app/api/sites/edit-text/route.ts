@@ -4,12 +4,13 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { setFieldText, setLinkValue, isAllowedLink, setStat, statIndex } from "@/lib/fieldPath";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Manuell textredigering i chattredigeraren: kunden skriver om en enskild
 // text själv. Inget går via AI:n.
 export const dynamic = "force-dynamic";
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -67,3 +68,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ content });
 }
+
+export const POST = withErrorLog("POST /api/sites/edit-text", POST_handler);

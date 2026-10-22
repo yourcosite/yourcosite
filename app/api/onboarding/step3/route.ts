@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
 import { SOCIAL_PLATFORMS } from "@/lib/socialPlatforms";
+import { withErrorLog } from "@/lib/errorLog";
 
 type IncomingPage = {
   label: string;
@@ -15,7 +16,7 @@ const VALID_PLATFORM_IDS = SOCIAL_PLATFORMS.map((p) => p.id);
 // Sparar kundens sidval för onboarding-utkastet. Vi tar bort de gamla
 // sidraderna och skriver in de valda på nytt — enklast eftersom kunden kan
 // lägga till/ta bort/döpa om fritt i steg 3 innan den här rutten anropas.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -76,3 +77,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/onboarding/step3", POST_handler);

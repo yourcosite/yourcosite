@@ -801,3 +801,26 @@ create index if not exists ai_usage_user_idx on ai_usage (user_id, created_at de
 alter table ai_usage enable row level security;
 drop policy if exists "Staff kan läsa AI-förbrukning" on ai_usage;
 create policy "Staff kan läsa AI-förbrukning" on ai_usage for select using (public.is_staff());
+
+-- ============================================================
+-- Felövervakning: fel från servern och webbläsaren (sidan /admin/fel).
+-- Kör en gång. Bara servern (service role) skriver, staff läser.
+-- ============================================================
+create table if not exists error_log (
+  id uuid primary key default gen_random_uuid(),
+  created_at timestamptz not null default now(),
+  source text not null check (source in ('server', 'client')),
+  fingerprint text not null,
+  message text not null,
+  stack text,
+  url text,
+  user_id uuid,
+  user_agent text,
+  context text,
+  alerted boolean not null default false
+);
+create index if not exists error_log_created_idx on error_log (created_at desc);
+create index if not exists error_log_fp_idx on error_log (fingerprint, created_at desc);
+alter table error_log enable row level security;
+drop policy if exists "Staff kan läsa fel" on error_log;
+create policy "Staff kan läsa fel" on error_log for select using (public.is_staff());

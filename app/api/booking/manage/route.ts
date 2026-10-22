@@ -7,6 +7,7 @@ import { loadSiteBookingData, sendBookingEmails, sendCancellationEmails } from "
 import { siteLocale } from "@/lib/i18n/site-server";
 import { LOCALES, isLocale } from "@/lib/i18n/config";
 import { CURRENCIES, isCurrency } from "@/lib/i18n/country";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Ägarens hantering av bokningen (sidan /bokningar). Allt går via
 // inloggad användare och Row Level Security; sajten kontrolleras också
@@ -29,7 +30,7 @@ async function ownedSite(siteId: unknown) {
   return { supabase, user, site } as const;
 }
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const siteId = new URL(request.url).searchParams.get("site");
   const ctx = await ownedSite(siteId);
   if ("error" in ctx) return ctx.error;
@@ -71,7 +72,7 @@ export async function GET(request: Request) {
   });
 }
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const body = await request.json().catch(() => ({}));
   const ctx = await ownedSite(body.siteId);
@@ -301,3 +302,6 @@ export async function POST(request: Request) {
       return fail(t("Okänt kommando."));
   }
 }
+
+export const GET = withErrorLog("GET /api/booking/manage", GET_handler);
+export const POST = withErrorLog("POST /api/booking/manage", POST_handler);

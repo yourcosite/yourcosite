@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getLocale } from "@/lib/i18n/server";
 import { translateText } from "@/lib/translate";
 import { rateLimited, TOO_MANY } from "@/lib/rateLimit";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Tar emot meddelanden kunder skickar direkt till oss via kundportalen —
 // "Kontakta oss" i kontomenyn (components/AccountHeader.tsx) eller knappen
@@ -15,7 +16,7 @@ const ALLOWED_SOURCES = ["konto", "chattredigerare", "ovrigt"] as const;
 const MAX_MESSAGE_LENGTH = 4000;
 const MAX_CONTEXT_LENGTH = 4000;
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -75,3 +76,5 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
+
+export const POST = withErrorLog("POST /api/support/messages", POST_handler);

@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/supabase/requireRole";
+import { withErrorLog } from "@/lib/errorLog";
 
-export async function GET(request: Request) {
+async function GET_handler(request: Request) {
   const check = await requireRole(["support", "admin", "superadmin"]);
   if (check.error) return check.error;
 
@@ -20,3 +21,5 @@ export async function GET(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ results: data });
 }
+
+export const GET = withErrorLog("GET /api/admin/search", GET_handler);

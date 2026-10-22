@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isAllowedImageUrl, isUnsplashImageUrl } from "@/lib/stockPhotos";
 import { getOrCreateDraftSite, draftLimitResponse } from "@/lib/supabase/onboardingSite";
+import { withErrorLog } from "@/lib/errorLog";
 
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp"];
 const DOCUMENT_TYPES = [
@@ -11,7 +12,7 @@ const DOCUMENT_TYPES = [
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
 
-export async function GET() {
+async function GET_handler() {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -39,7 +40,7 @@ export async function GET() {
 // emot URL:en och sparar en rad — själva filbytena går aldrig via vår
 // server, så Vercels gräns för request-storlek (~4.5 MB) spelar ingen
 // roll längre, oavsett hur många filer eller hur stora de är.
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -89,3 +90,6 @@ export async function POST(request: Request) {
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ asset: row });
 }
+
+export const GET = withErrorLog("GET /api/onboarding/assets", GET_handler);
+export const POST = withErrorLog("POST /api/onboarding/assets", POST_handler);

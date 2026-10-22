@@ -3,12 +3,13 @@ import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Exporterar all lagrad data om en kund, i enlighet med GDPR:s rätt till
 // registerutdrag. Inkluderar profil, sajter, sajtsidor och interna
 // anteckningar (anteckningarna räknas som personuppgifter om kunden
 // eftersom de innehåller bedömningar/information om personen).
-export async function GET(request: Request, { params }: { params: { id: string } }) {
+async function GET_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
@@ -72,3 +73,5 @@ export async function GET(request: Request, { params }: { params: { id: string }
     },
   });
 }
+
+export const GET = withErrorLog("GET /api/admin/customers/[id]/export", GET_handler);

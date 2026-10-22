@@ -90,7 +90,7 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
     if (
-      (path.startsWith("/admin/ekonomi") || path.startsWith("/admin/aktivitet")) &&
+      (path.startsWith("/admin/ekonomi") || path.startsWith("/admin/aktivitet") || path.startsWith("/admin/fel") || path.startsWith("/admin/ai-kostnad")) &&
       role === "support"
     ) {
       const url = request.nextUrl.clone();

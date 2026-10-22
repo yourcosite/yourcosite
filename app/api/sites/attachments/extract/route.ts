@@ -1,6 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Läser ut ren text ur en bifogad PDF eller Word-fil (redan uppladdad till
 // Storage av klienten, se app/redigera/page.tsx) så chattredigeraren kan
@@ -11,7 +12,7 @@ export const maxDuration = 30;
 
 const MAX_CHARS = 20000;
 
-export async function POST(request: Request) {
+async function POST_handler(request: Request) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -70,3 +71,5 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ text });
 }
+
+export const POST = withErrorLog("POST /api/sites/attachments/extract", POST_handler);

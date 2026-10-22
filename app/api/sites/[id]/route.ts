@@ -3,13 +3,14 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, uniquePagePath, type SiteContent } from "@/lib/contentModel";
 import { parentPathOf, movePage, reparentPage, placePage } from "@/lib/pageTree";
+import { withErrorLog } from "@/lib/errorLog";
 
 // Lägger till, döper om eller tar bort en SIDA direkt — till skillnad från
 // /api/sites/edit (Millie i chatten, som tolkar fri text och kan ändra
 // sektionsinnehåll) är det här en ren CRUD-väg för sidlistan själv, använd
 // av "Sidor"-panelen (app/sidor/page.tsx). Ingen AI inblandad: kunden
 // skriver namnet, koden gör sökvägen av det, sparas direkt.
-export async function PATCH(request: Request, { params }: { params: { id: string } }) {
+async function PATCH_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -117,7 +118,7 @@ export async function PATCH(request: Request, { params }: { params: { id: string
 // RLS ("Ägare kan ta bort sina sajter") säkerställer att man bara kan ta
 // bort sina egna — sidor, filer och aktivitet som hänger på sajten tas
 // bort automatiskt via on-delete-cascade i databasen.
-export async function DELETE(request: Request, { params }: { params: { id: string } }) {
+async function DELETE_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -128,3 +129,6 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   return NextResponse.json({ ok: true });
 }
+
+export const PATCH = withErrorLog("PATCH /api/sites/[id]", PATCH_handler);
+export const DELETE = withErrorLog("DELETE /api/sites/[id]", DELETE_handler);
