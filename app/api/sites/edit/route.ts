@@ -709,7 +709,9 @@ export async function POST(request: Request) {
       // praktiken nästan aldrig behövdes — sänkt för att inte ge modellen
       // utrymme att av misstag ändå skriva ut mer än nödvändigt.
       max_tokens: 4000,
-      tools: [EDIT_TOOL],
+      // Verktygsschemat är lika vid varje anrop — cacheas så att det inte
+      // behöver bearbetas på nytt (snabbare svar och lägre kostnad).
+      tools: [{ ...EDIT_TOOL, cache_control: { type: "ephemeral" } }],
       tool_choice: { type: "tool", name: "edit_site" },
       messages,
     });

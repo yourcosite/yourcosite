@@ -6,11 +6,16 @@ import { msg } from "@/lib/i18n/config";
 import { useT, useLocale } from "@/components/I18nProvider";
 import { BCP47 } from "@/lib/i18n/country";
 import { LOCALE_NAMES } from "@/lib/i18n/config";
-import { useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import Millie from "@/components/Millie";
 import SitePreview, { FieldEditContext } from "@/components/SitePreview";
+
+// Förhandsvisningen är tung (hela sajten ritas). Den memoiseras så att den
+// INTE ritas om för varje tecken man skriver i chatten eller varje tick i
+// förloppsstapeln, bara när sajtens innehåll eller markeringen ändras.
+const MemoSitePreview = memo(SitePreview);
 import ContactSupportModal from "@/components/ContactSupportModal";
 import TrackingSettingsModal from "@/components/TrackingSettingsModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
@@ -312,6 +317,17 @@ export default function EditorPage() {
   }, [sending]);
 
   const [selection, setSelection] = useState<Selection | null>(null);
+
+  // Stabila callbacks till den memoiserade förhandsvisningen.
+  const onPreviewNavigate = useCallback((path: string) => {
+    // Byter kunden sida medan något är markerat, ta bort markeringen — den
+    // syftade på innehåll på den gamla sidan.
+    setSelection(null);
+    setActivePath(path);
+  }, []);
+  const onPreviewSelectImage = useCallback((sel: any) => setSelection((prev) => (prev?.key === sel.key ? null : { target: "image", ...sel })), []);
+  const onPreviewSelectSection = useCallback((sel: any) => setSelection((prev) => (prev?.key === sel.key ? null : { target: "section", ...sel })), []);
+  const onPreviewSelectField = useCallback((sel: any) => setSelection((prev) => (prev?.key === sel.key ? null : { target: "field", ...sel })), []);
 
   // Flera bilagor samtidigt (t.ex. en hel hög bilder till ett nytt
   // bildgalleri) — se handleFiles nedan.
@@ -922,6 +938,26 @@ export default function EditorPage() {
     }
   };
 
+  // Stabilt context-värde: funktionerna ovan skapas om varje rendering, men
+  // vi anropar alltid senaste versionen via en ref. Utan det skulle varje
+  // tecken i chatten få alla textfält i förhandsvisningen att ritas om.
+  const fieldEditLatest = useRef({ openTextEditor, openLinkEditor, testLink });
+  fieldEditLatest.current = { openTextEditor, openLinkEditor, testLink };
+  const canEditText = selection?.target === "field" && selectedFieldText !== null;
+  const canEditLink = !!selectedLinkField;
+  const canTestLink = selectedLinkValue !== "";
+  const fieldEditValue = useMemo(
+    () => ({
+      canEditText,
+      onEditText: () => fieldEditLatest.current.openTextEditor(),
+      canEditLink,
+      onEditLink: () => fieldEditLatest.current.openLinkEditor(),
+      canTestLink,
+      onTestLink: () => fieldEditLatest.current.testLink(),
+    }),
+    [canEditText, canEditLink, canTestLink]
+  );
+
   const send = async (override?: string) => {
     const text = (override ?? draft).trim();
     if ((!text && attachments.length === 0) || sending || attaching) return;
@@ -1230,48 +1266,26 @@ export default function EditorPage() {
                     </div>
                   </div>
                 )}
-                <FieldEditContext.Provider
-                  value={{
-                    canEditText: selection?.target === "field" && selectedFieldText !== null,
-                    onEditText: openTextEditor,
-                    canEditLink: !!selectedLinkField,
-                    onEditLink: openLinkEditor,
-                    canTestLink: selectedLinkValue !== "",
-                    onTestLink: testLink,
-                  }}
-                >
-                <SitePreview
+                <FieldEditContext.Provider value={fieldEditValue}>
+                <MemoSitePreview
                   bookingPreviewSiteId={site?.id}
                   content={content}
                   siteName={site?.name}
                   lang={site?.language}
                   currency={site?.currency}
                   activePath={activePath}
-                  onNavigate={(path) => {
-                    // Byter kunden sida medan något är markerat, ta bort
-                    // markeringen — den syftade på innehåll på den gamla
-                    // sidan, och att låta den "hänga kvar" skulle kunna
-                    // ställa chattens nästa ändring på fel sida.
-                    setSelection(null);
-                    setActivePath(path);
-                  }}
+                  onNavigate={onPreviewNavigate}
                   privacyPolicyMode={site?.privacy_policy_mode}
                   privacyPolicyFileUrl={site?.privacy_policy_file_url}
                   privacyPolicyText={site?.privacy_policy_text}
                   newsArticles={newsArticles}
                   editable
                   selectedImageKey={selection?.target === "image" ? selection.key : null}
-                  onSelectImage={(sel) =>
-                    setSelection((prev) => (prev?.key === sel.key ? null : { target: "image", ...sel }))
-                  }
+                  onSelectImage={onPreviewSelectImage}
                   selectedSectionKey={selection?.target === "section" ? selection.key : null}
-                  onSelectSection={(sel) =>
-                    setSelection((prev) => (prev?.key === sel.key ? null : { target: "section", ...sel }))
-                  }
+                  onSelectSection={onPreviewSelectSection}
                   selectedFieldKey={selection?.target === "field" ? selection.key : null}
-                  onSelectField={(sel) =>
-                    setSelection((prev) => (prev?.key === sel.key ? null : { target: "field", ...sel }))
-                  }
+                  onSelectField={onPreviewSelectField}
                 />
                 </FieldEditContext.Provider>
               </div>
