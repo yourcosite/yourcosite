@@ -352,6 +352,31 @@ export interface GallerySection {
   bgColor?: string;
 }
 
+export type TeamLayout = "cards" | "round" | "rows" | "overlay";
+export const TEAM_LAYOUTS: TeamLayout[] = ["cards", "round", "rows", "overlay"];
+export const MAX_TEAM_MEMBERS = 24;
+
+// En person på kontaktsidan. Bild, namn och titel är det som krävs — e-post
+// och telefon är valfria och visas bara när de finns.
+export interface TeamItem {
+  // Tilldelas i kod (uppladdning i redigeraren), aldrig en påhittad adress.
+  imageUrl?: string;
+  name: string;
+  title: string;
+  email?: string;
+  phone?: string;
+}
+
+export interface TeamSection {
+  id: string;
+  type: "team";
+  layout: TeamLayout;
+  heading: string;
+  intro?: string;
+  items: TeamItem[];
+  bgColor?: string;
+}
+
 export interface FaqItem {
   question: string;
   answer: string;
@@ -501,6 +526,7 @@ export type Section = (
   | CtaSection
   | ContactSection
   | GallerySection
+  | TeamSection
   | FaqSection
   | MapSection
   | VideoSection
@@ -606,6 +632,7 @@ const VALID_SECTION_TYPES = [
   "cta",
   "contact",
   "gallery",
+  "team",
   "faq",
   "map",
   "video",

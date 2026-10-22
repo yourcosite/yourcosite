@@ -13,6 +13,7 @@ const TEXT_FIELDS = new Set([
   "ctaLabel",
   "submitLabel",
   "title",
+  "name",
   "caption",
   "question",
   "answer",

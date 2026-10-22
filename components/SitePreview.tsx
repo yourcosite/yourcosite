@@ -6,7 +6,7 @@ import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n
 import { useState, useEffect, useRef, useCallback, createContext, useContext, createElement } from "react";
 import Script from "next/script";
 import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
@@ -1497,7 +1497,9 @@ function ImageOrArt({
   natural,
   onOpen,
   lazy,
+  children,
 }: {
+  children?: React.ReactNode;
   imageUrl?: string;
   art: string;
   className?: string;
@@ -1536,6 +1538,7 @@ function ImageOrArt({
           {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
         </>
       )}
+      {!imageUrl && children}
       {selectable && (
         <div
           className={`absolute inset-0 flex items-center justify-center transition-opacity ${
@@ -2552,7 +2555,7 @@ function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
       return te("nyhetssektionen “{h}”", { h });
     case "booking":
       return te("bokningssektionen “{h}”", { h });
-    case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "faq": case "contactForm":
+    case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "team": case "faq": case "contactForm":
       return te("sektionen “{h}”", { h });
     default:
       return te("den här sektionen");
@@ -2663,6 +2666,13 @@ function SectionBlockInner({
   const galleryItemSelection = (i: number): (ImageSelection & { key: string }) | undefined =>
     editable && pagePath
       ? { key: galleryItemKey(i), pagePath, sectionId: section.id, kind: "galleryItem", itemIndex: i, label: `bild ${i + 1} i galleriet` }
+      : undefined;
+
+  // Foto på en person i personsektionen (team) — samma bildtyp som
+  // galleriet, adresserad med index i sektionens items.
+  const teamItemSelection = (i: number, name: string): (ImageSelection & { key: string }) | undefined =>
+    editable && pagePath
+      ? { key: `${pagePath}::team::${section.id}::${i}`, pagePath, sectionId: section.id, kind: "galleryItem", itemIndex: i, label: `fotot på ${name || `person ${i + 1}`}` }
       : undefined;
 
   // field matchar EXAKT egenskapsnamnet i innehållsmodellen (se
@@ -5138,6 +5148,196 @@ function SectionBlockInner({
               <SocialIcons socialLinks={socialLinks} palette={palette} />
             </div>
           )}
+        </div>
+      );
+    }
+
+    case "team": {
+      const layout = section.layout || "cards";
+      const hueOf = (i: number) => [accent, secondary[0], secondary[1]][i % 3] || accent;
+      const initials = (name: string) =>
+        name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
+      const headingEl = (
+        <Field
+          editable={editable}
+          as="h2"
+          className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center"
+          selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+          onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+        >
+          {section.heading}
+        </Field>
+      );
+      const introEl = section.intro ? (
+        <Field
+          editable={editable}
+          as="p"
+          className="text-[15px] text-center max-w-[560px] mx-auto mb-2"
+          style={{ color: palette.textDim }}
+          selected={selectedFieldKey === fieldSel("intro", section.intro, "inledningen")?.key}
+          onSelect={() => { const s = fieldSel("intro", section.intro, "inledningen"); s && onSelectField?.(s); }}
+        >
+          {section.intro}
+        </Field>
+      ) : null;
+      const photo = (item: TeamItem, i: number, className: string, fill = false) => {
+        const itemSel = teamItemSelection(i, item.name);
+        return (
+          <ImageOrArt
+            imageUrl={item.imageUrl}
+            art={`linear-gradient(145deg, ${hueOf(i)}66, ${hueOf(i)}22)`}
+            className={className}
+            fill={fill}
+            lazy
+            selectable={editable}
+            selected={!!itemSel && selectedImageKey === itemSel.key}
+            onSelect={() => itemSel && onSelectImage?.(itemSel)}
+          >
+            {!item.imageUrl && (
+              <span className="absolute inset-0 flex items-center justify-center font-heading text-[28px] opacity-60" style={{ color: palette.text }}>
+                {initials(item.name)}
+              </span>
+            )}
+          </ImageOrArt>
+        );
+      };
+      const nameEl = (item: TeamItem, i: number, cls: string, style?: React.CSSProperties) => (
+        <Field
+          editable={editable}
+          as="div"
+          className={cls}
+          style={style}
+          selected={selectedFieldKey === fieldSel(`items.${i}.name`, item.name, "namnet", i)?.key}
+          onSelect={() => { const s = fieldSel("name", item.name, "namnet", i); s && onSelectField?.(s); }}
+        >
+          {item.name}
+        </Field>
+      );
+      const titleEl = (item: TeamItem, i: number, cls: string, style?: React.CSSProperties) => (
+        <Field
+          editable={editable}
+          as="div"
+          className={cls}
+          style={style}
+          selected={selectedFieldKey === fieldSel("title", item.title, "titeln", i)?.key}
+          onSelect={() => { const s = fieldSel("title", item.title, "titeln", i); s && onSelectField?.(s); }}
+        >
+          {item.title}
+        </Field>
+      );
+      // E-post och telefon är klickbara länkar på den riktiga sajten och
+      // vanlig text (markerbar) i redigeraren.
+      const contactEls = (item: TeamItem, i: number, center: boolean, color?: string) => {
+        const rows: React.ReactNode[] = [];
+        const cls = `text-[13px] [overflow-wrap:anywhere] ${center ? "text-center" : ""}`;
+        if (item.email) {
+          rows.push(
+            <Field
+              key="e"
+              editable={editable}
+              as="div"
+              className={cls}
+              style={{ color: color || accent }}
+              selected={selectedFieldKey === fieldSel("email", item.email, "e-postadressen", i)?.key}
+              onSelect={() => { const s = fieldSel("email", item.email, "e-postadressen", i); s && onSelectField?.(s); }}
+            >
+              {editable ? item.email : <a href={`mailto:${item.email}`} className="hover:underline">{item.email}</a>}
+            </Field>
+          );
+        }
+        if (item.phone) {
+          rows.push(
+            <Field
+              key="p"
+              editable={editable}
+              as="div"
+              className={cls}
+              style={{ color: color || palette.textDim }}
+              selected={selectedFieldKey === fieldSel("phone", item.phone, "telefonnumret", i)?.key}
+              onSelect={() => { const s = fieldSel("phone", item.phone, "telefonnumret", i); s && onSelectField?.(s); }}
+            >
+              {editable ? item.phone : <a href={`tel:${item.phone.replace(/[^+\d]/g, "")}`} className="hover:underline">{item.phone}</a>}
+            </Field>
+          );
+        }
+        return rows.length ? <div className="mt-2 flex flex-col gap-0.5">{rows}</div> : null;
+      };
+      const wrap = (inner: React.ReactNode, max = "max-w-[1000px]") => (
+        <div className={`px-6 @3xl:px-10 py-16 ${max} mx-auto`} style={{ background: sectionBg }}>
+          {headingEl}
+          {introEl}
+          <div className="mt-8">{inner}</div>
+        </div>
+      );
+
+      if (layout === "round") {
+        return wrap(
+          <div className="grid grid-cols-2 @3xl:grid-cols-3 gap-x-5 gap-y-9">
+            {section.items.map((item, i) => (
+              <div key={i} className="flex flex-col items-center text-center">
+                {photo(item, i, "w-28 h-28 @3xl:w-36 @3xl:h-36 rounded-full")}
+                {nameEl(item, i, "font-heading text-[17px] mt-3")}
+                {titleEl(item, i, "text-[13.5px]", { color: palette.textDim })}
+                {contactEls(item, i, true)}
+              </div>
+            ))}
+          </div>
+        );
+      }
+
+      if (layout === "rows") {
+        return wrap(
+          <div>
+            {section.items.map((item, i) => (
+              <div key={i} className="flex flex-wrap items-center gap-x-4 gap-y-1 @3xl:gap-x-6 py-4" style={{ borderTop: i === 0 ? "none" : `1px solid ${palette.cardBorder}` }}>
+                {photo(item, i, "w-16 h-16 @3xl:w-20 @3xl:h-20 rounded-full flex-shrink-0")}
+                <div className="min-w-0 flex-1 basis-40">
+                  {nameEl(item, i, "font-heading text-[17px]")}
+                  {titleEl(item, i, "text-[13.5px]", { color: palette.textDim })}
+                </div>
+                <div className="min-w-0 w-full pl-20 text-left @3xl:w-auto @3xl:max-w-[45%] @3xl:pl-0 @3xl:text-right">{contactEls(item, i, false)}</div>
+              </div>
+            ))}
+          </div>,
+          "max-w-[820px]"
+        );
+      }
+
+      if (layout === "overlay") {
+        return wrap(
+          <div className="grid grid-cols-1 @xl:grid-cols-2 @3xl:grid-cols-3 gap-3 @3xl:gap-4">
+            {section.items.map((item, i) => (
+              <div key={i}>
+                <div className="relative aspect-[4/5] rounded-xl overflow-hidden">
+                  {photo(item, i, "rounded-xl", true)}
+                  <div className="absolute inset-x-0 bottom-0 p-3 pt-10 pointer-events-none" style={{ background: "linear-gradient(to top, rgba(0,0,0,.72), rgba(0,0,0,0))" }}>
+                    <div className="pointer-events-auto">
+                      {nameEl(item, i, "font-heading text-[16px]", { color: "#FFFFFF" })}
+                      {titleEl(item, i, "text-[12.5px]", { color: "rgba(255,255,255,.85)" })}
+                      {contactEls(item, i, false, "rgba(255,255,255,.92)")}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>,
+          "max-w-[1100px]"
+        );
+      }
+
+      // cards (standard)
+      return wrap(
+        <div className="grid grid-cols-1 @xl:grid-cols-2 @3xl:grid-cols-3 gap-4">
+          {section.items.map((item, i) => (
+            <div key={i} className="rounded-2xl overflow-hidden" style={{ background: palette.cardBg, border: `1px solid ${palette.cardBorder}` }}>
+              {photo(item, i, "aspect-[4/3]")}
+              <div className="p-4">
+                {nameEl(item, i, "font-heading text-[18px]")}
+                {titleEl(item, i, "text-[13.5px]", { color: palette.textDim })}
+                {contactEls(item, i, false)}
+              </div>
+            </div>
+          ))}
         </div>
       );
     }

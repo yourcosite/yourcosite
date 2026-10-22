@@ -264,6 +264,37 @@ const RAW_SECTION_SCHEMA = {
       type: "object",
       properties: {
         id: { type: "string" },
+        type: { const: "team" },
+        layout: {
+          type: "string",
+          enum: ["cards", "round", "rows", "overlay"],
+          description:
+            "\"cards\": kort med foto överst och text under. \"round\": runda porträtt med text centrerad under (personligt, passar små team). \"rows\": en rad per person med foto till vänster och kontaktuppgifter till höger (passar många personer). \"overlay\": stora foton med namn och titel över bildens nederkant.",
+        },
+        heading: { type: "string" },
+        intro: { type: "string" },
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              imageUrl: { type: "string" },
+              name: { type: "string" },
+              title: { type: "string" },
+              email: { type: "string" },
+              phone: { type: "string" },
+            },
+            required: ["name", "title"],
+          },
+        },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "layout", "heading", "items"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
         type: { const: "faq" },
         layout: {
           type: "string",

@@ -24,7 +24,7 @@ import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
-import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, MAX_GALLERY_IMAGES, type GalleryLayout, type GridLayout, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, type GalleryLayout, type GridLayout, type TeamLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -95,6 +95,13 @@ const GRID_LAYOUT_LABELS: Record<GridLayout, string> = {
   "icon-circles": msg("Ikoncirklar"),
   "icon-list": msg("Ikonlista"),
   "icon-top-rule": msg("Ikoner med linje"),
+};
+
+const TEAM_LAYOUT_LABELS: Record<TeamLayout, string> = {
+  cards: msg("Kort"),
+  round: msg("Runda porträtt"),
+  rows: msg("Lista"),
+  overlay: msg("Foto med text över"),
 };
 
 const GALLERY_LAYOUT_LABELS: Record<GalleryLayout, string> = {
@@ -877,8 +884,12 @@ export default function EditorPage() {
   const pickedIconId =
     pickedIconIndex !== null && pickedSection?.type === "grid" ? iconsForItems(pickedSection.items)[pickedIconIndex] ?? null : null;
   const canPickIcon = pickedIconIndex !== null && pickedSection?.type === "grid";
-  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery");
-  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : GRID_LAYOUTS;
+  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery" || pickedSection?.type === "team");
+  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : pickedSection?.type === "team" ? TEAM_LAYOUTS : GRID_LAYOUTS;
+  const layoutLabelOf = (l: string) =>
+    pickedSection?.type === "team"
+      ? (TEAM_LAYOUT_LABELS as Record<string, string>)[l] ?? l
+      : (GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l;
   const savePick = async (url: string, payload: Record<string, unknown>, okText: string) => {
     if (!selection || !content) return;
     setSavingPick(true);
@@ -894,6 +905,7 @@ export default function EditorPage() {
       setContent(data.content);
       setIconPickerOpen(false);
       setLayoutPickerOpen(false);
+      setTeamOpen(false);
       setSelection(null);
       setMessages((m) => [...m, { from: "bot", text: okText }]);
     } catch (e: any) {
@@ -945,6 +957,69 @@ export default function EditorPage() {
     selectedGalleryIndex !== null
       ? savePick("/api/sites/edit-gallery", { action: "remove", index: selectedGalleryIndex }, t("Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig."))
       : undefined;
+  // Personsektion (team): en egen redigeringsruta för alla personer.
+  type TeamDraft = { key: string; imageUrl: string; name: string; title: string; email: string; phone: string; busy?: boolean };
+  const [teamOpen, setTeamOpen] = useState(false);
+  const [teamDraft, setTeamDraft] = useState<TeamDraft[]>([]);
+  const [teamError, setTeamError] = useState("");
+  const canEditTeam = !!selection && pickedSection?.type === "team";
+  const teamKeyRef = useRef(0);
+  const newTeamRow = (m?: Partial<TeamDraft>): TeamDraft => ({
+    key: `m${++teamKeyRef.current}`,
+    imageUrl: m?.imageUrl ?? "",
+    name: m?.name ?? "",
+    title: m?.title ?? "",
+    email: m?.email ?? "",
+    phone: m?.phone ?? "",
+  });
+  const openTeamEditor = () => {
+    if (pickedSection?.type !== "team") return;
+    const rows = (pickedSection.items as any[]).map((it) => newTeamRow(it));
+    setTeamDraft(rows.length ? rows : [newTeamRow()]);
+    setTeamError("");
+    setTeamOpen(true);
+  };
+  const patchTeamRow = (key: string, patch: Partial<TeamDraft>) =>
+    setTeamDraft((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const moveTeamRow = (index: number, dir: -1 | 1) =>
+    setTeamDraft((rows) => {
+      const j = index + dir;
+      if (j < 0 || j >= rows.length) return rows;
+      const next = [...rows];
+      [next[index], next[j]] = [next[j], next[index]];
+      return next;
+    });
+  const uploadTeamPhoto = async (key: string, file: File | undefined) => {
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setTeamError(t("{name}: filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.", { name: file.name }));
+      return;
+    }
+    patchTeamRow(key, { busy: true });
+    setTeamError("");
+    try {
+      patchTeamRow(key, { imageUrl: (await uploadOneFile(file)).url, busy: false });
+    } catch (e: any) {
+      patchTeamRow(key, { busy: false });
+      setTeamError(e.message);
+    }
+  };
+  const saveTeam = async () => {
+    for (let n = 0; n < teamDraft.length; n++) {
+      const r = teamDraft[n];
+      if (r.busy) { setTeamError(t("Vänta tills fotot är uppladdat.")); return; }
+      if (!r.imageUrl || !r.name.trim() || !r.title.trim()) {
+        setTeamError(t("Person {n}: foto, namn och titel krävs.", { n: n + 1 }));
+        return;
+      }
+    }
+    setTeamError("");
+    await savePick(
+      "/api/sites/edit-team",
+      { members: teamDraft.map((r) => ({ imageUrl: r.imageUrl, name: r.name, title: r.title, email: r.email, phone: r.phone })) },
+      t("Klart! Personerna är sparade. Du kan ångra med knappen om du ändrar dig.")
+    );
+  };
   const saveLayout = (layout: string) =>
     savePick("/api/sites/edit-layout", { layout }, t("Klart! Layouten är bytt. Du kan ångra med knappen om du ändrar dig."));
 
@@ -1649,6 +1724,68 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
+            {teamOpen && canEditTeam && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-xl shadow-xl max-h-[90vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Personer")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{t("Foto, namn och titel krävs. E-post och telefon är valfria och visas bara om du fyller i dem.")}</div>
+                  <div className="overflow-y-auto pr-1 flex flex-col gap-3">
+                    {teamDraft.map((r, n) => (
+                      <div key={r.key} className="border border-line rounded-xl p-3 flex gap-3">
+                        <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                          <label className="relative w-16 h-16 rounded-full overflow-hidden bg-bg border border-line flex items-center justify-center cursor-pointer text-[11px] text-ink-dim text-center">
+                            {r.imageUrl ? (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img src={r.imageUrl} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                            ) : (
+                              <span className="px-1">{r.busy ? t("Laddar upp …") : t("Välj foto")}</span>
+                            )}
+                            <input
+                              type="file"
+                              accept="image/png,image/jpeg,image/webp,image/gif"
+                              className="hidden"
+                              disabled={savingPick || r.busy}
+                              onChange={(e) => { uploadTeamPhoto(r.key, e.target.files?.[0]); e.target.value = ""; }}
+                            />
+                          </label>
+                          {r.imageUrl && (
+                            <span className="text-[11px] text-ink-dim">{r.busy ? t("Laddar upp …") : t("Klicka för att byta")}</span>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input value={r.name} onChange={(e) => patchTeamRow(r.key, { name: e.target.value })} maxLength={80} placeholder={t("Namn (krävs)")} aria-label={t("Namn (krävs)")} className="bg-bg border border-line rounded-lg p-2 text-[13.5px] outline-none min-w-0" />
+                          <input value={r.title} onChange={(e) => patchTeamRow(r.key, { title: e.target.value })} maxLength={100} placeholder={t("Titel (krävs)")} aria-label={t("Titel (krävs)")} className="bg-bg border border-line rounded-lg p-2 text-[13.5px] outline-none min-w-0" />
+                          <input type="email" value={r.email} onChange={(e) => patchTeamRow(r.key, { email: e.target.value })} maxLength={120} placeholder={t("E-post (valfritt)")} aria-label={t("E-post (valfritt)")} className="bg-bg border border-line rounded-lg p-2 text-[13.5px] outline-none min-w-0" />
+                          <input type="tel" value={r.phone} onChange={(e) => patchTeamRow(r.key, { phone: e.target.value })} maxLength={40} placeholder={t("Telefon (valfritt)")} aria-label={t("Telefon (valfritt)")} className="bg-bg border border-line rounded-lg p-2 text-[13.5px] outline-none min-w-0" />
+                        </div>
+                        <div className="flex flex-col gap-1 flex-shrink-0">
+                          <button type="button" onClick={() => moveTeamRow(n, -1)} disabled={n === 0} aria-label={t("Flytta upp")} className="w-7 h-7 rounded-full border border-line text-[13px] disabled:opacity-30">↑</button>
+                          <button type="button" onClick={() => moveTeamRow(n, 1)} disabled={n === teamDraft.length - 1} aria-label={t("Flytta ner")} className="w-7 h-7 rounded-full border border-line text-[13px] disabled:opacity-30">↓</button>
+                          <button type="button" onClick={() => setTeamDraft((rows) => rows.filter((x) => x.key !== r.key))} aria-label={t("Ta bort personen")} className="w-7 h-7 rounded-full border border-line text-[13px]">🗑</button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setTeamDraft((rows) => [...rows, newTeamRow()])}
+                      disabled={teamDraft.length >= MAX_TEAM_MEMBERS}
+                      className="text-[13px] font-semibold border border-dashed border-line rounded-xl py-2 disabled:opacity-40"
+                    >
+                      {t("➕ Lägg till person")}
+                    </button>
+                  </div>
+                  {teamError && <div className="text-[12.5px] text-red-600 mt-2" role="alert">{teamError}</div>}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button type="button" onClick={() => setTeamOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      {t("Avbryt")}
+                    </button>
+                    <button type="button" onClick={saveTeam} disabled={savingPick || teamDraft.length === 0} className="text-[13px] font-semibold px-3 py-1.5 rounded-full bg-accent text-accent-ink disabled:opacity-60">
+                      {savingPick ? t("Sparar …") : t("Spara")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {layoutPickerOpen && canPickLayout && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-lg shadow-xl max-h-[85vh] flex flex-col">
@@ -1663,8 +1800,8 @@ export default function EditorPage() {
                         onClick={() => saveLayout(l)}
                         className={`rounded-xl border p-2 text-left disabled:opacity-60 ${l === pickedSection?.layout ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
                       >
-                        <GridLayoutThumb layout={l as GridLayout | GalleryLayout} accent={content?.theme.accentColor} />
-                        <div className="text-[12.5px] font-semibold mt-1.5">{t((GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l)}</div>
+                        <GridLayoutThumb layout={l as GridLayout | GalleryLayout | TeamLayout} accent={content?.theme.accentColor} />
+                        <div className="text-[12.5px] font-semibold mt-1.5">{t(layoutLabelOf(l))}</div>
                       </button>
                     ))}
                   </div>
@@ -1781,6 +1918,16 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     {t("🗑 Ta bort bilden")}
+                  </button>
+                )}
+                {canEditTeam && (
+                  <button
+                    type="button"
+                    onClick={openTeamEditor}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("👥 Redigera personer")}
                   </button>
                 )}
                 {canPickLayout && (

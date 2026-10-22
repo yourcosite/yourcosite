@@ -1,4 +1,4 @@
-import type { GalleryLayout, GridLayout } from "@/lib/contentModel";
+import type { GalleryLayout, GridLayout, TeamLayout } from "@/lib/contentModel";
 
 // Små schematiska förhandsbilder av rutnätssektionens layouter, till
 // layoutväljaren i redigeraren. Ritade med två toner: färgen för detaljer
@@ -16,7 +16,7 @@ function Lines({ x, y, w, n = 2, c }: { x: number; y: number; w: number; n?: num
   );
 }
 
-export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout: GridLayout | GalleryLayout; accent?: string }) {
+export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout: GridLayout | GalleryLayout | TeamLayout; accent?: string }) {
   const dim = "currentColor";
   const dimOp = 0.28;
   const cols3 = [8, 45, 82];
@@ -173,6 +173,35 @@ export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout
           ))}
         </>
       );
+      break;
+    case "round":
+      body = cols3.map((x, i) => (
+        <g key={x}>
+          <circle cx={x + 15} cy={28} r={12} fill={accent} fillOpacity={0.4 + i * 0.1} />
+          <rect x={x + 5} y={46} width={20} height={3} rx={1.5} fill={dim} opacity={0.6} />
+          <rect x={x + 8} y={52} width={14} height={2.4} rx={1.2} fill={dim} opacity={0.3} />
+        </g>
+      ));
+      break;
+    case "rows":
+      body = [0, 1, 2].map((r) => (
+        <g key={r}>
+          <circle cx={18} cy={19 + r * 19} r={7} fill={accent} fillOpacity={0.4 + r * 0.1} />
+          <rect x={30} y={15 + r * 19} width={34} height={3} rx={1.5} fill={dim} opacity={0.6} />
+          <rect x={30} y={21 + r * 19} width={22} height={2.4} rx={1.2} fill={dim} opacity={0.3} />
+          <rect x={80} y={17 + r * 19} width={32} height={2.4} rx={1.2} fill={dim} opacity={0.3} />
+        </g>
+      ));
+      break;
+    case "overlay":
+      body = cols3.map((x, i) => (
+        <g key={x}>
+          <rect x={x} y={10} width={30} height={56} rx={4} fill={accent} fillOpacity={0.3 + i * 0.1} />
+          <rect x={x} y={44} width={30} height={22} rx={4} fill="#000" fillOpacity={0.35} />
+          <rect x={x + 4} y={52} width={18} height={3} rx={1.5} fill="#fff" opacity={0.9} />
+          <rect x={x + 4} y={58} width={12} height={2.4} rx={1.2} fill="#fff" opacity={0.6} />
+        </g>
+      ));
       break;
     case "carousel":
       body = (
