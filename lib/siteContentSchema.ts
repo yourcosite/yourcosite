@@ -1,3 +1,4 @@
+import { GRID_ICON_IDS as ICON_IDS } from "./gridIcons";
 // Delat JSON-schema för sajtens innehållsmodell (lib/contentModel.ts),
 // använt av både /api/sites/generate (hela sajten på en gång, i
 // onboardingen) och /api/sites/edit (en riktad ändring i chattredigeraren)
@@ -114,9 +115,9 @@ const RAW_SECTION_SCHEMA = {
         type: { const: "grid" },
         layout: {
           type: "string",
-          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided"],
+          enum: ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided", "icon-cards", "icon-circles", "icon-list", "icon-top-rule"],
           description:
-            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll. \"divided-columns\" (ny): tre kolumner MED en tunn lodrät linje mellan varje (ingen egen kortbakgrund), en liten geometrisk symbol ovanför varje rubrik och en dekorativ \"Läs mer\"-rad under texten — passar 3 items bäst (en tjänste-/expertis-sektion). \"intro-divided\" (ny): en EGEN vänsterkolumn med eyebrow + rubrik + en kort introtext + knapp (använd fälten eyebrow/intro/ctaLabel/ctaLink, bara meningsfulla för DEN HÄR layouten), bredvid (inte ovanför) resten av items som avdelade kort likt \"divided-columns\". Passar 3 items i korten (4 kolumner totalt: 1 intro + 3 kort).",
+            "\"bento\": ett asymmetriskt rutnät där det FÖRSTA objektet i items visas större (dubbel bredd/höjd) och resten mindre, som en modern \"bento box\"-layout — ger variation i storlek istället för jämna rutor. Passar 3-5 items. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"icon-row\" (ny): en smal rad med 3-4 korta punkter (bara rubrik + kort body, ingen bild) i jämna kolumner, med en liten dekorativ cirkel-ikon ovanför varje — passar som en kompakt \"fördelar i korthet\"-rad direkt under en hero, inte som sidans enda innehåll. \"divided-columns\" (ny): tre kolumner MED en tunn lodrät linje mellan varje (ingen egen kortbakgrund), en liten geometrisk symbol ovanför varje rubrik och en dekorativ \"Läs mer\"-rad under texten — passar 3 items bäst (en tjänste-/expertis-sektion). \"intro-divided\" (ny): en EGEN vänsterkolumn med eyebrow + rubrik + en kort introtext + knapp (använd fälten eyebrow/intro/ctaLabel/ctaLink, bara meningsfulla för DEN HÄR layouten), bredvid (inte ovanför) resten av items som avdelade kort likt \"divided-columns\". Passar 3 items i korten (4 kolumner totalt: 1 intro + 3 kort). Fyra ikonlayouter utan bild, alla med en linjeikon per ruta: \"icon-cards\" (rundade kort med ikon i en färgad ruta, centrerad rubrik ovanför), \"icon-circles\" (ikon i stor cirkel, centrerad text, inga kort), \"icon-list\" (rubriken till vänster, en lodrät lista med ikon till vänster om varje punkt, avdelad av tunna linjer — passar 3-6 punkter), \"icon-top-rule\" (kolumner med en kraftig färgad linje överst och ikon under). Passar 2-4 items (icon-list upp till 6).",
         },
         heading: { type: "string" },
         eyebrow: {
@@ -154,6 +155,11 @@ const RAW_SECTION_SCHEMA = {
               newTab: { type: "boolean", description: "true = länken öppnas i ett nytt fönster, false = i samma. Rör bara om kunden ber om det; annars behåll värdet." },
               link: { type: "string", description: "Vart \"Läs mer →\"-raden leder: en exakt sidväg från pages[].path (t.ex. \"/tjanster\") eller en fullständig extern URL (https://...). Utelämna helt om raden inte ska vara klickbar." },
               linkLabel: { type: "string", description: "Texten på rutans \"Läs mer →\"-rad (utan pilen). Utelämna för att behålla \"Läs mer\"." },
+              icon: {
+                type: "string",
+                enum: ICON_IDS,
+                description: "Ikon i rutan (layouterna med ikoner). Utelämna (vanligast) så väljer systemet en passande ikon utifrån texten. Sätt BARA när kunden ber om en viss ikon eller en annan ikon på just den rutan.",
+              },
               bgColor: {
                 type: "string",
                 description:

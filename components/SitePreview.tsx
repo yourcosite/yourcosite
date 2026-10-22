@@ -6,12 +6,13 @@ import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n
 import { useState, useEffect, createContext, useContext, createElement } from "react";
 import Script from "next/script";
 import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
+import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
+import { GridIcon, iconsForItems } from "@/lib/gridIcons";
 import { parseYouTubeId } from "@/lib/youtube";
 import { parseSocialEmbed } from "@/lib/socialEmbed";
 import { isArticleLive, type NewsArticle } from "@/lib/newsArticles";
@@ -3669,6 +3670,7 @@ function SectionBlockInner({
 
     case "grid": {
       const layout = section.layout || "cards";
+      const gridIcons = iconsForItems(section.items);
 
       if (layout === "alternating-rows") {
         return (
@@ -3868,9 +3870,11 @@ function SectionBlockInner({
                 return (
                   <div key={i} className="text-center @3xl:text-left" style={gridItemCardStyle(item.bgColor, palette)}>
                     <div
-                      className="w-8 h-8 rounded-full mb-3 mx-auto @3xl:mx-0"
+                      className="w-10 h-10 rounded-full mb-3 mx-auto @3xl:mx-0 flex items-center justify-center"
                       style={{ background: `${[accent, secondary[0], secondary[1]][i % 3] || accent}22` }}
-                    />
+                    >
+                      <GridIcon id={gridIcons[i]} size={20} color={[accent, secondary[0], secondary[1]][i % 3] || accent} />
+                    </div>
                     <Field
                       editable={editable}
                       as="div"
@@ -3909,7 +3913,6 @@ function SectionBlockInner({
         // service-kort hade inga bilder, bara enkla Unicode-tecken.
         // Sektionen får en mjukt tonad bakgrund (tonalBg) i stället för
         // en platt yta, per kundens uttryckliga "tonade bakgrunder"-önskan.
-        const glyphs = ["⌂", "✦", "▣", "◇", "○", "△"];
         return (
           <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: tonalBg(sectionBg || palette.bg, accent) }}>
             <Field
@@ -3933,8 +3936,8 @@ function SectionBlockInner({
                     className={`@3xl:px-10 ${isFirst ? "@3xl:pl-0" : ""} ${isLast ? "@3xl:pr-0" : ""} ${i > 0 && !cardStyle ? "@3xl:border-l pt-8 @3xl:pt-0" : "pt-8 @3xl:pt-0"}`}
                     style={cardStyle || { borderColor: palette.cardBorder }}
                   >
-                    <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
-                      {glyphs[i % glyphs.length]}
+                    <div className="mb-5" style={{ color: accent }}>
+                      <GridIcon id={gridIcons[i]} size={30} color={accent} />
                     </div>
                     <Field
                       editable={editable}
@@ -3981,7 +3984,6 @@ function SectionBlockInner({
         // en EGEN, bredare vänsterkolumn BREDVID de avdelade korten (4
         // kolumner totalt: 1 bred intro + 3 smalare kort). Egna fält
         // (eyebrow/intro/ctaLabel/ctaLink) — se contentModel.ts.
-        const glyphs = ["☼", "▣", "♧", "◇", "○", "△"];
         return (
           <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: tonalBg(sectionBg || palette.bg, accent) }}>
             <div className="grid @3xl:grid-cols-[1.2fr_1fr_1fr_1fr] gap-8 @3xl:gap-0">
@@ -4040,8 +4042,8 @@ function SectionBlockInner({
                     className={`@3xl:px-8 pt-8 @3xl:pt-0 ${cardStyle ? "" : "@3xl:border-l"}`}
                     style={cardStyle || { borderColor: palette.cardBorder }}
                   >
-                    <div className="text-[26px] font-light mb-5" style={{ color: accent }}>
-                      {glyphs[i % glyphs.length]}
+                    <div className="mb-5" style={{ color: accent }}>
+                      <GridIcon id={gridIcons[i]} size={30} color={accent} />
                     </div>
                     <Field
                       editable={editable}
@@ -4073,6 +4075,138 @@ function SectionBlockInner({
                       {(item as any).linkLabel || "Läs mer"} →
                     </CtaLink>
                     </FieldBadge>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "icon-cards" || layout === "icon-circles" || layout === "icon-list" || layout === "icon-top-rule") {
+        // Fyra ikonbaserade uppbyggnader för "det här gör vi"-sektioner. Alla
+        // använder rutornas ikoner (se lib/gridIcons.tsx) och har ingen bild.
+        const n = section.items.length;
+        const cols = n <= 2 ? "@3xl:grid-cols-2" : n === 4 ? "@3xl:grid-cols-4" : "@3xl:grid-cols-3";
+        const titleF = (item: GridItem, i: number, cls: string) => (
+          <Field
+            editable={editable}
+            as="div"
+            className={cls}
+            selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+            onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+          >
+            {item.title}
+          </Field>
+        );
+        const bodyF = (item: GridItem, i: number, cls: string, color: string) => (
+          <Field
+            editable={editable}
+            as="div"
+            className={cls}
+            style={{ color }}
+            selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+            onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+          >
+            {item.body}
+          </Field>
+        );
+        const headingF = (cls: string) => (
+          <Field
+            editable={editable}
+            as="h2"
+            className={cls}
+            selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+            onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+          >
+            {section.heading}
+          </Field>
+        );
+        const headingCls = "font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(40px*var(--ycs-ts,1))] leading-[1.08]";
+
+        if (layout === "icon-cards") {
+          return (
+            <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: sectionBg }}>
+              {section.heading && headingF(`${headingCls} mb-10 @3xl:mb-12 text-center`)}
+              <div className={`grid ${cols} gap-5`}>
+                {section.items.map((item, i) => {
+                  const ip = itemPalette(item.bgColor, palette);
+                  const cardStyle = gridItemCardStyle(item.bgColor, palette);
+                  return (
+                    <div key={i} className="rounded-2xl p-7" style={cardStyle || { background: palette.cardBg, border: `1px solid ${palette.cardBorder}` }}>
+                      <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: `${accent}1F` }}>
+                        <GridIcon id={gridIcons[i]} size={24} color={accent} />
+                      </div>
+                      {titleF(item, i, "font-heading text-[20px] mb-2")}
+                      {bodyF(item, i, "text-[13.5px] leading-relaxed", ip.textDim)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        if (layout === "icon-circles") {
+          return (
+            <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: tonalBg(sectionBg || palette.bg, accent) }}>
+              {section.heading && headingF(`${headingCls} mb-12 @3xl:mb-14 text-center`)}
+              <div className={`grid ${cols} gap-10 @3xl:gap-8`}>
+                {section.items.map((item, i) => {
+                  const ip = itemPalette(item.bgColor, palette);
+                  return (
+                    <div key={i} className="text-center flex flex-col items-center" style={gridItemCardStyle(item.bgColor, palette)}>
+                      <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center mb-5" style={{ border: `1.5px solid ${accent}`, background: `${accent}12` }}>
+                        <GridIcon id={gridIcons[i]} size={30} color={accent} />
+                      </div>
+                      {titleF(item, i, "font-heading text-[19px] mb-2")}
+                      {bodyF(item, i, "text-[13.5px] leading-relaxed max-w-[280px]", ip.textDim)}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
+        if (layout === "icon-list") {
+          return (
+            <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: sectionBg }}>
+              <div className="grid @3xl:grid-cols-[1fr_1.6fr] gap-10 @3xl:gap-16">
+                <div>{section.heading && headingF(`${headingCls} @3xl:sticky @3xl:top-8`)}</div>
+                <div className="flex flex-col">
+                  {section.items.map((item, i) => {
+                    const ip = itemPalette(item.bgColor, palette);
+                    return (
+                      <div key={i} className="flex gap-5 py-6" style={{ borderTop: i === 0 ? "none" : `1px solid ${palette.cardBorder}`, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
+                        <div className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center" style={{ background: `${accent}1F` }}>
+                          <GridIcon id={gridIcons[i]} size={21} color={accent} />
+                        </div>
+                        <div className="min-w-0">
+                          {titleF(item, i, "font-heading text-[19px] mb-1.5")}
+                          {bodyF(item, i, "text-[13.5px] leading-relaxed", ip.textDim)}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        // icon-top-rule: kolumner med en kraftig färgad linje överst
+        return (
+          <div className="px-8 @3xl:px-14 py-16 @3xl:py-20" style={{ background: tonalBg(sectionBg || palette.bg, accent) }}>
+            {section.heading && headingF(`${headingCls} mb-10 @3xl:mb-12 max-w-[620px]`)}
+            <div className={`grid ${cols} gap-8`}>
+              {section.items.map((item, i) => {
+                const ip = itemPalette(item.bgColor, palette);
+                return (
+                  <div key={i} className="pt-6" style={{ borderTop: `3px solid ${accent}`, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
+                    <div className="mb-4"><GridIcon id={gridIcons[i]} size={28} color={accent} /></div>
+                    {titleF(item, i, "font-heading text-[20px] mb-2")}
+                    {bodyF(item, i, "text-[13.5px] leading-relaxed", ip.textDim)}
                   </div>
                 );
               })}

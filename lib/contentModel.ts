@@ -96,7 +96,7 @@ export interface SiteTheme {
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial" | "beam";
 export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right";
-export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided";
+export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided" | "icon-cards" | "icon-circles" | "icon-list" | "icon-top-rule";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
 export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
 export type ContactLayout = "centered" | "split-info";
@@ -236,6 +236,9 @@ export interface GridItem {
   newTab?: boolean;
   // Texten på rutans "Läs mer →"-rad. Saknas den står det "Läs mer".
   linkLabel?: string;
+  // Ikon i rutan (ett id ur lib/gridIcons.tsx). Saknas den väljs en passande
+  // ikon automatiskt utifrån texten.
+  icon?: string;
 }
 
 export interface GridSection {

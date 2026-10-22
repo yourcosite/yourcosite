@@ -50,7 +50,7 @@ async function POST_handler(request: Request) {
   content.theme.aboutLayout = ["text-left", "centered", "stats-split", "image-full", "image-stats"].includes(aboutLayout)
     ? aboutLayout
     : "text-left";
-  content.theme.gridLayout = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided"].includes(gridLayout)
+  content.theme.gridLayout = ["cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided", "icon-cards", "icon-circles", "icon-list", "icon-top-rule"].includes(gridLayout)
     ? gridLayout
     : "cards";
   content.theme.ctaLayout = ["centered", "split", "image-bleed", "dark-split"].includes(ctaLayout)
