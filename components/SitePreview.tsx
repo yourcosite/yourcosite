@@ -1611,6 +1611,8 @@ export type FieldEditActions = {
   onEditLink: () => void;
   canTestLink: boolean;
   onTestLink: () => void;
+  canPickIcon: boolean;
+  onPickIcon: () => void;
 };
 export const FieldEditContext = createContext<FieldEditActions | null>(null);
 
@@ -1677,6 +1679,35 @@ function Field({
         </button>
       )}
     </div>
+  );
+}
+
+// Klickbart omslag runt en ikon i ett rutnät: markerar ikonen och visar en
+// liten knapp som öppnar ikonväljaren i redigeraren.
+function IconField({ selected, onSelect, children }: { selected?: boolean; onSelect: () => void; children: React.ReactNode }) {
+  const t = useT();
+  const edit = useContext(FieldEditContext);
+  return (
+    <span
+      className="relative inline-flex group/icn cursor-pointer"
+      onClick={(e) => { e.stopPropagation(); onSelect(); }}
+    >
+      {children}
+      <span
+        className={`pointer-events-none absolute -inset-1.5 rounded-lg transition-opacity ${selected ? "opacity-100" : "opacity-0 group-hover/icn:opacity-100"}`}
+        style={{ outline: selected ? "2px solid #4A90D9" : "2px dashed #4A90D9", outlineOffset: "1px" }}
+      />
+      {selected && edit?.canPickIcon && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); e.preventDefault(); edit.onPickIcon(); }}
+          className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-10 text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md whitespace-nowrap"
+          style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
+        >
+          {t("✎ Byt ikon")}
+        </button>
+      )}
+    </span>
   );
 }
 
@@ -3671,6 +3702,22 @@ function SectionBlockInner({
     case "grid": {
       const layout = section.layout || "cards";
       const gridIcons = iconsForItems(section.items);
+      const iconEl = (i: number, size: number, color: string) => {
+        const glyph = <GridIcon id={gridIcons[i]} size={size} color={color} />;
+        if (!editable || !pagePath) return glyph;
+        const sel = {
+          key: `${pagePath}::field::${section.id}::items.${i}.icon`,
+          pagePath,
+          sectionId: section.id,
+          field: `items.${i}.icon`,
+          label: te("ikonen i rutan"),
+        };
+        return (
+          <IconField selected={selectedFieldKey === sel.key} onSelect={() => onSelectField?.(sel)}>
+            {glyph}
+          </IconField>
+        );
+      };
 
       if (layout === "alternating-rows") {
         return (
@@ -3873,7 +3920,7 @@ function SectionBlockInner({
                       className="w-10 h-10 rounded-full mb-3 mx-auto @3xl:mx-0 flex items-center justify-center"
                       style={{ background: `${[accent, secondary[0], secondary[1]][i % 3] || accent}22` }}
                     >
-                      <GridIcon id={gridIcons[i]} size={20} color={[accent, secondary[0], secondary[1]][i % 3] || accent} />
+                      {iconEl(i, 20, [accent, secondary[0], secondary[1]][i % 3] || accent)}
                     </div>
                     <Field
                       editable={editable}
@@ -3937,7 +3984,7 @@ function SectionBlockInner({
                     style={cardStyle || { borderColor: palette.cardBorder }}
                   >
                     <div className="mb-5" style={{ color: accent }}>
-                      <GridIcon id={gridIcons[i]} size={30} color={accent} />
+                      {iconEl(i, 30, accent)}
                     </div>
                     <Field
                       editable={editable}
@@ -4043,7 +4090,7 @@ function SectionBlockInner({
                     style={cardStyle || { borderColor: palette.cardBorder }}
                   >
                     <div className="mb-5" style={{ color: accent }}>
-                      <GridIcon id={gridIcons[i]} size={30} color={accent} />
+                      {iconEl(i, 30, accent)}
                     </div>
                     <Field
                       editable={editable}
@@ -4135,7 +4182,7 @@ function SectionBlockInner({
                   return (
                     <div key={i} className="rounded-2xl p-7" style={cardStyle || { background: palette.cardBg, border: `1px solid ${palette.cardBorder}` }}>
                       <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5" style={{ background: `${accent}1F` }}>
-                        <GridIcon id={gridIcons[i]} size={24} color={accent} />
+                        {iconEl(i, 24, accent)}
                       </div>
                       {titleF(item, i, "font-heading text-[20px] mb-2")}
                       {bodyF(item, i, "text-[13.5px] leading-relaxed", ip.textDim)}
@@ -4157,7 +4204,7 @@ function SectionBlockInner({
                   return (
                     <div key={i} className="text-center flex flex-col items-center" style={gridItemCardStyle(item.bgColor, palette)}>
                       <div className="w-[72px] h-[72px] rounded-full flex items-center justify-center mb-5" style={{ border: `1.5px solid ${accent}`, background: `${accent}12` }}>
-                        <GridIcon id={gridIcons[i]} size={30} color={accent} />
+                        {iconEl(i, 30, accent)}
                       </div>
                       {titleF(item, i, "font-heading text-[19px] mb-2")}
                       {bodyF(item, i, "text-[13.5px] leading-relaxed max-w-[280px]", ip.textDim)}
@@ -4180,7 +4227,7 @@ function SectionBlockInner({
                     return (
                       <div key={i} className="flex gap-5 py-6" style={{ borderTop: i === 0 ? "none" : `1px solid ${palette.cardBorder}`, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
                         <div className="flex-shrink-0 w-11 h-11 rounded-full flex items-center justify-center" style={{ background: `${accent}1F` }}>
-                          <GridIcon id={gridIcons[i]} size={21} color={accent} />
+                          {iconEl(i, 21, accent)}
                         </div>
                         <div className="min-w-0">
                           {titleF(item, i, "font-heading text-[19px] mb-1.5")}
@@ -4204,7 +4251,7 @@ function SectionBlockInner({
                 const ip = itemPalette(item.bgColor, palette);
                 return (
                   <div key={i} className="pt-6" style={{ borderTop: `3px solid ${accent}`, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
-                    <div className="mb-4"><GridIcon id={gridIcons[i]} size={28} color={accent} /></div>
+                    <div className="mb-4">{iconEl(i, 28, accent)}</div>
                     {titleF(item, i, "font-heading text-[20px] mb-2")}
                     {bodyF(item, i, "text-[13.5px] leading-relaxed", ip.textDim)}
                   </div>

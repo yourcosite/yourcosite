@@ -96,6 +96,10 @@ export interface SiteTheme {
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial" | "beam";
 export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right";
+export const GRID_LAYOUTS: GridLayout[] = [
+  "cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided",
+  "icon-cards", "icon-circles", "icon-list", "icon-top-rule",
+];
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided" | "icon-cards" | "icon-circles" | "icon-list" | "icon-top-rule";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
 export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";

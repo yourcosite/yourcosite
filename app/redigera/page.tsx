@@ -24,7 +24,9 @@ import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
-import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, type GridLayout, type SiteContent } from "@/lib/contentModel";
+import GridLayoutThumb from "@/components/GridLayoutThumb";
+import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
 import { getFieldText, getLinkValue, getNewTab, getStat, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
@@ -79,6 +81,21 @@ type Selection =
   | { target: "image"; key: string; pagePath: string; sectionId: string; kind: "hero" | "gridItem" | "galleryItem"; itemIndex?: number; label: string }
   | { target: "field"; key: string; pagePath: string; sectionId: string; field: string; label: string }
   | { target: "section"; key: string; pagePath: string; sectionId: string; label: string };
+
+const GRID_LAYOUT_LABELS: Record<GridLayout, string> = {
+  cards: msg("Kort"),
+  "alternating-rows": msg("Växlande rader"),
+  list: msg("Lista"),
+  numbered: msg("Numrerad"),
+  bento: msg("Mosaik"),
+  "icon-row": msg("Ikonrad"),
+  "divided-columns": msg("Avdelade kolumner"),
+  "intro-divided": msg("Intro och kolumner"),
+  "icon-cards": msg("Ikonkort"),
+  "icon-circles": msg("Ikoncirklar"),
+  "icon-list": msg("Ikonlista"),
+  "icon-top-rule": msg("Ikoner med linje"),
+};
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const MAX_DOC_BYTES = 10 * 1024 * 1024;
@@ -838,6 +855,51 @@ export default function EditorPage() {
     }
   };
 
+
+  // Visuella väljare: ikon för en ruta och layout för en rutnätssektion.
+  const [iconPickerOpen, setIconPickerOpen] = useState(false);
+  const [layoutPickerOpen, setLayoutPickerOpen] = useState(false);
+  const [savingPick, setSavingPick] = useState(false);
+  const pickedSection = (() => {
+    if (!content || !selection || selection.target === "image") return null;
+    return (content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any) ?? null;
+  })();
+  const iconFieldMatch = selection?.target === "field" ? selection.field.match(/^items\.(\d+)\.icon$/) : null;
+  const pickedIconIndex = iconFieldMatch ? Number(iconFieldMatch[1]) : null;
+  const pickedIconId =
+    pickedIconIndex !== null && pickedSection?.type === "grid" ? iconsForItems(pickedSection.items)[pickedIconIndex] ?? null : null;
+  const canPickIcon = pickedIconIndex !== null && pickedSection?.type === "grid";
+  const canPickLayout = !!selection && selection.target !== "image" && pickedSection?.type === "grid";
+  const savePick = async (url: string, payload: Record<string, unknown>, okText: string) => {
+    if (!selection || selection.target === "image" || !content) return;
+    setSavingPick(true);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site?.id, pagePath: selection.pagePath, sectionId: selection.sectionId, ...payload }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setIconPickerOpen(false);
+      setLayoutPickerOpen(false);
+      setSelection(null);
+      setMessages((m) => [...m, { from: "bot", text: okText }]);
+    } catch (e: any) {
+      setIconPickerOpen(false);
+      setLayoutPickerOpen(false);
+      setMessages((m) => [...m, { from: "bot", text: t("Ändringen kunde inte sparas: {message}", { message: e.message }) }]);
+    } finally {
+      setSavingPick(false);
+    }
+  };
+  const saveIcon = (icon: string | null) =>
+    savePick("/api/sites/edit-icon", { itemIndex: pickedIconIndex, icon }, t("Klart! Ikonen är bytt. Du kan ångra med knappen om du ändrar dig."));
+  const saveLayout = (layout: GridLayout) =>
+    savePick("/api/sites/edit-layout", { layout }, t("Klart! Layouten är bytt. Du kan ångra med knappen om du ändrar dig."));
+
   // Byta länk för en knapp eller "Läs mer"-rad — samma flöde som texten.
   const [linkEditOpen, setLinkEditOpen] = useState(false);
   const [linkChoice, setLinkChoice] = useState(""); // "", en sidväg eller "__egen"
@@ -956,8 +1018,8 @@ export default function EditorPage() {
   // Stabilt context-värde: funktionerna ovan skapas om varje rendering, men
   // vi anropar alltid senaste versionen via en ref. Utan det skulle varje
   // tecken i chatten få alla textfält i förhandsvisningen att ritas om.
-  const fieldEditLatest = useRef({ openTextEditor, openLinkEditor, testLink });
-  fieldEditLatest.current = { openTextEditor, openLinkEditor, testLink };
+  const fieldEditLatest = useRef({ openTextEditor, openLinkEditor, testLink, openIconPicker: () => setIconPickerOpen(true) });
+  fieldEditLatest.current = { openTextEditor, openLinkEditor, testLink, openIconPicker: () => setIconPickerOpen(true) };
   const canEditText = selection?.target === "field" && (selectedFieldText !== null || selectedStat !== null);
   const canEditLink = !!selectedLinkField;
   const canTestLink = selectedLinkValue !== "";
@@ -969,8 +1031,10 @@ export default function EditorPage() {
       onEditLink: () => fieldEditLatest.current.openLinkEditor(),
       canTestLink,
       onTestLink: () => fieldEditLatest.current.testLink(),
+      canPickIcon,
+      onPickIcon: () => fieldEditLatest.current.openIconPicker(),
     }),
-    [canEditText, canEditLink, canTestLink]
+    [canEditText, canEditLink, canTestLink, canPickIcon]
   );
 
   const send = async (override?: string) => {
@@ -1507,6 +1571,63 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
+            {iconPickerOpen && canPickIcon && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl max-h-[85vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Välj ikon")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{t("Klicka på en ikon för att använda den i rutan.")}</div>
+                  <div className="grid grid-cols-5 sm:grid-cols-6 gap-2 overflow-y-auto pr-1">
+                    {GRID_ICON_IDS.map((id) => (
+                      <button
+                        key={id}
+                        type="button"
+                        disabled={savingPick}
+                        onClick={() => saveIcon(id)}
+                        aria-label={id}
+                        className={`aspect-square rounded-xl border flex items-center justify-center disabled:opacity-60 ${id === pickedIconId ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
+                      >
+                        <GridIcon id={id} size={24} color="currentColor" />
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex justify-between gap-2 mt-3">
+                    <button type="button" onClick={() => saveIcon(null)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      {t("Välj automatiskt")}
+                    </button>
+                    <button type="button" onClick={() => setIconPickerOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      {t("Avbryt")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {layoutPickerOpen && canPickLayout && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-lg shadow-xl max-h-[85vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Välj layout")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{t("Texterna och ikonerna behålls, bara uppställningen byts.")}</div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 overflow-y-auto pr-1">
+                    {GRID_LAYOUTS.map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        disabled={savingPick}
+                        onClick={() => saveLayout(l)}
+                        className={`rounded-xl border p-2 text-left disabled:opacity-60 ${l === pickedSection?.layout ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
+                      >
+                        <GridLayoutThumb layout={l} accent={content?.theme.accentColor} />
+                        <div className="text-[12.5px] font-semibold mt-1.5">{t(GRID_LAYOUT_LABELS[l])}</div>
+                      </button>
+                    ))}
+                  </div>
+                  <div className="flex justify-end mt-3">
+                    <button type="button" onClick={() => setLayoutPickerOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      {t("Avbryt")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {textEditOpen && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
@@ -1582,6 +1703,26 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     {t("✂️ Redigera bild")}
+                  </button>
+                )}
+                {canPickLayout && (
+                  <button
+                    type="button"
+                    onClick={() => setLayoutPickerOpen(true)}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("🎨 Byt layout")}
+                  </button>
+                )}
+                {canPickIcon && (
+                  <button
+                    type="button"
+                    onClick={() => setIconPickerOpen(true)}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("✎ Byt ikon")}
                   </button>
                 )}
                 {selection.target === "image" && !selectedImageUrl && (
