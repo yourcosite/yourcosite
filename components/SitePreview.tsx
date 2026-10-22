@@ -1270,6 +1270,14 @@ function Footer({
         )}
       </nav>
 
+      {/* Loggan större och centrerad under menyn (kundönskemål). */}
+      {logoUrl && (
+        <div className="flex justify-center px-8 @3xl:px-12 pb-6 pt-1">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={logoUrl} alt={siteName || t("Logga")} className="h-14 @3xl:h-16 max-w-[220px] @3xl:max-w-[280px] object-contain" />
+        </div>
+      )}
+
       <div
         // pb lite större än pt — den nedersta raden låg annars väldigt nära
         // sajtens absoluta nederkant (ingenting kommer efter den).
@@ -1277,15 +1285,7 @@ function Footer({
         style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
       >
         <span className="flex items-center gap-x-4 gap-y-3 flex-wrap justify-center">
-          {/* Loggan ligger större, med företagsnamnet under (kundönskemål: den
-              blev för liten). På smal skärm centreras allt. */}
-          <span className="flex flex-col items-center sm:items-start gap-2.5">
-            {logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt={siteName || t("Logga")} className="h-12 @3xl:h-14 max-w-[200px] @3xl:max-w-[240px] object-contain object-left" />
-            )}
-            <span>{siteName || t("Ditt företag")} · {t("Byggd med YourCoSite")}</span>
-          </span>
+          <span>{siteName || t("Ditt företag")} · {t("Byggd med YourCoSite")}</span>
           {policyHref && (
             <a
               href={policyHref}
