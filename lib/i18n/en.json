@@ -1739,5 +1739,18 @@
   "Flytta ner": "Move down",
   "Ta bort personen": "Remove person",
   "➕ Lägg till person": "➕ Add person",
-  "👥 Redigera personer": "👥 Edit people"
+  "👥 Redigera personer": "👥 Edit people",
+  "Galleri och personer": "Gallery and people",
+  "Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar.": "Click the gallery or the people in the preview: ➕ Add images uploads many images at once, 👥 Edit people fills in photo, name, title, email and phone, and 🎨 Change layout shows all arrangements.",
+  "Lägg till ett galleri med plats för 12 bilder": "Add a gallery with room for 12 images",
+  "Gör galleriet till en mosaik": "Make the gallery a mosaic",
+  "Visa personerna på kontaktsidan med runda porträtt": "Show the people on the contact page with round portraits",
+  "Lägg till en sektion med vårt team på sidan Kontakt: Anna, VD och Erik, projektledare": "Add a section with our team on the Contact page: Anna, CEO and Erik, project manager",
+  "Ikoner och layouter": "Icons and layouts",
+  "Klicka på en ikon i förhandsvisningen och välj Byt ikon för att se alla ikoner, eller Byt layout på en sektion för att se miniatyrer.": "Click an icon in the preview and choose Change icon to see all icons, or Change layout on a section to see thumbnails.",
+  "Byt ikonerna i tjänsterna till något som passar bättre": "Change the icons in the services to something that fits better",
+  "Visa tjänsterna som ikonkort": "Show the services as icon cards",
+  "Flytta sidan Priser före Kontakt i menyn": "Move the Prices page before Contact in the menu",
+  "Ändra rubriken på nyheten om vår kampanj": "Change the headline of the news article about our campaign",
+  "Ta bort nyheten om vår kampanj": "Delete the news article about our campaign"
 }

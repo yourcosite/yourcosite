@@ -74,6 +74,26 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
     examples: [msg("Använd den bifogade bilden som bild på startsidan"), msg("Byt bilden här (markera den först)")],
   },
   {
+    icon: "🖼️",
+    title: msg("Galleri och personer"),
+    hint: msg("Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar."),
+    examples: [
+      msg("Lägg till ett galleri med plats för 12 bilder"),
+      msg("Gör galleriet till en mosaik"),
+      msg("Visa personerna på kontaktsidan med runda porträtt"),
+      msg("Lägg till en sektion med vårt team på sidan Kontakt: Anna, VD och Erik, projektledare"),
+    ],
+  },
+  {
+    icon: "✨",
+    title: msg("Ikoner och layouter"),
+    hint: msg("Klicka på en ikon i förhandsvisningen och välj Byt ikon för att se alla ikoner, eller Byt layout på en sektion för att se miniatyrer."),
+    examples: [
+      msg("Byt ikonerna i tjänsterna till något som passar bättre"),
+      msg("Visa tjänsterna som ikonkort"),
+    ],
+  },
+  {
     icon: "🔍",
     title: msg("Google och delning"),
     examples: [
@@ -93,6 +113,9 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
     examples: [
       msg("Lägg till en ny sida som heter Priser"),
       msg("Ta bort sidan Galleri"),
+      msg("Flytta sidan Priser före Kontakt i menyn"),
+      msg("Ändra rubriken på nyheten om vår kampanj"),
+      msg("Ta bort nyheten om vår kampanj"),
       msg("Skriv en nyhet om vår nya öppettid (börja gärna med en kort text – Millie utökar den och sätter rubrik och ingress)"),
       msg("Skriv en nyhet om vår kampanj, publicera den 1 november kl 08 och ta ner den 30 november"),
       msg("Ta ner nyheten om vår kampanj automatiskt den 30 november"),

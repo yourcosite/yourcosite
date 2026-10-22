@@ -1739,5 +1739,18 @@
   "Flytta ner": "Bajar",
   "Ta bort personen": "Quitar a la persona",
   "➕ Lägg till person": "➕ Añadir persona",
-  "👥 Redigera personer": "👥 Editar personas"
+  "👥 Redigera personer": "👥 Editar personas",
+  "Galleri och personer": "Galería y personas",
+  "Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar.": "Haz clic en la galería o en las personas en la vista previa: ➕ Añadir imágenes sube muchas imágenes a la vez, 👥 Editar personas rellena foto, nombre, cargo, correo y teléfono, y 🎨 Cambiar diseño muestra todas las disposiciones.",
+  "Lägg till ett galleri med plats för 12 bilder": "Añade una galería con espacio para 12 imágenes",
+  "Gör galleriet till en mosaik": "Convierte la galería en un mosaico",
+  "Visa personerna på kontaktsidan med runda porträtt": "Muestra a las personas en la página de contacto con retratos redondos",
+  "Lägg till en sektion med vårt team på sidan Kontakt: Anna, VD och Erik, projektledare": "Añade en la página Contacto una sección con nuestro equipo: Anna, directora y Erik, jefe de proyecto",
+  "Ikoner och layouter": "Iconos y diseños",
+  "Klicka på en ikon i förhandsvisningen och välj Byt ikon för att se alla ikoner, eller Byt layout på en sektion för att se miniatyrer.": "Haz clic en un icono en la vista previa y elige Cambiar icono para ver todos los iconos, o Cambiar diseño en una sección para ver las miniaturas.",
+  "Byt ikonerna i tjänsterna till något som passar bättre": "Cambia los iconos de los servicios por otros que encajen mejor",
+  "Visa tjänsterna som ikonkort": "Muestra los servicios como tarjetas con icono",
+  "Flytta sidan Priser före Kontakt i menyn": "Mueve la página Precios antes de Contacto en el menú",
+  "Ändra rubriken på nyheten om vår kampanj": "Cambia el titular de la noticia sobre nuestra campaña",
+  "Ta bort nyheten om vår kampanj": "Elimina la noticia sobre nuestra campaña"
 }

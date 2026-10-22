@@ -1739,5 +1739,18 @@
   "Flytta ner": "Descendre",
   "Ta bort personen": "Retirer la personne",
   "➕ Lägg till person": "➕ Ajouter une personne",
-  "👥 Redigera personer": "👥 Modifier les personnes"
+  "👥 Redigera personer": "👥 Modifier les personnes",
+  "Galleri och personer": "Galerie et personnes",
+  "Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar.": "Cliquez sur la galerie ou sur les personnes dans l'aperçu : ➕ Ajouter des images téléverse plusieurs images à la fois, 👥 Modifier les personnes renseigne photo, nom, titre, e-mail et téléphone, et 🎨 Changer de mise en page montre toutes les dispositions.",
+  "Lägg till ett galleri med plats för 12 bilder": "Ajoute une galerie avec de la place pour 12 images",
+  "Gör galleriet till en mosaik": "Transforme la galerie en mosaïque",
+  "Visa personerna på kontaktsidan med runda porträtt": "Affiche les personnes sur la page Contact avec des portraits ronds",
+  "Lägg till en sektion med vårt team på sidan Kontakt: Anna, VD och Erik, projektledare": "Ajoute sur la page Contact une section avec notre équipe : Anna, directrice et Erik, chef de projet",
+  "Ikoner och layouter": "Icônes et mises en page",
+  "Klicka på en ikon i förhandsvisningen och välj Byt ikon för att se alla ikoner, eller Byt layout på en sektion för att se miniatyrer.": "Cliquez sur une icône dans l'aperçu et choisissez Changer d'icône pour voir toutes les icônes, ou Changer de mise en page sur une section pour voir les miniatures.",
+  "Byt ikonerna i tjänsterna till något som passar bättre": "Remplace les icônes des services par d'autres plus adaptées",
+  "Visa tjänsterna som ikonkort": "Affiche les services sous forme de cartes à icônes",
+  "Flytta sidan Priser före Kontakt i menyn": "Place la page Tarifs avant Contact dans le menu",
+  "Ändra rubriken på nyheten om vår kampanj": "Change le titre de l'actualité sur notre campagne",
+  "Ta bort nyheten om vår kampanj": "Supprime l'actualité sur notre campagne"
 }

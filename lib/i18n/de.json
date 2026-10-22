@@ -1739,5 +1739,18 @@
   "Flytta ner": "Nach unten",
   "Ta bort personen": "Person entfernen",
   "➕ Lägg till person": "➕ Person hinzufügen",
-  "👥 Redigera personer": "👥 Personen bearbeiten"
+  "👥 Redigera personer": "👥 Personen bearbeiten",
+  "Galleri och personer": "Galerie und Personen",
+  "Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar.": "Klicke in der Vorschau auf die Galerie oder die Personen: ➕ Bilder hinzufügen lädt viele Bilder auf einmal hoch, 👥 Personen bearbeiten füllt Foto, Name, Titel, E-Mail und Telefon aus, und 🎨 Layout wechseln zeigt alle Anordnungen.",
+  "Lägg till ett galleri med plats för 12 bilder": "Füge eine Galerie mit Platz für 12 Bilder hinzu",
+  "Gör galleriet till en mosaik": "Mach die Galerie zu einem Mosaik",
+  "Visa personerna på kontaktsidan med runda porträtt": "Zeige die Personen auf der Kontaktseite mit runden Porträts",
+  "Lägg till en sektion med vårt team på sidan Kontakt: Anna, VD och Erik, projektledare": "Füge auf der Seite Kontakt einen Bereich mit unserem Team hinzu: Anna, Geschäftsführerin und Erik, Projektleiter",
+  "Ikoner och layouter": "Symbole und Layouts",
+  "Klicka på en ikon i förhandsvisningen och välj Byt ikon för att se alla ikoner, eller Byt layout på en sektion för att se miniatyrer.": "Klicke in der Vorschau auf ein Symbol und wähle Symbol wechseln, um alle Symbole zu sehen, oder Layout wechseln bei einem Bereich, um Miniaturen zu sehen.",
+  "Byt ikonerna i tjänsterna till något som passar bättre": "Ändere die Symbole bei den Leistungen in passendere",
+  "Visa tjänsterna som ikonkort": "Zeige die Leistungen als Symbolkarten",
+  "Flytta sidan Priser före Kontakt i menyn": "Verschiebe die Seite Preise im Menü vor Kontakt",
+  "Ändra rubriken på nyheten om vår kampanj": "Ändere die Überschrift der Neuigkeit über unsere Aktion",
+  "Ta bort nyheten om vår kampanj": "Lösche die Neuigkeit über unsere Aktion"
 }

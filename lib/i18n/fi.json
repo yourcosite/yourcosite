@@ -1739,5 +1739,18 @@
   "Flytta ner": "Siirrä alas",
   "Ta bort personen": "Poista henkilö",
   "➕ Lägg till person": "➕ Lisää henkilö",
-  "👥 Redigera personer": "👥 Muokkaa henkilöitä"
+  "👥 Redigera personer": "👥 Muokkaa henkilöitä",
+  "Galleri och personer": "Galleria ja henkilöt",
+  "Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar.": "Klikkaa galleriaa tai henkilöitä esikatselussa: ➕ Lisää kuvia lataa monta kuvaa kerralla, 👥 Muokkaa henkilöitä täyttää kuvan, nimen, tittelin, sähköpostin ja puhelinnumeron, ja 🎨 Vaihda asettelu näyttää kaikki vaihtoehdot.",
+  "Lägg till ett galleri med plats för 12 bilder": "Lisää galleria, jossa on tilaa 12 kuvalle",
+  "Gör galleriet till en mosaik": "Tee galleriasta mosaiikki",
+  "Visa personerna på kontaktsidan med runda porträtt": "Näytä henkilöt yhteystietosivulla pyöreillä muotokuvilla",
+  "Lägg till en sektion med vårt team på sidan Kontakt: Anna, VD och Erik, projektledare": "Lisää Yhteystiedot-sivulle osio tiimistämme: Anna, toimitusjohtaja ja Erik, projektipäällikkö",
+  "Ikoner och layouter": "Kuvakkeet ja asettelut",
+  "Klicka på en ikon i förhandsvisningen och välj Byt ikon för att se alla ikoner, eller Byt layout på en sektion för att se miniatyrer.": "Klikkaa kuvaketta esikatselussa ja valitse Vaihda kuvake nähdäksesi kaikki kuvakkeet, tai Vaihda asettelu osiossa nähdäksesi pikkukuvat.",
+  "Byt ikonerna i tjänsterna till något som passar bättre": "Vaihda palveluiden kuvakkeet sopivampiin",
+  "Visa tjänsterna som ikonkort": "Näytä palvelut kuvakekortteina",
+  "Flytta sidan Priser före Kontakt i menyn": "Siirrä Hinnat-sivu valikossa ennen Yhteystiedot-sivua",
+  "Ändra rubriken på nyheten om vår kampanj": "Muuta kampanjaamme koskevan uutisen otsikkoa",
+  "Ta bort nyheten om vår kampanj": "Poista kampanjaamme koskeva uutinen"
 }
