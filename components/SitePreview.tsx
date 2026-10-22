@@ -363,7 +363,11 @@ function SitePreviewInner({
       content.pages.find((pg) => hasType(pg, ["booking"])) ||
       content.pages.find((pg) => hasType(pg, ["contactForm", "contact"]) && pg.path !== "/");
     if (!target) return null;
-    return { path: target.path, label: want?.label?.trim() || target.label };
+    // Har kunden själv valt text eller sida för knappen ska sidan ÄVEN ligga
+    // kvar som vanligt menyval (t.ex. knappen "Boka" och länken "Kontakt" till
+    // samma sida). Bara den helautomatiska knappen tar bort dubbletten.
+    const custom = !!(want?.path || want?.label?.trim());
+    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom };
   })();
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = skin?.accent ? skin.accent(content.theme.accentColor) : content.theme.accentColor;
@@ -879,7 +883,7 @@ function Header({
   accent = "#C6FF5E",
   buttonShape = "pill",
 }: {
-  cta?: { path: string; label: string } | null;
+  cta?: { path: string; label: string; keepInMenu?: boolean } | null;
   accent?: string;
   buttonShape?: ButtonStyle;
   siteName?: string;
@@ -963,9 +967,10 @@ function Header({
   // Alla huvudsidor visas (inget tak) — många val flyttar menyn till
   // hamburgaren, se nedan. Undersidor visas i en rullgardin under sin
   // huvudsida.
-  // Med en knapp i menyn tas knappens sida bort ur länkraden (den syns som
-  // knappen istället).
-  const topPages = topLevelPages(pages).filter((p) => !cta || p.path !== cta.path);
+  // Med en helautomatisk knapp i menyn tas knappens sida bort ur länkraden
+  // (den syns som knappen istället). Har kunden anpassat knappen ligger sidan
+  // kvar som vanligt menyval också.
+  const topPages = topLevelPages(pages).filter((p) => !cta || cta.keepInMenu || p.path !== cta.path);
   const minimal = layout === "minimal";
   const pill = layout === "pill-bar";
   // Många menyval ger trångt bredvid loggan. Ju fler huvudsidor, desto
