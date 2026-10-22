@@ -1675,5 +1675,6 @@
   "Text under": "Teksti alla",
   "t.ex. 15+": "esim. 15+",
   "t.ex. års erfarenhet": "esim. vuotta kokemusta",
-  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Olemme saaneet ilmoituksen virheestä ja selvitämme sitä. Yritä hetken päästä uudelleen."
+  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Olemme saaneet ilmoituksen virheestä ja selvitämme sitä. Yritä hetken päästä uudelleen.",
+  "En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.": "Sivua ei voitu siirtää valikossa. Tarkista, että pääsivu on olemassa ja ettei sivulla itsellään ole alasivuja, niin yritän uudelleen."
 }

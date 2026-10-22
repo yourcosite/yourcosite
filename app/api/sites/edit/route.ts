@@ -10,6 +10,7 @@ import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { HEADER_LAYOUTS, isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
+import { reparentPage } from "@/lib/pageTree";
 import { normalizeCategory, uniqueSlugForSite, getSiteNewsCategories, getSiteNewsArticles, resolveNewsTiming, type NewsArticle } from "@/lib/newsArticles";
 import { DEFAULT_TIMEZONE } from "@/lib/booking";
 import { fillMissingImages, pagesNeedingImages } from "@/lib/ensureImageSlots";
@@ -93,8 +94,26 @@ const EDIT_TOOL = {
           unpublishAt: { type: "string", description: "Sätt automatisk avpublicering, lokal tid ÅÅÅÅ-MM-DDTTT:mm utan tidszon (efter publiceringen)." },
           clearUnpublish: { type: "boolean", description: "true = ta bort en satt avpubliceringstid." },
           makeDraft: { type: "boolean", description: "true = ta ner artikeln nu och gör den till utkast (tar bort schemaläggning och avpublicering)." },
+          newTitle: { type: "string", description: "Ny rubrik, bara om kunden bett om att byta rubriken på artikeln." },
+          newExcerpt: { type: "string", description: "Ny ingress (kort text under rubriken), bara om kunden bett om att ändra den." },
+          newBody: { type: "string", description: "Hela den nya brödtexten, bara om kunden bett om att ändra, korta, utöka eller skriva om artikelns text. Skriv ut HELA texten, inte bara ändringen." },
+          newCategory: { type: "string", description: "Ny kategori (se instruktionen om kategorier), bara om kunden bett om att flytta artikeln till en annan kategori." },
+          deleteArticle: { type: "boolean", description: "true = radera artikeln för gott. Sätt BARA när kunden uttryckligen bett om att ta bort/radera artikeln. 'Ta ner' eller 'dölj' betyder makeDraft, inte radering." },
         },
         required: ["title"],
+      },
+      movePages: {
+        type: "array",
+        description:
+          "Flytta befintliga sidor i menyn: gör en sida till undersida (rullgardin) under en annan huvudsida, eller lyft ut en undersida till en egen huvudsida. Använd det när kunden ber om det för sidor som redan finns. Sidans adress och alla länkar till den uppdateras automatiskt av systemet. Ändra INTE path själv i changedPages för det här. Utelämna annars.",
+        items: {
+          type: "object",
+          properties: {
+            path: { type: "string", description: "Sidans nuvarande path, t.ex. \"/stolar\"." },
+            newParent: { type: "string", description: "Huvudsidans path som sidan ska läggas under, eller tom sträng för att göra den till en egen huvudsida i menyn." },
+          },
+          required: ["path", "newParent"],
+        },
       },
       nextOptions: {
         type: "array",
@@ -178,7 +197,13 @@ type EditPatch = {
     unpublishAt?: string;
     clearUnpublish?: boolean;
     makeDraft?: boolean;
+    newTitle?: string;
+    newExcerpt?: string;
+    newBody?: string;
+    newCategory?: string;
+    deleteArticle?: boolean;
   };
+  movePages?: { path: string; newParent: string }[];
   nextOptions?: string[];
   summary: string;
   clarifyOptions?: string[];
@@ -273,7 +298,7 @@ VIKTIGT — exempelinnehåll: förstasidan kan innehålla EXEMPELcitat, exempeln
 
 VIKTIGT — ändra layout på en sektion ("visa tjänsterna som en lista", "gör Om oss med en stor bild"): byt sektionens "layout"-värde till ett giltigt för den sektionstypen (se verktygets schema) och behåll allt annat innehåll, alla bgColor/ctaColor/ctaLink/link och imageUrl oförändrade. Pekar kunden ut en markerad sektion, ändra just den. Välj layouten som bäst matchar ordvalet (t.ex. "lista" → "list", "stor bild" → "image-full", "siffror" → "stats-split"). Saknar sektionen innehåll en ny layout behöver (t.ex. nyckeltal), fyll i rimliga EXEMPELvärden.
 
-VIKTIGT — flytta/ordna om: "flytta citaten högst upp" = skriv ut sidans sektioner i den nya ordningen i changedPages (hero ska alltid ligga först, och sidans kontakt/cta nära slutet om inget annat sägs). "Lägg Kontakt före Nyheter i menyn"/"byt ordning på sidorna" = ange "pageOrder" med ALLA sidors path i ny ordning; startsidan ("/") ska normalt vara först. Ändra inget annat än ordningen.
+VIKTIGT — flytta/ordna om: "flytta citaten högst upp" = skriv ut sidans sektioner i den nya ordningen i changedPages (hero ska alltid ligga först, och sidans kontakt/cta nära slutet om inget annat sägs). "Lägg Kontakt under Om oss i menyn"/"gör Priser till en undersida till Tjänster"/"lyft ut Stolar som egen menypunkt" = ange "movePages" [{path, newParent}] med sidans nuvarande path och huvudsidans path (tom sträng för egen huvudsida); ändra INTE path i changedPages för det, systemet uppdaterar adress och länkar. Startsidan går inte att flytta och en undersida kan inte ha egna undersidor. "Lägg Kontakt före Nyheter i menyn"/"byt ordning på sidorna" = ange "pageOrder" med ALLA sidors path i ny ordning; startsidan ("/") ska normalt vara först. Ändra inget annat än ordningen.
 
 VIKTIGT — utseendereglage för hela sajten, i "theme": "buttonStyle" (pill/square/underline = runda, kantiga, understrukna knappar), "headerLayout" (left/centered-stacked/split = menyns placering; left-button/split-button/centered-button/pill-bar/minimal = meny med tydlig knapp, t.ex. Bokning, och "headerCta" {path,label,off} för knappens mål/text), "sectionSpacing" (compact/normal/airy = tätare/standard/luftigare). Ange bara det kunden bett om.
 
@@ -352,7 +377,7 @@ function buildAttachmentNote(attachments: Attachment[]): string {
 // Klistrar in Claudes patch i den befintliga, redan sparade sajten:
 // ersätter matchande sidor (på path), lägger till nya, tar bort begärda —
 // allt annat lämnas exakt som det var, orört av den här ändringen.
-function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
+function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[] = []): SiteContent {
   const removed = new Set(patch.removedPagePaths || []);
   // Tas en huvudsida bort följer dess undersidor med — annars blir de
   // föräldralösa och dyker upp som egna menyval.
@@ -484,6 +509,16 @@ function applyPatch(content: SiteContent, patch: EditPatch): SiteContent {
       }
     }
     merged.pages = [...ordered, ...merged.pages.filter((pg) => byPath.has(pg.path))];
+  }
+  // Flytta sidor mellan nivåer i menyn (undersida eller egen huvudsida).
+  if (Array.isArray(patch.movePages)) {
+    for (const mv of patch.movePages.slice(0, 10)) {
+      if (!mv || typeof mv.path !== "string") continue;
+      const parent = typeof mv.newParent === "string" && mv.newParent.trim() && mv.newParent.trim() !== "/" ? mv.newParent.trim() : null;
+      const res = reparentPage(merged.pages as any[], mv.path, parent);
+      if ("error" in res) moveErrors.push(`${mv.path}: ${res.error}`);
+      else merged.pages = res.pages as typeof merged.pages;
+    }
   }
   // Sökmotortexter: trimmas och kortas (tom sträng = ta bort).
   for (const pg of merged.pages) {
@@ -669,7 +704,7 @@ async function POST_handler(request: Request) {
   const articleList = existingArticles.length
     ? existingArticles.map((a) => `"${a.title}" (${a.published ? "publicerad" : a.scheduled_at ? "schemalagd " + fmtArt(a.scheduled_at) : "utkast"}${a.unpublish_at && new Date(a.unpublish_at).getTime() > Date.now() ? ", avpubliceras " + fmtArt(a.unpublish_at) : ""})`).join("; ")
     : "inga artiklar än";
-  const newsContext = `PUBLICERING OCH SCHEMALÄGGNING av nyheter: klockan är nu ${nowLocal} (sajtens tidszon ${newsTz}) — räkna ut relativa datum ("nästa måndag", "om två veckor", "1 november") från det och ange klockslag som lokal tid ÅÅÅÅ-MM-DDTTT:mm i "publishAt"/"unpublishAt". Kunden kan be om att en nyhet publiceras vid en viss tid ("publishAt") och/eller tas ner automatiskt vid en viss tid ("unpublishAt", t.ex. när en kampanj tar slut). Säg alltid i "summary" exakt vilka datum och klockslag du satt, så kunden kan rätta dig. Skapar du en nyhet och kunden INTE har sagt något om när den ska ut, sparas den som utkast (published false) och du frågar i "summary" kort om de vill publicera direkt, schemalägga den (och i så fall när) eller behålla den som utkast, och om den ska tas ner automatiskt vid ett visst datum (t.ex. för en kampanj) — och ger 2-3 klickbara svar i "nextOptions" (t.ex. "Publicera nyheten direkt", "Schemalägg nyheten", "Behåll som utkast"). Har kunden redan sagt hur den ska ut, fråga inte. Svarar kunden på din fråga (eller ber om ändrad publicering av en artikel som redan finns) ändrar du den BEFINTLIGA artikeln med "newsUpdate" — skapa aldrig en ny artikel för det, och utelämna "newsArticle" då. Skriver kunden bara "schemalägg" utan tid, fråga efter datum och klockslag i "summary" och gör inga ändringar. Sajtens artiklar just nu: ${articleList}.`;
+  const newsContext = `PUBLICERING OCH SCHEMALÄGGNING av nyheter: klockan är nu ${nowLocal} (sajtens tidszon ${newsTz}) — räkna ut relativa datum ("nästa måndag", "om två veckor", "1 november") från det och ange klockslag som lokal tid ÅÅÅÅ-MM-DDTTT:mm i "publishAt"/"unpublishAt". Kunden kan be om att en nyhet publiceras vid en viss tid ("publishAt") och/eller tas ner automatiskt vid en viss tid ("unpublishAt", t.ex. när en kampanj tar slut). Säg alltid i "summary" exakt vilka datum och klockslag du satt, så kunden kan rätta dig. Skapar du en nyhet och kunden INTE har sagt något om när den ska ut, sparas den som utkast (published false) och du frågar i "summary" kort om de vill publicera direkt, schemalägga den (och i så fall när) eller behålla den som utkast, och om den ska tas ner automatiskt vid ett visst datum (t.ex. för en kampanj) — och ger 2-3 klickbara svar i "nextOptions" (t.ex. "Publicera nyheten direkt", "Schemalägg nyheten", "Behåll som utkast"). Har kunden redan sagt hur den ska ut, fråga inte. Svarar kunden på din fråga (eller ber om ändrad publicering av en artikel som redan finns) ändrar du den BEFINTLIGA artikeln med "newsUpdate" — skapa aldrig en ny artikel för det, och utelämna "newsArticle" då. Skriver kunden bara "schemalägg" utan tid, fråga efter datum och klockslag i "summary" och gör inga ändringar. Ber kunden om att ändra rubrik, ingress, text eller kategori på en artikel som redan finns ("korta ner nyheten om skorna", "byt rubrik", "flytta den till Erbjudanden") gör du det med "newsUpdate" och fälten newTitle/newExcerpt/newBody/newCategory (newBody = hela den nya texten, på sajtens språk) — skapa aldrig en ny artikel och tappa ingenting som kunden inte bett om att ändra. Raderas en artikel sätter du deleteArticle: true, men BARA när kunden uttryckligen bett om att ta bort/radera den; är det oklart om kunden menar radera eller bara ta ner (utkast), fråga i "summary" och gör inga ändringar. Säg i "summary" vilken artikel som ändrats eller raderats. Sajtens artiklar just nu: ${articleList}.`;
   const uiLang = getLocale();
   const siteLang: string = isLocale((site as any).language) ? (site as any).language : "sv";
   const languageRule = `SPRÅK — kunden använder verktyget på ${LANGUAGE_ENGLISH[uiLang]} och sajten är skriven på ${LANGUAGE_ENGLISH[siteLang]}.
@@ -757,7 +792,8 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("AI-svaret hade fel format.") }, { status: 502 });
   }
 
-  const updatedContent = dedupeMaps(applyPatch(site.content, patch), "flatten-form");
+  const moveErrors: string[] = [];
+  const updatedContent = dedupeMaps(applyPatch(site.content, patch, moveErrors), "flatten-form");
   if (!updatedContent.pages.length) {
     return NextResponse.json({ error: t("Ändringen skulle lämna sajten utan sidor.") }, { status: 502 });
   }
@@ -863,6 +899,7 @@ async function POST_handler(request: Request) {
   let newsSaveFailed = false;
   const newsDropped: string[] = [];
   let newsUpdateMiss = false;
+  let newsDeleted: string | null = null;
   const newsCategory = patch.newsArticle ? normalizeCategory(patch.newsArticle.category) : null;
   if (patch.newsArticle && newsCategory && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) {
     const title = patch.newsArticle.title.trim().slice(0, 120);
@@ -932,9 +969,20 @@ async function POST_handler(request: Request) {
         else if (r.unpublish_at) newsDropped.push(msg("avpubliceringen kunde inte sättas på en artikel som inte är publicerad eller schemalagd"));
       }
       if (u.clearUnpublish === true) upd.unpublish_at = null;
+      if (typeof u.newTitle === "string" && u.newTitle.trim()) upd.title = u.newTitle.trim().slice(0, 120);
+      if (typeof u.newExcerpt === "string") upd.excerpt = u.newExcerpt.trim().slice(0, 300) || null;
+      if (typeof u.newBody === "string" && u.newBody.trim()) upd.body = u.newBody.trim().slice(0, 20000);
+      if (typeof u.newCategory === "string" && normalizeCategory(u.newCategory)) upd.category = normalizeCategory(u.newCategory);
+      if (u.deleteArticle === true) {
+        const { error: delErr } = await supabase.from("site_news_articles").delete().eq("id", existing.id).eq("site_id", site.id);
+        if (delErr) newsSaveFailed = true;
+        else newsDeleted = existing.title;
+      }
+      if (u.deleteArticle !== true) {
       const { data: updated, error: updErr } = await supabase.from("site_news_articles").update(upd).eq("id", existing.id).eq("site_id", site.id).select("*").single();
       if (!updErr && updated) newsArticle = updated as NewsArticle;
       else newsSaveFailed = true;
+      }
     }
   }
 
@@ -977,6 +1025,10 @@ async function POST_handler(request: Request) {
         t("Nej, låt den vara borta"),
       ];
     }
+  }
+
+  if (!warning && moveErrors.length > 0) {
+    warning = t("En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.");
   }
 
   return NextResponse.json({

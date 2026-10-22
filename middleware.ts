@@ -16,6 +16,7 @@ const PROTECTED_PREFIXES = [
   "/forslag",
   "/webbplats",
   "/forhandsgranska",
+  "/support",
 ];
 
 // Sidor som kräver att man är inloggad som admin.

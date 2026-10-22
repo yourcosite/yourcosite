@@ -1675,5 +1675,6 @@
   "Text under": "Tekst under",
   "t.ex. 15+": "fx 15+",
   "t.ex. års erfarenhet": "fx års erfaring",
-  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Vi har fået besked om fejlen og kigger på den. Prøv igen om lidt."
+  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Vi har fået besked om fejlen og kigger på den. Prøv igen om lidt.",
+  "En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.": "En side kunne ikke flyttes i menuen. Tjek, at hovedsiden findes, og at siden ikke selv har undersider, så prøver jeg igen."
 }

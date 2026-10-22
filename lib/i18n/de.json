@@ -1675,5 +1675,6 @@
   "Text under": "Text darunter",
   "t.ex. 15+": "z. B. 15+",
   "t.ex. års erfarenhet": "z. B. Jahre Erfahrung",
-  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Wir wurden über den Fehler informiert und kümmern uns darum. Bitte versuche es gleich noch einmal."
+  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Wir wurden über den Fehler informiert und kümmern uns darum. Bitte versuche es gleich noch einmal.",
+  "En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.": "Eine Seite konnte im Menü nicht verschoben werden. Prüfe, ob die übergeordnete Seite existiert und die Seite keine eigenen Unterseiten hat, dann versuche ich es erneut."
 }

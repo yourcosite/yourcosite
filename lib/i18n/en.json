@@ -1675,5 +1675,6 @@
   "Text under": "Text below",
   "t.ex. 15+": "e.g. 15+",
   "t.ex. års erfarenhet": "e.g. years of experience",
-  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "We have been notified about the error and are looking into it. Please try again in a moment."
+  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "We have been notified about the error and are looking into it. Please try again in a moment.",
+  "En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.": "A page could not be moved in the menu. Check that the parent page exists and that the page does not have subpages of its own, and I will try again."
 }

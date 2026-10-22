@@ -25,7 +25,7 @@ const securityHeaders = [
 nextConfig.headers = async () => [
   { source: "/:path*", headers: securityHeaders },
   // Inloggade delar och adminportalen ska aldrig hamna i sökmotorer.
-  ...["admin", "dashboard", "redigera", "sidor", "bokningar", "installningar", "fakturering", "avboka"].map((p) => ({
+  ...["admin", "dashboard", "redigera", "sidor", "bokningar", "installningar", "fakturering", "avboka", "support"].map((p) => ({
     source: `/${p}/:path*`,
     headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
   })),

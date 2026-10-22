@@ -1675,5 +1675,6 @@
   "Text under": "Texte en dessous",
   "t.ex. 15+": "p. ex. 15+",
   "t.ex. års erfarenhet": "p. ex. ans d'expérience",
-  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Nous avons été informés de l’erreur et nous nous en occupons. Réessayez dans un instant."
+  "Vi har fått ett meddelande om felet och tittar på det. Försök igen om en stund.": "Nous avons été informés de l’erreur et nous nous en occupons. Réessayez dans un instant.",
+  "En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.": "Une page n’a pas pu être déplacée dans le menu. Vérifiez que la page parente existe et que la page n’a pas elle-même de sous-pages, et j’essaierai à nouveau."
 }
