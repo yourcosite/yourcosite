@@ -129,6 +129,29 @@ export function isAllowedLink(value: string, pagePaths: string[]): boolean {
   return /^(https:\/\/|http:\/\/|mailto:|tel:)\S+$/i.test(value) && value.length <= 500;
 }
 
+// ---- Nyckeltal ("stats.N": värde + etikett) ----
+export function statIndex(field: string): number | null {
+  const m = /^stats\.(\d+)$/.exec(field);
+  return m ? Number(m[1]) : null;
+}
+
+export function getStat(section: any, field: string): { value: string; label: string } | null {
+  const i = statIndex(field);
+  if (i === null) return null;
+  const s = section?.stats?.[i];
+  return s && typeof s.value === "string" && typeof s.label === "string" ? { value: s.value, label: s.label } : null;
+}
+
+export function setStat(section: any, field: string, value: string, label: string): boolean {
+  const i = statIndex(field);
+  if (i === null) return false;
+  const s = section?.stats?.[i];
+  if (!s) return false;
+  s.value = value.trim().slice(0, 40);
+  s.label = label.trim().slice(0, 120);
+  return true;
+}
+
 // Vilket textfält som hör till det markerade fältet: ett vanligt textfält är
 // sig självt, en "Läs mer"-rad (ctaLink / items.N.link) har sin text i
 // linkLabel / items.N.linkLabel.

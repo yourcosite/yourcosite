@@ -27,7 +27,7 @@ import { createClient } from "@/lib/supabase/client";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
-import { getFieldText, getLinkValue, getNewTab, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
+import { getFieldText, getLinkValue, getNewTab, getStat, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
   from: "user" | "bot";
@@ -789,7 +789,21 @@ export default function EditorPage() {
     const tf = textFieldFor(selection.field);
     return tf ? getFieldText(section, tf) : null;
   })();
+  // Nyckeltal har två delar: siffran och texten under.
+  const selectedStat = (() => {
+    if (!content || selection?.target !== "field") return null;
+    const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId);
+    return section ? getStat(section, selection.field) : null;
+  })();
+  const [statValueDraft, setStatValueDraft] = useState("");
+  const [statLabelDraft, setStatLabelDraft] = useState("");
   const openTextEditor = () => {
+    if (selectedStat) {
+      setStatValueDraft(selectedStat.value);
+      setStatLabelDraft(selectedStat.label);
+      setTextEditOpen(true);
+      return;
+    }
     if (selectedFieldText === null) return;
     setTextDraft(selectedFieldText);
     setTextEditOpen(true);
@@ -805,6 +819,7 @@ export default function EditorPage() {
         body: JSON.stringify({
           siteId: site?.id,
           text: textDraft,
+          ...(selectedStat ? { statValue: statValueDraft, statLabel: statLabelDraft } : {}),
           selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, field: textFieldFor(sel.field) || sel.field },
         }),
       });
@@ -943,7 +958,7 @@ export default function EditorPage() {
   // tecken i chatten få alla textfält i förhandsvisningen att ritas om.
   const fieldEditLatest = useRef({ openTextEditor, openLinkEditor, testLink });
   fieldEditLatest.current = { openTextEditor, openLinkEditor, testLink };
-  const canEditText = selection?.target === "field" && selectedFieldText !== null;
+  const canEditText = selection?.target === "field" && (selectedFieldText !== null || selectedStat !== null);
   const canEditLink = !!selectedLinkField;
   const canTestLink = selectedLinkValue !== "";
   const fieldEditValue = useMemo(
@@ -1497,6 +1512,31 @@ export default function EditorPage() {
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
                   <div className="text-[14px] font-semibold mb-2">{t("Ändra text")}</div>
                   <div className="text-[12px] text-ink-dim mb-2 truncate">{selection?.label}</div>
+                  {selectedStat ? (
+                    <div className="flex flex-col gap-2">
+                      <label className="block">
+                        <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Siffra eller värde")}</span>
+                        <input
+                          value={statValueDraft}
+                          onChange={(e) => setStatValueDraft(e.target.value)}
+                          maxLength={40}
+                          autoFocus
+                          placeholder={t("t.ex. 15+")}
+                          className="w-full bg-bg border border-line rounded-lg p-2 text-[14px] outline-none"
+                        />
+                      </label>
+                      <label className="block">
+                        <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Text under")}</span>
+                        <input
+                          value={statLabelDraft}
+                          onChange={(e) => setStatLabelDraft(e.target.value)}
+                          maxLength={120}
+                          placeholder={t("t.ex. års erfarenhet")}
+                          className="w-full bg-bg border border-line rounded-lg p-2 text-[14px] outline-none"
+                        />
+                      </label>
+                    </div>
+                  ) : (
                   <textarea
                     value={textDraft}
                     onChange={(e) => setTextDraft(e.target.value)}
@@ -1504,6 +1544,7 @@ export default function EditorPage() {
                     autoFocus
                     className="w-full bg-bg border border-line rounded-lg p-2 text-[14px] outline-none"
                   />
+                  )}
                   <div className="flex justify-end gap-2 mt-3">
                     <button
                       type="button"
@@ -1516,7 +1557,7 @@ export default function EditorPage() {
                     <button
                       type="button"
                       onClick={saveEditedText}
-                      disabled={savingText || textDraft.trim() === ""}
+                      disabled={savingText || (selectedStat ? statValueDraft.trim() === "" : textDraft.trim() === "")}
                       className="text-[13px] font-semibold bg-accent text-accent-ink px-3 py-1.5 rounded-full disabled:opacity-60"
                     >
                       {savingText ? t("Sparar …") : t("Spara")}

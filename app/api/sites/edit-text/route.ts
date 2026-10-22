@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { setFieldText, setLinkValue, isAllowedLink } from "@/lib/fieldPath";
+import { setFieldText, setLinkValue, isAllowedLink, setStat, statIndex } from "@/lib/fieldPath";
 
 // Manuell textredigering i chattredigeraren: kunden skriver om en enskild
 // text själv. Inget går via AI:n.
@@ -18,8 +18,15 @@ export async function POST(request: Request) {
   const body = await request.json();
   const siteId = typeof body.siteId === "string" ? body.siteId : null;
   const sel = body.selection;
-  const text = typeof body.text === "string" ? body.text : null;
+  const isStat = !!sel && typeof sel.field === "string" && statIndex(sel.field) !== null;
+  // Nyckeltal har två delar (siffra och text under) i stället för en text.
+  const statValue = typeof body.statValue === "string" ? body.statValue : null;
+  const statLabel = typeof body.statLabel === "string" ? body.statLabel : null;
+  const text = isStat ? "" : typeof body.text === "string" ? body.text : null;
   const isLink = body.kind === "link";
+  if (isStat && (statValue === null || statLabel === null || !statValue.trim() || statValue.length > 40 || statLabel.length > 120)) {
+    return NextResponse.json({ error: t("Nyckeltalet saknar siffra eller är för långt.") }, { status: 400 });
+  }
   if (text === null || text.length > 5000) {
     return NextResponse.json({ error: t("Texten saknas eller är för lång.") }, { status: 400 });
   }
@@ -43,6 +50,10 @@ export async function POST(request: Request) {
     }
     if (!setLinkValue(section, sel.field, value, typeof body.newTab === "boolean" ? body.newTab : undefined)) {
       return NextResponse.json({ error: t("Det går inte att ändra länken här.") }, { status: 400 });
+    }
+  } else if (isStat) {
+    if (!setStat(section, sel.field, statValue as string, statLabel as string)) {
+      return NextResponse.json({ error: t("Hittade inte nyckeltalet.") }, { status: 400 });
     }
   } else if (!setFieldText(section, sel.field, text)) {
     return NextResponse.json({ error: t("Den här texten går inte att ändra för hand.") }, { status: 400 });
