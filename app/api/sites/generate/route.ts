@@ -8,7 +8,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { summarizeInspirationLinks, fetchInspirationImages } from "@/lib/inspiration";
-import { assignUploadedImages } from "@/lib/assignUploadedImages";
+import { assignUploadedImagesDetailed } from "@/lib/assignUploadedImages";
 import { ensureImageSlots, enforceHomepageImageRichness, dedupeMaps } from "@/lib/ensureImageSlots";
 import { ensureShowcaseSections } from "@/lib/showcaseContent";
 import { getPinnedOrLatestSite } from "@/lib/supabase/onboardingSite";
@@ -185,7 +185,8 @@ async function loadCustomerDocuments(
   supabase: any,
   siteId: string,
   userId: string
-): Promise<{ name: string; text: string }[]> {
+): Promise<{ docs: { name: string; text: string }[]; failed: string[] }> {
+  const failed: string[] = [];
   const { data: docs } = await supabase
     .from("site_assets")
     .select("file_name, file_url, mime_type")
@@ -199,18 +200,19 @@ async function loadCustomerDocuments(
     if (typeof d.file_url !== "string" || !d.file_url.includes(`/uploads/${userId}/`)) continue;
     try {
       const res = await fetch(d.file_url);
-      if (!res.ok) continue;
+      if (!res.ok) { failed.push(String(d.file_name)); continue; }
       let text = await extractDocumentText(Buffer.from(await res.arrayBuffer()), d.mime_type, d.file_name);
-      if (!text) continue;
+      if (!text) { failed.push(String(d.file_name)); continue; }
       text = text.slice(0, Math.min(MAX_DOC_CHARS_EACH, MAX_DOC_CHARS_TOTAL - total));
       total += text.length;
       out.push({ name: String(d.file_name), text });
     } catch (e) {
       // Ett dokument som inte går att läsa (t.ex. gammalt .doc) hoppas över.
+      failed.push(String(d.file_name));
       console.error("generate: kunde inte läsa dokument", { siteId, name: d.file_name, error: (e as Error)?.message });
     }
   }
-  return out;
+  return { docs: out, failed };
 }
 
 function documentsPrompt(docs: { name: string; text: string }[]) {
@@ -426,7 +428,7 @@ async function generateSite(emit: (p: Progress) => void) {
 
   const inspiration = await summarizeInspirationLinks(site.inspiration_links || []);
   const inspirationImages = await fetchInspirationImages(site.inspiration_image_urls || []);
-  const documents = await loadCustomerDocuments(supabase, site.id, user.id);
+  const { docs: documents, failed: failedDocuments } = await loadCustomerDocuments(supabase, site.id, user.id);
 
   // Bilderna läggs FÖRE textprompten i samma meddelande — Claude väger in
   // bilder bättre när de kommer innan texten som refererar till dem, enligt
@@ -555,7 +557,12 @@ async function generateSite(emit: (p: Progress) => void) {
   });
 
   const imageUrls = (imageAssets ?? []).map((a) => a.file_url);
-  const finalContent = assignUploadedImages(contentWithImageSlots, imageUrls, site.hero_image_url);
+  const { content: finalContent, galleryCount: galleryImages } = assignUploadedImagesDetailed(
+    contentWithImageSlots,
+    imageUrls,
+    site.hero_image_url,
+    (site as any).language
+  );
 
   // Inspirationsbilderna (skärmdumpar av ANDRA sajter kunden visat som
   // referens) har nu gjort sitt jobb — de användes ovan bara för att styra
@@ -593,7 +600,14 @@ async function generateSite(emit: (p: Progress) => void) {
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
 
-  return NextResponse.json({ ok: true, siteId: site.id });
+  return NextResponse.json({
+    ok: true,
+    siteId: site.id,
+    documentsRead: documents.length,
+    documentWords: documents.reduce((n, d) => n + d.text.split(/\s+/).filter(Boolean).length, 0),
+    documentsFailed: failedDocuments.length,
+    galleryImages,
+  });
 }
 
 export const POST = withErrorLog("POST /api/sites/generate", POST_handler);

@@ -20,7 +20,7 @@ async function POST_handler() {
 
   const { data: site, error: siteError } = await supabase
     .from("sites")
-    .select("id, content, hero_image_url")
+    .select("id, content, hero_image_url, language")
     .eq("owner_id", user.id)
     .not("content", "is", null)
     .order("created_at", { ascending: false })
@@ -51,7 +51,7 @@ async function POST_handler() {
   }
 
   const content = ensureImageSlots(site.content);
-  const finalContent = assignUploadedImages(content, imageUrls, site.hero_image_url);
+  const finalContent = assignUploadedImages(content, imageUrls, site.hero_image_url, site.language);
 
   const { error: updateError } = await supabase
     .from("sites")

@@ -1753,5 +1753,8 @@
   "Flytta sidan Priser före Kontakt i menyn": "Place la page Tarifs avant Contact dans le menu",
   "Ändra rubriken på nyheten om vår kampanj": "Change le titre de l'actualité sur notre campagne",
   "Ta bort nyheten om vår kampanj": "Supprime l'actualité sur notre campagne",
-  "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Photos personnelles (PNG/JPG/WEBP) et textes (Word .docx, PDF ou .txt), 15 Mo max. par fichier, plusieurs à la fois sont possibles. Si votre texte contient des titres portant le nom de vos pages, chaque partie se retrouve sur la bonne page. (Un logo ? Importez-le plutôt séparément ci-dessus.)"
+  "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Photos personnelles (PNG/JPG/WEBP) et textes (Word .docx, PDF ou .txt), 15 Mo max. par fichier, plusieurs à la fois sont possibles. Si votre texte contient des titres portant le nom de vos pages, chaque partie se retrouve sur la bonne page. (Un logo ? Importez-le plutôt séparément ci-dessus.)",
+  "Läste {n} dokument ({words} ord) och använde texten.": "{n} documents lus ({words} mots) et texte utilisé.",
+  "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "{n} documents n'ont pas pu être lus. Enregistrez-les en .docx, PDF ou .txt et réessayez.",
+  "{n} bilder blev över och samlades i ett galleri.": "{n} images restantes ont été réunies dans une galerie."
 }

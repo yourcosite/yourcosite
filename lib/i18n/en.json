@@ -1753,5 +1753,8 @@
   "Flytta sidan Priser före Kontakt i menyn": "Move the Prices page before Contact in the menu",
   "Ändra rubriken på nyheten om vår kampanj": "Change the headline of the news article about our campaign",
   "Ta bort nyheten om vår kampanj": "Delete the news article about our campaign",
-  "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Your own photos (PNG/JPG/WEBP) and texts (Word .docx, PDF or .txt), max 15 MB per file, several at a time is fine. If your text has headings named like your pages, each part ends up on the right page. (Logo? Upload it separately above instead.)"
+  "Egna foton (PNG/JPG/WEBP) och texter (Word .docx, PDF eller .txt), max 15 MB per fil, flera åt gången går bra. Har du en text med rubriker som heter som dina sidor hamnar varje del på rätt sida. (Logga? Ladda upp den separat ovanför istället.)": "Your own photos (PNG/JPG/WEBP) and texts (Word .docx, PDF or .txt), max 15 MB per file, several at a time is fine. If your text has headings named like your pages, each part ends up on the right page. (Logo? Upload it separately above instead.)",
+  "Läste {n} dokument ({words} ord) och använde texten.": "Read {n} documents ({words} words) and used the text.",
+  "{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.": "{n} documents could not be read. Save them as .docx, PDF or .txt and try again.",
+  "{n} bilder blev över och samlades i ett galleri.": "{n} leftover images were collected in a gallery."
 }

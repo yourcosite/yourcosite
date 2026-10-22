@@ -1,4 +1,13 @@
-import type { SiteContent } from "./contentModel";
+import type { SiteContent, Section } from "./contentModel";
+import { MAX_GALLERY_IMAGES } from "./contentModel";
+
+const GALLERY_HEADING: Record<string, string> = {
+  sv: "Galleri", en: "Gallery", da: "Galleri", fi: "Galleria", de: "Galerie", fr: "Galerie", es: "Galería",
+};
+const GALLERY_PAGE_RE = /galleri|gallery|galerie|galería|galeria|bilder|images|photos|fotos|portfolio|inspiration|referens/i;
+// Så många bilder måste bli över (efter att mallens bildplatser fyllts) för att
+// ett galleri ska läggas till.
+const MIN_GALLERY_LEFTOVER = 3;
 
 // Placerar kundens egna uppladdade foton i designen — helt deterministiskt
 // i kod, INTE något AI:n väljer eller ser. Varje sidas hero får en bild,
@@ -16,13 +25,29 @@ import type { SiteContent } from "./contentModel";
 export function assignUploadedImages(
   content: SiteContent,
   imageUrls: string[],
-  heroImageUrl?: string | null
+  heroImageUrl?: string | null,
+  language?: string | null
 ): SiteContent {
+  return assignUploadedImagesDetailed(content, imageUrls, heroImageUrl, language).content;
+}
+
+// Som ovan, men säger också hur många bilder som hamnade i kundens galleri.
+// Blir det fler uppladdade foton över än mallens bildplatser rymmer läggs de
+// i ett galleri: det galleri som redan finns, annars ett nytt på sidan som
+// heter något med galleri/bilder/portfolio (annars startsidan).
+export function assignUploadedImagesDetailed(
+  content: SiteContent,
+  imageUrls: string[],
+  heroImageUrl?: string | null,
+  language?: string | null
+): { content: SiteContent; galleryCount: number } {
+  let galleryCount = 0;
   const generalUrls = heroImageUrl ? imageUrls.filter((u) => u !== heroImageUrl) : imageUrls;
 
   if (generalUrls.length > 0) {
     let i = 0;
     const next = () => generalUrls[i++ % generalUrls.length];
+    const slotsUsed = () => i;
 
     for (const page of content.pages) {
       for (const section of page.sections) {
@@ -88,6 +113,40 @@ export function assignUploadedImages(
     if (firstHomeCta && firstHomeCta.type === "cta" && !firstHomeCta.imageUrl) {
       firstHomeCta.imageUrl = next();
     }
+
+    // Fler foton än mallen har bildplatser för: samla dem i ett galleri.
+    if (generalUrls.length - slotsUsed() >= MIN_GALLERY_LEFTOVER) {
+      const all = (heroImageUrl ? [heroImageUrl, ...generalUrls] : generalUrls).slice(0, MAX_GALLERY_IMAGES);
+      const items = all.map((imageUrl) => ({ imageUrl }));
+      const layoutFor = (n: number) => (n >= 12 ? "mosaic" : n >= 7 ? "masonry" : "grid");
+      const pagePrefer = content.pages.find((p) => p.path !== "/" && GALLERY_PAGE_RE.test(`${p.label} ${p.path}`));
+      let existing: any;
+      for (const pg of pagePrefer ? [pagePrefer, ...content.pages] : content.pages) {
+        existing = pg.sections.find((sec) => sec.type === "gallery");
+        if (existing) break;
+      }
+      if (existing) {
+        existing.items = items;
+        existing.layout = layoutFor(items.length);
+      } else {
+        const target = pagePrefer ?? content.pages.find((p) => p.path === "/") ?? content.pages[0];
+        if (target) {
+          const section = {
+            id: "gallery-uploads",
+            type: "gallery",
+            layout: layoutFor(items.length),
+            heading: GALLERY_HEADING[language || "sv"] ?? GALLERY_HEADING.sv,
+            items,
+          } as unknown as Section;
+          // Före sista avslutande sektion (cta/kontakt/formulär) om sådan finns.
+          const tailTypes = ["cta", "contact", "contactForm", "booking", "map"];
+          let at = target.sections.length;
+          while (at > 1 && tailTypes.includes(target.sections[at - 1].type)) at--;
+          target.sections.splice(at, 0, section);
+        }
+      }
+      galleryCount = items.length;
+    }
   }
 
   if (heroImageUrl) {
@@ -96,5 +155,5 @@ export function assignUploadedImages(
     if (homeHero) homeHero.imageUrl = heroImageUrl;
   }
 
-  return content;
+  return { content, galleryCount };
 }

@@ -20,6 +20,9 @@ export default function GeneratingPage() {
   const [percent, setPercent] = useState(0);
   const [pageInfo, setPageInfo] = useState<{ page: number; pages: number } | null>(null);
   const [error, setError] = useState("");
+  // Kort sammanfattning som visas när sajten är klar: vilka dokument som lästes
+  // och om extra bilder blev ett galleri.
+  const [notes, setNotes] = useState<string[]>([]);
   // Ingen fallback-text som "din" — hellre visa rubriken en stund senare
   // än att blinka till en felaktig/konstig text innan det riktiga namnet
   // hämtats.
@@ -79,8 +82,15 @@ export default function GeneratingPage() {
         if (!cancelled) {
           setActiveStep(steps.length - 1);
           setPercent(100);
-          // En kort stund på 100 % så man hinner se att det blev klart.
-          setTimeout(() => router.push("/forslag"), 600);
+          const b = r.body || {};
+          const lines: string[] = [];
+          if (b.documentsRead > 0) lines.push(t("Läste {n} dokument ({words} ord) och använde texten.", { n: b.documentsRead, words: b.documentWords }));
+          if (b.documentsFailed > 0) lines.push(t("{n} dokument gick inte att läsa. Spara dem som .docx, PDF eller .txt och försök igen.", { n: b.documentsFailed }));
+          if (b.galleryImages > 0) lines.push(t("{n} bilder blev över och samlades i ett galleri.", { n: b.galleryImages }));
+          setNotes(lines);
+          // En kort stund på 100 % så man hinner se att det blev klart —
+          // längre när det finns en sammanfattning att läsa.
+          setTimeout(() => router.push("/forslag"), lines.length > 0 ? 4500 : 600);
         }
       })
       .catch((e) => {
@@ -171,6 +181,14 @@ export default function GeneratingPage() {
                 {t(label)}
               </span>
             </div>
+          ))}
+        </div>
+      )}
+
+      {!error && notes.length > 0 && (
+        <div className="w-full max-w-[420px] mt-8 text-[13.5px] text-[#E5E4E1] flex flex-col gap-1.5" role="status">
+          {notes.map((n) => (
+            <div key={n}>✓ {n}</div>
           ))}
         </div>
       )}
