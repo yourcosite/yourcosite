@@ -5261,6 +5261,53 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "fade-bottom") {
+        // Samma uttoning som hero-layouten fade-bottom: bilden tonar ut i
+        // sektionens bakgrund och texten ligger direkt under, utan egen ruta.
+        const fadeTo = sectionBg || palette.bg;
+        return (
+          <div style={{ background: sectionBg }}>
+            <div className="relative h-[280px] @3xl:h-[380px]">
+              <ImageOrArt imageUrl={section.imageUrl} art={artBackground(mode, accent, secondary)} fill dark={mode === "dark"} />
+              <div
+                className="absolute inset-x-0 bottom-0 h-2/3 pointer-events-none"
+                style={{ background: `linear-gradient(0deg, ${fadeTo} 0%, transparent 100%)` }}
+              />
+            </div>
+            <div className="relative -mt-12 @3xl:-mt-16 px-8 @3xl:px-14 pb-14 max-w-[620px]">
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-heading text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(38px*var(--ycs-ts,1))] leading-[1.1] mb-4"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="text-[15px] leading-relaxed mb-6"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              <FieldBadge
+                editable={editable}
+                selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+              >
+                <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                  {section.ctaLabel}
+                </CtaPill>
+              </FieldBadge>
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "dark-split") {
         // Kundens "Atelier"-referenskod — en "story"-sektion: en HELT
         // mörk bakgrund till vänster (rubrik/text/knapp i vitt), och en

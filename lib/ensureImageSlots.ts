@@ -135,7 +135,7 @@ function wantsImage(s: AnySection): boolean {
     case "about":
       return ["image-full", "image-stats", "image-left", "image-right"].includes(s.layout);
     case "cta":
-      return s.layout === "image-bleed" || s.layout === "dark-split";
+      return s.layout === "image-bleed" || s.layout === "dark-split" || s.layout === "fade-bottom";
     case "testimonials":
       return s.layout === "full-bleed";
     case "booking":

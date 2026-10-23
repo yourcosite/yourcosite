@@ -204,9 +204,9 @@ const RAW_SECTION_SCHEMA = {
         type: { const: "cta" },
         layout: {
           type: "string",
-          enum: ["centered", "split", "image-bleed", "dark-split"],
+          enum: ["centered", "split", "image-bleed", "dark-split", "fade-bottom"],
           description:
-            "\"image-bleed\" (ny): en riktig bild täcker hela sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD ovanpå — ett dramatiskt, redaktionellt avbrott mellan andra sektioner. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"dark-split\" (ny): en HELT mörk bakgrund till vänster (rubrik/text/knapp i vitt) och en riktig bild som fyller högra halvan — till skillnad från \"image-bleed\" är bilden INTE en gradient-bakgrund bakom texten, utan en egen, separat ruta bredvid.",
+            "\"image-bleed\" (ny): en riktig bild täcker hela sektionens bredd bakom en mörk gradient, med rubrik/text VÄNSTERSTÄLLD ovanpå — ett dramatiskt, redaktionellt avbrott mellan andra sektioner. Används bara när stilvarianten faktiskt är den \"redaktionella\" känslan (se hero-layouten \"collage\"). \"dark-split\" (ny): en HELT mörk bakgrund till vänster (rubrik/text/knapp i vitt) och en riktig bild som fyller högra halvan — till skillnad från \"image-bleed\" är bilden INTE en gradient-bakgrund bakom texten, utan en egen, separat ruta bredvid. \"fade-bottom\" (ny): en bred bild överst som tonar mjukt ut i sidans bakgrund, med rubrik, text och knapp under/ovanpå utan egen ruta (samma känsla som hero-layouten fade-bottom) — använd när kunden vill ha en kontaktsektion/uppmaning med \"fade-bottom\" eller bild som tonar ut; kräver imageUrl (behåll sektionens befintliga bild).",
         },
         heading: { type: "string" },
         body: { type: "string" },

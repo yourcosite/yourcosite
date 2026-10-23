@@ -106,7 +106,7 @@ export const GRID_LAYOUTS: GridLayout[] = [
 ];
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided" | "icon-cards" | "icon-circles" | "icon-list" | "icon-top-rule" | "image-cta-cards";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
-export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split";
+export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split" | "fade-bottom";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
 export type BookingLayout = "standard" | "compact" | "image-left" | "image-right" | "image-background";
