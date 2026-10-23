@@ -2344,5 +2344,8 @@
   "En salong byggd": "Un salon construit",
   "på goda samtal": "sur de bonnes conversations",
   "Släpp här för att lägga sidan sist": "Déposez ici pour placer la page en dernier",
-  "Bildkort med knapp": "Cartes image avec bouton"
+  "Bildkort med knapp": "Cartes image avec bouton",
+  "Toningssektion och mjukare knappar": "Section en fondu et boutons plus doux",
+  "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Une section en fondu a une image qui s'estompe doucement vers le haut et vers le bas, avec du texte et un bouton par-dessus. Elle peut servir de hero en haut de page et d'appel à l'action plus bas. Vous pouvez aussi obtenir des boutons plus doux : teintés, avec seulement un contour, aux coins doucement arrondis ou avec un dégradé. Demandez simplement à Millie.",
+  "Gör den här sektionen till en toningssektion": "Transforme cette section en section en fondu"
 }

@@ -50,7 +50,7 @@ export function assignUploadedImages(
         } else if (section.type === "booking" && (section.layout === "image-left" || section.layout === "image-right" || section.layout === "image-background")) {
           // Samma princip som hero imageUrl — se contentModel.ts BookingSection.imageUrl.
           section.imageUrl = next();
-        } else if (section.type === "cta" && (section.layout === "image-bleed" || section.layout === "dark-split" || section.layout === "fade-bottom")) {
+        } else if (section.type === "cta" && (section.layout === "image-bleed" || section.layout === "dark-split" || section.layout === "fade-bottom" || section.layout === "fade-both")) {
           // Samma princip igen — se contentModel.ts CtaSection.imageUrl.
           section.imageUrl = next();
         } else if (section.type === "about" && section.layout === "stats-split") {

@@ -15,6 +15,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-23-toningssektion",
+    date: "2026-10-23",
+    icon: "🌅",
+    title: msg("Toningssektion och mjukare knappar"),
+    text: msg("En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha."),
+    try: msg("Gör den här sektionen till en toningssektion"),
+  },
+  {
     id: "2026-10-20-bokningsvillkor",
     date: "2026-10-20",
     icon: "📜",

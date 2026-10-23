@@ -2344,5 +2344,8 @@
   "En salong byggd": "A salon built",
   "på goda samtal": "on good conversations",
   "Släpp här för att lägga sidan sist": "Drop here to place the page last",
-  "Bildkort med knapp": "Image cards with button"
+  "Bildkort med knapp": "Image cards with button",
+  "Toningssektion och mjukare knappar": "Fade section and softer buttons",
+  "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "A fade section has an image that fades softly both upwards and downwards, with text and a button on top. It can be used as the hero at the top and as a call to action further down. You can also get softer buttons: tinted, outline only, softly rounded or with a colour gradient. Just ask Millie for what you want.",
+  "Gör den här sektionen till en toningssektion": "Turn this section into a fade section"
 }

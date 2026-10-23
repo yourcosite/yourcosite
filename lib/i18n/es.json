@@ -2344,5 +2344,8 @@
   "En salong byggd": "Un salón construido",
   "på goda samtal": "sobre buenas conversaciones",
   "Släpp här för att lägga sidan sist": "Suelta aquí para colocar la página al final",
-  "Bildkort med knapp": "Tarjetas con imagen y botón"
+  "Bildkort med knapp": "Tarjetas con imagen y botón",
+  "Toningssektion och mjukare knappar": "Sección con degradado y botones más suaves",
+  "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Una sección con degradado tiene una imagen que se desvanece suavemente hacia arriba y hacia abajo, con texto y un botón encima. Puede usarse como hero arriba del todo y como llamada a la acción más abajo. También puedes tener botones más suaves: tintados, solo con borde, con esquinas suavemente redondeadas o con degradado de color. Pídeselo a Millie.",
+  "Gör den här sektionen till en toningssektion": "Convierte esta sección en una sección con degradado"
 }

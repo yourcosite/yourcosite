@@ -2344,5 +2344,8 @@
   "En salong byggd": "Ein Salon, gebaut",
   "på goda samtal": "auf gute Gespräche",
   "Släpp här för att lägga sidan sist": "Hier ablegen, um die Seite ans Ende zu setzen",
-  "Bildkort med knapp": "Bildkarten mit Button"
+  "Bildkort med knapp": "Bildkarten mit Button",
+  "Toningssektion och mjukare knappar": "Überblendungs-Sektion und weichere Buttons",
+  "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Eine Überblendungs-Sektion hat ein Bild, das sanft nach oben und nach unten ausblendet, mit Text und Button darüber. Sie lässt sich als Hero ganz oben und als Handlungsaufforderung weiter unten verwenden. Du kannst auch weichere Buttons bekommen: getönt, nur mit Rahmen, sanft abgerundet oder mit Farbverlauf. Bitte Millie einfach darum.",
+  "Gör den här sektionen till en toningssektion": "Mach aus dieser Sektion eine Überblendungs-Sektion"
 }

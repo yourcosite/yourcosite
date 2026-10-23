@@ -17,7 +17,7 @@ export type BackgroundMode = "light" | "warm" | "dark";
 // /forslag (en konsekvent "personlighet" hör ihop med varje variant,
 // snarare än att fritt kunna kombineras), så den sätts i kod i
 // /api/sites/choose-look, aldrig av Claude.
-export type ButtonStyle = "pill" | "square" | "underline";
+export type ButtonStyle = "pill" | "square" | "underline" | "soft" | "outline" | "rounded" | "gradient";
 
 // "Skin" — en SJUNDE stilaxel ovanpå de redan befintliga (se lib/skins.ts):
 // ett färg- och typografipaket som byter ut HELA färgläget (bakgrunder och
@@ -98,7 +98,7 @@ export interface SiteTheme {
   ctaLayout?: CtaLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "collage" | "quad" | "editorial" | "beam";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "fade-both" | "collage" | "quad" | "editorial" | "beam";
 export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right";
 export const GRID_LAYOUTS: GridLayout[] = [
   "cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided",
@@ -106,7 +106,7 @@ export const GRID_LAYOUTS: GridLayout[] = [
 ];
 export type GridLayout = "cards" | "alternating-rows" | "list" | "numbered" | "bento" | "icon-row" | "divided-columns" | "intro-divided" | "icon-cards" | "icon-circles" | "icon-list" | "icon-top-rule" | "image-cta-cards";
 export type TestimonialsLayout = "single-quote" | "carousel-row" | "side-by-side" | "full-bleed" | "carousel-arrows";
-export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split" | "fade-bottom";
+export type CtaLayout = "centered" | "split" | "image-bleed" | "dark-split" | "fade-bottom" | "fade-both";
 export type ContactLayout = "centered" | "split-info";
 export type FaqLayout = "stacked" | "two-column";
 export type BookingLayout = "standard" | "compact" | "image-left" | "image-right" | "image-background";

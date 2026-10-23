@@ -2344,5 +2344,8 @@
   "En salong byggd": "Salonki rakennettu",
   "på goda samtal": "hyville keskusteluille",
   "Släpp här för att lägga sidan sist": "Pudota tähän, niin sivu menee viimeiseksi",
-  "Bildkort med knapp": "Kuvakortit painikkeella"
+  "Bildkort med knapp": "Kuvakortit painikkeella",
+  "Toningssektion och mjukare knappar": "Häivytysosio ja pehmeämmät painikkeet",
+  "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Häivytysosiossa kuva häipyy pehmeästi sekä ylös että alas, ja teksti ja painike ovat sen päällä. Sen voi ottaa käyttöön hero-osiona ylhäällä ja toimintakehotuksena alempana. Voit myös saada pehmeämpiä painikkeita: sävytettyjä, pelkällä reunuksella, pehmeästi pyöristettyjä tai värisiirtymällä. Pyydä Milliea tekemään haluamasi.",
+  "Gör den här sektionen till en toningssektion": "Tee tästä osiosta häivytysosio"
 }

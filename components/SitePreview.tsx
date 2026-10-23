@@ -1929,15 +1929,46 @@ function CtaPill({
       </CtaLink>
     );
   }
+  // Mjukare knappformer: ingen hård fyllning. Texten följer sidans
+  // textfärg (textColor) eftersom bakgrunden är genomskinlig/ljus.
+  const sizeCls = size === "sm" ? "text-[13px] px-5 py-2.5" : "text-[14px] px-7 py-3.5";
+  if (shape === "soft") {
+    return (
+      <CtaLink
+        link={link}
+        newTab={newTab}
+        basePath={basePath}
+        onNavigate={onNavigate}
+        className={`inline-block font-semibold whitespace-nowrap rounded-xl ${sizeCls}`}
+        style={textColor === "#FFFFFF" ? { background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.55)", backdropFilter: "blur(6px)", color: "#FFFFFF" } : { background: `${fill}2E`, border: `1px solid ${fill}55`, color: textColor }}
+      >
+        {children}
+      </CtaLink>
+    );
+  }
+  if (shape === "outline") {
+    return (
+      <CtaLink
+        link={link}
+        newTab={newTab}
+        basePath={basePath}
+        onNavigate={onNavigate}
+        className={`inline-block font-semibold whitespace-nowrap rounded-full ${sizeCls}`}
+        style={{ background: "transparent", border: `1.5px solid ${textColor === "#FFFFFF" ? "#FFFFFF" : fill}`, color: textColor }}
+      >
+        {children}
+      </CtaLink>
+    );
+  }
   return (
     <CtaLink
       link={link}
       newTab={newTab}
       basePath={basePath}
       onNavigate={onNavigate}
-      className={`inline-block font-semibold whitespace-nowrap ${size === "sm" ? "text-[13px] px-5 py-2.5" : "text-[14px] px-7 py-3.5"} ${shape === "square" ? "rounded-md" : "rounded-full"}`}
+      className={`inline-block font-semibold whitespace-nowrap ${sizeCls} ${shape === "square" ? "rounded-md" : shape === "rounded" ? "rounded-xl" : "rounded-full"}`}
       style={{
-        background: fill,
+        background: shape === "gradient" ? `linear-gradient(135deg, ${fill}, ${fill}B3)` : fill,
         // Utan egen färg: mörk text som förut — utom på riktigt mörka
         // accentfärger (t.ex. svarta knappar i ett skin), där den annars
         // skulle försvinna.
@@ -3664,6 +3695,68 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "fade-both") {
+        // TONINGSSEKTION: bilden tonar ut mot sidans bakgrund både uppåt och
+        // nedåt, text och knapp ligger centrerade över bilden.
+        const fadeTo = sectionBg || palette.bg;
+        return (
+          <div className="relative" style={{ background: sectionBg }}>
+            <div className={`relative ${heroEmphasis ? "h-[560px] @3xl:h-[700px]" : "h-[420px] @3xl:h-[520px]"}`}>
+              <ImageOrArt
+                imageUrl={section.imageUrl}
+                art={art}
+                fill
+                dark={mode === "dark"}
+                selectable={editable}
+                selected={!!heroSelection && selectedImageKey === heroSelection.key}
+                onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+              />
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.38)" }} />
+              <div className="absolute inset-x-0 top-0 h-1/3 pointer-events-none" style={{ background: `linear-gradient(180deg, ${fadeTo} 0%, transparent 100%)` }} />
+              <div className="absolute inset-x-0 bottom-0 h-1/3 pointer-events-none" style={{ background: `linear-gradient(0deg, ${fadeTo} 0%, transparent 100%)` }} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 @3xl:px-14 text-white">
+                {section.eyebrow && (
+                  <Field editable={editable} as="div" className="text-[12px] tracking-[0.2em] font-semibold mb-4 opacity-80"
+                    selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                    onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}>
+                    {section.eyebrow.toUpperCase()}
+                  </Field>
+                )}
+                <Field
+                  editable={editable}
+                  as="h1"
+                  className="font-heading leading-[1.08] mb-4 max-w-[760px] text-[length:calc(40px*var(--ycs-ts,1))] @3xl:text-[length:calc(60px*var(--ycs-ts,1))]"
+                  selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                  onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+                >
+                  {section.headline}
+                </Field>
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="text-[15px] @3xl:text-[16.5px] leading-relaxed mb-7 max-w-[560px] opacity-90"
+                  selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                  onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.body}
+                </Field>
+                {section.ctaLabel && (
+                  <FieldBadge
+                    editable={editable}
+                    selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                    onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                  >
+                    <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
+                      {section.ctaLabel}
+                    </CtaPill>
+                  </FieldBadge>
+                )}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "fade-bottom") {
         // Bilden tonar mjukt ut i sidans egen bakgrundsfärg istället för att
         // sluta med en hård kant (som "centered" nedan) eller ligga bakom en
@@ -5269,6 +5362,60 @@ function SectionBlockInner({
                   {section.ctaLabel}
                 </CtaPill>
               </FieldBadge>
+            </div>
+          </div>
+        );
+      }
+
+      if (layout === "fade-both") {
+        // TONINGSSEKTION: bilden tonar ut mot sidans bakgrund både uppåt och
+        // nedåt, text och knapp ligger centrerade över bilden.
+        const fadeTo = sectionBg || palette.bg;
+        return (
+          <div className="relative" style={{ background: sectionBg }}>
+            <div className={`relative h-[400px] @3xl:h-[480px]`}>
+              <ImageOrArt
+                imageUrl={section.imageUrl}
+                art={artBackground(mode, accent, secondary)}
+                fill
+                dark={mode === "dark"}
+
+              />
+              <div className="absolute inset-0 pointer-events-none" style={{ background: "rgba(0,0,0,0.38)" }} />
+              <div className="absolute inset-x-0 top-0 h-1/3 pointer-events-none" style={{ background: `linear-gradient(180deg, ${fadeTo} 0%, transparent 100%)` }} />
+              <div className="absolute inset-x-0 bottom-0 h-1/3 pointer-events-none" style={{ background: `linear-gradient(0deg, ${fadeTo} 0%, transparent 100%)` }} />
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-8 @3xl:px-14 text-white">
+
+                <Field
+                  editable={editable}
+                  as="h2"
+                  className="font-heading leading-[1.08] mb-4 max-w-[760px] text-[length:calc(32px*var(--ycs-ts,1))] @3xl:text-[length:calc(42px*var(--ycs-ts,1))]"
+                  selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                  onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+                >
+                  {section.heading}
+                </Field>
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="text-[15px] @3xl:text-[16.5px] leading-relaxed mb-7 max-w-[560px] opacity-90"
+                  selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                  onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.body}
+                </Field>
+                {section.ctaLabel && (
+                  <FieldBadge
+                    editable={editable}
+                    selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                    onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                  >
+                    <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor="#FFFFFF">
+                      {section.ctaLabel}
+                    </CtaPill>
+                  </FieldBadge>
+                )}
+              </div>
             </div>
           </div>
         );

@@ -38,7 +38,7 @@ async function POST_handler(request: Request) {
   content.theme.backgroundMode = ["light", "warm", "dark"].includes(backgroundMode)
     ? backgroundMode
     : "light";
-  content.theme.buttonStyle = ["pill", "square", "underline"].includes(buttonStyle)
+  content.theme.buttonStyle = ["pill", "square", "underline", "soft", "outline", "rounded", "gradient"].includes(buttonStyle)
     ? buttonStyle
     : "pill";
   content.theme.headerLayout = ["left", "centered-stacked", "split"].includes(headerLayout)
