@@ -430,6 +430,50 @@ const RAW_SECTION_SCHEMA = {
       type: "object",
       properties: {
         id: { type: "string" },
+        type: { const: "menu" },
+        layout: {
+          type: "string",
+          enum: ["classic", "elegant", "cards", "tabs"],
+          description:
+            "\"classic\": två spalter med rätt, prisrad och beskrivning (vanligast). \"elegant\": centrerad, lugn, för finare restauranger. \"cards\": rutor, passar kortare menyer. \"tabs\": flikar per kategori, passar långa menyer.",
+        },
+        heading: { type: "string" },
+        intro: { type: "string" },
+        note: { type: "string", description: "Valfri text längst ned, t.ex. allergiinformation." },
+        categories: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              name: { type: "string" },
+              description: { type: "string" },
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    name: { type: "string" },
+                    description: { type: "string" },
+                    price: { type: "string", description: "Fritext exakt som kunden skrev, t.ex. \"189 kr\". Hitta aldrig på priser." },
+                    tags: { type: "array", items: { type: "string", enum: ["v", "vg", "gf", "lf", "hot"] } },
+                  },
+                  required: ["name"],
+                },
+              },
+            },
+            required: ["name", "items"],
+          },
+        },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "layout", "heading", "categories"],
+      description:
+        "Restaurangmeny med kategorier och rätter. Hittar ALDRIG på rätter, priser eller kostmärken — bara det kunden angett eller laddat upp. Lämna \"categories\" tom om kunden inte angett någon meny.",
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
         type: { const: "embed" },
         heading: { type: "string" },
         body: { type: "string" },

@@ -1,4 +1,4 @@
-import type { GalleryLayout, GridLayout, TeamLayout } from "@/lib/contentModel";
+import type { GalleryLayout, GridLayout, MenuLayout, TeamLayout } from "@/lib/contentModel";
 
 // Små schematiska förhandsbilder av rutnätssektionens layouter, till
 // layoutväljaren i redigeraren. Ritade med två toner: färgen för detaljer
@@ -16,7 +16,7 @@ function Lines({ x, y, w, n = 2, c }: { x: number; y: number; w: number; n?: num
   );
 }
 
-export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout: GridLayout | GalleryLayout | TeamLayout; accent?: string }) {
+export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout: GridLayout | GalleryLayout | TeamLayout | MenuLayout; accent?: string }) {
   const dim = "currentColor";
   const dimOp = 0.28;
   const cols3 = [8, 45, 82];
@@ -170,6 +170,44 @@ export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout
         <>
           {[[8, 8, 50, 38], [62, 8, 24, 38], [90, 8, 22, 17], [90, 29, 22, 17], [8, 50, 24, 18], [36, 50, 50, 18], [90, 50, 22, 18]].map(([x, y, w, h], k) => (
             <rect key={k} x={x} y={y} width={w} height={h} rx={3} fill={accent} fillOpacity={0.3 + (k % 3) * 0.12} />
+          ))}
+        </>
+      );
+      break;
+    case "classic":
+      body = [0, 1].map((col) =>
+        [0, 1, 2].map((r) => (
+          <g key={`${col}${r}`}>
+            <rect x={8 + col * 55} y={14 + r * 19} width={26} height={3} rx={1.5} fill={dim} opacity={0.6} />
+            <rect x={36 + col * 55} y={16 + r * 19} width={12} height={0.8} fill={dim} opacity={0.4} />
+            <rect x={50 + col * 55} y={14 + r * 19} width={9} height={3} rx={1.5} fill={accent} />
+            <rect x={8 + col * 55} y={20 + r * 19} width={38} height={2.4} rx={1.2} fill={dim} opacity={0.28} />
+          </g>
+        ))
+      );
+      break;
+    case "elegant":
+      body = [0, 1].map((r) => (
+        <g key={r}>
+          <rect x={44} y={10 + r * 34} width={32} height={3.5} rx={1.7} fill={dim} opacity={0.6} />
+          <rect x={54} y={17 + r * 34} width={12} height={1} fill={accent} />
+          <rect x={36} y={22 + r * 34} width={48} height={2.6} rx={1.3} fill={dim} opacity={0.3} />
+          <rect x={46} y={28 + r * 34} width={28} height={2.6} rx={1.3} fill={dim} opacity={0.3} />
+        </g>
+      ));
+      break;
+    case "tabs":
+      body = (
+        <>
+          {[0, 1, 2].map((k) => (
+            <rect key={k} x={14 + k * 32} y={10} width={28} height={9} rx={4.5} fill={k === 0 ? accent : "none"} stroke={k === 0 ? "none" : dim} strokeOpacity={0.4} />
+          ))}
+          {[0, 1, 2].map((r) => (
+            <g key={r}>
+              <rect x={20} y={28 + r * 14} width={36} height={3} rx={1.5} fill={dim} opacity={0.6} />
+              <rect x={60} y={30 + r * 14} width={22} height={0.8} fill={dim} opacity={0.4} />
+              <rect x={88} y={28 + r * 14} width={12} height={3} rx={1.5} fill={accent} />
+            </g>
           ))}
         </>
       );

@@ -6,7 +6,7 @@ import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n
 import { useState, useEffect, useRef, useCallback, createContext, useContext, createElement } from "react";
 import Script from "next/script";
 import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
-import type { SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
+import type { MenuCategory, MenuItem, MenuSection, SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
@@ -1519,6 +1519,197 @@ function EmbedFrame({ id, code, height, title }: { id: string; code: string; hei
   );
 }
 
+// Restaurangmeny (sektionen "menu"): fyra uppställningar. Texterna är kundens
+// egna (rättsnamn, beskrivningar, priser) — bara teckenförklaringen för
+// kostmärkena översätts (sajtens chrome).
+const MENU_TAG_LABEL: Record<string, { short: string; label: string }> = {
+  v: { short: "V", label: msg("Vegetarisk") },
+  vg: { short: "VG", label: msg("Vegansk") },
+  gf: { short: "GF", label: msg("Glutenfri") },
+  lf: { short: "LF", label: msg("Laktosfri") },
+  hot: { short: "🌶", label: msg("Stark") },
+};
+
+function MenuView({
+  section,
+  palette,
+  accent,
+  sectionBg,
+}: {
+  section: MenuSection;
+  palette: { text: string; textDim: string; cardBg: string; cardBorder: string };
+  accent: string;
+  sectionBg?: string;
+}) {
+  const t = useSiteT();
+  const cats: MenuCategory[] = (Array.isArray(section.categories) ? section.categories : []).filter((c) => c && Array.isArray(c.items));
+  const [tab, setTab] = useState(0);
+  const layout = section.layout || "classic";
+  const usedTags = Array.from(new Set(cats.flatMap((c) => c.items.flatMap((i) => i.tags || [])))).filter((x) => MENU_TAG_LABEL[x]);
+
+  const badges = (item: MenuItem) =>
+    item.tags && item.tags.length > 0 ? (
+      <span className="inline-flex gap-1 ml-2 align-middle">
+        {item.tags.filter((x) => MENU_TAG_LABEL[x]).map((x) => (
+          <span
+            key={x}
+            title={t(MENU_TAG_LABEL[x].label)}
+            className="inline-flex items-center justify-center rounded-full text-[9.5px] font-bold leading-none px-1.5 py-[3px]"
+            style={{ border: `1px solid ${accent}`, color: accent }}
+          >
+            {MENU_TAG_LABEL[x].short}
+          </span>
+        ))}
+      </span>
+    ) : null;
+
+  const heading = (
+    <>
+      <h2 className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3 text-center">{section.heading}</h2>
+      {section.intro && <p className="text-[15px] text-center max-w-[560px] mx-auto mb-2" style={{ color: palette.textDim }}>{section.intro}</p>}
+    </>
+  );
+  const footer = (
+    <>
+      {usedTags.length > 0 && (
+        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 mt-8 text-[12px]" style={{ color: palette.textDim }}>
+          {usedTags.map((x) => (
+            <span key={x}>
+              <span className="font-bold" style={{ color: accent }}>{MENU_TAG_LABEL[x].short}</span> {t(MENU_TAG_LABEL[x].label)}
+            </span>
+          ))}
+        </div>
+      )}
+      {section.note && <p className="text-[12.5px] italic text-center max-w-[620px] mx-auto mt-4" style={{ color: palette.textDim }}>{section.note}</p>}
+    </>
+  );
+  const empty = cats.length === 0;
+  const wrap = (inner: React.ReactNode, max = "max-w-[1000px]") => (
+    <div className={`px-6 @3xl:px-10 py-16 ${max} mx-auto`} style={{ background: sectionBg }}>
+      {heading}
+      <div className="mt-8">{empty ? null : inner}</div>
+      {!empty && footer}
+    </div>
+  );
+
+  const catTitle = (c: MenuCategory, center = false) => (
+    <div className={`mb-4 ${center ? "text-center" : ""}`}>
+      <h3 className="font-heading text-[22px] pb-2" style={{ borderBottom: center ? "none" : `2px solid ${accent}` }}>{c.name}</h3>
+      {c.description && <p className="text-[13.5px] mt-1.5" style={{ color: palette.textDim }}>{c.description}</p>}
+    </div>
+  );
+
+  if (layout === "elegant") {
+    return wrap(
+      <div className="flex flex-col gap-12 text-center">
+        {cats.map((c, ci) => (
+          <div key={ci}>
+            <h3 className="font-heading text-[24px] tracking-wide">{c.name}</h3>
+            <div className="mx-auto my-3 h-px w-12" style={{ background: accent }} />
+            {c.description && <p className="text-[13.5px] mb-4 italic" style={{ color: palette.textDim }}>{c.description}</p>}
+            <div className="flex flex-col gap-5">
+              {c.items.map((it, i) => (
+                <div key={i}>
+                  <div className="font-heading text-[17px]">{it.name}{badges(it)}</div>
+                  {it.description && <div className="text-[13.5px] mt-0.5 max-w-[460px] mx-auto" style={{ color: palette.textDim }}>{it.description}</div>}
+                  {it.price && <div className="text-[14px] mt-1 font-semibold" style={{ color: accent }}>{it.price}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>,
+      "max-w-[720px]"
+    );
+  }
+
+  if (layout === "cards") {
+    return wrap(
+      <div className="flex flex-col gap-10">
+        {cats.map((c, ci) => (
+          <div key={ci}>
+            {catTitle(c)}
+            <div className="grid grid-cols-1 @xl:grid-cols-2 @3xl:grid-cols-3 gap-3">
+              {c.items.map((it, i) => (
+                <div key={i} className="rounded-xl p-4" style={{ background: palette.cardBg, border: `1px solid ${palette.cardBorder}` }}>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <div className="font-heading text-[16px]">{it.name}{badges(it)}</div>
+                    {it.price && <div className="text-[14px] font-semibold flex-shrink-0" style={{ color: accent }}>{it.price}</div>}
+                  </div>
+                  {it.description && <div className="text-[13px] mt-1.5" style={{ color: palette.textDim }}>{it.description}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (layout === "tabs") {
+    const idx = Math.min(tab, Math.max(0, cats.length - 1));
+    const c = cats[idx];
+    return wrap(
+      <div>
+        <div className="flex flex-wrap justify-center gap-2 mb-8" role="tablist">
+          {cats.map((cc, i) => (
+            <button
+              key={i}
+              type="button"
+              role="tab"
+              aria-selected={i === idx}
+              onClick={(e) => { e.stopPropagation(); setTab(i); }}
+              className="px-4 py-1.5 rounded-full text-[13.5px] font-semibold"
+              style={i === idx ? { background: accent, color: "#FFFFFF" } : { border: `1px solid ${palette.cardBorder}`, color: palette.text }}
+            >
+              {cc.name}
+            </button>
+          ))}
+        </div>
+        {c && (
+          <div className="max-w-[720px] mx-auto">
+            {c.description && <p className="text-[13.5px] mb-4 text-center" style={{ color: palette.textDim }}>{c.description}</p>}
+            {c.items.map((it, i) => (
+              <div key={i} className="py-3.5" style={{ borderTop: i === 0 ? "none" : `1px solid ${palette.cardBorder}` }}>
+                <div className="flex items-baseline gap-3">
+                  <div className="font-heading text-[17px]">{it.name}{badges(it)}</div>
+                  <div className="flex-1 border-b border-dotted translate-y-[-4px] opacity-40" style={{ borderColor: palette.textDim }} />
+                  {it.price && <div className="text-[15px] font-semibold" style={{ color: accent }}>{it.price}</div>}
+                </div>
+                {it.description && <div className="text-[13.5px] mt-1" style={{ color: palette.textDim }}>{it.description}</div>}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>,
+      "max-w-[860px]"
+    );
+  }
+
+  // classic
+  return wrap(
+    <div className="flex flex-col gap-12">
+      {cats.map((c, ci) => (
+        <div key={ci}>
+          {catTitle(c)}
+          <div className="grid grid-cols-1 @3xl:grid-cols-2 gap-x-12 gap-y-5">
+            {c.items.map((it, i) => (
+              <div key={i}>
+                <div className="flex items-baseline gap-3">
+                  <div className="font-heading text-[17px]">{it.name}{badges(it)}</div>
+                  <div className="flex-1 border-b border-dotted translate-y-[-4px] opacity-40" style={{ borderColor: palette.textDim }} />
+                  {it.price && <div className="text-[15px] font-semibold flex-shrink-0" style={{ color: accent }}>{it.price}</div>}
+                </div>
+                {it.description && <div className="text-[13.5px] mt-1" style={{ color: palette.textDim }}>{it.description}</div>}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function ImageOrArt({
   imageUrl,
   art,
@@ -2589,6 +2780,8 @@ function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
       return te("nyhetssektionen “{h}”", { h });
     case "booking":
       return te("bokningssektionen “{h}”", { h });
+    case "menu":
+      return h ? te("menysektionen “{h}”", { h }) : te("menysektionen");
     case "embed":
       return h ? te("inbäddningen “{h}”", { h }) : te("inbäddningen");
     case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "team": case "faq": case "contactForm":
@@ -5186,6 +5379,23 @@ function SectionBlockInner({
           )}
         </div>
       );
+    }
+
+    case "menu": {
+      const cats = Array.isArray(section.categories) ? section.categories : [];
+      // Tom meny syns bara i redigeraren — besökarna ser ingenting förrän rätterna finns.
+      if (cats.length === 0 && !editable) return null;
+      if (cats.length === 0) {
+        return (
+          <div className="px-6 @3xl:px-10 py-12 max-w-[1000px] mx-auto text-center" style={{ background: sectionBg }}>
+            <h2 className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-3">{section.heading}</h2>
+            <div className="rounded-xl border-2 border-dashed p-8 text-[14px]" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+              {te("Menyn är tom. Skriv rätterna till Millie, eller bifoga din meny (PDF, Word, text eller ett foto) så läser hon in den.")}
+            </div>
+          </div>
+        );
+      }
+      return <MenuView section={section} palette={palette} accent={accent} sectionBg={sectionBg} />;
     }
 
     case "embed": {

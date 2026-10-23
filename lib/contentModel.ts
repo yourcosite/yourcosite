@@ -508,6 +508,42 @@ export interface BookingSection {
   bgColor?: string;
 }
 
+export type MenuLayout = "classic" | "elegant" | "cards" | "tabs";
+export const MENU_LAYOUTS: MenuLayout[] = ["classic", "elegant", "cards", "tabs"];
+// Kostmärken på en rätt: vegetarisk, vegansk, glutenfri, laktosfri, stark.
+export const MENU_TAGS = ["v", "vg", "gf", "lf", "hot"] as const;
+export const MAX_MENU_CATEGORIES = 30;
+export const MAX_MENU_ITEMS = 80;
+
+export interface MenuItem {
+  name: string;
+  description?: string;
+  // Fritext (t.ex. "189 kr" eller "145/195") — formateras aldrig om.
+  price?: string;
+  tags?: string[];
+}
+
+export interface MenuCategory {
+  name: string;
+  description?: string;
+  items: MenuItem[];
+}
+
+// Restaurangmeny: kategorier med rätter, pris och kostmärken. Millie lägger
+// till, ändrar och tar bort rätter med "menuOps" (lib/menuOps.ts) i stället
+// för att skriva om hela sidan.
+export interface MenuSection {
+  id: string;
+  type: "menu";
+  layout: MenuLayout;
+  heading: string;
+  intro?: string;
+  categories: MenuCategory[];
+  // T.ex. allergiinformation längst ned.
+  note?: string;
+  bgColor?: string;
+}
+
 // Inbäddad kod från tredje part, t.ex. ett eget bokningssystem. Koden klistras
 // in av kunden själv (aldrig av Millie) och körs i en isolerad ram, se
 // lib/embedDoc.ts. "height" saknas = ramen anpassar sin höjd automatiskt.
@@ -548,6 +584,7 @@ export type Section = (
   | NewsListSection
   | BookingSection
   | EmbedSection
+  | MenuSection
 ) &
   SectionExtras;
 
@@ -655,6 +692,7 @@ const VALID_SECTION_TYPES = [
   "newsList",
   "booking",
   "embed",
+  "menu",
 ];
 
 // Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så

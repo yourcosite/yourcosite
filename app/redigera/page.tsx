@@ -25,7 +25,7 @@ import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
-import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, type GalleryLayout, type GridLayout, type TeamLayout, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -96,6 +96,13 @@ const GRID_LAYOUT_LABELS: Record<GridLayout, string> = {
   "icon-circles": msg("Ikoncirklar"),
   "icon-list": msg("Ikonlista"),
   "icon-top-rule": msg("Ikoner med linje"),
+};
+
+const MENU_LAYOUT_LABELS: Record<MenuLayout, string> = {
+  classic: msg("Klassisk"),
+  elegant: msg("Elegant"),
+  cards: msg("Kort"),
+  tabs: msg("Flikar"),
 };
 
 const TEAM_LAYOUT_LABELS: Record<TeamLayout, string> = {
@@ -902,10 +909,12 @@ export default function EditorPage() {
   const pickedIconId =
     pickedIconIndex !== null && pickedSection?.type === "grid" ? iconsForItems(pickedSection.items)[pickedIconIndex] ?? null : null;
   const canPickIcon = pickedIconIndex !== null && pickedSection?.type === "grid";
-  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery" || pickedSection?.type === "team");
-  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : pickedSection?.type === "team" ? TEAM_LAYOUTS : GRID_LAYOUTS;
+  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery" || pickedSection?.type === "team" || pickedSection?.type === "menu");
+  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : pickedSection?.type === "team" ? TEAM_LAYOUTS : pickedSection?.type === "menu" ? MENU_LAYOUTS : GRID_LAYOUTS;
   const layoutLabelOf = (l: string) =>
-    pickedSection?.type === "team"
+    pickedSection?.type === "menu"
+      ? (MENU_LAYOUT_LABELS as Record<string, string>)[l] ?? l
+      : pickedSection?.type === "team"
       ? (TEAM_LAYOUT_LABELS as Record<string, string>)[l] ?? l
       : (GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l;
   const savePick = async (url: string, payload: Record<string, unknown>, okText: string) => {
@@ -1879,7 +1888,7 @@ export default function EditorPage() {
                         onClick={() => saveLayout(l)}
                         className={`rounded-xl border p-2 text-left disabled:opacity-60 ${l === pickedSection?.layout ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
                       >
-                        <GridLayoutThumb layout={l as GridLayout | GalleryLayout | TeamLayout} accent={content?.theme.accentColor} />
+                        <GridLayoutThumb layout={l as GridLayout | GalleryLayout | TeamLayout | MenuLayout} accent={content?.theme.accentColor} />
                         <div className="text-[12.5px] font-semibold mt-1.5">{t(layoutLabelOf(l))}</div>
                       </button>
                     ))}

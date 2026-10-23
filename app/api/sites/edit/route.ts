@@ -18,6 +18,7 @@ import { isUnsplashImageUrl, unsplashKey, withCredit, UNSPLASH_PROFILE_PREFIX } 
 import { isSkinId } from "@/lib/skins";
 import { dedupeMaps } from "@/lib/ensureImageSlots";
 import { withErrorLog } from "@/lib/errorLog";
+import { applyMenuOps, cleanCategories, type MenuOp } from "@/lib/menuOps";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -115,6 +116,60 @@ const EDIT_TOOL = {
           required: ["path", "newParent"],
         },
       },
+      menuOps: {
+        type: "array",
+        description:
+          "Ändringar i en restaurangmeny (sektionen \"menu\") som redan finns på sajten: lägg till, ändra, flytta eller ta bort rätter och kategorier. Använd det för ALLA små och medelstora menyändringar (nytt pris, ny rätt, ta bort en rätt, byt kategori) i stället för att skriva om sidan. Ange rätter och kategorier med sina nuvarande namn. Utelämna annars.",
+        items: {
+          type: "object",
+          properties: {
+            action: {
+              type: "string",
+              enum: ["addItem", "updateItem", "removeItem", "addCategory", "renameCategory", "removeCategory", "moveCategory", "setMenu"],
+              description:
+                "addItem (ny rätt i en kategori, kategorin skapas om den saknas), updateItem (ändra namn, beskrivning, pris, märken eller plats på en rätt), removeItem, addCategory, renameCategory, removeCategory, moveCategory (flytta en kategori till en plats), setMenu (byt HELA menyns innehåll mot \"categories\", t.ex. när kunden laddat upp sin egen meny som du tolkat).",
+            },
+            sectionId: { type: "string", description: "Menysektionens id. Utelämna om sajten bara har en meny." },
+            category: { type: "string", description: "Kategorins nuvarande namn (t.ex. \"Varmrätter\")." },
+            item: { type: "string", description: "Rättens nuvarande namn, för updateItem/removeItem. För addItem: den nya rättens namn." },
+            newName: { type: "string", description: "Nytt namn, för updateItem eller renameCategory." },
+            description: { type: "string", description: "Rättens (eller kategorins) beskrivning. Tom sträng tar bort den." },
+            price: { type: "string", description: "Pris som fritext exakt som kunden skrev det, t.ex. \"189 kr\". Tom sträng tar bort priset. Hitta aldrig på priser." },
+            tags: {
+              type: "array",
+              items: { type: "string", enum: ["v", "vg", "gf", "lf", "hot"] },
+              description: "Kostmärken: v = vegetarisk, vg = vegansk, gf = glutenfri, lf = laktosfri, hot = stark. Sätt bara dem kunden eller menyn uttryckligen anger. Tom lista tar bort alla.",
+            },
+            position: { type: "integer", description: "Plats (1 = först). Utelämna för sist." },
+            categories: {
+              type: "array",
+              description: "Bara för setMenu: hela den nya menyn.",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  description: { type: "string" },
+                  items: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string" },
+                        description: { type: "string" },
+                        price: { type: "string" },
+                        tags: { type: "array", items: { type: "string", enum: ["v", "vg", "gf", "lf", "hot"] } },
+                      },
+                      required: ["name"],
+                    },
+                  },
+                },
+                required: ["name", "items"],
+              },
+            },
+          },
+          required: ["action"],
+        },
+      },
       nextOptions: {
         type: "array",
         items: { type: "string" },
@@ -204,6 +259,7 @@ type EditPatch = {
     deleteArticle?: boolean;
   };
   movePages?: { path: string; newParent: string }[];
+  menuOps?: MenuOp[];
   nextOptions?: string[];
   summary: string;
   clarifyOptions?: string[];
@@ -337,7 +393,7 @@ FRÅGA FÖRST om utseendet: ber kunden om en bokningssida eller bokningssektion 
 
 FRÅGA FÖRST om menyn: ber kunden att byta eller ändra menyns design/utseende/placering, eller om en knapp i menyn (t.ex. "jag vill ha en bokningsknapp i menyn", "kan vi ändra menyn?", "byt design på menyn"), utan att ha valt en av stilarna nedan, gör du INGA ändringar. Beskriv kort stilarna i "summary" och ge de fem som klickbara önskemål i "clarifyOptions" och sätt "clarifyPreview": "menu" (dessa fem, i den här ordningen, översatta till kundens språk — beskrivningen i "summary" också): "Byt menyn till Klassisk med knapp (meny och knapp till höger)", "Byt menyn till Meny i mitten med knapp", "Byt menyn till Centrerad logga med knapp", "Byt menyn till Flytande pillermeny med knapp", "Byt menyn till Minimal (bara knapp och meny-ikon)". I "summary" förklarar du i en mening per stil hur den ser ut: 1 = logga vänster, meny och en tydlig knapp höger; 2 = logga vänster, meny i mitten, knapp höger; 3 = loggan i mitten, knapp uppe till höger och menyn på en rad under; 4 = menyn i en rundad flytande ruta, aktuell sida markerad, knapp höger; 5 = bara logga, knapp och meny-ikon. Nämn också att knappen automatiskt blir sajtens bokningssida (annars kontaktsidan) och att kunden kan be om en annan text eller en annan sida. Kunden kan även välja de enklare stilarna utan knapp: "klassisk" (headerLayout left), "loggan centrerad" (centered-stacked) eller "meny i mitten" utan knapp (split) — sätt dem direkt om kunden ber om det uttryckligen. Mappning när kunden har valt: Klassisk med knapp = "left-button", Meny i mitten med knapp = "split-button", Centrerad logga med knapp = "centered-button", Flytande pillermeny = "pill-bar", Minimal = "minimal" (alla i theme.headerLayout, ändra inget annat). Bara knappens text eller mål ("ändra knappen till Boka tid", "låt knappen gå till Kontakt") sätts i theme.headerCta {label, path} och kräver ingen fråga; en sida kan ligga i menyn OCH vara knappens mål samtidigt — sätter kunden knappens text eller sida finns sidan kvar som vanligt menyval, så "Kontakt" som länk plus en knapp "Boka" till samma sida går bra och du ska ALDRIG säga att det inte går (kräver ingen annan ändring än headerCta; ta inte bort sidan ur menyn); finns ingen bokningssida eller kontaktsida syns ingen knapp förrän kunden anger en sida med path — säg det i så fall. "Ta bort knappen" = theme.headerCta {off: true}. Gäller frågan bara att byta namn på, ta bort eller flytta ett menyval (en sida), är det ingen designfråga — hantera det som vanligt med sidans namn och ordning, utan att visa stilarna.
 
-VIKTIGT — galleri ("gallery"): ber kunden om ett galleri/bildgalleri/fotogalleri, lägg till en "gallery"-sektion med en passande rubrik och 8-12 tomma platser i "items" (objekt utan imageUrl, ge ALDRIG påhittade bildadresser). Välj layout efter önskemålet: "mosaic" för oregelbundet/collage, "masonry" för foton i olika format med egna proportioner, "tiles" för många små bilder i ett tätt rutnät, "grid" för få större bilder, "carousel" för en svepbar rad. Besökarna kan klicka på varje bild för att se den större, det behöver du inte ordna. Säg i "summary" att kunden klickar på galleriet i förhandsvisningen och väljer "➕ Lägg till bilder" för att ladda upp många bilder på en gång (de fyller platserna och galleriet växer vid behov), att "🎨 Byt layout" visar alla uppställningar, och att man kan bifoga bilder här i chatten också (högst 10 åt gången). Bifogar kunden bilder när ett galleri finns fyller systemet platserna i ordning. VIKTIGT — personer/team ("team"): ber kunden om personer, medarbetare, team eller "vilka vi är" (t.ex. på kontaktsidan), lägg till en "team"-sektion med en passande rubrik och en post per person kunden nämnt, med "name" och "title" (e-post och telefon BARA om kunden gett dem, hitta aldrig på kontaktuppgifter eller bildadresser). Nämner kunden inga namn, lägg 3 platser med exempeltexterna "Förnamn Efternamn" och "Titel" och säg det i "summary". Layouter: "cards" (kort), "round" (runda porträtt, personligt), "rows" (en rad per person, bra för många), "overlay" (stora foton med text över). Säg i "summary" att kunden klickar på sektionen i förhandsvisningen och väljer "👥 Redigera personer" för att ladda upp foton och fylla i namn, titel, e-post och telefon (bara foto, namn och titel krävs), och "🎨 Byt layout" för att se alla uppställningar. VIKTIGT — inbäddad kod ("embed"): ber kunden att lägga in ett eget bokningssystem, ett externt formulär, en widget, ett script eller annan html-kod på en sida, lägg till en "embed"-sektion på den sida kunden pekar ut (längst ned om inget annat sägs) med en passande rubrik, och UTELÄMNA "code". Du kan aldrig ta emot, skriva eller ändra själva koden — den klistrar kunden in själv. Säg i "summary" att kunden klickar på sektionen i förhandsvisningen och väljer "</> Klistra in kod", att det går bra att klistra in antingen hela koden (script eller iframe) eller bara adressen till bokningssidan, och att koden körs i en säker, isolerad ruta (några tjänster som kräver cookies eller lagring på sajten kan därför behöva sin egen länk i stället). Bokningssystemet i "booking"-sektionen är YourCoSites egna; föreslå det bara om kunden inte redan har ett eget system. Ta aldrig bort en befintlig "embed"-sektion om inte kunden uttryckligen ber om det. VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
+VIKTIGT — galleri ("gallery"): ber kunden om ett galleri/bildgalleri/fotogalleri, lägg till en "gallery"-sektion med en passande rubrik och 8-12 tomma platser i "items" (objekt utan imageUrl, ge ALDRIG påhittade bildadresser). Välj layout efter önskemålet: "mosaic" för oregelbundet/collage, "masonry" för foton i olika format med egna proportioner, "tiles" för många små bilder i ett tätt rutnät, "grid" för få större bilder, "carousel" för en svepbar rad. Besökarna kan klicka på varje bild för att se den större, det behöver du inte ordna. Säg i "summary" att kunden klickar på galleriet i förhandsvisningen och väljer "➕ Lägg till bilder" för att ladda upp många bilder på en gång (de fyller platserna och galleriet växer vid behov), att "🎨 Byt layout" visar alla uppställningar, och att man kan bifoga bilder här i chatten också (högst 10 åt gången). Bifogar kunden bilder när ett galleri finns fyller systemet platserna i ordning. VIKTIGT — personer/team ("team"): ber kunden om personer, medarbetare, team eller "vilka vi är" (t.ex. på kontaktsidan), lägg till en "team"-sektion med en passande rubrik och en post per person kunden nämnt, med "name" och "title" (e-post och telefon BARA om kunden gett dem, hitta aldrig på kontaktuppgifter eller bildadresser). Nämner kunden inga namn, lägg 3 platser med exempeltexterna "Förnamn Efternamn" och "Titel" och säg det i "summary". Layouter: "cards" (kort), "round" (runda porträtt, personligt), "rows" (en rad per person, bra för många), "overlay" (stora foton med text över). Säg i "summary" att kunden klickar på sektionen i förhandsvisningen och väljer "👥 Redigera personer" för att ladda upp foton och fylla i namn, titel, e-post och telefon (bara foto, namn och titel krävs), och "🎨 Byt layout" för att se alla uppställningar. VIKTIGT — inbäddad kod ("embed"): ber kunden att lägga in ett eget bokningssystem, ett externt formulär, en widget, ett script eller annan html-kod på en sida, lägg till en "embed"-sektion på den sida kunden pekar ut (längst ned om inget annat sägs) med en passande rubrik, och UTELÄMNA "code". Du kan aldrig ta emot, skriva eller ändra själva koden — den klistrar kunden in själv. Säg i "summary" att kunden klickar på sektionen i förhandsvisningen och väljer "</> Klistra in kod", att det går bra att klistra in antingen hela koden (script eller iframe) eller bara adressen till bokningssidan, och att koden körs i en säker, isolerad ruta (några tjänster som kräver cookies eller lagring på sajten kan därför behöva sin egen länk i stället). Bokningssystemet i "booking"-sektionen är YourCoSites egna; föreslå det bara om kunden inte redan har ett eget system. Ta aldrig bort en befintlig "embed"-sektion om inte kunden uttryckligen ber om det. VIKTIGT — restaurangmeny ("menu"): ber kunden om en meny, matsedel, dryckeslista eller lunchmeny, lägg till en "menu"-sektion på den sida kunden pekar ut (föreslå en egen sida "Meny" om ingen nämns). Fyll den med de rätter kunden angett i "categories" (kategorier med rätter: name, valfri description, price som fritext exakt som kunden skrev, tags). Hitta ALDRIG på rätter, priser eller kostmärken — har kunden inte angett några, lämna "categories" som en tom lista och säg i "summary" att kunden kan skriva eller ladda upp sin meny härnäst. Layouter: "classic" (två spalter med prisrad), "elegant" (centrerad, lugn, för finare restauranger), "cards" (rutor), "tabs" (flikar per kategori, bra för långa menyer). Allergiinformation kan läggas i "note". Kostmärken (tags): v vegetarisk, vg vegansk, gf glutenfri, lf laktosfri, hot stark. ÄNDRA en befintlig meny med "menuOps" (addItem, updateItem, removeItem, addCategory, renameCategory, removeCategory, moveCategory), ALDRIG genom att skriva om hela sidan i changedPages — det gäller även ändrade priser. "Sänk priset på laxen till 245" = updateItem med item "Lax…" (rättens nuvarande namn) och price "245 kr". "Lägg till en vegansk pasta under varmrätter för 165" = addItem med tags ["vg"]. Flera ändringar i samma meddelande = flera objekt i menuOps. UPPLADDAD MENY: bifogar kunden sin egen meny (PDF, Word, textfil eller ett foto/skärmdump av en meny) och vill ha den på sajten, läs ut ALLA kategorier och rätter exakt som de står (namn, beskrivning, pris, och kostmärken bara om de anges, t.ex. (V), (VG), (GF), (LF)), utan att korta eller hitta på något. Finns redan en menysektion: använd menuOps med action "setMenu" och "categories". Finns ingen: skapa en "menu"-sektion med alla "categories" direkt i changedPages. Är en rad oläslig eller osäker: ta med den så gott det går och nämn det i "summary". Säg i "summary" hur många kategorier och rätter du lade in och att kunden kan be dig ändra enskilda rätter eller priser. Kundens språk i menyn behålls som det är (översätt inte rättsnamn). VIKTIGT — nyhetssektionen ("newsList"): visar kundens PUBLICERADE nyhetsartiklar som ett rutnät på en sida — själva sektionen innehåller inga artiklar, bara en rubrik. Ber kunden om en nyhetssida/nyhetssektion, lägg till "newsList"-sektionen på den sidan (högst en per sida).
 
 VIKTIGT — skapa en nyhetsARTIKEL: det här går numera att göra direkt här i chatten, via det separata fältet "newsArticle" (skiljt från sajtens sidor — artiklar lagras för sig och visas via "newsList"-sektionen ovan). Använd det BARA när kunden uttryckligen ber om att skapa/skriva/publicera en nyhet/artikel, t.ex. "skriv en nyhet om att vi fått nya skor i lager" eller genom att bifogera text och/eller en bild med en begäran om att göra en nyhet av det. Rubrik får ALDRIG hittas på — se fältbeskrivningen. Saknas en tydlig rubrik eller är kategorin oklar, utelämna HELA "newsArticle" och fråga efter det som saknas i "summary" istället. Sajtens befintliga kategorier just nu: ${existingNewsCategories.join(", ")} — matcha en av dessa EXAKT om kunden syftar på samma sak, annars kan du sätta en ny kategori med kundens egen benämning (lista då gärna de befintliga som förslag om du istället behöver fråga). En bifogad bild används automatiskt som artikelns bild av vårt system — nämn inte bilden i "newsArticle" på något sätt, den hanteras utanför den här strukturen precis som andra bilder. Har kunden INTE bifogat någon bild alls, skapas artikeln helt enkelt utan bild. ${newsContext} Skapar du en artikel samtidigt som kunden ber om en nyhetssida/nyhetssektion de inte redan har, lägg gärna till "newsList"-sektionen i samma svar också. ${content.pages.some((pg) => pg.sections.some((sec) => sec.type === "newsList")) ? "Sajten HAR en nyhetslista." : "Sajten har just nu INGEN nyhetslista — skapar du en artikel MÅSTE du i samma svar lägga till en \"newsList\"-sektion (på en befintlig nyhetssida om en finns, annars på en ny sida \"Nyheter\" med path \"/nyheter\"), annars syns artikeln inte för besökarna."} Ta ALDRIG bort en befintlig "newsList"-sektion eller nyhetssida om inte kunden uttryckligen ber om det — skriver du om en sida som innehåller en, ska den följa med oförändrad.
 
@@ -377,7 +433,7 @@ function buildAttachmentNote(attachments: Attachment[]): string {
 // Klistrar in Claudes patch i den befintliga, redan sparade sajten:
 // ersätter matchande sidor (på path), lägger till nya, tar bort begärda —
 // allt annat lämnas exakt som det var, orört av den här ändringen.
-function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[] = []): SiteContent {
+function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[] = [], currentPath?: string): SiteContent {
   const removed = new Set(patch.removedPagePaths || []);
   // Tas en huvudsida bort följer dess undersidor med — annars blir de
   // föräldralösa och dyker upp som egna menyval.
@@ -533,6 +589,16 @@ function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[]
       if ("error" in res) moveErrors.push(`${mv.path}: ${res.error}`);
       else merged.pages = res.pages as typeof merged.pages;
     }
+  }
+  // Menysektioner: rensa det Millie skrivit direkt i en sektion, och utför
+  // sedan hennes menyändringar (lägg till/ändra/ta bort rätter).
+  for (const pg of merged.pages) {
+    for (const sec of pg.sections as any[]) {
+      if (sec.type === "menu") sec.categories = cleanCategories(Array.isArray(sec.categories) ? sec.categories : []);
+    }
+  }
+  if (Array.isArray(patch.menuOps) && patch.menuOps.length > 0) {
+    applyMenuOps(merged, patch.menuOps, currentPath, moveErrors, getT());
   }
   // Sökmotortexter: trimmas och kortas (tom sträng = ta bort).
   for (const pg of merged.pages) {
@@ -759,7 +825,7 @@ async function POST_handler(request: Request) {
       // sidor) istället för mot hela sajten, så 8000 var ett tak som i
       // praktiken nästan aldrig behövdes — sänkt för att inte ge modellen
       // utrymme att av misstag ändå skriva ut mer än nödvändigt.
-      max_tokens: 4000,
+      max_tokens: 12000,
       // Verktygsschemat är lika vid varje anrop — cacheas så att det inte
       // behöver bearbetas på nytt (snabbare svar och lägre kostnad).
       tools: [{ ...EDIT_TOOL, cache_control: { type: "ephemeral" } }],
@@ -807,7 +873,7 @@ async function POST_handler(request: Request) {
   }
 
   const moveErrors: string[] = [];
-  const updatedContent = dedupeMaps(applyPatch(site.content, patch, moveErrors), "flatten-form");
+  const updatedContent = dedupeMaps(applyPatch(site.content, patch, moveErrors, currentPath), "flatten-form");
   if (!updatedContent.pages.length) {
     return NextResponse.json({ error: t("Ändringen skulle lämna sajten utan sidor.") }, { status: 502 });
   }

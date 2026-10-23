@@ -94,6 +94,19 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
     ],
   },
   {
+    icon: "🍽️",
+    title: msg("Restaurangmeny"),
+    hint: msg("Bifoga din meny (PDF, Word, text eller ett foto) med gemet så läser Millie in alla rätter. Sedan ändrar du enskilda rätter och priser genom att skriva till henne. 🎨 Byt layout på menyn visar fyra uppställningar."),
+    examples: [
+      msg("Lägg till en menysida med den bifogade menyn"),
+      msg("Sänk priset på laxen till 245 kr"),
+      msg("Lägg till en vegansk pasta under varmrätter för 165 kr"),
+      msg("Ta bort rätten Råbiff från menyn"),
+      msg("Flytta efterrätter före drycker"),
+      msg("Gör menyn till flikar"),
+    ],
+  },
+  {
     icon: "🔌",
     title: msg("Eget bokningssystem och kod"),
     hint: msg("Millie lägger till en ruta för koden. Själva koden klistrar du in själv: klicka på rutan i förhandsvisningen och välj Klistra in kod. Det går bra med script, iframe eller bara adressen."),
