@@ -569,6 +569,8 @@ export type TextAlign = "left" | "center" | "right";
 export interface SectionExtras {
   spacing?: "compact" | "airy" | "normal";
   textAlign?: TextAlign;
+  // true = sektionens nederkant tonar mjukt ut i färgen på sektionen under.
+  fadeBottom?: boolean;
 }
 
 export type Section = (

@@ -522,10 +522,15 @@ const TEXT_ALIGN_SCHEMA = {
   description:
     "Textjustering i BARA den här sektionen: left = vänsterställd, center = centrerad, right = högerställd. Sätt bara när kunden ber om det för just den sektionen. Utelämna annars, och behåll ett redan satt värde oförändrat när du skriver om sektionen av annan anledning.",
 };
+const FADE_BOTTOM_SCHEMA = {
+  type: "boolean",
+  description:
+    "true = den här sektionens nederkant tonar mjukt ut i bakgrundsfärgen på sektionen under (mjuk övergång istället för hård kant). false tar bort. Sätt bara när kunden ber om fade/uttoning/mjuk övergång nedåt på just den sektionen; behåll ett redan satt värde när du skriver om sektionen av annan anledning. (Heroens layout fade-bottom gör redan detta av sig själv.)",
+};
 export const SECTION_SCHEMA = {
   anyOf: RAW_SECTION_SCHEMA.anyOf.map((variant) => ({
     ...variant,
-    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA },
+    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA, fadeBottom: FADE_BOTTOM_SCHEMA },
   })),
 };
 
