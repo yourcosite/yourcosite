@@ -54,12 +54,13 @@ export function buildSalonExample(t: TFunction): SiteContent {
 
   return {
     theme: {
-      accentColor: "#A8576E",
+      skin: "pastell",
+      accentColor: "#C2527A",
       secondaryColors: ["#4A3B52", "#D9A58F"],
-      font: "serif",
+      font: "sans",
       backgroundMode: "light",
       buttonStyle: "pill",
-      headerLayout: "split-button",
+      headerLayout: "centered-button",
       headerCta: { path: "/kontakt", label: t("Boka tid") },
     },
     pages: [
@@ -70,37 +71,39 @@ export function buildSalonExample(t: TFunction): SiteContent {
         seoDescription: t("Salong Saxen, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "h-hero", type: "hero", layout: "overlay-bottom",
+            id: "h-hero", type: "hero", layout: "collage",
             eyebrow: t("FRISÖR I LINKÖPING"),
-            headline: t("Hår som känns som du"),
+            headline: t("Hår som känns"),
+            headlineEmphasis: t("som du"),
             body: t("Klippning, färg och styling för alla. Vi lyssnar först och tar oss tid, så att du går härifrån nöjd."),
             ctaLabel: t("Boka tid"), ctaLink: "/kontakt", imageUrl: img("hero"),
+            collageImageUrls: [img("uppsattning"), img("plattang")],
+            stats: [{ value: "5", label: t("Stylister") }, { value: "2014", label: t("Öppnade") }],
           },
           {
-            id: "h-about", type: "about", layout: "image-stats",
+            id: "h-about", type: "about", layout: "image-right",
             heading: t("En liten salong med stort engagemang"),
             body: t("Salong Saxen öppnade 2014 på Storgatan med en enkel idé: att varje besök ska börja med ett riktigt samtal. Vi frågar hur du bor, hur du vill ha det och hur mycket tid du vill lägga på håret en vanlig morgon.") + "\n\n" +
               t("Hos oss arbetar fem stylister med olika styrkor, från färg och slingor till herrklippning och festfrisyrer. Det betyder att du alltid hamnar hos någon som verkligen kan det du vill ha."),
             imageUrl: img("handduk"),
-            stats: [
-              { value: "2014", label: t("Öppnade") },
-              { value: "5", label: t("Stylister") },
-              { value: "6", label: t("Stolar") },
-            ],
           },
           {
-            id: "h-services", type: "grid", layout: "cards",
+            id: "h-services", type: "grid", layout: "icon-cards",
             eyebrow: t("DET HÄR GÖR VI"),
-            heading: t("Tre saker vi är extra stolta över"),
-            intro: t("Från en snabb toppning till en helt ny färg. Här är det våra mest bokade behandlingar."),
+            heading: t("Allt för håret, under ett tak"),
+            intro: t("Från en snabb toppning till en helt ny färg. Här är våra vanligaste behandlingar."),
             items: [
-              { title: t("Klippning med omtanke"), body: t("Vi klipper efter ditt hårs egen form, så att det faller rätt även veckor senare."), imageUrl: img("klipp"), link: "/priser", linkLabel: t("Se priser") },
-              { title: t("Färg och slingor"), body: t("Allt från naturliga toner till mjuk balayage. Vi blandar färgen för just ditt hår."), imageUrl: img("plattang"), link: "/priser", linkLabel: t("Se priser") },
-              { title: t("Uppsättning och fest"), body: t("Bröllop, bal eller middag. Vi provar frisyren i förväg så att kvällen blir lugn."), imageUrl: img("uppsattning"), link: "/priser", linkLabel: t("Se priser") },
+              { title: t("Klippning med omtanke"), body: t("Vi klipper efter ditt hårs egen form, så att det faller rätt även veckor senare."), icon: "scissors" },
+              { title: t("Färg och slingor"), body: t("Allt från naturliga toner till mjuk balayage. Vi blandar färgen för just ditt hår."), icon: "palette" },
+              { title: t("Uppsättning och fest"), body: t("Bröllop, bal eller middag. Vi provar frisyren i förväg så att kvällen blir lugn."), icon: "sparkle" },
+              { title: t("Herr och skägg"), body: t("Skarp kontur, mjuka övergångar och skäggtrimning med varm handduk."), icon: "award" },
+              { title: t("Barn"), body: t("Korta, snabba och trevliga besök. Vi tar det i barnets takt."), icon: "smile" },
+              { title: t("Vård och behandlingar"), body: t("Hårkurer och hårbottenbehandlingar som ger glans och styrka."), icon: "heart" },
             ],
+            ctaLabel: t("Se priser"), ctaLink: "/priser",
           },
           {
-            id: "h-reviews", type: "testimonials", layout: "carousel-row",
+            id: "h-reviews", type: "testimonials", layout: "single-quote",
             heading: t("Vad kunderna säger"),
             items: [
               { quote: t("Äntligen en frisör som frågar innan hon klipper. Jag gick därifrån med precis den frisyr jag drömt om."), author: t("Stamkund sedan fem år") },
@@ -109,17 +112,7 @@ export function buildSalonExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "h-more", type: "grid", layout: "cards",
-            eyebrow: t("FÖR ALLA I FAMILJEN"),
-            heading: t("Fler sätt att ta hand om håret"),
-            items: [
-              { title: t("Herr och skägg"), body: t("Skarp kontur, mjuka övergångar och skäggtrimning med varm handduk."), imageUrl: img("herr") },
-              { title: t("Barn"), body: t("Korta, snabba och trevliga besök. Vi tar det i barnets takt."), imageUrl: img("spegel") },
-              { title: t("Vård och behandlingar"), body: t("Hårkurer och hårbottenbehandlingar som ger glans och styrka."), imageUrl: img("tvatt") },
-            ],
-          },
-          {
-            id: "h-gallery", type: "gallery", layout: "mosaic",
+            id: "h-gallery", type: "gallery", layout: "masonry",
             heading: t("Från salongen"),
             items: [
               { imageUrl: img("tvatt"), caption: t("Tvätt och massage") },
@@ -131,7 +124,7 @@ export function buildSalonExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "h-faq", type: "faq", layout: "two-column",
+            id: "h-faq", type: "faq", layout: "stacked",
             heading: t("Bra att veta"),
             items: [
               { question: t("Hur lång tid tar en klippning?"), answer: t("En damklippning tar ungefär en timme med tvätt och föning. Herr tar cirka 30 minuter.") },
@@ -141,16 +134,16 @@ export function buildSalonExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "h-contact", type: "contact", layout: "split-info",
+            id: "h-contact", type: "contact", layout: "centered",
             heading: t("Hitta hit"),
             body: t("Vi har öppet måndag till lördag. Kom förbi eller boka en tid på förhand."),
             email: "hej@salongsaxen.se", phone: "013 – 123 45 67", address,
           },
           {
-            id: "h-cta", type: "cta", layout: "image-bleed",
+            id: "h-cta", type: "cta", layout: "dark-split",
             heading: t("Boka din tid i dag"),
             body: t("Skriv vad du vill göra och när du kan, så återkommer vi inom ett dygn."),
-            ctaLabel: t("Boka tid"), ctaLink: "/kontakt", imageUrl: img("sax"),
+            ctaLabel: t("Boka tid"), ctaLink: "/kontakt", imageUrl: img("spegel"),
           },
         ],
       },
@@ -161,21 +154,21 @@ export function buildSalonExample(t: TFunction): SiteContent {
         seoDescription: t("Prislista — Salong Saxen, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "p-hero", type: "hero", layout: "fade-bottom",
+            id: "p-hero", type: "hero", layout: "split-left",
             eyebrow: t("PRISLISTA"),
             headline: t("Våra behandlingar och priser"),
             body: t("Tydliga priser och inga överraskningar. Du får alltid ett prisförslag innan vi börjar."),
             imageUrl: img("verktyg"),
           },
           {
-            id: "p-menu", type: "menu", layout: "classic",
+            id: "p-menu", type: "menu", layout: "tabs",
             heading: t("Prislista"),
             intro: t("Priserna gäller vanlig hårlängd. Vid långt eller tjockt hår tillkommer en mindre avgift."),
             categories: prices,
             note: t("Prislistan är ett exempel och behandlingarna är påhittade. Vi ger alltid ett prisförslag innan vi börjar."),
           },
           {
-            id: "p-cta", type: "cta", layout: "centered",
+            id: "p-cta", type: "cta", layout: "image-bleed", imageUrl: img("verktyg"),
             heading: t("Redo för en ny frisyr?"),
             body: t("Boka en tid, så hjälper vi dig att välja rätt behandling."),
             ctaLabel: t("Boka tid"), ctaLink: "/kontakt",
@@ -189,19 +182,20 @@ export function buildSalonExample(t: TFunction): SiteContent {
         seoDescription: t("Om oss — Salong Saxen, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "o-hero", type: "hero", layout: "split-right",
+            id: "o-hero", type: "hero", layout: "editorial",
             eyebrow: t("VÅR HISTORIA"),
-            headline: t("En salong byggd på goda samtal"),
+            headline: t("En salong byggd"),
+            headlineEmphasis: t("på goda samtal"),
+            collageImageUrls: [img("klipp")],
             body: t("Salong Saxen öppnade 2014 med en enkel idé: att ta sig tid. Därför börjar varje besök med att vi lyssnar på vad du vill och hur du lever."),
             ctaLabel: t("Se priser"), ctaLink: "/priser", imageUrl: img("gron"),
           },
           {
-            id: "o-story", type: "about", layout: "image-left",
+            id: "o-story", type: "about", layout: "centered",
             heading: t("Så började det"),
             body: t("Salongen startade med två stolar och en önskan om att göra det lite lugnare att gå till frisören. Efter några år behövde vi större lokaler och flyttade in på Storgatan, där vi sitter i dag.") + "\n\n" +
               t("I dag arbetar vi fem stylister, alla med olika styrkor. Vi lär av varandra, går på utbildningar varje år och delar gärna med oss av det vi kan.") + "\n\n" +
               t("Vi tror att ett bra besök känns lugnt. Därför har vi bokat in luft mellan kunderna, så att ingen behöver stressa."),
-            imageUrl: img("herr"),
           },
           {
             id: "o-values", type: "grid", layout: "numbered",
@@ -227,7 +221,7 @@ export function buildSalonExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "o-visit", type: "grid", layout: "cards",
+            id: "o-visit", type: "grid", layout: "alternating-rows",
             eyebrow: t("ETT BESÖK HOS OSS"),
             heading: t("Så går det till"),
             items: [
@@ -251,14 +245,14 @@ export function buildSalonExample(t: TFunction): SiteContent {
         seoDescription: t("Boka tid — Salong Saxen, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "k-hero", type: "hero", layout: "centered",
+            id: "k-hero", type: "hero", layout: "beam",
             eyebrow: t("ÖPPET MÅNDAG TILL LÖRDAG"),
             headline: t("Boka en tid hos oss"),
             body: t("Skriv vad du vill göra och när du kan, så återkommer vi inom ett dygn."),
             imageUrl: img("sax"),
           },
           {
-            id: "k-form", type: "contactForm", layout: "centered",
+            id: "k-form", type: "contactForm", layout: "split-map", address,
             heading: t("Skicka en förfrågan"),
             body: t("Berätta vilken behandling du vill ha, vilka dagar som passar och om du har önskemål om stylist."),
             submitLabel: t("Skicka förfrågan"),
@@ -270,7 +264,7 @@ export function buildSalonExample(t: TFunction): SiteContent {
             email: "hej@salongsaxen.se", phone: "013 – 123 45 67", address,
           },
           {
-            id: "k-faq", type: "faq", layout: "two-column",
+            id: "k-faq", type: "faq", layout: "stacked",
             heading: t("Vanliga frågor om bokning"),
             items: [
               { question: t("Hur avbokar jag?"), answer: t("Avboka gärna senast dagen innan, så att tiden kan gå till någon annan. Vi tar ingen avgift.") },

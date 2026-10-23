@@ -63,12 +63,13 @@ export function buildFootballExample(t: TFunction): SiteContent {
 
   return {
     theme: {
-      accentColor: "#D62839",
-      secondaryColors: ["#12305F", "#F2C94C"],
+      skin: "kontrast",
+      accentColor: "#1F5FD6",
+      secondaryColors: ["#D62839", "#F2C94C"],
       font: "sans",
       backgroundMode: "light",
-      buttonStyle: "pill",
-      headerLayout: "split-button",
+      buttonStyle: "square",
+      headerLayout: "pill-bar",
       headerCta: { path: "/bli-medlem", label: t("Bli medlem") },
     },
     pages: [
@@ -79,25 +80,25 @@ export function buildFootballExample(t: TFunction): SiteContent {
         seoDescription: t("Lindvallens FK, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "h-hero", type: "hero", layout: "overlay-bottom",
-            headline: t("Här börjar fotbollsglädjen"),
+            id: "h-hero", type: "hero", layout: "quad",
+            headline: t("Fotboll för alla"),
             body: t("Lindvallens FK är en ungdomsförening i Motala där alla får vara med, oavsett nivå. Vi spelar för att det är kul, och för att växa tillsammans."),
             ctaLabel: t("Bli medlem"), ctaLink: "/bli-medlem", imageUrl: img("lag"),
+            stats: [
+              { value: "", label: t("Första träningen är gratis") },
+              { value: "", label: t("Lag för alla åldrar") },
+              { value: "", label: t("Utbildade ledare") },
+            ],
           },
           {
-            id: "h-about", type: "about", layout: "image-stats",
+            id: "h-about", type: "about", layout: "image-left",
             heading: t("En förening för hela bygden"),
             body: t("Lindvallens FK grundades 1968 av några föräldrar som ville ge barnen i området en plats att spela fotboll. I dag har vi fjorton lag för barn och unga, och ett gäng ledare som brinner för att alla ska få vara med.") + "\n\n" +
               t("Hos oss kommer glädjen före resultaten. Vi tränar tillsammans, tävlar när det är kul och firar varandras framgångar, stora som små."),
             imageUrl: img("koner"),
-            stats: [
-              { value: "1968", label: t("Grundades") },
-              { value: "14", label: t("Lag") },
-              { value: "320", label: t("Medlemmar") },
-            ],
           },
           {
-            id: "h-teams", type: "grid", layout: "cards",
+            id: "h-teams", type: "grid", layout: "bento",
             eyebrow: t("VÅRA LAG"),
             heading: t("Hitta ditt lag"),
             intro: t("Vi har lag för barn och unga i alla åldrar. Kom och prova, första träningen är gratis."),
@@ -108,18 +109,18 @@ export function buildFootballExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "h-why", type: "grid", layout: "numbered",
+            id: "h-why", type: "grid", layout: "icon-row",
             eyebrow: t("DÄRFÖR LINDVALLEN"),
             heading: t("Fyra saker vi tror på"),
             items: [
-              { title: t("Alla får spela"), body: t("Ingen sitter på bänken för att ha missat en träning. Alla barn får speltid i våra matcher.") },
-              { title: t("Utbildade ledare"), body: t("Alla ledare går vår ledarutbildning och har utdrag ur belastningsregistret.") },
-              { title: t("Låga avgifter"), body: t("Vi håller avgifterna nere så att ingen ska behöva avstå. Det finns även stöd att söka.") },
-              { title: t("Trygg miljö"), body: t("Vi arbetar aktivt mot mobbning och gör hellre en extra paus än en onödig tackling.") },
+              { title: t("Alla får spela"), body: t("Ingen sitter på bänken för att ha missat en träning. Alla barn får speltid i våra matcher."), icon: "users" },
+              { title: t("Utbildade ledare"), body: t("Alla ledare går vår ledarutbildning och har utdrag ur belastningsregistret."), icon: "shield" },
+              { title: t("Låga avgifter"), body: t("Vi håller avgifterna nere så att ingen ska behöva avstå. Det finns även stöd att söka."), icon: "heart" },
+              { title: t("Trygg miljö"), body: t("Vi arbetar aktivt mot mobbning och gör hellre en extra paus än en onödig tackling."), icon: "flag" },
             ],
           },
           {
-            id: "h-news", type: "grid", layout: "cards",
+            id: "h-news", type: "grid", layout: "alternating-rows",
             eyebrow: t("AKTUELLT"),
             heading: t("Det här händer just nu"),
             items: [
@@ -129,7 +130,7 @@ export function buildFootballExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "h-reviews", type: "testimonials", layout: "carousel-row",
+            id: "h-reviews", type: "testimonials", layout: "full-bleed", imageUrl: img("ben"),
             heading: t("Det här säger våra medlemmar"),
             items: [
               { quote: t("Min dotter var blyg första träningen, men efter en månad ville hon inte missa någon. Ledarna är fantastiska."), author: t("Förälder till en nioåring") },
@@ -138,19 +139,19 @@ export function buildFootballExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "h-gallery", type: "gallery", layout: "mosaic",
+            id: "h-gallery", type: "gallery", layout: "tiles",
             heading: t("Från träningar och matcher"),
             items: [
               { imageUrl: img("skott"), caption: t("Skott på mål") },
               { imageUrl: img("trana"), caption: t("Träning i solskenet") },
               { imageUrl: img("ben"), caption: t("Dribbling mellan konerna") },
               { imageUrl: img("koner"), caption: t("Konövning med hela laget") },
-              { imageUrl: img("ring"), caption: t("Samling före matchen") },
+              { imageUrl: img("tranare"), caption: t("Samling före matchen") },
               { imageUrl: img("hall"), caption: t("Inomhusträning på vintern") },
             ],
           },
           {
-            id: "h-faq", type: "faq", layout: "two-column",
+            id: "h-faq", type: "faq", layout: "stacked",
             heading: t("Bra att veta"),
             items: [
               { question: t("Måste man kunna spela fotboll sedan tidigare?"), answer: t("Nej. Vi tar emot alla som vill börja, och våra ledare ser till att alla får vara med oavsett nivå.") },
@@ -166,7 +167,7 @@ export function buildFootballExample(t: TFunction): SiteContent {
             email: "hej@lindvallensfk.se", phone: "0141 – 123 45", address,
           },
           {
-            id: "h-cta", type: "cta", layout: "image-bleed",
+            id: "h-cta", type: "cta", layout: "dark-split",
             heading: t("Kom och prova första träningen gratis"),
             body: t("Skriv till oss, så berättar vi vilket lag och vilken dag som passar bäst."),
             ctaLabel: t("Bli medlem"), ctaLink: "/bli-medlem", imageUrl: img("tranare"),
@@ -180,14 +181,14 @@ export function buildFootballExample(t: TFunction): SiteContent {
         seoDescription: t("Lag och träningstider — Lindvallens FK, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "l-hero", type: "hero", layout: "fade-bottom",
+            id: "l-hero", type: "hero", layout: "split-left",
             eyebrow: t("VÅRA LAG"),
             headline: t("Ett lag för varje spelare"),
             body: t("Här ser du vilka lag vi har och när de tränar. Hittar du inte rätt, hör av dig så hjälper vi dig."),
             imageUrl: img("hall"),
           },
           {
-            id: "l-teams", type: "grid", layout: "cards",
+            id: "l-teams", type: "grid", layout: "list",
             heading: t("Lag och åldersgrupper"),
             items: [
               { title: t("Fotbollsskolan, 5–7 år"), body: t("Det första mötet med fotbollen. Lekar, bollövningar och mycket skratt."), imageUrl: img("koner") },
@@ -204,7 +205,7 @@ export function buildFootballExample(t: TFunction): SiteContent {
             note: t("Tiderna är ett exempel. Ledarna meddelar ändringar i lagets grupp."),
           },
           {
-            id: "l-cta", type: "cta", layout: "centered",
+            id: "l-cta", type: "cta", layout: "image-bleed", imageUrl: img("skott"),
             heading: t("Vill du prova?"),
             body: t("Första träningen är gratis. Skriv till oss, så hittar vi rätt lag."),
             ctaLabel: t("Bli medlem"), ctaLink: "/bli-medlem",
@@ -225,24 +226,24 @@ export function buildFootballExample(t: TFunction): SiteContent {
             ctaLabel: t("Anmäl dig"), ctaLink: "/kontakt", imageUrl: img("tjej"),
           },
           {
-            id: "m-steps", type: "grid", layout: "numbered",
+            id: "m-steps", type: "grid", layout: "icon-circles",
             eyebrow: t("SÅ GÅR DET TILL"),
             heading: t("Tre steg till laget"),
             items: [
-              { title: t("Kom och prova"), body: t("Första träningen är gratis. Kom i bekväma kläder så fixar vi resten.") },
-              { title: t("Hitta ditt lag"), body: t("Ledarna hjälper dig att hitta ett lag som passar din ålder och dina önskemål.") },
-              { title: t("Anmäl dig"), body: t("Fyll i formuläret på kontaktsidan, så får du medlemsinformation och en faktura på terminsavgiften.") },
+              { title: t("Kom och prova"), body: t("Första träningen är gratis. Kom i bekväma kläder så fixar vi resten."), icon: "calendar" },
+              { title: t("Hitta ditt lag"), body: t("Ledarna hjälper dig att hitta ett lag som passar din ålder och dina önskemål."), icon: "users" },
+              { title: t("Anmäl dig"), body: t("Fyll i formuläret på kontaktsidan, så får du medlemsinformation och en faktura på terminsavgiften."), icon: "check" },
             ],
           },
           {
-            id: "m-fees", type: "menu", layout: "classic",
+            id: "m-fees", type: "menu", layout: "elegant",
             heading: t("Avgifter"),
             intro: t("Vi håller avgifterna låga, så att ingen ska behöva avstå. Hör av dig om du behöver stöd."),
             categories: fees,
             note: t("Avgifterna är ett exempel. Medlemsavgiften ingår i terminsavgiften."),
           },
           {
-            id: "m-faq", type: "faq", layout: "two-column",
+            id: "m-faq", type: "faq", layout: "stacked",
             heading: t("Frågor om medlemskap"),
             items: [
               { question: t("Kan jag få hjälp med avgiften?"), answer: t("Ja, hör av dig så berättar vi om stöd och bidrag. Ingen ska behöva avstå av ekonomiska skäl.") },
@@ -265,14 +266,14 @@ export function buildFootballExample(t: TFunction): SiteContent {
         seoDescription: t("Om oss — Lindvallens FK, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "o-hero", type: "hero", layout: "split-right",
+            id: "o-hero", type: "hero", layout: "beam",
             eyebrow: t("VÅR HISTORIA"),
             headline: t("Från två mål till fjorton lag"),
             body: t("Lindvallens FK startade 1968 med en grusplan och en handfull föräldrar. I dag spelar över trehundra barn och unga hos oss."),
             ctaLabel: t("Se våra lag"), ctaLink: "/lag", imageUrl: img("trana"),
           },
           {
-            id: "o-story", type: "about", layout: "image-left",
+            id: "o-story", type: "about", layout: "image-right",
             heading: t("Så började det"),
             body: t("Allt började med en grusplan vid Lindvallen och några föräldrar som ville att barnen skulle ha någonstans att spela. Nu, mer än femtio år senare, finns både en konstgräsplan och en egen klubbstuga.") + "\n\n" +
               t("Vi drivs av ideella krafter. Föräldrar, ungdomsledare och gamla spelare delar på ansvaret, och alla är välkomna att bidra på det sätt de kan.") + "\n\n" +
@@ -303,7 +304,7 @@ export function buildFootballExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "o-practice", type: "grid", layout: "cards",
+            id: "o-practice", type: "grid", layout: "intro-divided",
             eyebrow: t("EN TRÄNING HOS OSS"),
             heading: t("Så ser en träning ut"),
             items: [
@@ -313,7 +314,7 @@ export function buildFootballExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "o-cta", type: "cta", layout: "centered",
+            id: "o-cta", type: "cta", layout: "image-bleed", imageUrl: img("trana"),
             heading: t("Välkommen att vara med"),
             body: t("Kom och prova en träning eller hör av dig om du vill bli ledare."),
             ctaLabel: t("Bli medlem"), ctaLink: "/bli-medlem",
@@ -327,14 +328,14 @@ export function buildFootballExample(t: TFunction): SiteContent {
         seoDescription: t("Kontakt och anmälan — Lindvallens FK, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "k-hero", type: "hero", layout: "centered",
+            id: "k-hero", type: "hero", layout: "fade-bottom",
             eyebrow: t("VI SVARAR INOM ETT DYGN"),
             headline: t("Hör av dig till klubben"),
             body: t("Frågor om lag, träningar eller medlemskap? Skriv till oss, så hjälper vi dig vidare."),
             imageUrl: img("hall"),
           },
           {
-            id: "k-form", type: "contactForm", layout: "centered",
+            id: "k-form", type: "contactForm", layout: "split-map", address,
             heading: t("Skicka ett meddelande"),
             body: t("Berätta barnets ålder och om ni vill prova eller anmäla er, så hör vi av oss."),
             submitLabel: t("Skicka meddelande"),
