@@ -620,6 +620,7 @@ export const EDIT_PATCH_PROPERTIES = {
           path: { type: "string" },
           label: { type: "string" },
           off: { type: "boolean" },
+          hideFromMenu: { type: "boolean", description: "true = sidan knappen går till tas bort som vanligt menyval (så den bara finns som knapp). Sätt när kunden vill att knappen ERSÄTTER menylänken." },
         },
       },
       sectionSpacing: {

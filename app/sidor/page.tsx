@@ -191,8 +191,8 @@ export default function PagesManagePage() {
     if (!canNestInto(targetPath)) return y < 0.5 ? "before" : "after";
     // Redan i "undersida"-läge på den här raden: stanna kvar där (ingen
     // "efter"-zon) så rutan inte stänger sig medan man drar ner mot den.
-    if (dropAt?.path === targetPath && dropAt.pos === "into") return y < 0.3 ? "before" : "into";
-    return y < 0.3 ? "before" : y > 0.8 ? "after" : "into";
+    if (dropAt?.path === targetPath && dropAt.pos === "into") return y < 0.25 ? "before" : y > 0.9 ? "after" : "into";
+    return y < 0.3 ? "before" : y > 0.7 ? "after" : "into";
   };
   const dropOn = async (targetPath: string, position: "before" | "after" | "into") => {
     const path = dragPath;
@@ -499,6 +499,28 @@ export default function PagesManagePage() {
                   );
                 })}
               </div>
+
+              {dragPath && (() => {
+                const tops = pages.filter((x) => parentPathOf(x.path, allPages) === null);
+                const lastTop = tops[tops.length - 1];
+                if (!lastTop || lastTop.path === dragPath) return null;
+                const active = dropAt?.path === lastTop.path && dropAt.pos === "after";
+                return (
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (!active) setDropAt({ path: lastTop.path, pos: "after" });
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      dropOn(lastTop.path, "after");
+                    }}
+                    className={`-mt-1 mb-4.5 rounded-xl border-2 border-dashed px-4 py-4 text-center text-[13px] font-semibold ${active ? "border-accent bg-accent-soft text-ink" : "border-line text-ink-dim"}`}
+                  >
+                    {t("Släpp här för att lägga sidan sist")}
+                  </div>
+                );
+              })()}
 
               {addError && !adding && (
                 <div className="bg-white border border-line rounded-lg px-4 py-3 mb-4.5 text-[13px] text-warm font-semibold">{addError}</div>

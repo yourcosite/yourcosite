@@ -369,7 +369,7 @@ function SitePreviewInner({
     // kvar som vanligt menyval (t.ex. knappen "Boka" och länken "Kontakt" till
     // samma sida). Bara den helautomatiska knappen tar bort dubbletten.
     const custom = !!(want?.path || want?.label?.trim());
-    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom };
+    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom && !want?.hideFromMenu };
   })();
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = skin?.accent ? skin.accent(content.theme.accentColor) : content.theme.accentColor;

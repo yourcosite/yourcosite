@@ -70,7 +70,7 @@ export interface SiteTheme {
   // Saknas den väljs automatiskt: sidan med bokning ("Bokning"), annars
   // sidan med kontakt. path = vilken sida knappen går till, label = texten
   // (annars sidans egen rubrik), off = ingen knapp alls. Satt av Millie.
-  headerCta?: { path?: string; label?: string; off?: boolean };
+  headerCta?: { path?: string; label?: string; off?: boolean; hideFromMenu?: boolean };
   // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
   // (lib/themeVariants.ts), satt i kod i /api/sites/choose-look. Gäller
   // BARA startsidans hero (se SitePreview.tsx) — undersidornas hero-layout
