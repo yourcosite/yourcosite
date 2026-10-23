@@ -615,7 +615,7 @@ export const EDIT_PATCH_PROPERTIES = {
       headerGlass: {
         type: "boolean",
         description:
-          "true = halvgenomskinlig, lite mörk meny som ligger över heroens bild så att bilden syns svagt igenom; false = vanlig meny. Funkar när startsidans (eller sidans) första sektion är en hero med bild och layouten overlay-bottom eller fade-bottom — byt då heroens layout till overlay-bottom om den har en annan. Sätt när kunden ber om genomskinlig/halvtransparent/glas-meny eller att bilden ska synas igenom menyn.",
+          "true = halvgenomskinlig, lite mörk meny som ligger över heroens bild så att bilden syns svagt igenom; false = vanlig meny. Funkar när startsidans (eller sidans) första sektion är en hero med bild och layouten overlay-bottom, fade-bottom eller beam — byt då heroens layout till overlay-bottom om den har en annan. Sätt när kunden ber om genomskinlig/halvtransparent/glas-meny eller att bilden ska synas igenom menyn.",
       },
       headerCta: {
         type: "object",

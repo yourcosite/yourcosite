@@ -437,7 +437,7 @@ function SitePreviewInner({
   const heroLay = firstSection?.type === "hero" ? firstSection.layout || "centered" : "";
   const overlayHeader =
     (page.path === "/" && heroLay === "overlay-bottom") ||
-    (headerGlass && (heroLay === "overlay-bottom" || heroLay === "fade-bottom") && !!(firstSection as any)?.imageUrl);
+    (headerGlass && (heroLay === "overlay-bottom" || heroLay === "fade-bottom" || heroLay === "beam") && !!(firstSection as any)?.imageUrl);
   const restSections = overlayHeader ? pageSections.slice(1) : pageSections;
 
   // Sektionen direkt under hero fick annars ALLTID samma mekaniska

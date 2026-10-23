@@ -806,7 +806,7 @@ async function POST_handler(request: Request) {
 
 `;
   const th: any = site.content.theme || {};
-  const menuStatus = `MENYNS NUVARANDE LÄGE (läs det här, lita inte på tidigare chattmeddelanden): headerLayout=${th.headerLayout ?? "left (standard)"}; menyknapp ${HEADER_BUTTON_LAYOUTS.includes(th.headerLayout) ? "stil med knapp finns" : "stilen har INGEN knapp, så ingen knapp syns"}; headerCta=${JSON.stringify(th.headerCta ?? null)}; headerGlass=${th.headerGlass ? "ja" : "nej"}.
+  const menuStatus = `MENYNS NUVARANDE LÄGE (läs det här, lita inte på tidigare chattmeddelanden): headerLayout=${th.headerLayout ?? "left (standard)"}; menyknapp ${HEADER_BUTTON_LAYOUTS.includes(th.headerLayout) ? "stil med knapp finns" : "stilen har INGEN knapp, så ingen knapp syns"}; headerCta=${JSON.stringify(th.headerCta ?? null)}; headerGlass=${th.headerGlass ? "ja" : "nej"}; startsidans första sektion=${(site.content.pages[0]?.sections[0] as any)?.type ?? "?"}/${(site.content.pages[0]?.sections[0] as any)?.layout ?? "?"} (genomskinlig meny syns bara över en hero med bild i layouten overlay-bottom, fade-bottom eller beam). Säg aldrig att menyn är genomskinlig om den inte syns enligt det här.
 
 `;
   const promptText = languageRule + menuStatus + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories, newsContext);

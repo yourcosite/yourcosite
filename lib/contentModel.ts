@@ -72,7 +72,7 @@ export interface SiteTheme {
   // (annars sidans egen rubrik), off = ingen knapp alls. Satt av Millie.
   // Halvgenomskinlig mörk meny som ligger över heroens bild (bilden syns
   // svagt igenom). Gäller sidor där första sektionen är en hero med
-  // layouten overlay-bottom eller fade-bottom. Satt av Millie.
+  // layouten overlay-bottom, fade-bottom eller beam. Satt av Millie.
   headerGlass?: boolean;
   headerCta?: { path?: string; label?: string; off?: boolean; hideFromMenu?: boolean };
   // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
