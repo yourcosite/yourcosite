@@ -15,10 +15,10 @@ export default function ExamplesPage() {
   const examples = [
     {
       href: "/exempel/restaurang",
-      name: t("Björkängens Kök"),
+      name: t("Bistro Tegelbruket"),
       category: t("Restaurang"),
-      body: t("Elegant, mörk och stämningsfull — med bordsbokning och meny i fokus."),
-      img: "/images/restaurant-hero.jpg",
+      body: t("Mörk och stämningsfull — med meny, bildgalleri och bordsbokning i fokus."),
+      img: "/images/bistro-hero.jpg",
     },
     {
       href: "/exempel/inredning",
