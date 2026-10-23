@@ -614,7 +614,7 @@ function SitePreviewInner({
         restSections.map((section, i) => (
           <div
             key={section.id}
-            style={(section as any).fadeBottom ? { position: "relative" } : undefined}
+            style={(section as any).fadeBottom || (section as any).fadeTop ? { position: "relative" } : undefined}
             className={section.type === "hero" ? "ycs-blk" : "ycs-sec ycs-blk"}
             data-ycs-sp={section.type === "hero" ? undefined : section.spacing}
             data-ycs-align={section.textAlign ?? content.theme.textAlign}
@@ -647,6 +647,19 @@ function SitePreviewInner({
             onSelectField={onSelectField}
             newsArticles={newsArticles}
           />
+          {(section as any).fadeTop && (() => {
+            const pv = i > 0 ? restSections[i - 1] : undefined;
+            const pvIdx = (overlayHeader ? i + 1 : i) - 1;
+            const pvAlt = (pvIdx + altOffset) % 2 === 1;
+            const from = pv ? ((pv as { bgColor?: string }).bgColor ?? (pvAlt ? palette.bgAlt : palette.bg)) : palette.bg;
+            return (
+              <div
+                aria-hidden="true"
+                className="absolute inset-x-0 top-0 h-[120px] @3xl:h-[160px] pointer-events-none"
+                style={{ background: `linear-gradient(0deg, transparent 0%, ${from} 100%)` }}
+              />
+            );
+          })()}
           {(section as any).fadeBottom && (() => {
             const nx = restSections[i + 1];
             const nxAlt = (((overlayHeader ? i + 1 : i) + 1) + altOffset) % 2 === 1;

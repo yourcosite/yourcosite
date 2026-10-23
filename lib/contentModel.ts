@@ -571,6 +571,8 @@ export interface SectionExtras {
   textAlign?: TextAlign;
   // true = sektionens nederkant tonar mjukt ut i färgen på sektionen under.
   fadeBottom?: boolean;
+  // true = sektionens överkant tonar mjukt ut i färgen på sektionen över.
+  fadeTop?: boolean;
 }
 
 export type Section = (

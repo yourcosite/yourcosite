@@ -527,10 +527,15 @@ const FADE_BOTTOM_SCHEMA = {
   description:
     "true = den här sektionens nederkant tonar mjukt ut i bakgrundsfärgen på sektionen under (mjuk övergång istället för hård kant). false tar bort. Sätt bara när kunden ber om fade/uttoning/mjuk övergång nedåt på just den sektionen; behåll ett redan satt värde när du skriver om sektionen av annan anledning. (Heroens layout fade-bottom gör redan detta av sig själv.)",
 };
+const FADE_TOP_SCHEMA = {
+  type: "boolean",
+  description:
+    "true = den här sektionens överkant tonar mjukt ut i bakgrundsfärgen på sektionen över (mjuk övergång uppåt, t.ex. en bild som tonar ut uppåt). false tar bort. Sätt bara när kunden ber om fade/uttoning UPPÅT på just den sektionen; kan kombineras med fadeBottom för att tona både uppåt och nedåt. Behåll ett redan satt värde när du skriver om sektionen av annan anledning.",
+};
 export const SECTION_SCHEMA = {
   anyOf: RAW_SECTION_SCHEMA.anyOf.map((variant) => ({
     ...variant,
-    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA, fadeBottom: FADE_BOTTOM_SCHEMA },
+    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA, fadeBottom: FADE_BOTTOM_SCHEMA, fadeTop: FADE_TOP_SCHEMA },
   })),
 };
 
