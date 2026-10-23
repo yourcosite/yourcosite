@@ -28,8 +28,11 @@ async function POST_handler(request: Request) {
   const content: SiteContent = JSON.parse(JSON.stringify(site.content));
   const section = content.pages.find((p) => p.path === body.pagePath)?.sections.find((s) => s.id === body.sectionId) as any;
   if (!section) return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
-  if (style === null) delete section.ctaStyle;
-  else section.ctaStyle = style;
+  const idx = typeof body.itemIndex === "number" ? body.itemIndex : null;
+  const target = idx !== null ? section.items?.[idx] : section;
+  if (!target) return NextResponse.json({ error: t("Hittade inte knappen i sektionen.") }, { status: 400 });
+  if (style === null) delete target.ctaStyle;
+  else target.ctaStyle = style;
   if (!isValidSiteContent(content)) return NextResponse.json({ error: t("Ändringen blev ogiltig.") }, { status: 400 });
 
   const { error } = await supabase.from("sites").update({ content }).eq("id", site.id);

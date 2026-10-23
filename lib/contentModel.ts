@@ -247,6 +247,8 @@ export interface GridItem {
   // Ikon i rutan (ett id ur lib/gridIcons.tsx). Saknas den väljs en passande
   // ikon automatiskt utifrån texten.
   icon?: string;
+  // Egen knappstil på just den här rutans knapp (layouten image-cta-cards).
+  ctaStyle?: ButtonStyle;
 }
 
 export interface GridSection {

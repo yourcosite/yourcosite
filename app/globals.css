@@ -197,3 +197,7 @@ h1, h2, h3 {
   .ycs-sec [class*="@3xl:grid-cols-[1.2fr_1fr_1fr_1fr]"]:has(> :nth-child(3):last-child) { grid-template-columns: 1.2fr 1fr 1fr; }
   .ycs-sec [class*="@3xl:grid-cols-[1.2fr_1fr_1fr_1fr]"]:has(> :nth-child(2):last-child) { grid-template-columns: 1.2fr 1fr; }
 }
+
+/* Toning (fadeTop/fadeBottom): gradienten ligger över bilden men UNDER text och knappar. */
+.ycs-fadewrap .ycs-fade { z-index: 1; }
+.ycs-fadewrap :is(h1, h2, h3, h4, p, a, button, li, blockquote, input, textarea, label) { position: relative; z-index: 2; }

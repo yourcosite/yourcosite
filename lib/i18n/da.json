@@ -2361,5 +2361,8 @@
   "Välj knappstil": "Vælg knapstil",
   "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "Gælder knapperne i denne sektion. Resten af sitet påvirkes ikke.",
   "Knapp": "Knap",
-  "🔘 Byt knappstil": "🔘 Skift knapstil"
+  "🔘 Byt knappstil": "🔘 Skift knapstil",
+  "Hittade inte knappen i sektionen.": "Kunne ikke finde knappen i sektionen.",
+  "Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig.": "Færdig! Knapstilen er ændret. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Gælder kun denne knap. Resten af sitet påvirkes ikke."
 }

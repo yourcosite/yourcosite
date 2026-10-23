@@ -919,6 +919,8 @@ export default function EditorPage() {
       : pickedSection?.type === "team"
       ? (TEAM_LAYOUT_LABELS as Record<string, string>)[l] ?? l
       : (GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l;
+  const buttonItemMatch = selection?.target === "field" ? selection.field.match(/^items\.(\d+)\.link$/) : null;
+  const buttonItemIndex = buttonItemMatch ? Number(buttonItemMatch[1]) : null;
   const canPickButtonStyle = selection?.target === "field" && !!pickedSection && /(^|\.)(ctaLabel|ctaLink|link)$/.test(selection.field);
   const BUTTON_STYLE_CHOICES: { id: string | null; label: string }[] = [
     { id: null, label: msg("Som resten av sajten") },
@@ -960,7 +962,7 @@ export default function EditorPage() {
     }
   };
   const saveButtonStyle = (style: string | null) =>
-    savePick("/api/sites/edit-button-style", { style }, t("Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig."));
+    savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
   const saveIcon = (icon: string | null) =>
     savePick("/api/sites/edit-icon", { itemIndex: pickedIconIndex, icon }, t("Klart! Ikonen är bytt. Du kan ångra med knappen om du ändrar dig."));
   // Galleri: lägg till många bilder på en gång (utan AI) och ta bort enskilda.
@@ -2031,18 +2033,18 @@ export default function EditorPage() {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl max-h-[85vh] flex flex-col">
                   <div className="text-[14px] font-semibold mb-1">{t("Välj knappstil")}</div>
-                  <div className="text-[12px] text-ink-dim mb-3">{t("Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{buttonItemIndex !== null ? t("Gäller bara den här knappen. Resten av sajten påverkas inte.") : t("Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.")}</div>
                   <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
                     {BUTTON_STYLE_CHOICES.map((c) => {
                       const accent = content?.theme.accentColor || "#2E7D5B";
-                      const current = (pickedSection?.ctaStyle ?? null) === c.id;
+                      const current = ((buttonItemIndex !== null ? pickedSection?.items?.[buttonItemIndex]?.ctaStyle : pickedSection?.ctaStyle) ?? null) === c.id;
                       const sample: React.CSSProperties =
-                        c.id === "soft" ? { background: `${accent}2E`, border: `1px solid ${accent}55`, borderRadius: 12 }
+                        c.id === "soft" ? { background: `color-mix(in srgb, ${accent} 20%, transparent)`, border: `1px solid color-mix(in srgb, ${accent} 45%, transparent)`, borderRadius: 12 }
                         : c.id === "outline" ? { border: `1.5px solid ${accent}`, borderRadius: 999 }
                         : c.id === "underline" ? { borderBottom: `2px solid ${accent}`, borderRadius: 0 }
                         : c.id === "square" ? { background: accent, borderRadius: 6 }
                         : c.id === "rounded" ? { background: accent, borderRadius: 12 }
-                        : c.id === "gradient" ? { background: `linear-gradient(135deg, ${accent}, ${accent}B3)`, borderRadius: 999 }
+                        : c.id === "gradient" ? { background: `linear-gradient(135deg, ${accent}, color-mix(in srgb, ${accent} 70%, transparent))`, borderRadius: 999 }
                         : c.id === "pill" ? { background: accent, borderRadius: 999 }
                         : { border: "1px dashed #999", borderRadius: 999 };
                       return (

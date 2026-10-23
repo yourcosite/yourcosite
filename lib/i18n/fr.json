@@ -2361,5 +2361,8 @@
   "Välj knappstil": "Choisir le style de bouton",
   "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "S'applique aux boutons de cette section. Le reste du site n'est pas modifié.",
   "Knapp": "Bouton",
-  "🔘 Byt knappstil": "🔘 Changer le style du bouton"
+  "🔘 Byt knappstil": "🔘 Changer le style du bouton",
+  "Hittade inte knappen i sektionen.": "Impossible de trouver le bouton dans la section.",
+  "Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! Le style du bouton a été changé. Vous pouvez annuler avec le bouton si vous changez d'avis.",
+  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "S'applique uniquement à ce bouton. Le reste du site n'est pas modifié."
 }

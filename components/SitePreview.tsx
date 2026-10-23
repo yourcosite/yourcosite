@@ -562,7 +562,7 @@ function SitePreviewInner({
           buttonShape={buttonShape}
         />
         {overlayHeader && firstSection && (
-          <div className="contents ycs-blk" data-ycs-align={firstSection.textAlign ?? content.theme.textAlign}>
+          <div className={`contents ycs-blk${(firstSection as any).fadeBottom || (firstSection as any).fadeTop ? " ycs-fadewrap" : ""}`} data-ycs-align={firstSection.textAlign ?? content.theme.textAlign}>
           <SectionBlock
             section={firstSection}
             accent={accent}
@@ -591,14 +591,14 @@ function SitePreviewInner({
           {(firstSection as any).fadeTop && (
             <div
               aria-hidden="true"
-              className="absolute inset-x-0 top-0 h-[140px] @3xl:h-[200px] pointer-events-none"
+              className="ycs-fade absolute inset-x-0 top-0 h-[140px] @3xl:h-[200px] pointer-events-none"
               style={{ background: `linear-gradient(0deg, transparent 0%, ${palette.bg} 100%)` }}
             />
           )}
           {(firstSection as any).fadeBottom && (
             <div
               aria-hidden="true"
-              className="absolute inset-x-0 bottom-0 h-[140px] @3xl:h-[200px] pointer-events-none"
+              className="ycs-fade absolute inset-x-0 bottom-0 h-[140px] @3xl:h-[200px] pointer-events-none"
               style={{ background: `linear-gradient(180deg, transparent 0%, ${nextBgForHero ?? palette.bg} 100%)` }}
             />
           )}
@@ -629,7 +629,7 @@ function SitePreviewInner({
           <div
             key={section.id}
             style={(section as any).fadeBottom || (section as any).fadeTop ? { position: "relative" } : undefined}
-            className={section.type === "hero" ? "ycs-blk" : "ycs-sec ycs-blk"}
+            className={`${section.type === "hero" ? "ycs-blk" : "ycs-sec ycs-blk"}${(section as any).fadeBottom || (section as any).fadeTop ? " ycs-fadewrap" : ""}`}
             data-ycs-sp={section.type === "hero" ? undefined : section.spacing}
             data-ycs-align={section.textAlign ?? content.theme.textAlign}
           >
@@ -669,7 +669,7 @@ function SitePreviewInner({
             return (
               <div
                 aria-hidden="true"
-                className="absolute inset-x-0 top-0 h-[120px] @3xl:h-[160px] pointer-events-none"
+                className="ycs-fade absolute inset-x-0 top-0 h-[120px] @3xl:h-[160px] pointer-events-none"
                 style={{ background: `linear-gradient(0deg, transparent 0%, ${from} 100%)` }}
               />
             );
@@ -681,7 +681,7 @@ function SitePreviewInner({
             return (
               <div
                 aria-hidden="true"
-                className="absolute inset-x-0 bottom-0 h-[120px] @3xl:h-[160px] pointer-events-none"
+                className="ycs-fade absolute inset-x-0 bottom-0 h-[120px] @3xl:h-[160px] pointer-events-none"
                 style={{ background: `linear-gradient(180deg, transparent 0%, ${to} 100%)` }}
               />
             );
@@ -1954,7 +1954,7 @@ function CtaPill({
         basePath={basePath}
         onNavigate={onNavigate}
         className={`inline-block font-semibold whitespace-nowrap rounded-xl ${sizeCls}`}
-        style={textColor === "#FFFFFF" ? { background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.55)", backdropFilter: "blur(6px)", color: "#FFFFFF" } : { background: `${fill}2E`, border: `1px solid ${fill}55`, color: textColor }}
+        style={textColor === "#FFFFFF" ? { background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.55)", backdropFilter: "blur(6px)", color: "#FFFFFF" } : { background: `color-mix(in srgb, ${fill} 20%, transparent)`, border: `1px solid color-mix(in srgb, ${fill} 45%, transparent)`, color: textColor }}
       >
         {children}
       </CtaLink>
@@ -1982,7 +1982,7 @@ function CtaPill({
       onNavigate={onNavigate}
       className={`inline-block font-semibold whitespace-nowrap ${sizeCls} ${shape === "square" ? "rounded-md" : shape === "rounded" ? "rounded-xl" : "rounded-full"}`}
       style={{
-        background: shape === "gradient" ? `linear-gradient(135deg, ${fill}, ${fill}B3)` : fill,
+        background: shape === "gradient" ? `linear-gradient(135deg, ${fill}, color-mix(in srgb, ${fill} 70%, transparent))` : fill,
         // Utan egen färg: mörk text som förut — utom på riktigt mörka
         // accentfärger (t.ex. svarta knappar i ett skin), där den annars
         // skulle försvinna.
@@ -4890,11 +4890,11 @@ function SectionBlockInner({
                 const itemSel = gridItemSelection(i, item.title);
                 const ip = itemPalette(item.bgColor, palette);
                 return (
-                  <div key={i} className="flex flex-col rounded-2xl overflow-hidden border" style={{ background: palette.cardBg, borderColor: palette.cardBorder, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
+                  <div key={i} className="flex flex-col rounded-2xl border" style={{ background: palette.cardBg, borderColor: palette.cardBorder, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
                     <ImageOrArt
                       imageUrl={item.imageUrl}
                       art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
-                      className="h-[190px]"
+                      className="h-[190px] rounded-t-2xl overflow-hidden"
                       selectable={editable}
                       selected={!!itemSel && selectedImageKey === itemSel.key}
                       onSelect={() => itemSel && onSelectImage?.(itemSel)}
@@ -4921,7 +4921,7 @@ function SectionBlockInner({
                       </Field>
                       <div className="mt-auto">
                         <FieldBadge {...readMoreField("link", "knappen i rutan", i, (item as any).linkLabel)}>
-                          <CtaPill accent={accent} link={item.link} newTab={(item as any).newTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} size="sm">
+                          <CtaPill accent={accent} link={item.link} newTab={(item as any).newTab} basePath={basePath} onNavigate={onNavigate} shape={(item as any).ctaStyle ?? buttonShape} size="sm">
                             {(item as any).linkLabel || t("Läs mer")}
                           </CtaPill>
                         </FieldBadge>
