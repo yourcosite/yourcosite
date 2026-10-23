@@ -641,6 +641,7 @@ export const EDIT_PATCH_PROPERTIES = {
           path: { type: "string" },
           label: { type: "string" },
           off: { type: "boolean" },
+          style: { type: "string", enum: ["pill", "square", "underline", "soft", "outline", "rounded", "gradient", "auto"], description: "Knappstil på BARA menyknappen (annars sajtens knappstil). auto = följ sajten. Sätt när kunden ber om en annan stil på knappen i menyn." },
           hideFromMenu: { type: "boolean", description: "true = sidan knappen går till tas bort som vanligt menyval (så den bara finns som knapp). Sätt när kunden vill att knappen ERSÄTTER menylänken." },
         },
       },

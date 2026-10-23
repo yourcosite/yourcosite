@@ -369,7 +369,7 @@ function SitePreviewInner({
     // kvar som vanligt menyval (t.ex. knappen "Boka" och länken "Kontakt" till
     // samma sida). Bara den helautomatiska knappen tar bort dubbletten.
     const custom = !!(want?.path || want?.label?.trim());
-    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom && !want?.hideFromMenu };
+    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom && !want?.hideFromMenu, style: want?.style };
   })();
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = skin?.accent ? skin.accent(content.theme.accentColor) : content.theme.accentColor;
@@ -938,7 +938,7 @@ function Header({
   accent = "#C6FF5E",
   buttonShape = "pill",
 }: {
-  cta?: { path: string; label: string; keepInMenu?: boolean } | null;
+  cta?: { path: string; label: string; keepInMenu?: boolean; style?: ButtonStyle } | null;
   accent?: string;
   buttonShape?: ButtonStyle;
   siteName?: string;
@@ -1131,7 +1131,7 @@ function Header({
     : { borderBottom: `1px solid ${palette.cardBorder}` };
 
   const ctaEl = cta ? (
-    <CtaPill accent={accent} link={cta.path} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} size="sm" textColor={overlay ? "#FFFFFF" : palette.text}>
+    <CtaPill accent={accent} link={cta.path} basePath={basePath} onNavigate={onNavigate} shape={cta.style ?? buttonShape} size="sm" textColor={overlay ? "#FFFFFF" : palette.text}>
       {cta.label}
     </CtaPill>
   ) : null;
