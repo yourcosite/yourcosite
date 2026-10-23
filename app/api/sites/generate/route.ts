@@ -290,7 +290,9 @@ function buildPrompt(
       ? `VIKTIGT — texten ska hålla sig nära det kunden faktiskt skrivit: kunden har INTE godkänt att du fyller ut saknad information med egna påhittade detaljer. Utgå bara från briefen, beskrivningen och branschen ovan. Hitta inte på konkreta erbjudanden, historia, priser eller funktioner kunden inte nämnt. Där en sida eller sektion saknar underlag — håll texten kort, allmän och varumärkesneutral. UNDANTAG: de EXEMPELSEKTIONER som beskrivs i stycket om exempelinnehåll nedan (citat, nyckeltal, vanliga frågor) ska ändå finnas — de är tydliga platshållare som kunden byter eller tar bort.`
       : `Skriv genuint bra, konkret copy på ${langName} för varje sida — ingen platshållartext ("Lorem ipsum" eller liknande är förbjudet). Utgå från beskrivningen och branschen för att hitta rätt detaljer och ton, och fyll gärna i rimliga, generiska detaljer där kundens egen brief är sparsam.`;
 
-  return `Du ska skriva innehållet till en helt ny webbplats, åt en kund hos YourCoSite (en AI-driven hemsidesbyggare för småföretag i Sverige, Danmark, Finland, Tyskland, Frankrike och Spanien).
+  return `Skriv aldrig tecknet "&" (et-tecken) i någon text på sajten — stava alltid ut ordet på sajtens språk (och, and, og, ja, und, et, y), utom i ett företagsnamn som kunden själv har angett.
+
+Du ska skriva innehållet till en helt ny webbplats, åt en kund hos YourCoSite (en AI-driven hemsidesbyggare för småföretag i Sverige, Danmark, Finland, Tyskland, Frankrike och Spanien).
 
 SPRÅK: skriv ALL synlig text på webbplatsen (rubriker, brödtext, knappar, menynamn, sidnamn, exempelcitat, frågor och svar) på ${langName}, med naturligt, lokalt språk och tilltal som passar landet. Kundens brief nedan kan vara skriven på ett annat språk — förstå den, men skriv sajten på ${langName}. Översätt aldrig företagsnamn, personnamn, produktnamn eller adresser.
 

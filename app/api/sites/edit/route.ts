@@ -804,6 +804,7 @@ async function POST_handler(request: Request) {
 - Du förstår kundens önskemål på vilket språk som helst. Skriv "summary", frågor och "clarifyOptions" på samma språk som kundens senaste meddelande (annars ${LANGUAGE_ENGLISH[uiLang]}).
 - Allt nytt innehåll du skriver PÅ SAJTEN (texter, rubriker, knappar, menynamn, nyheter, frågor och svar) skrivs på sajtens språk (${LANGUAGE_ENGLISH[siteLang]}), även om kunden ber om ändringen på ett annat språk, om inte kunden uttryckligen ber om ett annat språk för just det stället.
 - Ber kunden om att sajten ska byta språk eller översättas, sätt "siteLanguage" till den nya språkkoden och översätt ALL synlig text på de sidor du ändrar (rubriker, brödtext, knappar, menynamn, sidnamn). Översätt aldrig namn på företag, personer, produkter eller adresser.
+- Skriv ALDRIG tecknet "&" (et-tecken) i texter på sajten (rubriker, brödtext, knappar, menynamn, nyheter, frågor och svar) — stava alltid ut ordet på sajtens språk (och, and, og, ja, und, et, y). Gäller även när kunden själv skriver "&" i sitt önskemål, utom i ett företags- eller varumärkesnamn som kunden uttryckligen anger.
 - Lokal anpassning: tilltal, datum, telefonformat och valuta ska följa sajtens språk och land. Hitta aldrig på uppgifter.
 
 `;
@@ -891,6 +892,31 @@ async function POST_handler(request: Request) {
 
   const moveErrors: string[] = [];
   const updatedContent = dedupeMaps(applyPatch(site.content, patch, moveErrors, currentPath), "flatten-form");
+  // Säkerhetsnät: nya eller ändrade texter får aldrig innehålla " & ". Redan
+  // befintliga texter (t.ex. kundens eget företagsnamn) rörs inte.
+  {
+    const andWord: Record<string, string> = { sv: "och", en: "and", da: "og", fi: "ja", de: "und", fr: "et", es: "y" };
+    const word = andWord[(site as any).language as string] || "och";
+    const oldStrings = new Set<string>();
+    const collect = (v: unknown) => {
+      if (typeof v === "string") oldStrings.add(v);
+      else if (Array.isArray(v)) v.forEach(collect);
+      else if (v && typeof v === "object") Object.values(v as object).forEach(collect);
+    };
+    collect(site.content);
+    const clean = (v: any, key?: string): any => {
+      if (typeof v === "string") {
+        if (key === "code" || oldStrings.has(v) || !v.includes(" & ") || /^(https?:)?\//.test(v)) return v;
+        return v.replace(/ & /g, ` ${word} `);
+      }
+      if (Array.isArray(v)) return v.map((x) => clean(x));
+      if (v && typeof v === "object") {
+        for (const k of Object.keys(v)) v[k] = clean(v[k], k);
+      }
+      return v;
+    };
+    clean(updatedContent.pages);
+  }
   if (!updatedContent.pages.length) {
     return NextResponse.json({ error: t("Ändringen skulle lämna sajten utan sidor.") }, { status: 502 });
   }
