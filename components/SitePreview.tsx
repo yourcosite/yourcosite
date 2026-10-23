@@ -928,12 +928,12 @@ function Header({
     // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
     // Ovanpå en foto-hero får den en ljus platta bakom sig så den
     // alltid syns oavsett hur ljus/mörk loggan själv är.
-    <div className={overlay ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}>
+    <div className={overlay && !glass ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoUrl}
         alt={siteName || t("Logga")}
-        className={overlay ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
+        className={overlay && !glass ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
       />
     </div>
   ) : (
@@ -1077,7 +1077,7 @@ function Header({
   // vilket en gång redan orsakade en osynlig hero-bild (se ImageOrArt).
   const outerBase = overlay ? "absolute top-0 left-0 right-0 z-10" : "relative";
   const outerStyle = glass
-    ? { background: "rgba(10,10,12,0.5)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.12)" }
+    ? { background: "rgba(8,8,10,0.2)", backdropFilter: "blur(3px)", WebkitBackdropFilter: "blur(3px)" }
     : overlay
     ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
     : { borderBottom: `1px solid ${palette.cardBorder}` };
