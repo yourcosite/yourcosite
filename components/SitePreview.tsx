@@ -1296,7 +1296,7 @@ function Footer({
   const linkClass = "text-[12.5px] font-semibold";
 
   return (
-    <div style={{ borderTop: `1px solid ${palette.cardBorder}` }}>
+    <div>
       {/* Sidfotsmenyn — samma sidor, samma tre-vägs länklogik som
           huvudmenyn (onNavigate i chattredigeraren, riktig <a href> på en
           publicerad sida, annars bara text i /forslag-miniatyrerna). */}

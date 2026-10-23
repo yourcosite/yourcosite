@@ -316,8 +316,10 @@ function buildEditPrompt(
   const selSection = selection
     ? (content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any)
     : undefined;
+  const selPage = selection ? content.pages.find((p) => p.path === selection.pagePath) : undefined;
+  const selTitle = (sec: any) => sec?.heading || sec?.headline || "";
   const selSectionInfo = selSection
-    ? ` Sektionen är av typen "${selSection.type}"${selSection.layout ? ` med layouten "${selSection.layout}"` : ""}${selSection.heading ? ` och rubriken "${selSection.heading}"` : ""}.`
+    ? ` Sektionen är av typen "${selSection.type}"${selSection.layout ? ` med layouten "${selSection.layout}"` : ""}${selTitle(selSection) ? ` och rubriken "${selTitle(selSection)}"` : ""}. Den ligger på sidan "${selPage?.label ?? selection?.pagePath}" (${selection?.pagePath}). Dess nuvarande inställningar: fadeTop=${selSection.fadeTop ? "ja" : "nej"}, fadeBottom=${selSection.fadeBottom ? "ja" : "nej"}, ctaStyle=${selSection.ctaStyle ?? "sajtens"}. Sektionerna på just den sidan, i ordning: ${selPage?.sections.map((sec: any, i: number) => `${i + 1}. id "${sec.id}" (${sec.type}${sec.layout ? "/" + sec.layout : ""}${selTitle(sec) ? `, "${selTitle(sec)}"` : ""})${sec.id === selection?.sectionId ? " ← DEN MARKERADE" : ""}`).join("; ")}. Ändringen görs i DEN MARKERADE sektionen på den sidan — INTE i någon annan sektion eller på någon annan sida, även om en annan sektion nämnts tidigare i chatten eller har egenskapen kunden ber om.`
     : "";
   const selectionNote =
     selection?.target === "image"
