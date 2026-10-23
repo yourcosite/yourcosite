@@ -4715,6 +4715,75 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "image-cta-cards") {
+        // Bild överst, rubrik, text och en knapp i botten av varje ruta.
+        // Knapparna ligger på samma höjd (flex-kolumn, knappen mt-auto).
+        const n = section.items.length;
+        const colCls = n >= 4 ? "@3xl:grid-cols-4 @xl:grid-cols-2" : n === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-2";
+        return (
+          <div className="px-8 @3xl:px-12 py-16 max-w-[1180px] mx-auto" style={{ background: sectionBg }}>
+            {section.heading && (
+              <Field
+                editable={editable}
+                as="h2"
+                className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] mb-8 text-center"
+                selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.heading}
+              </Field>
+            )}
+            <div className={`grid grid-cols-1 ${colCls} gap-6`}>
+              {section.items.map((item, i) => {
+                const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+                const itemSel = gridItemSelection(i, item.title);
+                const ip = itemPalette(item.bgColor, palette);
+                return (
+                  <div key={i} className="flex flex-col rounded-2xl overflow-hidden border" style={{ background: palette.cardBg, borderColor: palette.cardBorder, ...(gridItemCardStyle(item.bgColor, palette) || {}) }}>
+                    <ImageOrArt
+                      imageUrl={item.imageUrl}
+                      art={`linear-gradient(145deg, ${hue}55, ${hue}15)`}
+                      className="h-[190px]"
+                      selectable={editable}
+                      selected={!!itemSel && selectedImageKey === itemSel.key}
+                      onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                    />
+                    <div className="flex flex-col flex-1 p-5">
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className="font-heading text-[19px] mb-2"
+                        selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                        onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+                      >
+                        {item.title}
+                      </Field>
+                      <Field
+                        editable={editable}
+                        as="div"
+                        className="text-[13.5px] leading-relaxed mb-5"
+                        style={{ color: ip.textDim }}
+                        selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                        onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                      >
+                        {item.body}
+                      </Field>
+                      <div className="mt-auto">
+                        <FieldBadge {...readMoreField("link", "knappen i rutan", i, (item as any).linkLabel)}>
+                          <CtaPill accent={accent} link={item.link} newTab={(item as any).newTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} size="sm">
+                            {(item as any).linkLabel || t("Läs mer")}
+                          </CtaPill>
+                        </FieldBadge>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+
       // cards (default) — kolumnantalet räknas ut från items.length (samma
       // knep som "bento" ovan) istället för ett fast grid-cols-3, annars
       // strandar t.ex. ett FJÄRDE objekt ensamt på en egen rad för sig

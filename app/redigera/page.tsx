@@ -96,6 +96,7 @@ const GRID_LAYOUT_LABELS: Record<GridLayout, string> = {
   "icon-circles": msg("Ikoncirklar"),
   "icon-list": msg("Ikonlista"),
   "icon-top-rule": msg("Ikoner med linje"),
+  "image-cta-cards": msg("Bildkort med knapp"),
 };
 
 const MENU_LAYOUT_LABELS: Record<MenuLayout, string> = {

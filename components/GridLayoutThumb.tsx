@@ -251,6 +251,16 @@ export default function GridLayoutThumb({ layout, accent = "#2E7D5B" }: { layout
         </>
       );
       break;
+    case "image-cta-cards":
+      body = cols3.map((x, i) => (
+        <g key={x}>
+          <rect x={x} y={12} width={30} height={22} rx={3} fill={accent} fillOpacity={0.4 + i * 0.1} />
+          <rect x={x} y={38} width={20} height={3} rx={1.5} fill={dim} opacity={0.6} />
+          <g opacity={dimOp}><Lines x={x} y={44} w={28} n={2} c={dim} /></g>
+          <rect x={x} y={57} width={30} height={8} rx={4} fill={accent} fillOpacity={0.8} />
+        </g>
+      ));
+      break;
     case "icon-top-rule":
       body = cols3.map((x) => (
         <g key={x}>
