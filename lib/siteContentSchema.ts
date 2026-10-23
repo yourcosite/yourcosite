@@ -612,6 +612,11 @@ export const EDIT_PATCH_PROPERTIES = {
         description:
           "Headerns uppbyggnad: left = logga vänster och meny höger (klassisk), centered-stacked = logga centrerad med menyn på en egen rad under, split = logga vänster och menyn centrerad. Menyer MED en tydlig knapp (t.ex. Bokning): left-button = klassisk meny med knapp ytterst till höger, split-button = logga vänster, meny i mitten, knapp höger, centered-button = loggan centrerad, knapp uppe till höger och menyn under, pill-bar = menyn i en rundad flytande ruta med knapp höger, minimal = bara logga, knapp och hamburgarmeny även på bred skärm. Sätt bara när kunden ber om en annan header/meny-placering eller en knapp i menyn.",
       },
+      headerGlass: {
+        type: "boolean",
+        description:
+          "true = halvgenomskinlig, lite mörk meny som ligger över heroens bild så att bilden syns svagt igenom; false = vanlig meny. Funkar när startsidans (eller sidans) första sektion är en hero med bild och layouten overlay-bottom eller fade-bottom — byt då heroens layout till overlay-bottom om den har en annan. Sätt när kunden ber om genomskinlig/halvtransparent/glas-meny eller att bilden ska synas igenom menyn.",
+      },
       headerCta: {
         type: "object",
         description:

@@ -70,6 +70,10 @@ export interface SiteTheme {
   // Saknas den väljs automatiskt: sidan med bokning ("Bokning"), annars
   // sidan med kontakt. path = vilken sida knappen går till, label = texten
   // (annars sidans egen rubrik), off = ingen knapp alls. Satt av Millie.
+  // Halvgenomskinlig mörk meny som ligger över heroens bild (bilden syns
+  // svagt igenom). Gäller sidor där första sektionen är en hero med
+  // layouten overlay-bottom eller fade-bottom. Satt av Millie.
+  headerGlass?: boolean;
   headerCta?: { path?: string; label?: string; off?: boolean; hideFromMenu?: boolean };
   // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
   // (lib/themeVariants.ts), satt i kod i /api/sites/choose-look. Gäller

@@ -433,8 +433,11 @@ function SitePreviewInner({
     (acc, [type, override]) => applyFirstSectionOverride(acc, type, override),
     heroOverriddenSections
   );
+  const headerGlass = !!content.theme.headerGlass;
+  const heroLay = firstSection?.type === "hero" ? firstSection.layout || "centered" : "";
   const overlayHeader =
-    page.path === "/" && firstSection?.type === "hero" && (firstSection.layout || "centered") === "overlay-bottom";
+    (page.path === "/" && heroLay === "overlay-bottom") ||
+    (headerGlass && (heroLay === "overlay-bottom" || heroLay === "fade-bottom") && !!(firstSection as any)?.imageUrl);
   const restSections = overlayHeader ? pageSections.slice(1) : pageSections;
 
   // Sektionen direkt under hero fick annars ALLTID samma mekaniska
@@ -546,6 +549,7 @@ function SitePreviewInner({
           basePath={basePath}
           onNavigate={onNavigate}
           overlay={overlayHeader}
+          glass={headerGlass && overlayHeader}
           layout={headerLayout}
           cta={headerCta}
           accent={accent}
@@ -880,6 +884,7 @@ function Header({
   basePath,
   onNavigate,
   overlay,
+  glass,
   layout = "left",
   cta = null,
   accent = "#C6FF5E",
@@ -904,6 +909,8 @@ function Header({
   // vara en egen solid stapel ovanför — det där "wow"-intrycket kunden
   // efterfrågade, med menyn indragen i själva bilden.
   overlay?: boolean;
+  // Halvgenomskinlig mörk stapel (headerGlass) i stället för gradienten.
+  glass?: boolean;
   // Headerns uppbyggnad — se HeaderLayout i lib/contentModel.ts, bunden
   // till sajtens stilvariant (lib/themeVariants.ts). "left" om inget annat
   // anges, samma som innan den här axeln fanns.
@@ -1069,7 +1076,9 @@ function Header({
   // "relative" vinna över "absolute" oavsett klassordning i strängen,
   // vilket en gång redan orsakade en osynlig hero-bild (se ImageOrArt).
   const outerBase = overlay ? "absolute top-0 left-0 right-0 z-10" : "relative";
-  const outerStyle = overlay
+  const outerStyle = glass
+    ? { background: "rgba(10,10,12,0.5)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderBottom: "1px solid rgba(255,255,255,0.12)" }
+    : overlay
     ? { background: "linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.25) 55%, rgba(0,0,0,0) 100%)" }
     : { borderBottom: `1px solid ${palette.cardBorder}` };
 

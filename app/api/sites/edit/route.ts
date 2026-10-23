@@ -805,7 +805,11 @@ async function POST_handler(request: Request) {
 - Lokal anpassning: tilltal, datum, telefonformat och valuta ska följa sajtens språk och land. Hitta aldrig på uppgifter.
 
 `;
-  const promptText = languageRule + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories, newsContext);
+  const th: any = site.content.theme || {};
+  const menuStatus = `MENYNS NUVARANDE LÄGE (läs det här, lita inte på tidigare chattmeddelanden): headerLayout=${th.headerLayout ?? "left (standard)"}; menyknapp ${HEADER_BUTTON_LAYOUTS.includes(th.headerLayout) ? "stil med knapp finns" : "stilen har INGEN knapp, så ingen knapp syns"}; headerCta=${JSON.stringify(th.headerCta ?? null)}; headerGlass=${th.headerGlass ? "ja" : "nej"}.
+
+`;
+  const promptText = languageRule + menuStatus + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories, newsContext);
 
   // Bara bildbilagor görs om till egna innehållsblock i ett multimodalt
   // meddelande (Claude ser själva bilderna, en efter en) — textdokument är
@@ -921,7 +925,19 @@ async function POST_handler(request: Request) {
   const baseline = dedupeMaps(applyPatch(site.content, { summary: "" } as EditPatch), "flatten-form");
   const contentChanged = JSON.stringify(updatedContent) !== JSON.stringify(baseline);
   const hasNews = !!(patch.newsArticle && normalizeCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) || !!(patch.newsUpdate?.title?.trim());
-  const didSomething = contentChanged || hasNews || newLogoUrl !== undefined || patch.exampleContentResolved === true;
+  // Menyknappen kräver en stil med knapp. Finns en knapp (headerCta) men stilen
+  // saknar knapp byter vi till motsvarande stil med knapp, oavsett vad Millie
+  // skickade — annars syns ingenting.
+  let headerFixed = false;
+  {
+    const c = updatedContent.theme.headerCta;
+    const lay = updatedContent.theme.headerLayout;
+    if (c && !c.off && (c.path || c.label) && !(HEADER_BUTTON_LAYOUTS as readonly string[]).includes(lay ?? "left")) {
+      updatedContent.theme.headerLayout = lay === "split" ? "split-button" : lay === "centered-stacked" ? "centered-button" : "left-button";
+      headerFixed = true;
+    }
+  }
+  const didSomething = headerFixed || contentChanged || hasNews || newLogoUrl !== undefined || patch.exampleContentResolved === true;
   if (!didSomething && patch.answerOnly !== true && patch.unsupported !== true) {
     return NextResponse.json({
       content: site.content,
