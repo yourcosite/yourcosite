@@ -452,6 +452,12 @@ function SitePreviewInner({
   let altSeed = 0;
   for (let i = 0; i < page.path.length; i++) altSeed = (altSeed * 31 + page.path.charCodeAt(i)) >>> 0;
   const altOffset = altSeed % 2;
+  // Färgen på sektionen direkt efter första sektionen (samma regel som
+  // SectionBlock använder för sin bakgrund) — hero fade-bottom tonar mot den.
+  const nextAfterFirst = overlayHeader ? restSections[0] : restSections[1];
+  const nextBgForHero: string | undefined = nextAfterFirst
+    ? (nextAfterFirst as { bgColor?: string }).bgColor ?? ((1 + altOffset) % 2 === 1 ? palette.bgAlt : undefined)
+    : undefined;
 
   // Cookiebannern ska synas automatiskt på en RIKTIG sajt (alla sidor,
   // besökaren klickar runt) men aldrig i de små, icke-interaktiva
@@ -567,6 +573,7 @@ function SitePreviewInner({
             socialLinks={content.socialLinks}
             buttonShape={buttonShape}
             heroEmphasis
+            nextBg={nextBgForHero}
             basePath={basePath}
             siteId={siteId}
             bookingSiteId={bookingSiteId}
@@ -623,6 +630,7 @@ function SitePreviewInner({
             // Startsidans första sektion är besökarens allra första intryck —
             // ska kännas som en "wow"-ingång. Gäller bara hero överst på "/".
             heroEmphasis={!overlayHeader && page.path === "/" && i === 0}
+            nextBg={i === 0 && !overlayHeader ? nextBgForHero : undefined}
             basePath={basePath}
             siteId={siteId}
             bookingSiteId={bookingSiteId}
@@ -2810,6 +2818,7 @@ function SectionBlockInner({
   socialLinks,
   buttonShape,
   heroEmphasis,
+  nextBg,
   basePath,
   siteId,
   bookingSiteId,
@@ -2836,6 +2845,8 @@ function SectionBlockInner({
   // true för startsidans första sektion — ger hero-layouterna en större,
   // mer dramatisk bild/rubrik oavsett vilken layout AI:n valt.
   heroEmphasis?: boolean;
+  // Bakgrundsfärg på sektionen direkt under (bara satt när den skiljer sig från sidans bakgrund) — hero fade-bottom tonar ut mot den.
+  nextBg?: string;
   // Vidarebefordras bara till CTA-knappen (se CtaLink) — samma
   // basePath/onNavigate som Header redan använder för menyn.
   basePath?: string;
@@ -3655,8 +3666,12 @@ function SectionBlockInner({
               />
             </div>
             <div
+              className={`relative ${heroEmphasis ? "-mt-10 @3xl:-mt-14" : "-mt-8 @3xl:-mt-10"}`}
+              style={nextBg ? { background: `linear-gradient(180deg, transparent 0%, transparent 35%, ${nextBg} 100%)` } : undefined}
+            >
+            <div
               className={`px-8 @3xl:px-14 max-w-[620px] relative ${
-                heroEmphasis ? "-mt-10 @3xl:-mt-14 pb-14" : "-mt-8 @3xl:-mt-10 pb-10"
+                nextBg ? (heroEmphasis ? "pb-24" : "pb-20") : heroEmphasis ? "pb-14" : "pb-10"
               }`}
             >
               {section.eyebrow && (
@@ -3701,6 +3716,7 @@ function SectionBlockInner({
                   </CtaPill>
                 </FieldBadge>
               )}
+            </div>
             </div>
           </div>
         );
