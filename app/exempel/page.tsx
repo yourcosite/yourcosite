@@ -7,7 +7,7 @@ import Footer from "@/components/Footer";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = getT();
-  return { title: t("Exempel"), description: t("Fyra helt olika branscher, fyra helt olika känslor — allihop byggda genom samma samtal.") };
+  return { title: t("Exempel"), description: t("Sex helt olika branscher, sex helt olika känslor — allihop byggda genom samma samtal.") };
 }
 
 export default function ExamplesPage() {
@@ -19,6 +19,20 @@ export default function ExamplesPage() {
       category: t("Restaurang"),
       body: t("Mörk och stämningsfull — med meny, bildgalleri och bordsbokning i fokus."),
       img: "/images/bistro-hero.jpg",
+    },
+    {
+      href: "/exempel/salong",
+      name: t("Salong Saxen"),
+      category: t("Frisör"),
+      body: t("Ljus och personlig, med prislista och bokningsförfrågan i fokus."),
+      img: "/images/salong-hero.jpg",
+    },
+    {
+      href: "/exempel/fotboll",
+      name: t("Lindvallens FK"),
+      category: t("Fotbollsklubb"),
+      body: t("Glad och energisk, med lag, träningstider och medlemsavgifter."),
+      img: "/images/fotboll-lag.jpg",
     },
     {
       href: "/exempel/inredning",
@@ -53,10 +67,10 @@ export default function ExamplesPage() {
             {t("LIVE-DEMO")}
           </div>
           <h1 className="text-[36px] md:text-[42px] leading-[1.15] font-medium text-white">
-            {t("Fyra exempel på vad YourCoSite bygger")}
+            {t("Sex exempel på vad YourCoSite bygger")}
           </h1>
           <p className="text-[16px] leading-relaxed text-[#C9C7C2] mt-4">
-            {t("Fyra helt olika branscher, fyra helt olika känslor — allihop byggda genom samma samtal. Klicka runt i dem som riktiga sajter.")}
+            {t("Sex helt olika branscher, sex helt olika känslor — allihop byggda genom samma samtal. Klicka runt i dem som riktiga sajter.")}
           </p>
         </div>
       </section>
