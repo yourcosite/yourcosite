@@ -573,6 +573,8 @@ export interface SectionExtras {
   fadeBottom?: boolean;
   // true = sektionens överkant tonar mjukt ut i färgen på sektionen över.
   fadeTop?: boolean;
+  // Egen knappstil på knapparna i just den här sektionen (annars sajtens theme.buttonStyle).
+  ctaStyle?: ButtonStyle;
 }
 
 export type Section = (

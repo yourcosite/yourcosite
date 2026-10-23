@@ -2347,5 +2347,19 @@
   "Bildkort med knapp": "Cartes image avec bouton",
   "Toningssektion och mjukare knappar": "Section en fondu et boutons plus doux",
   "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Une section en fondu a une image qui s'estompe doucement vers le haut et vers le bas, avec du texte et un bouton par-dessus. Elle peut servir de hero en haut de page et d'appel à l'action plus bas. Vous pouvez aussi obtenir des boutons plus doux : teintés, avec seulement un contour, aux coins doucement arrondis ou avec un dégradé. Demandez simplement à Millie.",
-  "Gör den här sektionen till en toningssektion": "Transforme cette section en section en fondu"
+  "Gör den här sektionen till en toningssektion": "Transforme cette section en section en fondu",
+  "Det gick inte att avgöra vilken knappstil som ska användas.": "Impossible de déterminer le style de bouton à utiliser.",
+  "Som resten av sajten": "Comme le reste du site",
+  "Rund": "Rond",
+  "Mjukt rundad": "Doucement arrondi",
+  "Kantig": "Carré",
+  "Mjuk ton": "Teinte douce",
+  "Ram": "Contour",
+  "Färgton": "Dégradé",
+  "Understruken": "Souligné",
+  "Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! Le style de bouton a été changé pour les boutons de cette section. Vous pouvez annuler avec le bouton si vous changez d'avis.",
+  "Välj knappstil": "Choisir le style de bouton",
+  "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "S'applique aux boutons de cette section. Le reste du site n'est pas modifié.",
+  "Knapp": "Bouton",
+  "🔘 Byt knappstil": "🔘 Changer le style du bouton"
 }

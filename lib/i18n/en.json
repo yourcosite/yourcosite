@@ -2347,5 +2347,19 @@
   "Bildkort med knapp": "Image cards with button",
   "Toningssektion och mjukare knappar": "Fade section and softer buttons",
   "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "A fade section has an image that fades softly both upwards and downwards, with text and a button on top. It can be used as the hero at the top and as a call to action further down. You can also get softer buttons: tinted, outline only, softly rounded or with a colour gradient. Just ask Millie for what you want.",
-  "Gör den här sektionen till en toningssektion": "Turn this section into a fade section"
+  "Gör den här sektionen till en toningssektion": "Turn this section into a fade section",
+  "Det gick inte att avgöra vilken knappstil som ska användas.": "Could not tell which button style to use.",
+  "Som resten av sajten": "Same as the rest of the site",
+  "Rund": "Round",
+  "Mjukt rundad": "Softly rounded",
+  "Kantig": "Square",
+  "Mjuk ton": "Soft tint",
+  "Ram": "Outline",
+  "Färgton": "Colour gradient",
+  "Understruken": "Underlined",
+  "Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig.": "Done! The button style has been changed for the buttons in this section. You can undo it with the button if you change your mind.",
+  "Välj knappstil": "Choose button style",
+  "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "Applies to the buttons in this section. The rest of the site is not affected.",
+  "Knapp": "Button",
+  "🔘 Byt knappstil": "🔘 Change button style"
 }

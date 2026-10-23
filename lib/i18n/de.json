@@ -2347,5 +2347,19 @@
   "Bildkort med knapp": "Bildkarten mit Button",
   "Toningssektion och mjukare knappar": "Überblendungs-Sektion und weichere Buttons",
   "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Eine Überblendungs-Sektion hat ein Bild, das sanft nach oben und nach unten ausblendet, mit Text und Button darüber. Sie lässt sich als Hero ganz oben und als Handlungsaufforderung weiter unten verwenden. Du kannst auch weichere Buttons bekommen: getönt, nur mit Rahmen, sanft abgerundet oder mit Farbverlauf. Bitte Millie einfach darum.",
-  "Gör den här sektionen till en toningssektion": "Mach aus dieser Sektion eine Überblendungs-Sektion"
+  "Gör den här sektionen till en toningssektion": "Mach aus dieser Sektion eine Überblendungs-Sektion",
+  "Det gick inte att avgöra vilken knappstil som ska användas.": "Es ließ sich nicht bestimmen, welcher Button-Stil verwendet werden soll.",
+  "Som resten av sajten": "Wie der Rest der Website",
+  "Rund": "Rund",
+  "Mjukt rundad": "Sanft abgerundet",
+  "Kantig": "Eckig",
+  "Mjuk ton": "Weiche Tönung",
+  "Ram": "Rahmen",
+  "Färgton": "Farbverlauf",
+  "Understruken": "Unterstrichen",
+  "Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig.": "Fertig! Der Button-Stil wurde für die Buttons in dieser Sektion geändert. Du kannst es mit dem Button rückgängig machen, wenn du es dir anders überlegst.",
+  "Välj knappstil": "Button-Stil wählen",
+  "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "Gilt für die Buttons in dieser Sektion. Der Rest der Website bleibt unverändert.",
+  "Knapp": "Button",
+  "🔘 Byt knappstil": "🔘 Button-Stil ändern"
 }

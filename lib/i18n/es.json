@@ -2347,5 +2347,19 @@
   "Bildkort med knapp": "Tarjetas con imagen y botón",
   "Toningssektion och mjukare knappar": "Sección con degradado y botones más suaves",
   "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Una sección con degradado tiene una imagen que se desvanece suavemente hacia arriba y hacia abajo, con texto y un botón encima. Puede usarse como hero arriba del todo y como llamada a la acción más abajo. También puedes tener botones más suaves: tintados, solo con borde, con esquinas suavemente redondeadas o con degradado de color. Pídeselo a Millie.",
-  "Gör den här sektionen till en toningssektion": "Convierte esta sección en una sección con degradado"
+  "Gör den här sektionen till en toningssektion": "Convierte esta sección en una sección con degradado",
+  "Det gick inte att avgöra vilken knappstil som ska användas.": "No se pudo determinar qué estilo de botón usar.",
+  "Som resten av sajten": "Como el resto del sitio",
+  "Rund": "Redondo",
+  "Mjukt rundad": "Suavemente redondeado",
+  "Kantig": "Cuadrado",
+  "Mjuk ton": "Tono suave",
+  "Ram": "Borde",
+  "Färgton": "Degradado de color",
+  "Understruken": "Subrayado",
+  "Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig.": "¡Listo! Se ha cambiado el estilo de los botones de esta sección. Puedes deshacerlo con el botón si cambias de opinión.",
+  "Välj knappstil": "Elegir estilo de botón",
+  "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "Se aplica a los botones de esta sección. El resto del sitio no cambia.",
+  "Knapp": "Botón",
+  "🔘 Byt knappstil": "🔘 Cambiar estilo de botón"
 }

@@ -2347,5 +2347,19 @@
   "Bildkort med knapp": "Billedkort med knap",
   "Toningssektion och mjukare knappar": "Toningssektion og blødere knapper",
   "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "En toningssektion har et billede, der tones blødt ud både opad og nedad, med tekst og en knap ovenpå. Den kan bruges som hero øverst og som opfordring længere nede. Du kan også få blødere knapper: toned, kun med ramme, blødt afrundede eller med farveovergang. Bed Millie om det, du vil have.",
-  "Gör den här sektionen till en toningssektion": "Gør denne sektion til en toningssektion"
+  "Gör den här sektionen till en toningssektion": "Gør denne sektion til en toningssektion",
+  "Det gick inte att avgöra vilken knappstil som ska användas.": "Kunne ikke afgøre, hvilken knapstil der skal bruges.",
+  "Som resten av sajten": "Som resten af sitet",
+  "Rund": "Rund",
+  "Mjukt rundad": "Blødt afrundet",
+  "Kantig": "Kantet",
+  "Mjuk ton": "Blød tone",
+  "Ram": "Ramme",
+  "Färgton": "Farveovergang",
+  "Understruken": "Understreget",
+  "Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig.": "Færdig! Knapstilen er ændret for knapperne i denne sektion. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "Välj knappstil": "Vælg knapstil",
+  "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "Gælder knapperne i denne sektion. Resten af sitet påvirkes ikke.",
+  "Knapp": "Knap",
+  "🔘 Byt knappstil": "🔘 Skift knapstil"
 }

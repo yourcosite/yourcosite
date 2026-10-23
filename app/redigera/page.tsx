@@ -900,6 +900,7 @@ export default function EditorPage() {
   // Visuella väljare: ikon för en ruta och layout för en rutnätssektion.
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [layoutPickerOpen, setLayoutPickerOpen] = useState(false);
+  const [buttonStyleOpen, setButtonStyleOpen] = useState(false);
   const [savingPick, setSavingPick] = useState(false);
   const pickedSection = (() => {
     if (!content || !selection) return null;
@@ -918,6 +919,17 @@ export default function EditorPage() {
       : pickedSection?.type === "team"
       ? (TEAM_LAYOUT_LABELS as Record<string, string>)[l] ?? l
       : (GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l;
+  const canPickButtonStyle = selection?.target === "field" && !!pickedSection && /(^|\.)(ctaLabel|ctaLink|link)$/.test(selection.field);
+  const BUTTON_STYLE_CHOICES: { id: string | null; label: string }[] = [
+    { id: null, label: msg("Som resten av sajten") },
+    { id: "pill", label: msg("Rund") },
+    { id: "rounded", label: msg("Mjukt rundad") },
+    { id: "square", label: msg("Kantig") },
+    { id: "soft", label: msg("Mjuk ton") },
+    { id: "outline", label: msg("Ram") },
+    { id: "gradient", label: msg("Färgton") },
+    { id: "underline", label: msg("Understruken") },
+  ];
   const savePick = async (url: string, payload: Record<string, unknown>, okText: string) => {
     if (!selection || !content) return;
     setSavingPick(true);
@@ -933,6 +945,7 @@ export default function EditorPage() {
       setContent(data.content);
       setIconPickerOpen(false);
       setLayoutPickerOpen(false);
+      setButtonStyleOpen(false);
       setTeamOpen(false);
       setEmbedOpen(false);
       setMenuOpen(false);
@@ -946,6 +959,8 @@ export default function EditorPage() {
       setSavingPick(false);
     }
   };
+  const saveButtonStyle = (style: string | null) =>
+    savePick("/api/sites/edit-button-style", { style }, t("Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig."));
   const saveIcon = (icon: string | null) =>
     savePick("/api/sites/edit-icon", { itemIndex: pickedIconIndex, icon }, t("Klart! Ikonen är bytt. Du kan ångra med knappen om du ändrar dig."));
   // Galleri: lägg till många bilder på en gång (utan AI) och ta bort enskilda.
@@ -2012,6 +2027,48 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
+            {buttonStyleOpen && canPickButtonStyle && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl max-h-[85vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Välj knappstil")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{t("Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.")}</div>
+                  <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
+                    {BUTTON_STYLE_CHOICES.map((c) => {
+                      const accent = content?.theme.accentColor || "#2E7D5B";
+                      const current = (pickedSection?.ctaStyle ?? null) === c.id;
+                      const sample: React.CSSProperties =
+                        c.id === "soft" ? { background: `${accent}2E`, border: `1px solid ${accent}55`, borderRadius: 12 }
+                        : c.id === "outline" ? { border: `1.5px solid ${accent}`, borderRadius: 999 }
+                        : c.id === "underline" ? { borderBottom: `2px solid ${accent}`, borderRadius: 0 }
+                        : c.id === "square" ? { background: accent, borderRadius: 6 }
+                        : c.id === "rounded" ? { background: accent, borderRadius: 12 }
+                        : c.id === "gradient" ? { background: `linear-gradient(135deg, ${accent}, ${accent}B3)`, borderRadius: 999 }
+                        : c.id === "pill" ? { background: accent, borderRadius: 999 }
+                        : { border: "1px dashed #999", borderRadius: 999 };
+                      return (
+                        <button
+                          key={c.id ?? "auto"}
+                          type="button"
+                          disabled={savingPick}
+                          onClick={() => saveButtonStyle(c.id)}
+                          className={`rounded-xl border p-3 text-left disabled:opacity-60 ${current ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
+                        >
+                          <div className="flex justify-center py-1.5">
+                            <span className="inline-block text-[11px] font-semibold px-4 py-1.5" style={{ color: c.id === "pill" || c.id === "square" || c.id === "rounded" || c.id === "gradient" ? "#17171A" : undefined, ...sample }}>{t("Knapp")}</span>
+                          </div>
+                          <div className="text-[12.5px] font-semibold mt-1">{t(c.label)}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-end mt-3">
+                    <button type="button" onClick={() => setButtonStyleOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">
+                      {t("Avbryt")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {layoutPickerOpen && canPickLayout && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-lg shadow-xl max-h-[85vh] flex flex-col">
@@ -2174,6 +2231,16 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     {t("👥 Redigera personer")}
+                  </button>
+                )}
+                {canPickButtonStyle && (
+                  <button
+                    type="button"
+                    onClick={() => setButtonStyleOpen(true)}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("🔘 Byt knappstil")}
                   </button>
                 )}
                 {canPickLayout && (

@@ -2347,5 +2347,19 @@
   "Bildkort med knapp": "Kuvakortit painikkeella",
   "Toningssektion och mjukare knappar": "Häivytysosio ja pehmeämmät painikkeet",
   "En toningssektion har en bild som tonar mjukt ut både uppåt och nedåt, med text och knapp över. Den går att ha som hero högst upp och som uppmaning längre ner. Du kan också få mjukare knappar: tonade, med bara en ram, mjukt rundade eller med färgton. Be Millie om det du vill ha.": "Häivytysosiossa kuva häipyy pehmeästi sekä ylös että alas, ja teksti ja painike ovat sen päällä. Sen voi ottaa käyttöön hero-osiona ylhäällä ja toimintakehotuksena alempana. Voit myös saada pehmeämpiä painikkeita: sävytettyjä, pelkällä reunuksella, pehmeästi pyöristettyjä tai värisiirtymällä. Pyydä Milliea tekemään haluamasi.",
-  "Gör den här sektionen till en toningssektion": "Tee tästä osiosta häivytysosio"
+  "Gör den här sektionen till en toningssektion": "Tee tästä osiosta häivytysosio",
+  "Det gick inte att avgöra vilken knappstil som ska användas.": "Käytettävää painiketyyliä ei voitu päättää.",
+  "Som resten av sajten": "Kuten muualla sivustolla",
+  "Rund": "Pyöreä",
+  "Mjukt rundad": "Pehmeästi pyöristetty",
+  "Kantig": "Kulmikas",
+  "Mjuk ton": "Pehmeä sävy",
+  "Ram": "Kehys",
+  "Färgton": "Värisiirtymä",
+  "Understruken": "Alleviivattu",
+  "Klart! Knappstilen är bytt för knapparna i den här sektionen. Du kan ångra med knappen om du ändrar dig.": "Valmis! Painiketyyli on vaihdettu tämän osion painikkeisiin. Voit kumota sen painikkeella, jos muutat mielesi.",
+  "Välj knappstil": "Valitse painiketyyli",
+  "Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.": "Koskee tämän osion painikkeita. Muu sivusto ei muutu.",
+  "Knapp": "Painike",
+  "🔘 Byt knappstil": "🔘 Vaihda painiketyyli"
 }

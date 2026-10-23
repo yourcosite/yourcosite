@@ -588,6 +588,20 @@ function SitePreviewInner({
             selectedFieldKey={selectedFieldKey}
             onSelectField={onSelectField}
           />
+          {(firstSection as any).fadeTop && (
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 top-0 h-[140px] @3xl:h-[200px] pointer-events-none"
+              style={{ background: `linear-gradient(0deg, transparent 0%, ${palette.bg} 100%)` }}
+            />
+          )}
+          {(firstSection as any).fadeBottom && (
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-0 bottom-0 h-[140px] @3xl:h-[200px] pointer-events-none"
+              style={{ background: `linear-gradient(180deg, transparent 0%, ${nextBgForHero ?? palette.bg} 100%)` }}
+            />
+          )}
           </div>
         )}
       </div>
@@ -2873,7 +2887,7 @@ function SectionBlockInner({
   palette: basePalette,
   alt,
   socialLinks,
-  buttonShape,
+  buttonShape: buttonShapeSite,
   heroEmphasis,
   nextBg,
   basePath,
@@ -2947,6 +2961,8 @@ function SectionBlockInner({
   // ner i den här funktionen (kort/text/kantfärger, i varenda layout-gren)
   // får då automatiskt rätt färger utan att varje gren behöver ändras för
   // sig, precis som innan den här funktionen fick en egen `bgColor`.
+  // En egen knappstil på just den här sektionen (section.ctaStyle) går före sajtens.
+  const buttonShape: ButtonStyle = (section as { ctaStyle?: ButtonStyle }).ctaStyle ?? buttonShapeSite;
   const sectionBgColor = (section as { bgColor?: string }).bgColor;
   const palette = sectionBgColor ? buildContrastPalette(sectionBgColor) : basePalette;
   const sectionBg = sectionBgColor ?? (alt ? palette.bgAlt : undefined);

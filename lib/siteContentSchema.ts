@@ -532,10 +532,16 @@ const FADE_TOP_SCHEMA = {
   description:
     "true = den här sektionens överkant tonar mjukt ut i bakgrundsfärgen på sektionen över (mjuk övergång uppåt, t.ex. en bild som tonar ut uppåt). false tar bort. Sätt bara när kunden ber om fade/uttoning UPPÅT på just den sektionen; kan kombineras med fadeBottom för att tona både uppåt och nedåt. Behåll ett redan satt värde när du skriver om sektionen av annan anledning.",
 };
+const CTA_STYLE_SCHEMA = {
+  type: "string",
+  enum: ["pill", "square", "underline", "soft", "outline", "rounded", "gradient", "auto"],
+  description:
+    "Knappstil för knapparna i BARA den här sektionen (annars gäller sajtens): pill = runda fyllda, square = kantiga, underline = understruken, soft = mjukt tonad, outline = bara ram, rounded = mjukt rundade fyllda, gradient = färgton. auto = ta bort och följ sajten igen. Sätt bara när kunden ber om en annan knappstil på en enskild sektion/knapp; ändra annars theme.buttonStyle för hela sajten. Behåll ett redan satt värde när du skriver om sektionen av annan anledning.",
+};
 export const SECTION_SCHEMA = {
   anyOf: RAW_SECTION_SCHEMA.anyOf.map((variant) => ({
     ...variant,
-    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA, fadeBottom: FADE_BOTTOM_SCHEMA, fadeTop: FADE_TOP_SCHEMA },
+    properties: { ...variant.properties, spacing: SPACING_SCHEMA, textAlign: TEXT_ALIGN_SCHEMA, fadeBottom: FADE_BOTTOM_SCHEMA, fadeTop: FADE_TOP_SCHEMA, ctaStyle: CTA_STYLE_SCHEMA },
   })),
 };
 
