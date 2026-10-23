@@ -2364,5 +2364,9 @@
   "🔘 Byt knappstil": "🔘 Skift knapstil",
   "Hittade inte knappen i sektionen.": "Kunne ikke finde knappen i sektionen.",
   "Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig.": "Færdig! Knapstilen er ændret. Du kan fortryde med knappen, hvis du ombestemmer dig.",
-  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Gælder kun denne knap. Resten af sitet påvirkes ikke."
+  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Gælder kun denne knap. Resten af sitet påvirkes ikke.",
+  "Klart! Knappfärgen är bytt. Du kan ångra med knappen om du ändrar dig.": "Færdigt! Knapfarven er ændret. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "Knappfärg": "Knapfarve",
+  "Sajtens färg": "Sidens farve",
+  "Egen färg": "Egen farve"
 }

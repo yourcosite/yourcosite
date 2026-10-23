@@ -2364,5 +2364,9 @@
   "🔘 Byt knappstil": "🔘 Vaihda painiketyyli",
   "Hittade inte knappen i sektionen.": "Painiketta ei löytynyt osiosta.",
   "Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig.": "Valmis! Painiketyyli on vaihdettu. Voit kumota sen painikkeella, jos muutat mielesi.",
-  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Koskee vain tätä painiketta. Muu sivusto ei muutu."
+  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Koskee vain tätä painiketta. Muu sivusto ei muutu.",
+  "Klart! Knappfärgen är bytt. Du kan ångra med knappen om du ändrar dig.": "Valmis! Painikkeen väri on vaihdettu. Voit perua sen painikkeella, jos muutat mielesi.",
+  "Knappfärg": "Painikkeen väri",
+  "Sajtens färg": "Sivuston väri",
+  "Egen färg": "Oma väri"
 }

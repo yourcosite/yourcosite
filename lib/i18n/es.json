@@ -2364,5 +2364,9 @@
   "🔘 Byt knappstil": "🔘 Cambiar estilo de botón",
   "Hittade inte knappen i sektionen.": "No se encontró el botón en la sección.",
   "Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig.": "¡Listo! Se ha cambiado el estilo del botón. Puedes deshacerlo con el botón si cambias de opinión.",
-  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Se aplica solo a este botón. El resto del sitio no cambia."
+  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Se aplica solo a este botón. El resto del sitio no cambia.",
+  "Klart! Knappfärgen är bytt. Du kan ångra med knappen om du ändrar dig.": "¡Listo! El color del botón ha sido cambiado. Puedes deshacerlo con el botón si cambias de opinión.",
+  "Knappfärg": "Color del botón",
+  "Sajtens färg": "Color del sitio",
+  "Egen färg": "Color personalizado"
 }

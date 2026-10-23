@@ -369,7 +369,7 @@ function SitePreviewInner({
     // kvar som vanligt menyval (t.ex. knappen "Boka" och länken "Kontakt" till
     // samma sida). Bara den helautomatiska knappen tar bort dubbletten.
     const custom = !!(want?.path || want?.label?.trim());
-    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom && !want?.hideFromMenu, style: want?.style };
+    return { path: target.path, label: want?.label?.trim() || target.label, keepInMenu: custom && !want?.hideFromMenu, style: want?.style, color: want?.color };
   })();
   const fontClass = font === "serif" ? "font-serif" : "font-sans";
   const accent = skin?.accent ? skin.accent(content.theme.accentColor) : content.theme.accentColor;
@@ -556,6 +556,9 @@ function SitePreviewInner({
           onNavigate={onNavigate}
           overlay={overlayHeader}
           glass={headerGlass && overlayHeader}
+          ctaEditable={editable}
+          ctaSelected={selectedFieldKey === `${page.path}::header::cta`}
+          onSelectCta={() => onSelectField?.({ key: `${page.path}::header::cta`, pagePath: page.path, sectionId: "__header__", field: "headerCta", label: "menyknappen" })}
           layout={headerLayout}
           cta={headerCta}
           accent={accent}
@@ -933,12 +936,19 @@ function Header({
   onNavigate,
   overlay,
   glass,
+  ctaEditable,
+  ctaSelected,
+  onSelectCta,
   layout = "left",
   cta = null,
   accent = "#C6FF5E",
   buttonShape = "pill",
 }: {
-  cta?: { path: string; label: string; keepInMenu?: boolean; style?: ButtonStyle } | null;
+  cta?: { path: string; label: string; keepInMenu?: boolean; style?: ButtonStyle; color?: string } | null;
+  // Redigeraren: menyknappen går att markera (fältet "headerCta").
+  ctaEditable?: boolean;
+  ctaSelected?: boolean;
+  onSelectCta?: () => void;
   accent?: string;
   buttonShape?: ButtonStyle;
   siteName?: string;
@@ -1131,9 +1141,11 @@ function Header({
     : { borderBottom: `1px solid ${palette.cardBorder}` };
 
   const ctaEl = cta ? (
-    <CtaPill accent={accent} link={cta.path} basePath={basePath} onNavigate={onNavigate} shape={cta.style ?? buttonShape} size="sm" textColor={overlay ? "#FFFFFF" : palette.text}>
-      {cta.label}
-    </CtaPill>
+    <FieldBadge editable={ctaEditable} selected={ctaSelected} onSelect={onSelectCta}>
+      <CtaPill accent={accent} link={cta.path} basePath={basePath} onNavigate={onNavigate} shape={cta.style ?? buttonShape} colorOverride={cta.color} size="sm" textColor={overlay ? "#FFFFFF" : palette.text}>
+        {cta.label}
+      </CtaPill>
+    </FieldBadge>
   ) : null;
   const ctaAndBurger = (
     <div className="flex items-center gap-2 @3xl:gap-3 justify-end flex-shrink-0">
@@ -4921,7 +4933,7 @@ function SectionBlockInner({
                       </Field>
                       <div className="mt-auto">
                         <FieldBadge {...readMoreField("link", "knappen i rutan", i, (item as any).linkLabel)}>
-                          <CtaPill accent={accent} link={item.link} newTab={(item as any).newTab} basePath={basePath} onNavigate={onNavigate} shape={(item as any).ctaStyle ?? buttonShape} size="sm">
+                          <CtaPill accent={accent} link={item.link} newTab={(item as any).newTab} basePath={basePath} onNavigate={onNavigate} shape={(item as any).ctaStyle ?? buttonShape} colorOverride={(item as any).ctaColor} size="sm">
                             {(item as any).linkLabel || t("Läs mer")}
                           </CtaPill>
                         </FieldBadge>

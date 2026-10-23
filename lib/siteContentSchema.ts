@@ -642,6 +642,7 @@ export const EDIT_PATCH_PROPERTIES = {
           label: { type: "string" },
           off: { type: "boolean" },
           style: { type: "string", enum: ["pill", "square", "underline", "soft", "outline", "rounded", "gradient", "auto"], description: "Knappstil på BARA menyknappen (annars sajtens knappstil). auto = följ sajten. Sätt när kunden ber om en annan stil på knappen i menyn." },
+          color: { type: "string", description: "Egen färg på menyknappen som hex, t.ex. #E5574E. Tom sträng tar bort och knappen följer sajtens accentfärg igen. Sätt när kunden ber om en annan färg på just menyknappen." },
           hideFromMenu: { type: "boolean", description: "true = sidan knappen går till tas bort som vanligt menyval (så den bara finns som knapp). Sätt när kunden vill att knappen ERSÄTTER menylänken." },
         },
       },

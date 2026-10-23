@@ -2364,5 +2364,9 @@
   "🔘 Byt knappstil": "🔘 Button-Stil ändern",
   "Hittade inte knappen i sektionen.": "Der Button wurde in der Sektion nicht gefunden.",
   "Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig.": "Fertig! Der Button-Stil wurde geändert. Du kannst es mit dem Button rückgängig machen, wenn du es dir anders überlegst.",
-  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Gilt nur für diesen Button. Der Rest der Website bleibt unverändert."
+  "Gäller bara den här knappen. Resten av sajten påverkas inte.": "Gilt nur für diesen Button. Der Rest der Website bleibt unverändert.",
+  "Klart! Knappfärgen är bytt. Du kan ångra med knappen om du ändrar dig.": "Fertig! Die Schaltflächenfarbe wurde geändert. Mit dem Button kannst du es rückgängig machen, falls du es dir anders überlegst.",
+  "Knappfärg": "Schaltflächenfarbe",
+  "Sajtens färg": "Farbe der Website",
+  "Egen färg": "Eigene Farbe"
 }

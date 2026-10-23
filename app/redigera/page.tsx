@@ -902,6 +902,7 @@ export default function EditorPage() {
   const [layoutPickerOpen, setLayoutPickerOpen] = useState(false);
   const [buttonStyleOpen, setButtonStyleOpen] = useState(false);
   const [savingPick, setSavingPick] = useState(false);
+  const [customBtnColor, setCustomBtnColor] = useState<string | null>(null);
   const pickedSection = (() => {
     if (!content || !selection) return null;
     return (content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any) ?? null;
@@ -921,7 +922,14 @@ export default function EditorPage() {
       : (GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l;
   const buttonItemMatch = selection?.target === "field" ? selection.field.match(/^items\.(\d+)\.link$/) : null;
   const buttonItemIndex = buttonItemMatch ? Number(buttonItemMatch[1]) : null;
-  const canPickButtonStyle = selection?.target === "field" && !!pickedSection && /(^|\.)(ctaLabel|ctaLink|link)$/.test(selection.field);
+  const isHeaderBtn = selection?.target === "field" && selection.sectionId === "__header__";
+  const canPickButtonStyle = isHeaderBtn || (selection?.target === "field" && !!pickedSection && /(^|\.)(ctaLabel|ctaLink|link)$/.test(selection.field));
+  const pickedBtn: any = isHeaderBtn ? content?.theme.headerCta : buttonItemIndex !== null ? pickedSection?.items?.[buttonItemIndex] : pickedSection;
+  const pickedBtnStyle: string | null = (isHeaderBtn ? pickedBtn?.style : pickedBtn?.ctaStyle) ?? null;
+  const pickedBtnColor: string | null = (isHeaderBtn ? pickedBtn?.color : pickedBtn?.ctaColor) ?? null;
+  const btnColorChoices: string[] = Array.from(new Set([
+    content?.theme.accentColor, ...((content?.theme.secondaryColors as string[] | undefined) ?? []), "#FFFFFF", "#17171A", "#C0392B", "#2E7D5B", "#2F6FDE", "#E0A526",
+  ].filter((c): c is string => typeof c === "string" && /^#[0-9a-fA-F]{6}$/.test(c)).map((c) => c.toUpperCase())));
   const BUTTON_STYLE_CHOICES: { id: string | null; label: string }[] = [
     { id: null, label: msg("Som resten av sajten") },
     { id: "pill", label: msg("Rund") },
@@ -948,6 +956,7 @@ export default function EditorPage() {
       setIconPickerOpen(false);
       setLayoutPickerOpen(false);
       setButtonStyleOpen(false);
+      setCustomBtnColor(null);
       setTeamOpen(false);
       setEmbedOpen(false);
       setMenuOpen(false);
@@ -962,7 +971,9 @@ export default function EditorPage() {
     }
   };
   const saveButtonStyle = (style: string | null) =>
-    savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
+    savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex, header: isHeaderBtn }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
+  const saveButtonColor = (color: string | null) =>
+    savePick("/api/sites/edit-button-style", { color, itemIndex: buttonItemIndex, header: isHeaderBtn }, t("Klart! Knappfärgen är bytt. Du kan ångra med knappen om du ändrar dig."));
   const saveIcon = (icon: string | null) =>
     savePick("/api/sites/edit-icon", { itemIndex: pickedIconIndex, icon }, t("Klart! Ikonen är bytt. Du kan ångra med knappen om du ändrar dig."));
   // Galleri: lägg till många bilder på en gång (utan AI) och ta bort enskilda.
@@ -2033,11 +2044,11 @@ export default function EditorPage() {
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl max-h-[85vh] flex flex-col">
                   <div className="text-[14px] font-semibold mb-1">{t("Välj knappstil")}</div>
-                  <div className="text-[12px] text-ink-dim mb-3">{buttonItemIndex !== null ? t("Gäller bara den här knappen. Resten av sajten påverkas inte.") : t("Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{buttonItemIndex !== null || isHeaderBtn ? t("Gäller bara den här knappen. Resten av sajten påverkas inte.") : t("Gäller knapparna i den här sektionen. Resten av sajten påverkas inte.")}</div>
                   <div className="grid grid-cols-2 gap-3 overflow-y-auto pr-1">
                     {BUTTON_STYLE_CHOICES.map((c) => {
                       const accent = content?.theme.accentColor || "#2E7D5B";
-                      const current = ((buttonItemIndex !== null ? pickedSection?.items?.[buttonItemIndex]?.ctaStyle : pickedSection?.ctaStyle) ?? null) === c.id;
+                      const current = pickedBtnStyle === c.id;
                       const sample: React.CSSProperties =
                         c.id === "soft" ? { background: `color-mix(in srgb, ${accent} 20%, transparent)`, border: `1px solid color-mix(in srgb, ${accent} 45%, transparent)`, borderRadius: 12 }
                         : c.id === "outline" ? { border: `1.5px solid ${accent}`, borderRadius: 999 }
@@ -2062,6 +2073,39 @@ export default function EditorPage() {
                         </button>
                       );
                     })}
+                  </div>
+                  <div className="mt-3 border-t border-line pt-3">
+                    <div className="text-[13px] font-semibold mb-2">{t("Knappfärg")}</div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={savingPick}
+                        onClick={() => saveButtonColor(null)}
+                        className={`text-[12px] rounded-full border px-3 py-1.5 disabled:opacity-60 ${pickedBtnColor === null ? "border-accent bg-accent-soft" : "border-line hover:bg-bg"}`}
+                      >
+                        {t("Sajtens färg")}
+                      </button>
+                      {btnColorChoices.map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          disabled={savingPick}
+                          aria-label={c}
+                          onClick={() => saveButtonColor(c)}
+                          className={`w-8 h-8 rounded-full border-2 disabled:opacity-60 ${pickedBtnColor?.toUpperCase() === c ? "border-accent ring-2 ring-accent" : "border-line"}`}
+                          style={{ background: c }}
+                        />
+                      ))}
+                      <label className="text-[12px] flex items-center gap-1.5 rounded-full border border-line px-2 py-1 cursor-pointer">
+                        {t("Egen färg")}
+                        <input type="color" disabled={savingPick} value={customBtnColor ?? pickedBtnColor ?? content?.theme.accentColor ?? "#2E7D5B"} onChange={(e) => setCustomBtnColor(e.target.value.toUpperCase())} className="w-6 h-6 p-0 border-0 bg-transparent" />
+                      </label>
+                      {customBtnColor && (
+                        <button type="button" disabled={savingPick} onClick={() => saveButtonColor(customBtnColor)} className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-3 py-1.5 disabled:opacity-60">
+                          {t("Använd")}
+                        </button>
+                      )}
+                    </div>
                   </div>
                   <div className="flex justify-end mt-3">
                     <button type="button" onClick={() => setButtonStyleOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">

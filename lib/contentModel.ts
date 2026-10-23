@@ -74,7 +74,7 @@ export interface SiteTheme {
   // svagt igenom). Gäller sidor där första sektionen är en hero med
   // layouten overlay-bottom, fade-bottom eller beam. Satt av Millie.
   headerGlass?: boolean;
-  headerCta?: { path?: string; label?: string; off?: boolean; hideFromMenu?: boolean; style?: ButtonStyle };
+  headerCta?: { path?: string; label?: string; off?: boolean; hideFromMenu?: boolean; style?: ButtonStyle; color?: string };
   // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
   // (lib/themeVariants.ts), satt i kod i /api/sites/choose-look. Gäller
   // BARA startsidans hero (se SitePreview.tsx) — undersidornas hero-layout
@@ -249,6 +249,8 @@ export interface GridItem {
   icon?: string;
   // Egen knappstil på just den här rutans knapp (layouten image-cta-cards).
   ctaStyle?: ButtonStyle;
+  // Egen färg på rutans knapp (hex).
+  ctaColor?: string;
 }
 
 export interface GridSection {
