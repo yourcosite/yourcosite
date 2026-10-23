@@ -230,7 +230,7 @@ export function buildRestaurantExample(t: TFunction): SiteContent {
             ],
           },
           {
-            id: "o-evening", type: "grid", layout: "alternating-rows",
+            id: "o-evening", type: "grid", layout: "cards",
             eyebrow: t("EN KVÄLL HOS OSS"),
             heading: t("Så går det till"),
             items: [
@@ -258,7 +258,7 @@ export function buildRestaurantExample(t: TFunction): SiteContent {
             eyebrow: t("HAPPY HOUR 17–19"),
             headline: t("Boka ett bord hos oss"),
             body: t("Skriv när ni vill komma och hur många ni är, så återkommer vi inom ett dygn."),
-            imageUrl: img("kontakt-side"),
+            imageUrl: img("quote-bg"),
           },
           {
             id: "k-form", type: "contactForm", layout: "centered",
