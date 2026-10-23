@@ -63,13 +63,13 @@ export function buildFootballExample(t: TFunction): SiteContent {
 
   return {
     theme: {
-      skin: "kontrast",
-      accentColor: "#1F5FD6",
-      secondaryColors: ["#D62839", "#F2C94C"],
+      skin: "fargyta",
+      accentColor: "#1E6B3A",
+      secondaryColors: ["#F3DDB0", "#D62839"],
       font: "sans",
-      backgroundMode: "light",
-      buttonStyle: "square",
-      headerLayout: "pill-bar",
+      backgroundMode: "dark",
+      buttonStyle: "pill",
+      headerLayout: "left-button",
       headerCta: { path: "/bli-medlem", label: t("Bli medlem") },
     },
     pages: [
@@ -80,15 +80,10 @@ export function buildFootballExample(t: TFunction): SiteContent {
         seoDescription: t("Lindvallens FK, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "h-hero", type: "hero", layout: "quad",
+            id: "h-hero", type: "hero", layout: "overlay-bottom",
             headline: t("Fotboll för alla"),
             body: t("Lindvallens FK är en ungdomsförening i Motala där alla får vara med, oavsett nivå. Vi spelar för att det är kul, och för att växa tillsammans."),
             ctaLabel: t("Bli medlem"), ctaLink: "/bli-medlem", imageUrl: img("lag"),
-            stats: [
-              { value: "", label: t("Första träningen är gratis") },
-              { value: "", label: t("Lag för alla åldrar") },
-              { value: "", label: t("Utbildade ledare") },
-            ],
           },
           {
             id: "h-about", type: "about", layout: "image-left",

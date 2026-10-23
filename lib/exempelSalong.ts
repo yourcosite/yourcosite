@@ -71,14 +71,11 @@ export function buildSalonExample(t: TFunction): SiteContent {
         seoDescription: t("Salong Saxen, exempel byggt med YourCoSite."),
         sections: [
           {
-            id: "h-hero", type: "hero", layout: "collage",
+            id: "h-hero", type: "hero", layout: "fade-bottom",
             eyebrow: t("FRISÖR I LINKÖPING"),
             headline: t("Hår som känns"),
-            headlineEmphasis: t("som du"),
             body: t("Klippning, färg och styling för alla. Vi lyssnar först och tar oss tid, så att du går härifrån nöjd."),
             ctaLabel: t("Boka tid"), ctaLink: "/kontakt", imageUrl: img("hero"),
-            collageImageUrls: [img("uppsattning"), img("plattang")],
-            stats: [{ value: "5", label: t("Stylister") }, { value: "2014", label: t("Öppnade") }],
           },
           {
             id: "h-about", type: "about", layout: "image-right",
