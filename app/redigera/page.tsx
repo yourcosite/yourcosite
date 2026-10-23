@@ -25,7 +25,7 @@ import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
-import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, MAX_MENU_CATEGORIES, MAX_MENU_ITEMS, MENU_TAGS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -934,6 +934,7 @@ export default function EditorPage() {
       setLayoutPickerOpen(false);
       setTeamOpen(false);
       setEmbedOpen(false);
+      setMenuOpen(false);
       setSelection(null);
       setMessages((m) => [...m, { from: "bot", text: okText }]);
     } catch (e: any) {
@@ -1011,6 +1012,55 @@ export default function EditorPage() {
     }
     setEmbedError("");
     await savePick("/api/sites/edit-embed", { code: embedCode, height: h ? Number(h) : null }, t("Klart! Koden är sparad. Du kan ångra med knappen om du ändrar dig."));
+  };
+  // Meny (menu): en egen redigeringsruta för kategorier och rätter.
+  type MenuDraftItem = { key: string; name: string; description: string; price: string; tags: string[] };
+  type MenuDraftCat = { key: string; name: string; description: string; items: MenuDraftItem[] };
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuDraft, setMenuDraft] = useState<MenuDraftCat[]>([]);
+  const [menuNote, setMenuNote] = useState("");
+  const [menuError, setMenuError] = useState("");
+  const canEditMenu = !!selection && pickedSection?.type === "menu";
+  const menuKeyRef = useRef(0);
+  const mk = () => `k${++menuKeyRef.current}`;
+  const newMenuItem = (it?: any): MenuDraftItem => ({ key: mk(), name: it?.name ?? "", description: it?.description ?? "", price: it?.price ?? "", tags: Array.isArray(it?.tags) ? it.tags : [] });
+  const newMenuCat = (c?: any): MenuDraftCat => ({ key: mk(), name: c?.name ?? "", description: c?.description ?? "", items: (c?.items ?? []).map(newMenuItem) });
+  const openMenuEditor = () => {
+    if (pickedSection?.type !== "menu") return;
+    const cats = ((pickedSection.categories as any[]) ?? []).map(newMenuCat);
+    setMenuDraft(cats.length ? cats : [newMenuCat()]);
+    setMenuNote(pickedSection.note || "");
+    setMenuError("");
+    setMenuOpen(true);
+  };
+  const patchMenuCat = (ck: string, patch: Partial<MenuDraftCat>) => setMenuDraft((cs) => cs.map((c) => (c.key === ck ? { ...c, ...patch } : c)));
+  const patchMenuItem = (ck: string, ik: string, patch: Partial<MenuDraftItem>) =>
+    setMenuDraft((cs) => cs.map((c) => (c.key === ck ? { ...c, items: c.items.map((i) => (i.key === ik ? { ...i, ...patch } : i)) } : c)));
+  const moveIn = <T,>(arr: T[], i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= arr.length) return arr;
+    const next = [...arr];
+    [next[i], next[j]] = [next[j], next[i]];
+    return next;
+  };
+  const saveMenu = async () => {
+    const cats = menuDraft.filter((c) => c.name.trim() || c.items.some((i) => i.name.trim()));
+    for (const c of cats) {
+      if (!c.name.trim()) { setMenuError(t("Alla kategorier behöver ett namn.")); return; }
+    }
+    setMenuError("");
+    await savePick(
+      "/api/sites/edit-menu",
+      {
+        note: menuNote,
+        categories: cats.map((c) => ({
+          name: c.name,
+          description: c.description,
+          items: c.items.filter((i) => i.name.trim()).map((i) => ({ name: i.name, description: i.description, price: i.price, tags: i.tags })),
+        })),
+      },
+      t("Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.")
+    );
   };
   const canEditTeam = !!selection && pickedSection?.type === "team";
   const teamKeyRef = useRef(0);
@@ -1774,6 +1824,93 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
+            {menuOpen && canEditMenu && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-3" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-2xl shadow-xl max-h-[92vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Meny")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{t("Lägg till kategorier och rätter. Bara namnet krävs på en rätt. Pris skriver du som text, till exempel 165 kr.")}</div>
+                  <div className="overflow-y-auto pr-1 flex flex-col gap-4">
+                    {menuDraft.map((c, ci) => (
+                      <div key={c.key} className="border border-line rounded-xl p-3">
+                        <div className="flex gap-2 items-start">
+                          <div className="flex-1 min-w-0 grid gap-2">
+                            <input value={c.name} onChange={(e) => patchMenuCat(c.key, { name: e.target.value })} maxLength={80} placeholder={t("Kategori (t.ex. Förrätter)")} aria-label={t("Kategori (t.ex. Förrätter)")} className="bg-bg border border-line rounded-lg p-2 text-[14px] font-semibold outline-none min-w-0" />
+                            <input value={c.description} onChange={(e) => patchMenuCat(c.key, { description: e.target.value })} maxLength={300} placeholder={t("Text under kategorin (valfritt)")} aria-label={t("Text under kategorin (valfritt)")} className="bg-bg border border-line rounded-lg p-2 text-[13px] outline-none min-w-0" />
+                          </div>
+                          <div className="flex gap-1 flex-shrink-0">
+                            <button type="button" onClick={() => setMenuDraft((cs) => moveIn(cs, ci, -1))} disabled={ci === 0} aria-label={t("Flytta upp")} className="w-7 h-7 rounded-full border border-line text-[13px] disabled:opacity-30">↑</button>
+                            <button type="button" onClick={() => setMenuDraft((cs) => moveIn(cs, ci, 1))} disabled={ci === menuDraft.length - 1} aria-label={t("Flytta ner")} className="w-7 h-7 rounded-full border border-line text-[13px] disabled:opacity-30">↓</button>
+                            <button type="button" onClick={() => setMenuDraft((cs) => cs.filter((x) => x.key !== c.key))} aria-label={t("Ta bort kategorin")} className="w-7 h-7 rounded-full border border-line text-[13px]">🗑</button>
+                          </div>
+                        </div>
+                        <div className="flex flex-col gap-2 mt-3">
+                          {c.items.map((it, ii) => (
+                            <div key={it.key} className="rounded-lg bg-bg p-2 flex gap-2 items-start">
+                              <div className="flex-1 min-w-0 grid gap-1.5">
+                                <div className="flex gap-1.5">
+                                  <input value={it.name} onChange={(e) => patchMenuItem(c.key, it.key, { name: e.target.value })} maxLength={120} placeholder={t("Rätt")} aria-label={t("Rätt")} className="flex-1 min-w-0 bg-surface border border-line rounded-md p-1.5 text-[13.5px] outline-none" />
+                                  <input value={it.price} onChange={(e) => patchMenuItem(c.key, it.key, { price: e.target.value })} maxLength={40} placeholder={t("Pris")} aria-label={t("Pris")} className="w-24 bg-surface border border-line rounded-md p-1.5 text-[13.5px] outline-none" />
+                                </div>
+                                <input value={it.description} onChange={(e) => patchMenuItem(c.key, it.key, { description: e.target.value })} maxLength={400} placeholder={t("Beskrivning (valfritt)")} aria-label={t("Beskrivning (valfritt)")} className="bg-surface border border-line rounded-md p-1.5 text-[12.5px] outline-none min-w-0" />
+                                <div className="flex flex-wrap gap-1.5">
+                                  {MENU_TAGS.map((tg) => {
+                                    const on = it.tags.includes(tg);
+                                    return (
+                                      <button
+                                        key={tg}
+                                        type="button"
+                                        aria-pressed={on}
+                                        title={tg === "v" ? t("Vegetarisk") : tg === "vg" ? t("Vegansk") : tg === "gf" ? t("Glutenfri") : tg === "lf" ? t("Laktosfri") : t("Stark")}
+                                        onClick={() => patchMenuItem(c.key, it.key, { tags: on ? it.tags.filter((x) => x !== tg) : [...it.tags, tg] })}
+                                        className={`text-[11px] font-bold rounded-full px-2 py-0.5 border ${on ? "bg-accent text-accent-ink border-accent" : "border-line text-ink-dim"}`}
+                                      >
+                                        {tg === "hot" ? "🌶" : tg.toUpperCase()}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                              <div className="flex flex-col gap-1 flex-shrink-0">
+                                <button type="button" onClick={() => patchMenuCat(c.key, { items: moveIn(c.items, ii, -1) })} disabled={ii === 0} aria-label={t("Flytta upp")} className="w-6 h-6 rounded-full border border-line text-[12px] disabled:opacity-30">↑</button>
+                                <button type="button" onClick={() => patchMenuCat(c.key, { items: moveIn(c.items, ii, 1) })} disabled={ii === c.items.length - 1} aria-label={t("Flytta ner")} className="w-6 h-6 rounded-full border border-line text-[12px] disabled:opacity-30">↓</button>
+                                <button type="button" onClick={() => patchMenuCat(c.key, { items: c.items.filter((x) => x.key !== it.key) })} aria-label={t("Ta bort rätten")} className="w-6 h-6 rounded-full border border-line text-[12px]">🗑</button>
+                              </div>
+                            </div>
+                          ))}
+                          <button
+                            type="button"
+                            onClick={() => patchMenuCat(c.key, { items: [...c.items, newMenuItem()] })}
+                            disabled={c.items.length >= MAX_MENU_ITEMS}
+                            className="text-[12.5px] font-semibold border border-dashed border-line rounded-lg py-1.5 disabled:opacity-40"
+                          >
+                            {t("➕ Lägg till rätt")}
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setMenuDraft((cs) => [...cs, newMenuCat()])}
+                      disabled={menuDraft.length >= MAX_MENU_CATEGORIES}
+                      className="text-[13px] font-semibold border border-dashed border-line rounded-xl py-2 disabled:opacity-40"
+                    >
+                      {t("➕ Lägg till kategori")}
+                    </button>
+                    <label className="block">
+                      <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Text längst ned, till exempel om allergier (valfritt)")}</span>
+                      <textarea value={menuNote} onChange={(e) => setMenuNote(e.target.value)} rows={2} maxLength={500} className="w-full bg-bg border border-line rounded-lg p-2 text-[13px] outline-none resize-y" />
+                    </label>
+                  </div>
+                  {menuError && <div className="text-[12.5px] text-red-600 mt-2" role="alert">{menuError}</div>}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button type="button" onClick={() => setMenuOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">{t("Avbryt")}</button>
+                    <button type="button" onClick={saveMenu} disabled={savingPick} className="text-[13px] font-semibold px-3 py-1.5 rounded-full bg-accent text-accent-ink disabled:opacity-60">
+                      {savingPick ? t("Sparar …") : t("Spara")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             {embedOpen && canEditEmbed && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-xl shadow-xl max-h-[90vh] flex flex-col">
@@ -2016,6 +2153,16 @@ export default function EditorPage() {
                     className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
                   >
                     {t("</> Klistra in kod")}
+                  </button>
+                )}
+                {canEditMenu && (
+                  <button
+                    type="button"
+                    onClick={openMenuEditor}
+                    disabled={sending}
+                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
+                  >
+                    {t("🍽 Redigera meny")}
                   </button>
                 )}
                 {canEditTeam && (

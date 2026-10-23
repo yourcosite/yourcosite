@@ -1811,5 +1811,20 @@
   "Rätten saknar kategori.": "Annokselta puuttuu kategoria.",
   "En rätt saknade namn.": "Annokselta puuttui nimi.",
   "Kategorin “{name}” har redan så många rätter som ryms.": "Kategoriassa “{name}” on jo niin monta annosta kuin mahtuu.",
-  "Hittade inte rätten “{name}”.": "Annosta “{name}” ei löytynyt."
+  "Hittade inte rätten “{name}”.": "Annosta “{name}” ei löytynyt.",
+  "Det gick inte att avgöra vilken meny som ska ändras.": "Ei voitu päätellä, mitä ruokalistaa muutetaan.",
+  "Hittade inte menyn på sidan.": "Ruokalistaa ei löytynyt sivulta.",
+  "Alla kategorier behöver ett namn.": "Kaikilla kategorioilla on oltava nimi.",
+  "Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.": "Valmis! Ruokalista on tallennettu. Voit peruuttaa painikkeella, jos muutat mielesi.",
+  "Lägg till kategorier och rätter. Bara namnet krävs på en rätt. Pris skriver du som text, till exempel 165 kr.": "Lisää kategorioita ja annoksia. Annokselta vaaditaan vain nimi. Kirjoita hinta tekstinä, esimerkiksi 165 kr.",
+  "Kategori (t.ex. Förrätter)": "Kategoria (esim. Alkuruoat)",
+  "Text under kategorin (valfritt)": "Teksti kategorian alla (valinnainen)",
+  "Ta bort kategorin": "Poista kategoria",
+  "Rätt": "Annos",
+  "Beskrivning (valfritt)": "Kuvaus (valinnainen)",
+  "Ta bort rätten": "Poista annos",
+  "➕ Lägg till rätt": "➕ Lisää annos",
+  "➕ Lägg till kategori": "➕ Lisää kategoria",
+  "Text längst ned, till exempel om allergier (valfritt)": "Teksti alaosassa, esimerkiksi allergioista (valinnainen)",
+  "🍽 Redigera meny": "🍽 Muokkaa ruokalistaa"
 }

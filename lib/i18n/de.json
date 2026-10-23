@@ -1811,5 +1811,20 @@
   "Rätten saknar kategori.": "Dem Gericht fehlt eine Kategorie.",
   "En rätt saknade namn.": "Bei einem Gericht fehlte der Name.",
   "Kategorin “{name}” har redan så många rätter som ryms.": "Die Kategorie „{name}“ hat bereits so viele Gerichte wie möglich.",
-  "Hittade inte rätten “{name}”.": "Das Gericht „{name}“ wurde nicht gefunden."
+  "Hittade inte rätten “{name}”.": "Das Gericht „{name}“ wurde nicht gefunden.",
+  "Det gick inte att avgöra vilken meny som ska ändras.": "Es konnte nicht ermittelt werden, welche Speisekarte geändert werden soll.",
+  "Hittade inte menyn på sidan.": "Die Speisekarte wurde auf der Seite nicht gefunden.",
+  "Alla kategorier behöver ett namn.": "Alle Kategorien brauchen einen Namen.",
+  "Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.": "Fertig! Die Speisekarte ist gespeichert. Du kannst mit der Schaltfläche rückgängig machen.",
+  "Lägg till kategorier och rätter. Bara namnet krävs på en rätt. Pris skriver du som text, till exempel 165 kr.": "Füge Kategorien und Gerichte hinzu. Bei einem Gericht ist nur der Name erforderlich. Schreibe den Preis als Text, zum Beispiel 165 kr.",
+  "Kategori (t.ex. Förrätter)": "Kategorie (z. B. Vorspeisen)",
+  "Text under kategorin (valfritt)": "Text unter der Kategorie (optional)",
+  "Ta bort kategorin": "Kategorie entfernen",
+  "Rätt": "Gericht",
+  "Beskrivning (valfritt)": "Beschreibung (optional)",
+  "Ta bort rätten": "Gericht entfernen",
+  "➕ Lägg till rätt": "➕ Gericht hinzufügen",
+  "➕ Lägg till kategori": "➕ Kategorie hinzufügen",
+  "Text längst ned, till exempel om allergier (valfritt)": "Text ganz unten, zum Beispiel zu Allergien (optional)",
+  "🍽 Redigera meny": "🍽 Speisekarte bearbeiten"
 }

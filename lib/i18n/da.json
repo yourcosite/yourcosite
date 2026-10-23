@@ -1811,5 +1811,20 @@
   "Rätten saknar kategori.": "Retten mangler en kategori.",
   "En rätt saknade namn.": "En ret manglede navn.",
   "Kategorin “{name}” har redan så många rätter som ryms.": "Kategorien “{name}” har allerede så mange retter, som der er plads til.",
-  "Hittade inte rätten “{name}”.": "Kunne ikke finde retten “{name}”."
+  "Hittade inte rätten “{name}”.": "Kunne ikke finde retten “{name}”.",
+  "Det gick inte att avgöra vilken meny som ska ändras.": "Kunne ikke afgøre, hvilken menu der skal ændres.",
+  "Hittade inte menyn på sidan.": "Kunne ikke finde menuen på siden.",
+  "Alla kategorier behöver ett namn.": "Alle kategorier skal have et navn.",
+  "Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.": "Færdigt! Menuen er gemt. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "Lägg till kategorier och rätter. Bara namnet krävs på en rätt. Pris skriver du som text, till exempel 165 kr.": "Tilføj kategorier og retter. Kun navnet er påkrævet på en ret. Skriv prisen som tekst, for eksempel 165 kr.",
+  "Kategori (t.ex. Förrätter)": "Kategori (f.eks. Forretter)",
+  "Text under kategorin (valfritt)": "Tekst under kategorien (valgfrit)",
+  "Ta bort kategorin": "Fjern kategorien",
+  "Rätt": "Ret",
+  "Beskrivning (valfritt)": "Beskrivelse (valgfrit)",
+  "Ta bort rätten": "Fjern retten",
+  "➕ Lägg till rätt": "➕ Tilføj ret",
+  "➕ Lägg till kategori": "➕ Tilføj kategori",
+  "Text längst ned, till exempel om allergier (valfritt)": "Tekst nederst, for eksempel om allergier (valgfrit)",
+  "🍽 Redigera meny": "🍽 Rediger menu"
 }

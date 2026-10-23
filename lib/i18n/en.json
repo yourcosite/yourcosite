@@ -1811,5 +1811,20 @@
   "Rätten saknar kategori.": "The dish is missing a category.",
   "En rätt saknade namn.": "A dish was missing a name.",
   "Kategorin “{name}” har redan så många rätter som ryms.": "The category “{name}” already has as many dishes as fit.",
-  "Hittade inte rätten “{name}”.": "Could not find the dish “{name}”."
+  "Hittade inte rätten “{name}”.": "Could not find the dish “{name}”.",
+  "Det gick inte att avgöra vilken meny som ska ändras.": "Could not tell which menu to change.",
+  "Hittade inte menyn på sidan.": "Could not find the menu on the page.",
+  "Alla kategorier behöver ett namn.": "All categories need a name.",
+  "Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.": "Done! The menu is saved. You can undo with the button if you change your mind.",
+  "Lägg till kategorier och rätter. Bara namnet krävs på en rätt. Pris skriver du som text, till exempel 165 kr.": "Add categories and dishes. Only the name is required for a dish. Write the price as text, for example 165 kr.",
+  "Kategori (t.ex. Förrätter)": "Category (e.g. Starters)",
+  "Text under kategorin (valfritt)": "Text under the category (optional)",
+  "Ta bort kategorin": "Remove category",
+  "Rätt": "Dish",
+  "Beskrivning (valfritt)": "Description (optional)",
+  "Ta bort rätten": "Remove dish",
+  "➕ Lägg till rätt": "➕ Add dish",
+  "➕ Lägg till kategori": "➕ Add category",
+  "Text längst ned, till exempel om allergier (valfritt)": "Text at the bottom, for example about allergies (optional)",
+  "🍽 Redigera meny": "🍽 Edit menu"
 }

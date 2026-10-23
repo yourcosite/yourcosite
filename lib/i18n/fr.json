@@ -1811,5 +1811,20 @@
   "Rätten saknar kategori.": "Il manque une catégorie au plat.",
   "En rätt saknade namn.": "Il manquait le nom d'un plat.",
   "Kategorin “{name}” har redan så många rätter som ryms.": "La catégorie « {name} » a déjà autant de plats que possible.",
-  "Hittade inte rätten “{name}”.": "Plat « {name} » introuvable."
+  "Hittade inte rätten “{name}”.": "Plat « {name} » introuvable.",
+  "Det gick inte att avgöra vilken meny som ska ändras.": "Impossible de déterminer quelle carte modifier.",
+  "Hittade inte menyn på sidan.": "Carte introuvable sur la page.",
+  "Alla kategorier behöver ett namn.": "Toutes les catégories doivent avoir un nom.",
+  "Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! La carte est enregistrée. Vous pouvez annuler avec le bouton si vous changez d'avis.",
+  "Lägg till kategorier och rätter. Bara namnet krävs på en rätt. Pris skriver du som text, till exempel 165 kr.": "Ajoutez des catégories et des plats. Seul le nom est obligatoire pour un plat. Écrivez le prix sous forme de texte, par exemple 165 kr.",
+  "Kategori (t.ex. Förrätter)": "Catégorie (p. ex. Entrées)",
+  "Text under kategorin (valfritt)": "Texte sous la catégorie (facultatif)",
+  "Ta bort kategorin": "Retirer la catégorie",
+  "Rätt": "Plat",
+  "Beskrivning (valfritt)": "Description (facultatif)",
+  "Ta bort rätten": "Retirer le plat",
+  "➕ Lägg till rätt": "➕ Ajouter un plat",
+  "➕ Lägg till kategori": "➕ Ajouter une catégorie",
+  "Text längst ned, till exempel om allergier (valfritt)": "Texte en bas, par exemple sur les allergies (facultatif)",
+  "🍽 Redigera meny": "🍽 Modifier la carte"
 }
