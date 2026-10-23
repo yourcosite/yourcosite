@@ -1,6 +1,5 @@
 import { rich } from "@/lib/i18n/rich";
 import { getT } from "@/lib/i18n/server";
-import Image from "next/image";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -16,7 +15,7 @@ export default function LandingPage() {
 
       {/* Hero */}
       <section className="bg-ink">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-20 grid md:grid-cols-2 gap-12 items-center">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-20 grid md:grid-cols-[0.8fr_1.2fr] gap-12 items-center">
           <div>
             <h1 className="text-[42px] md:text-[52px] leading-[1.1] font-medium text-white">{rich(t, "Din hemsida.{br}<span>Byggd genom ett samtal.</span>", { span: (c) => <span className="italic text-accent">{c}</span> }, { br: <br /> })}
             </h1>
@@ -45,28 +44,7 @@ export default function LandingPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
               <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
             </div>
-            <div className="flex h-[300px] md:h-[360px]">
-              <div className="relative flex-1 min-w-0">
-                <Image
-                  src="/images/hero-bakery.jpg"
-                  alt={t("Solgläntans Bageri — exempel på en hemsida byggd med YourCoSite")}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-                <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                  <div className="font-serif italic text-[13px] text-accent mb-1">
-                    {t("Nybakat med kärlek — sedan 1998")}
-                  </div>
-                  <div className="font-serif text-2xl">{t("Solgläntans Bageri")}</div>
-                  <p className="text-[13.5px] text-[#E9E6E0] mt-1 max-w-[36ch]">
-                    {t("Surdegsbröd, kanelbullar och fika i hjärtat av stan")}
-                  </p>
-                </div>
-              </div>
-              <HeroChatDemo />
-            </div>
+            <HeroChatDemo />
           </div>
         </div>
       </section>

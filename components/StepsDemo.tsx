@@ -61,7 +61,7 @@ export default function StepsDemo() {
 
   const isLoading = phase === 0;
   const isDone = phase === 1;
-  const step3Image = isDone ? "/images/bakery-cake.jpg" : "/images/hero-bakery.jpg";
+  const step3Image = isDone ? "/images/bistro-feature-3.jpg" : "/images/bistro-hero.jpg";
 
   return (
     <div className="grid md:grid-cols-3 gap-10">
@@ -96,7 +96,7 @@ export default function StepsDemo() {
                         "yc-type 2.1s steps(15) forwards, yc-caret .7s step-end infinite",
                     }}
                   >
-                    {t("Solgläntans Bageri")}
+                    {t("Bistro Tegelbruket")}
                   </div>
                 </div>
               )}
@@ -161,7 +161,7 @@ export default function StepsDemo() {
                     </svg>
                     <div className="flex-1">
                       <div className="text-[11.5px] text-ink font-semibold">
-                        {t("bageri_fasad.jpg")}
+                        {t("tegelbruket_lokal.jpg")}
                       </div>
                       <div className="h-[5px] rounded-[3px] bg-line mt-1.5 overflow-hidden">
                         <div
@@ -174,11 +174,11 @@ export default function StepsDemo() {
                   <div className="flex gap-2">
                     <div
                       className="w-[42px] h-[42px] rounded-lg bg-cover bg-center"
-                      style={{ backgroundImage: "url('/images/step1-beratta.jpg')" }}
+                      style={{ backgroundImage: "url('/images/bistro-gal-1.jpg')" }}
                     />
                     <div
                       className="w-[42px] h-[42px] rounded-lg bg-cover bg-center"
-                      style={{ backgroundImage: "url('/images/bakery-cake.jpg')" }}
+                      style={{ backgroundImage: "url('/images/bistro-ostron.jpg')" }}
                     />
                   </div>
                 </div>
@@ -250,13 +250,13 @@ export default function StepsDemo() {
                   <div className="flex items-center gap-1.5 px-3.5 py-2.5 bg-[#1D1D21]">
                     <div className="w-3 h-3 rounded-[4px] bg-[#C9834A]" />
                     <span className="font-serif italic text-[11px] text-white">
-                      {t("Solgläntans Bageri")}
+                      {t("Bistro Tegelbruket")}
                     </span>
                   </div>
                   <div
                     className="h-[96px] flex-shrink-0 bg-cover"
                     style={{
-                      backgroundImage: "url('/images/step2-bygger.jpg')",
+                      backgroundImage: "url('/images/bistro-feature-2.jpg')",
                       backgroundPosition: "center 55%",
                     }}
                   />
@@ -316,7 +316,7 @@ export default function StepsDemo() {
 
                 <div className="flex-1 flex flex-col justify-end gap-1.5">
                   <div className="self-end max-w-[88%] bg-accent text-accent-ink text-[11.5px] font-semibold px-2.5 py-1.5 rounded-[10px_10px_3px_10px]">
-                    {t("Byt till en bild med fler bullar i förgrunden")}
+                    {t("Byt till en bild på baren")}
                   </div>
                   {isDone && (
                     <div
