@@ -2533,5 +2533,18 @@
   "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Drag a page to change its order in the menu. A new page starts empty, tell Millie what it should contain.",
   "Visa sidan →": "View the page →",
   "Kunde inte hämta nyheterna.": "Could not load the news.",
-  "Hämtar …": "Loading …"
+  "Hämtar …": "Loading …",
+  "Skriv en kortare och tydligare knapptext": "Write a shorter, clearer button text",
+  "Låt knappen länka till kontaktsidan": "Make the button link to the contact page",
+  "Byt knappens text till något mer inbjudande": "Change the button text to something more inviting",
+  "Skriv en kortare rubrik": "Write a shorter heading",
+  "Gör rubriken mer lockande": "Make the heading more enticing",
+  "Skriv en kortare förtext": "Write a shorter lead-in",
+  "Gör förtexten mer lockande": "Make the lead-in more enticing",
+  "Skriv om frågan så den blir tydligare": "Rewrite the question so it is clearer",
+  "Gör citatet kortare": "Make the quote shorter",
+  "Ändra namnet till ": "Change the name to ",
+  "Ändra telefonnumret till ": "Change the phone number to ",
+  "Ändra e-postadressen till ": "Change the email address to ",
+  "Ändra adressen till ": "Change the address to "
 }

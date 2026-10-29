@@ -2533,5 +2533,18 @@
   "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Vedä sivu muuttaaksesi sen järjestystä valikossa. Uusi sivu luodaan tyhjänä, kerro Millielle, mitä sen pitää sisältää.",
   "Visa sidan →": "Näytä sivu →",
   "Kunde inte hämta nyheterna.": "Uutisten haku epäonnistui.",
-  "Hämtar …": "Haetaan …"
+  "Hämtar …": "Haetaan …",
+  "Skriv en kortare och tydligare knapptext": "Kirjoita lyhyempi ja selkeämpi painikkeen teksti",
+  "Låt knappen länka till kontaktsidan": "Linkitä painike yhteystietosivulle",
+  "Byt knappens text till något mer inbjudande": "Vaihda painikkeen teksti kutsuvammaksi",
+  "Skriv en kortare rubrik": "Kirjoita lyhyempi otsikko",
+  "Gör rubriken mer lockande": "Tee otsikosta houkuttelevampi",
+  "Skriv en kortare förtext": "Kirjoita lyhyempi johdantoteksti",
+  "Gör förtexten mer lockande": "Tee johdantotekstistä houkuttelevampi",
+  "Skriv om frågan så den blir tydligare": "Kirjoita kysymys selkeämmäksi",
+  "Gör citatet kortare": "Lyhennä sitaattia",
+  "Ändra namnet till ": "Muuta nimeksi ",
+  "Ändra telefonnumret till ": "Muuta puhelinnumeroksi ",
+  "Ändra e-postadressen till ": "Muuta sähköpostiosoitteeksi ",
+  "Ändra adressen till ": "Muuta osoitteeksi "
 }

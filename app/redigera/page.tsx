@@ -1480,12 +1480,30 @@ export default function EditorPage() {
 
   // Förslag i Millies fält som hör till det som är markerat. Bara sådant
   // Millie faktiskt kan göra.
+  // Förslag som passar det som är markerat: en knapp får knappförslag, en
+  // rubrik rubrikförslag, en kontaktuppgift en påbörjad mening osv. Fältnamnet
+  // är sista delen av sökvägen ("items.1.title" blir "title").
+  const fieldChips = (field: string): string[] => {
+    const name = field.split(".").pop() || "";
+    if (["ctaLabel", "submitLabel", "linkLabel"].includes(name))
+      return [t("Skriv en kortare och tydligare knapptext"), t("Låt knappen länka till kontaktsidan"), t("Byt knappens text till något mer inbjudande")];
+    if (["headline", "headlineEmphasis", "heading", "title"].includes(name))
+      return [t("Skriv en kortare rubrik"), t("Gör rubriken mer lockande")];
+    if (name === "eyebrow") return [t("Skriv en kortare förtext"), t("Gör förtexten mer lockande")];
+    if (name === "question") return [t("Skriv om frågan så den blir tydligare")];
+    if (name === "quote") return [t("Gör citatet kortare")];
+    if (name === "name" || name === "author") return [t("Ändra namnet till ")];
+    if (name === "phone") return [t("Ändra telefonnumret till ")];
+    if (name === "email") return [t("Ändra e-postadressen till ")];
+    if (name === "address") return [t("Ändra adressen till ")];
+    return [t("Skriv om texten så den blir kortare"), t("Gör texten mer inbjudande")];
+  };
   const selectionChips: string[] = !selection
     ? [t("Gör rubrikerna större"), t("Lägg till vanliga frågor längst ner"), t("Skriv bildtexter för alla bilder")]
     : selection.target === "image"
     ? [t("Skriv en bildtext för den här bilden"), t("Byt ut bilden mot den jag bifogar")]
     : selection.target === "field"
-    ? [t("Skriv om texten så den blir kortare"), t("Gör texten mer inbjudande")]
+    ? fieldChips(selection.field)
     : [t("Gör sektionen mörk"), t("Centrera texten i sektionen"), t("Flytta sektionen längst ner på sidan")];
   const dockBtn = "text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink hover:border-ink flex-shrink-0 disabled:opacity-60";
 

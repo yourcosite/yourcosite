@@ -2533,5 +2533,18 @@
   "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Arrastra una página para cambiar su orden en el menú. Una página nueva se crea vacía, dile a Millie qué debe contener.",
   "Visa sidan →": "Ver la página →",
   "Kunde inte hämta nyheterna.": "No se pudieron cargar las noticias.",
-  "Hämtar …": "Cargando …"
+  "Hämtar …": "Cargando …",
+  "Skriv en kortare och tydligare knapptext": "Escribe un texto de botón más corto y claro",
+  "Låt knappen länka till kontaktsidan": "Haz que el botón enlace a la página de contacto",
+  "Byt knappens text till något mer inbjudande": "Cambia el texto del botón por algo más atractivo",
+  "Skriv en kortare rubrik": "Escribe un título más corto",
+  "Gör rubriken mer lockande": "Haz el título más atractivo",
+  "Skriv en kortare förtext": "Escribe un texto previo más corto",
+  "Gör förtexten mer lockande": "Haz el texto previo más atractivo",
+  "Skriv om frågan så den blir tydligare": "Reescribe la pregunta para que sea más clara",
+  "Gör citatet kortare": "Acorta la cita",
+  "Ändra namnet till ": "Cambia el nombre a ",
+  "Ändra telefonnumret till ": "Cambia el número de teléfono a ",
+  "Ändra e-postadressen till ": "Cambia la dirección de correo a ",
+  "Ändra adressen till ": "Cambia la dirección a "
 }
