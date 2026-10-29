@@ -8,7 +8,6 @@ import { BCP47 } from "@/lib/i18n/country";
 import { LOCALE_NAMES } from "@/lib/i18n/config";
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Logo from "@/components/Logo";
 import Millie from "@/components/Millie";
 import SitePreview, { FieldEditContext } from "@/components/SitePreview";
 
@@ -17,7 +16,10 @@ import SitePreview, { FieldEditContext } from "@/components/SitePreview";
 // förloppsstapeln, bara när sajtens innehåll eller markeringen ändras.
 const MemoSitePreview = memo(SitePreview);
 import ContactSupportModal from "@/components/ContactSupportModal";
-import TrackingSettingsModal from "@/components/TrackingSettingsModal";
+import Rail, { type EditorPanel } from "@/components/editor/Rail";
+import DesignPanel from "@/components/editor/DesignPanel";
+import SettingsPanel from "@/components/editor/SettingsPanel";
+import { analyzeSeo } from "@/lib/seoAnalysis";
 import MyImagesModal, { type MyImage } from "@/components/MyImagesModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import ImageEditorModal from "@/components/ImageEditorModal";
@@ -243,7 +245,7 @@ export default function EditorPage() {
     {
       from: "bot",
       transient: true,
-      text: t("Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion i förhandsvisningen till vänster för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt."),
+      text: t("Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion på sajten för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt."),
     },
   ]);
   // De senaste versionerna av sajten före Millies ändringar, för "Ångra".
@@ -404,7 +406,6 @@ export default function EditorPage() {
   // ett önskemål innehållsmodellen inte stöder (se unsupported ovan).
   const [supportOpen, setSupportOpen] = useState(false);
   const [supportDraft, setSupportDraft] = useState({ message: "", context: "", wish: false });
-  const [trackingOpen, setTrackingOpen] = useState(false);
 
   // Under md-brytpunkten får förhandsvisningen och chatten inte plats sida
   // vid sida (chattpanelen är 400px fast bredd) — mobilView styr vilken av
@@ -413,6 +414,13 @@ export default function EditorPage() {
   // chatthistorik/scrollposition osv. inte tappas när man växlar.
   const [mobileView, setMobileView] = useState<"preview" | "chat">("preview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  // Nya redigeraren: Dator/Mobil-läge, sidopanel (Design/Inställningar) och
+  // om Millies konversation är utfälld över sajten.
+  const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  const [panel, setPanel] = useState<EditorPanel>(null);
+  const [millieOpen, setMillieOpen] = useState(false);
+  const [savingTheme, setSavingTheme] = useState(false);
+  const restoredAtRef = useRef(0);
 
   useEffect(() => {
     // Vilken sajt som ska öppnas — skickas med som ?site=<id> från
@@ -476,6 +484,17 @@ export default function EditorPage() {
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, millieOpen]);
+
+  // Fäll ut konversationen när Millie svarat (men inte när gammal historik
+  // läses in vid start).
+  const prevMsgCount = useRef(0);
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (messages.length > prevMsgCount.current && last && !last.transient && restoredAtRef.current > 0 && Date.now() - restoredAtRef.current > 1500) {
+      setMillieOpen(true);
+    }
+    prevMsgCount.current = messages.length;
   }, [messages]);
 
   // Laddar upp EN fil och returnerar dess Attachment — kastar med ett
@@ -671,6 +690,7 @@ export default function EditorPage() {
       }
       if (cancelled) return;
       chatRestored.current = true;
+      restoredAtRef.current = Date.now();
       const next: ChatMessage[] = [];
       if (stored.length > 0) {
         next.push(...stored);
@@ -1406,280 +1426,366 @@ export default function EditorPage() {
     }
   };
 
+  // Designpanelen: sparar ett tema-val direkt (utan Millie) och går att ångra.
+  const saveTheme = async (patch: Record<string, unknown>) => {
+    if (!content || savingTheme) return;
+    setSavingTheme(true);
+    try {
+      const res = await fetch("/api/sites/edit-theme", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site?.id, patch }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: t("Ändringen kunde inte sparas: {message}", { message: e.message }) }]);
+      setMillieOpen(true);
+    } finally {
+      setSavingTheme(false);
+    }
+  };
+
+  // Antal saker kvar att göra i Förbättra (röd siffra i sidofältet).
+  const improveCount = useMemo(() => (content ? analyzeSeo(content, newsArticles).todo : 0), [content, newsArticles]);
+
+  // Förslag i Millies fält som hör till det som är markerat. Bara sådant
+  // Millie faktiskt kan göra.
+  const selectionChips: string[] = !selection
+    ? [t("Gör rubrikerna större"), t("Lägg till vanliga frågor längst ner"), t("Skriv bildtexter för alla bilder")]
+    : selection.target === "image"
+    ? [t("Skriv en bildtext för den här bilden"), t("Byt ut bilden mot den jag bifogar")]
+    : selection.target === "field"
+    ? [t("Skriv om texten så den blir kortare"), t("Gör texten mer inbjudande")]
+    : [t("Gör sektionen mörk"), t("Centrera texten i sektionen"), t("Flytta sektionen längst ner på sidan")];
+  const tbBtn = "text-[12px] font-semibold rounded-full px-3 py-1.5 bg-white/10 text-white hover:bg-white/20 flex-shrink-0 disabled:opacity-60";
+
+
   return (
-    <div className="h-screen flex flex-col font-sans overflow-hidden">
-      <div className="flex items-center justify-between px-3.5 md:px-6 py-3.5 border-b border-line bg-surface flex-shrink-0 relative">
-        <div className="flex items-center gap-2.5 md:gap-5 min-w-0">
-          <Link
-            href="/dashboard"
-            title={t("Tillbaka till kundzonen")}
-            className="flex items-center gap-1.5 text-[12.5px] font-bold text-ink bg-bg border border-line px-2.5 md:px-3 py-1.5 rounded-full flex-shrink-0"
-          >
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="19" y1="12" x2="5" y2="12" />
-              <polyline points="12 19 5 12 12 5" />
-            </svg>
-            {/* Loggan intill räcker som varumärke på en smal skärm — "Kundzon"
-                i klartext tar bara plats som den fasta "← Kundzon"-knappen
-                redan ger genom ikonen. */}
-            <span className="hidden sm:inline">{t("Kundzon")}</span>
-          </Link>
-          <div className="hidden md:block w-px h-5.5 bg-line" />
-          <div className="hidden md:block">
-            <Logo light={false} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[14px] font-semibold truncate">{site?.name || t("Din sajt")}</div>
-            <div className="text-[11.5px] text-ink-dim truncate">
-              {site ? (site.status === "live" ? t("Live") : t("Utkast")) : "…"}
-              {site?.domain ? ` · ${site.domain}` : t(" · ingen domän ännu")}
+    <div className="h-screen flex font-sans overflow-hidden bg-[#E5E3DD]">
+      <Rail
+        siteId={site?.id}
+        panel={panel}
+        onPanel={setPanel}
+        canUndo={undoStack.length > 0}
+        undoing={undoing}
+        onUndo={undo}
+        improveCount={improveCount}
+      />
+      <div className="flex-1 min-w-0 flex flex-col relative">
+        {/* Överrad: sajtnamn, Dator/Mobil, Nytt, Tips, Förhandsgranska */}
+        <div className="h-14 flex-shrink-0 bg-surface border-b border-line flex items-center justify-between gap-3 px-3.5 md:px-5 relative z-40">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="md:hidden w-8 h-8 rounded-lg bg-accent text-accent-ink font-extrabold flex items-center justify-center flex-shrink-0">Y</Link>
+            <div className="min-w-0">
+              <div className="text-[14px] font-semibold truncate">{site?.name || t("Din sajt")}</div>
+              <div className="text-[11.5px] text-ink-dim truncate">
+                {site ? (site.status === "live" ? t("Live") : t("Utkast")) : "…"}
+                {site?.domain ? ` · ${site.domain}` : t(" · ingen domän ännu")}
+              </div>
             </div>
           </div>
-        </div>
-
-        {/* Desktop: alla knappar synliga i rad. Under md-brytpunkten finns
-            inte plats för fyra separata knappar bredvid sajtnamnet, så de
-            samlas istället i en meny (se nedan). */}
-        <div className="hidden md:flex items-center gap-3.5 flex-shrink-0">
-          <button
-            type="button"
-            onClick={() => setTrackingOpen(true)}
-            title={t("Analys och marknadsföring (Google Analytics, Meta Pixel)")}
-            aria-label={t("Sajtinställningar")}
-            className="w-[34px] h-[34px] rounded-full border border-line bg-bg flex items-center justify-center text-ink-dim flex-shrink-0"
-          >
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="3" />
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
-            </svg>
-          </button>
-          <Link href={`/sidor${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            {t("Sidor")}
-          </Link>
-          <Link href={`/nyheter${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            {t("Nyheter")}
-          </Link>
-          <Link href={`/forbattra${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            {t("Förbättra")}
-          </Link>
-          <Link href={`/bokningar${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
-            {t("Bokningar")}
-          </Link>
-          <Link
-            href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
-            className="text-[13.5px] font-semibold text-ink border border-line px-4 py-2.5 rounded-lg"
-          >
-            {t("Förhandsgranska")}
-          </Link>
-          <button
-            type="button"
-            disabled
-            title={t("Publicering till en riktig domän byggs i ett senare steg")}
-            className="text-[13.5px] font-semibold text-ink-dim bg-bg border border-line px-4.5 py-2.5 rounded-lg cursor-not-allowed opacity-70"
-          >
-            {t("Publicera (kommer snart)")}
-          </button>
-        </div>
-
-        {/* Mobil: samma fyra åtgärder, samlade bakom en enda meny-knapp. */}
-        <button
-          type="button"
-          onClick={() => setMobileMenuOpen((v) => !v)}
-          aria-label={t("Fler alternativ")}
-          aria-expanded={mobileMenuOpen}
-          className="md:hidden w-9 h-9 rounded-lg border border-line bg-bg flex items-center justify-center text-ink flex-shrink-0"
-        >
-          <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" />
-            <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
-            <circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none" />
-          </svg>
-        </button>
-
-        {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full right-3.5 mt-1.5 w-[230px] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.14)] p-1.5 z-30">
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                setTrackingOpen(true);
-              }}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
-            >
-              {t("Analys och marknadsföring")}
+          <div className="hidden md:flex items-center bg-bg border border-line rounded-full p-0.5 text-[12.5px] font-semibold">
+            {([["desktop", t("Dator")], ["mobile", t("Mobil")]] as const).map(([id, label]) => (
+              <button key={id} type="button" onClick={() => setDevice(id)} className={`px-3.5 py-1 rounded-full ${device === id ? "bg-ink text-white" : "text-ink-dim"}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <button type="button" onClick={openNews} title={t("Se vad som är nytt")} className="relative text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
+              ✨ Nytt
+              {hasUnseenNews && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" aria-label={t("Nya nyheter")} />}
             </button>
-            <Link
-              href={`/sidor${site ? `?site=${site.id}` : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
-            >
-              {t("Sidor")}
-            </Link>
-            <Link
-              href={`/nyheter${site ? `?site=${site.id}` : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
-            >
-              {t("Nyheter")}
-            </Link>
-            <Link
-              href={`/forbattra${site ? `?site=${site.id}` : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
-            >
-              {t("Förbättra")}
-            </Link>
-            <Link
-              href={`/bokningar${site ? `?site=${site.id}` : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
-            >
-              {t("Bokningar")}
-            </Link>
-            <Link
-              href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`}
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
-            >
+            <button type="button" onClick={() => setHelpOpen(true)} title={t("Se vad du kan be Millie om")} className="hidden sm:block text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
+              {t("💡 Tips")}
+            </button>
+            <Link href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`} className="hidden md:block text-[13px] font-semibold text-ink border border-line px-3.5 py-2 rounded-lg">
               {t("Förhandsgranska")}
             </Link>
+            <button type="button" disabled title={t("Publicering till en riktig domän byggs i ett senare steg")} className="hidden md:block text-[13px] font-semibold text-ink-dim bg-bg border border-line px-3.5 py-2 rounded-lg cursor-not-allowed opacity-70">
+              {t("Publicera (kommer snart)")}
+            </button>
+            <button type="button" onClick={() => setMobileMenuOpen((v) => !v)} aria-label={t("Fler alternativ")} aria-expanded={mobileMenuOpen} className="md:hidden w-9 h-9 rounded-lg border border-line bg-bg flex items-center justify-center text-ink">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="5" r="1.4" fill="currentColor" stroke="none" />
+                <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+                <circle cx="12" cy="19" r="1.4" fill="currentColor" stroke="none" />
+              </svg>
+            </button>
+          </div>
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full right-3.5 mt-1.5 w-[230px] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.14)] p-1.5 z-50">
+            {([
+              [t("Design"), () => setPanel("design")],
+              [t("Inställningar"), () => setPanel("settings")],
+            ] as [string, () => void][]).map(([label, fn]) => (
+              <button key={label} type="button" onClick={() => { setMobileMenuOpen(false); fn(); }} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
+                {label}
+              </button>
+            ))}
+            {([
+              [t("Sidor"), "/sidor"],
+              [t("Nyheter"), "/nyheter"],
+              [t("Förbättra"), "/forbattra"],
+              [t("Bokningar"), "/bokningar"],
+              [t("Förhandsgranska"), "/forhandsgranska"],
+            ] as [string, string][]).map(([label, href]) => (
+              <Link key={href} href={`${href}${site ? `?site=${site.id}` : ""}`} onClick={() => setMobileMenuOpen(false)} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
+                {label}
+              </Link>
+            ))}
             <div className="h-px bg-line my-1.5" />
             <div className="px-3 py-2 text-[12.5px] text-ink-dim leading-relaxed">
               {t("Publicera (kommer snart) — publicering till en riktig domän byggs i ett senare steg.")}
             </div>
           </div>
         )}
-      </div>
+        </div>
 
-      {/* Mobil: flikar för att växla mellan förhandsvisning och chatt — de
-          får inte plats sida vid sida under md (se mobileView ovan). */}
-      <div className="md:hidden flex border-b border-line bg-surface flex-shrink-0">
-        <button
-          type="button"
-          onClick={() => setMobileView("preview")}
-          className={`flex-1 text-center text-[13px] font-semibold py-2.5 border-b-2 ${
-            mobileView === "preview" ? "border-ink text-ink" : "border-transparent text-ink-dim"
-          }`}
-        >
-          {t("Sajten")}
-        </button>
-        <button
-          type="button"
-          onClick={() => setMobileView("chat")}
-          className={`flex-1 text-center text-[13px] font-semibold py-2.5 border-b-2 ${
-            mobileView === "chat" ? "border-ink text-ink" : "border-transparent text-ink-dim"
-          }`}
-        >
-          {t("Chatta med Millie")}
-        </button>
-      </div>
-
-      <div className="flex-1 flex overflow-hidden">
-        <div
-          className={`${mobileView === "preview" ? "flex" : "hidden"} md:flex flex-1 bg-[#E5E3DD] items-center justify-center p-3.5 md:p-7 overflow-hidden`}
-        >
+        <div className="flex-1 min-h-0 relative">
           {loadError && (
-            <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px] max-w-[420px]">
-              {loadError}{" "}
-              <Link href="/onboarding/1" className="font-semibold underline">
-                {t("Gå till onboardingen")}
-              </Link>
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px] max-w-[420px]">
+                {loadError}{" "}
+                <Link href="/onboarding/1" className="font-semibold underline">
+                  {t("Gå till onboardingen")}
+                </Link>
+              </div>
             </div>
           )}
-
           {!loadError && !content && (
-            <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">{t("Hämtar din sajt …")}</div>
+            <div className="absolute inset-0 flex items-center justify-center p-6">
+              <div className="bg-white rounded-2xl p-10 text-center text-ink-dim text-[14.5px]">{t("Hämtar din sajt …")}</div>
+            </div>
           )}
 
           {content && (
-            <div className="w-full h-full max-w-[1400px] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col">
-              <div className="h-[38px] bg-[#F1EFE9] flex items-center gap-1.5 px-3.5 flex-shrink-0">
-                <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
-                <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
-                <div className="flex-1 text-center text-[11.5px] text-ink-dim truncate px-2">
-                  {site?.name?.toLowerCase().replace(/\s+/g, "")}.yourcosite.com{activePath !== "/" ? activePath : ""}
+            <div className="absolute inset-0 flex justify-center p-2.5 md:p-5">
+              <div className={`h-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col ${device === "mobile" ? "w-[390px] max-w-full" : "w-full max-w-[1500px]"}`}>
+                <div className="h-[34px] bg-[#F1EFE9] flex items-center gap-1.5 px-3.5 flex-shrink-0">
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-[#58C36C]" />
+                  <div className="flex-1 text-center text-[11.5px] text-ink-dim truncate px-2">
+                    {site?.name?.toLowerCase().replace(/\s+/g, "")}.yourcosite.com{activePath !== "/" ? activePath : ""}
+                  </div>
                 </div>
-              </div>
-              <div className="flex-1 overflow-y-auto relative">
-                {sending && (
-                  <div className="absolute inset-0 bg-white/40 z-40 flex items-start justify-center pt-10 pointer-events-none">
-                    <div className="bg-ink text-white text-[12.5px] font-semibold pl-2 pr-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
-                      <Millie active size={26} />
-                      <div className="w-[230px]">
-                        <div className="truncate">{thinkingPhrase}</div>
-                        <div className="mt-1.5 h-1 w-full rounded-full bg-white/25 overflow-hidden">
-                          <div className="h-full bg-white rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
+                <div className="flex-1 overflow-y-auto relative" onClick={() => panel && setPanel(null)}>
+                  {sending && (
+                    <div className="absolute inset-0 bg-white/40 z-40 flex items-start justify-center pt-10 pointer-events-none">
+                      <div className="bg-ink text-white text-[12.5px] font-semibold pl-2 pr-4 py-1.5 rounded-full shadow-lg flex items-center gap-2">
+                        <Millie active size={26} />
+                        <div className="w-[230px]">
+                          <div className="truncate">{thinkingPhrase}</div>
+                          <div className="mt-1.5 h-1 w-full rounded-full bg-white/25 overflow-hidden">
+                            <div className="h-full bg-white rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-                <FieldEditContext.Provider value={fieldEditValue}>
-                <MemoSitePreview
-                  bookingPreviewSiteId={site?.id}
-                  content={content}
-                  siteName={site?.name}
-                  lang={site?.language}
-                  currency={site?.currency}
-                  activePath={activePath}
-                  onNavigate={onPreviewNavigate}
-                  privacyPolicyMode={site?.privacy_policy_mode}
-                  privacyPolicyFileUrl={site?.privacy_policy_file_url}
-                  privacyPolicyText={site?.privacy_policy_text}
-                  newsArticles={newsArticles}
-                  editable
-                  selectedImageKey={selection?.target === "image" ? selection.key : null}
-                  onSelectImage={onPreviewSelectImage}
-                  selectedSectionKey={selection?.target === "section" ? selection.key : null}
-                  onSelectSection={onPreviewSelectSection}
-                  selectedFieldKey={selection?.target === "field" ? selection.key : null}
-                  onSelectField={onPreviewSelectField}
-                />
-                </FieldEditContext.Provider>
+                  )}
+                  <FieldEditContext.Provider value={fieldEditValue}>
+                    <MemoSitePreview
+                      bookingPreviewSiteId={site?.id}
+                      content={content}
+                      siteName={site?.name}
+                      lang={site?.language}
+                      currency={site?.currency}
+                      activePath={activePath}
+                      onNavigate={onPreviewNavigate}
+                      privacyPolicyMode={site?.privacy_policy_mode}
+                      privacyPolicyFileUrl={site?.privacy_policy_file_url}
+                      privacyPolicyText={site?.privacy_policy_text}
+                      newsArticles={newsArticles}
+                      editable
+                      selectedImageKey={selection?.target === "image" ? selection.key : null}
+                      onSelectImage={onPreviewSelectImage}
+                      selectedSectionKey={selection?.target === "section" ? selection.key : null}
+                      onSelectSection={onPreviewSelectSection}
+                      selectedFieldKey={selection?.target === "field" ? selection.key : null}
+                      onSelectField={onPreviewSelectField}
+                    />
+                  </FieldEditContext.Provider>
+                  <div className="h-40" />
+                </div>
               </div>
             </div>
           )}
-        </div>
 
-        <div
-          className={`${mobileView === "chat" ? "flex" : "hidden"} md:flex w-full md:w-[400px] border-l-0 md:border-l border-line bg-surface flex-col flex-shrink-0`}
-        >
-          <div className="px-5 py-4 border-b border-line flex items-center gap-2.5">
-            <Millie size={28} />
-            <div className="min-w-0">
-              <div className="font-semibold text-[14.5px]">{t("Chatta med Millie")}</div>
-              <div className="text-[12px] text-ink-dim mt-0.5">{t("Säg vilken sida du menar, och vad du vill ändra eller lägga till.")}</div>
-            </div>
-            <div className="ml-auto flex flex-shrink-0 items-center gap-1.5">
-              <button
-                type="button"
-                onClick={openNews}
-                title={t("Se vad som är nytt")}
-                className="relative text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
-              >
-                ✨ Nytt
-                {hasUnseenNews && (
-                  <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" aria-label={t("Nya nyheter")} />
+          {selection && content && (
+            <div className="absolute top-3 md:top-4 left-1/2 -translate-x-1/2 z-[45] max-w-[calc(100%-20px)] flex flex-wrap items-center justify-center gap-1.5 bg-ink text-white rounded-2xl px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.28)]">
+              <span className="text-[12px] text-accent font-semibold max-w-[220px] truncate">
+                {selection.target === "image" ? "🖼️ " : selection.target === "field" ? "✏️ " : "📝 "}
+                {selection.label}
+              </span>
+{selection.target === "image" && selectedImageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageEditorOpen(true)}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("✂️ Redigera bild")}
+                  </button>
                 )}
-              </button>
+{canAddGalleryImages && (
+                  <>
+                    <input
+                      ref={galleryFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => addGalleryImages(Array.from(e.target.files || []))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => galleryFileRef.current?.click()}
+                      disabled={sending || galleryBusy || savingPick}
+                      className={tbBtn}
+                    >
+                      {galleryBusy || savingPick ? t("Laddar upp …") : t("➕ Lägg till bilder")}
+                    </button>
+                  </>
+                )}
+{selectedGalleryIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={removeGalleryImage}
+                    disabled={sending || galleryBusy || savingPick}
+                    className={tbBtn}
+                  >
+                    {t("🗑 Ta bort bilden")}
+                  </button>
+                )}
+{canEditEmbed && (
+                  <button
+                    type="button"
+                    onClick={openEmbedEditor}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("</> Klistra in kod")}
+                  </button>
+                )}
+{canEditMenu && (
+                  <button
+                    type="button"
+                    onClick={openMenuEditor}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("🍽 Redigera meny")}
+                  </button>
+                )}
+{canEditTeam && (
+                  <button
+                    type="button"
+                    onClick={openTeamEditor}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("👥 Redigera personer")}
+                  </button>
+                )}
+{canPickButtonStyle && (
+                  <button
+                    type="button"
+                    onClick={() => setButtonStyleOpen(true)}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("🔘 Byt knappstil")}
+                  </button>
+                )}
+{canPickLayout && (
+                  <button
+                    type="button"
+                    onClick={() => setLayoutPickerOpen(true)}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("🎨 Byt layout")}
+                  </button>
+                )}
+{canPickIcon && (
+                  <button
+                    type="button"
+                    onClick={() => setIconPickerOpen(true)}
+                    disabled={sending}
+                    className={tbBtn}
+                  >
+                    {t("✎ Byt ikon")}
+                  </button>
+                )}
+              {selection.target === "image" && !selectedImageUrl && (
+                <span className="text-[11.5px] text-white/60 flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
+              )}
+              {selection.target !== "section" && selection.sectionId !== "__header__" && (
+                <button
+                  type="button"
+                  onClick={() => setSelection({ target: "section", key: `${selection.pagePath}::section::${selection.sectionId}`, pagePath: selection.pagePath, sectionId: selection.sectionId, label: t("hela sektionen") })}
+                  className={tbBtn}
+                >
+                  {t("↑ Hela sektionen")}
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => setHelpOpen(true)}
-                title={t("Se vad du kan be Millie om")}
-                className="text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5"
+                onClick={() => draftInputRef.current?.focus()}
+                className="text-[12px] font-semibold rounded-full px-3 py-1.5 bg-accent text-accent-ink flex-shrink-0"
               >
-                {t("💡 Tips")}
+                {t("Fråga Millie")}
+              </button>
+              <button type="button" onClick={() => setSelection(null)} aria-label={t("Ta bort markeringen")} className="text-white/70 text-[16px] font-bold flex-shrink-0 px-1 leading-none">
+                ×
               </button>
             </div>
-          </div>
+          )}
 
-          <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 py-4.5 flex flex-col gap-4">
+          {/* Sidopanel: Design eller Inställningar */}
+          {panel && content && (
+            <div className="absolute left-0 top-0 bottom-0 w-full md:w-[360px] bg-[#F7F5F2] shadow-[12px_0_40px_rgba(0,0,0,0.18)] z-40">
+              {panel === "design" && <DesignPanel content={content} busy={savingTheme} onChange={saveTheme} onClose={() => setPanel(null)} />}
+              {panel === "settings" && (
+                <SettingsPanel
+                  siteId={site?.id}
+                  gaMeasurementId={content.gaMeasurementId}
+                  metaPixelId={content.metaPixelId}
+                  onSaved={(values) => setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))}
+                  onClose={() => setPanel(null)}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Millie: flytande fält längst ner, konversationen viks ut över sajten */}
+          <div className={`absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]" : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
+            {millieOpen && (
+              <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] flex flex-col max-h-[48vh]">
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line flex-shrink-0">
+                  <Millie size={24} />
+                  <div className="text-[13.5px] font-semibold">{t("Chatta med Millie")}</div>
+                  <div className="ml-auto flex items-center gap-1.5">
+                    {undoStack.length > 0 && (
+                      <button type="button" onClick={undo} disabled={undoing || sending} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1 disabled:opacity-60">
+                        {undoing ? t("Ångrar …") : t("↩ Ångra senaste ändringen")}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setMillieOpen(false)} className="text-[12px] font-semibold text-ink-dim px-2 py-1">
+                      {t("Minimera")}
+                    </button>
+                  </div>
+                </div>
+                <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-3.5 flex flex-col gap-3.5">
             {messages.map((m, i) => (
               <div key={i} className={`flex items-end gap-2 ${m.from === "user" ? "self-end flex-row-reverse" : "self-start"}`}>
                 {m.from === "bot" && <Millie size={22} />}
                 <div
-                  className={`max-w-[260px] text-[13.5px] leading-relaxed px-3.5 py-2.5 ${
+                  className={`max-w-[min(520px,85%)] text-[13.5px] leading-relaxed px-3.5 py-2.5 ${
                     m.from === "user"
                       ? "bg-accent text-accent-ink rounded-[14px_14px_4px_14px]"
                       : "bg-bg rounded-[14px_14px_14px_4px]"
@@ -1745,7 +1851,7 @@ export default function EditorPage() {
             {sending && (
               <div className="self-start flex items-end gap-2">
                 <Millie active size={22} />
-                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5 w-[250px]">
+                <div className="bg-bg rounded-[14px_14px_14px_4px] text-[13.5px] text-ink-dim px-3.5 py-2.5 w-[min(320px,85%)]">
                   <div className="flex items-center justify-between gap-3">
                     <span className="truncate">{thinkingPhrase}</span>
                     <span className="text-[12px] font-semibold tabular-nums w-9 text-right flex-shrink-0">{Math.round(progress * 100)}%</span>
@@ -1756,20 +1862,175 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="px-5 py-4 border-t border-line">
-            {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
-            {undoStack.length > 0 && (
-              <button
-                type="button"
-                onClick={undo}
-                disabled={undoing || sending}
-                className="mb-2 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5 disabled:opacity-60"
-              >
-                {undoing ? t("Ångrar …") : t("↩ Ångra senaste ändringen")}
-              </button>
+                </div>
+              </div>
             )}
+            <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] p-2.5">
+              {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
+              <div className="flex md:flex-wrap items-center gap-1.5 mb-2 overflow-x-auto md:overflow-visible [&>*]:flex-shrink-0 [&>*]:whitespace-nowrap">
+                {!millieOpen && (
+                  <button type="button" onClick={() => setMillieOpen(true)} className="text-[12px] font-semibold text-ink-dim bg-bg border border-line rounded-full px-2.5 py-1">
+                    {t("💬 Visa chatten")}
+                  </button>
+                )}
+                {selection && (
+                  <span className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent-soft border border-line max-w-[260px] truncate">
+                    {t("Markerad")}: {selection.label}
+                  </span>
+                )}
+                {selectionChips.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    onClick={() => {
+                      setDraft(c);
+                      draftInputRef.current?.focus();
+                    }}
+                    className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            {micError && (
+              <div className="text-[12px] text-red-600 px-1 pb-1.5" role="status">
+                {micError}
+              </div>
+            )}
+            {attachments.length > 0 && (
+              <div className="flex flex-col gap-1.5 mb-2">
+                {attachments.map((a, i) => (
+                  <div key={i} className="flex items-center gap-2 bg-bg border border-line rounded-lg px-3 py-2">
+                    {a.kind === "image" ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={a.url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <span className="text-[14px] flex-shrink-0">📄</span>
+                    )}
+                    <span className="text-[12.5px] truncate flex-1">{a.name}</span>
+                    {a.kind === "image" && !a.credit && (
+                      <button
+                        type="button"
+                        onClick={() => setEditAtt(i)}
+                        disabled={sending}
+                        className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
+                      >
+                        {t("✂️ Redigera")}
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
+                      aria-label={t("Ta bort bilagan")}
+                      className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-end gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-2 pr-1.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,text/plain,text/markdown,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files && e.target.files.length > 0) handleFiles(Array.from(e.target.files));
+                  e.target.value = "";
+                }}
+              />
+              <div className="relative flex-shrink-0">
+                              <button
+                  type="button"
+                  onClick={() => setAttachMenuOpen((o) => !o)}
+                  aria-haspopup="menu"
+                  aria-expanded={attachMenuOpen}
+                  disabled={sending || attaching || !content}
+                  aria-label={t("Bifoga filer")}
+                  title={t("Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri")}
+                  className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
+                >
+                  {attaching ? (
+                    <span className="text-[11px]">…</span>
+                  ) : (
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
+                    </svg>
+                  )}
+                </button>
+                {attachMenuOpen && (
+                  <>
+                    <div className="fixed inset-0 z-30" onClick={() => setAttachMenuOpen(false)} />
+                    <div role="menu" className="absolute bottom-full left-0 mb-2 z-40 w-[230px] bg-surface border border-line rounded-xl shadow-lg p-1.5 flex flex-col">
+                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); fileInputRef.current?.click(); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
+                        {t("📎 Ladda upp")}
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setMyImagesOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
+                        {t("🗂 Mina bilder")}
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setStockOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
+                        {t("🖼 Stockbilder")}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+              {micSupported && (
+                <button
+                  type="button"
+                  onClick={toggleListening}
+                  disabled={sending || attaching || !content}
+                  aria-label={listening ? t("Sluta lyssna") : t("Prata in meddelandet")}
+                  aria-pressed={listening}
+                  title={listening ? t("Tryck för att sluta lyssna") : t("Prata in ditt meddelande ({språk})", { språk: LOCALE_NAMES[locale] })}
+                  className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px] ${
+                    listening ? "bg-red-500 text-white animate-pulse" : "text-ink-dim"
+                  }`}
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="2" width="6" height="12" rx="3" />
+                    <path d="M5 11a7 7 0 0014 0" />
+                    <line x1="12" y1="18" x2="12" y2="22" />
+                  </svg>
+                </button>
+              )}
+              <textarea
+                ref={draftInputRef}
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  // Enter skickar, Shift+Enter gör en ny rad — precis som i
+                  // de flesta chattverktyg.
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder={listening ? t("Jag lyssnar … prata på") : t("Skriv till Millie …")}
+                disabled={sending || !content}
+                rows={1}
+                className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60 resize-none py-1.5 leading-[1.4] max-h-[160px] overflow-y-auto"
+              />
+              <button
+                onClick={() => send()}
+                disabled={sending || attaching || !content || (!draft.trim() && attachments.length === 0)}
+                aria-label={t("Skicka")}
+                className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px]"
+              >
+                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0C1004" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="12" y1="19" x2="12" y2="5" />
+                  <polyline points="5 12 12 5 19 12" />
+                </svg>
+              </button>
+            </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
             {linkEditOpen && content && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
                 <div className="bg-surface rounded-2xl p-4 w-full max-w-md shadow-xl">
@@ -2219,264 +2480,6 @@ export default function EditorPage() {
                 </div>
               </div>
             )}
-            {selection && (
-              <div className="flex items-center gap-2 bg-accent-soft border border-line rounded-lg px-3 py-2 mb-2">
-                <span className="text-[14px] flex-shrink-0">
-                  {selection.target === "image" ? "🖼️" : selection.target === "field" ? "✏️" : "📝"}
-                </span>
-                <span className="text-[12.5px] truncate flex-1">
-                  {t("Vald")}: {selection.label}
-                </span>
-                {selection.target === "image" && selectedImageUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setImageEditorOpen(true)}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("✂️ Redigera bild")}
-                  </button>
-                )}
-                {canAddGalleryImages && (
-                  <>
-                    <input
-                      ref={galleryFileRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => addGalleryImages(Array.from(e.target.files || []))}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => galleryFileRef.current?.click()}
-                      disabled={sending || galleryBusy || savingPick}
-                      className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                    >
-                      {galleryBusy || savingPick ? t("Laddar upp …") : t("➕ Lägg till bilder")}
-                    </button>
-                  </>
-                )}
-                {selectedGalleryIndex !== null && (
-                  <button
-                    type="button"
-                    onClick={removeGalleryImage}
-                    disabled={sending || galleryBusy || savingPick}
-                    className="text-[12px] font-semibold border border-line rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("🗑 Ta bort bilden")}
-                  </button>
-                )}
-                {canEditEmbed && (
-                  <button
-                    type="button"
-                    onClick={openEmbedEditor}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("</> Klistra in kod")}
-                  </button>
-                )}
-                {canEditMenu && (
-                  <button
-                    type="button"
-                    onClick={openMenuEditor}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("🍽 Redigera meny")}
-                  </button>
-                )}
-                {canEditTeam && (
-                  <button
-                    type="button"
-                    onClick={openTeamEditor}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("👥 Redigera personer")}
-                  </button>
-                )}
-                {canPickButtonStyle && (
-                  <button
-                    type="button"
-                    onClick={() => setButtonStyleOpen(true)}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("🔘 Byt knappstil")}
-                  </button>
-                )}
-                {canPickLayout && (
-                  <button
-                    type="button"
-                    onClick={() => setLayoutPickerOpen(true)}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("🎨 Byt layout")}
-                  </button>
-                )}
-                {canPickIcon && (
-                  <button
-                    type="button"
-                    onClick={() => setIconPickerOpen(true)}
-                    disabled={sending}
-                    className="text-[12px] font-semibold bg-accent text-accent-ink rounded-full px-2.5 py-1 flex-shrink-0 disabled:opacity-60"
-                  >
-                    {t("✎ Byt ikon")}
-                  </button>
-                )}
-                {selection.target === "image" && !selectedImageUrl && (
-                  <span className="text-[11.5px] text-ink-dim flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setSelection(null)}
-                  aria-label={t("Ta bort markeringen")}
-                  className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-            {micError && (
-              <div className="text-[12px] text-red-600 px-1 pb-1.5" role="status">
-                {micError}
-              </div>
-            )}
-            {attachments.length > 0 && (
-              <div className="flex flex-col gap-1.5 mb-2">
-                {attachments.map((a, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-bg border border-line rounded-lg px-3 py-2">
-                    {a.kind === "image" ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={a.url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
-                    ) : (
-                      <span className="text-[14px] flex-shrink-0">📄</span>
-                    )}
-                    <span className="text-[12.5px] truncate flex-1">{a.name}</span>
-                    {a.kind === "image" && !a.credit && (
-                      <button
-                        type="button"
-                        onClick={() => setEditAtt(i)}
-                        disabled={sending}
-                        className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
-                      >
-                        {t("✂️ Redigera")}
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setAttachments((prev) => prev.filter((_, j) => j !== i))}
-                      aria-label={t("Ta bort bilagan")}
-                      className="text-[13px] text-ink-dim font-bold flex-shrink-0 px-1"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex items-end gap-2.5 bg-bg border border-line rounded-xl py-1.5 pl-2 pr-1.5">
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept="image/png,image/jpeg,image/webp,image/gif,.txt,.md,text/plain,text/markdown,.pdf,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                className="hidden"
-                onChange={(e) => {
-                  if (e.target.files && e.target.files.length > 0) handleFiles(Array.from(e.target.files));
-                  e.target.value = "";
-                }}
-              />
-              <div className="relative flex-shrink-0">
-                              <button
-                  type="button"
-                  onClick={() => setAttachMenuOpen((o) => !o)}
-                  aria-haspopup="menu"
-                  aria-expanded={attachMenuOpen}
-                  disabled={sending || attaching || !content}
-                  aria-label={t("Bifoga filer")}
-                  title={t("Bifoga en eller flera bilder/textdokument — t.ex. flera bilder på en gång till ett bildgalleri")}
-                  className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 text-ink-dim disabled:opacity-60 mb-[1px]"
-                >
-                  {attaching ? (
-                    <span className="text-[11px]">…</span>
-                  ) : (
-                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M21.44 11.05l-9.19 9.19a5 5 0 01-7.07-7.07l9.19-9.19a3.5 3.5 0 014.95 4.95l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
-                    </svg>
-                  )}
-                </button>
-                {attachMenuOpen && (
-                  <>
-                    <div className="fixed inset-0 z-30" onClick={() => setAttachMenuOpen(false)} />
-                    <div role="menu" className="absolute bottom-full left-0 mb-2 z-40 w-[230px] bg-surface border border-line rounded-xl shadow-lg p-1.5 flex flex-col">
-                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); fileInputRef.current?.click(); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("📎 Ladda upp")}
-                      </button>
-                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setMyImagesOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("🗂 Mina bilder")}
-                      </button>
-                      <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setStockOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("🖼 Stockbilder")}
-                      </button>
-                    </div>
-                  </>
-                )}
-              </div>
-              {micSupported && (
-                <button
-                  type="button"
-                  onClick={toggleListening}
-                  disabled={sending || attaching || !content}
-                  aria-label={listening ? t("Sluta lyssna") : t("Prata in meddelandet")}
-                  aria-pressed={listening}
-                  title={listening ? t("Tryck för att sluta lyssna") : t("Prata in ditt meddelande ({språk})", { språk: LOCALE_NAMES[locale] })}
-                  className={`w-[30px] h-[30px] rounded-[8px] flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px] ${
-                    listening ? "bg-red-500 text-white animate-pulse" : "text-ink-dim"
-                  }`}
-                >
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="9" y="2" width="6" height="12" rx="3" />
-                    <path d="M5 11a7 7 0 0014 0" />
-                    <line x1="12" y1="18" x2="12" y2="22" />
-                  </svg>
-                </button>
-              )}
-              <textarea
-                ref={draftInputRef}
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                onKeyDown={(e) => {
-                  // Enter skickar, Shift+Enter gör en ny rad — precis som i
-                  // de flesta chattverktyg.
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    send();
-                  }
-                }}
-                placeholder={listening ? t("Jag lyssnar … prata på") : t("Skriv till Millie …")}
-                disabled={sending || !content}
-                rows={1}
-                className="flex-1 text-[13.5px] bg-transparent outline-none text-ink-dim placeholder:text-ink-dim disabled:opacity-60 resize-none py-1.5 leading-[1.4] max-h-[160px] overflow-y-auto"
-              />
-              <button
-                onClick={() => send()}
-                disabled={sending || attaching || !content || (!draft.trim() && attachments.length === 0)}
-                aria-label={t("Skicka")}
-                className="w-[34px] h-[34px] rounded-[9px] bg-accent flex items-center justify-center flex-shrink-0 disabled:opacity-60 mb-[1px]"
-              >
-                <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#0C1004" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="12" y1="19" x2="12" y2="5" />
-                  <polyline points="5 12 12 5 19 12" />
-                </svg>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {content && (
         <NewsPreviewModal
@@ -2547,17 +2550,6 @@ export default function EditorPage() {
           supportDraft.wish
             ? t("Vad skulle du vilja kunna göra på din sajt som du inte kan idag? Beskriv gärna så konkret du kan – vi läser alla förslag.")
             : t("Millie kan inte fixa det här själv än, men vi läser alla önskemål — skriv gärna lite mer om vad du vill kunna göra.")
-        }
-      />
-
-      <TrackingSettingsModal
-        open={trackingOpen}
-        onClose={() => setTrackingOpen(false)}
-        gaMeasurementId={content?.gaMeasurementId}
-        metaPixelId={content?.metaPixelId}
-        siteId={site?.id}
-        onSaved={(values) =>
-          setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))
         }
       />
     </div>
