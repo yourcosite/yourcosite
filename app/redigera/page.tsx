@@ -1487,7 +1487,7 @@ export default function EditorPage() {
     : selection.target === "field"
     ? [t("Skriv om texten så den blir kortare"), t("Gör texten mer inbjudande")]
     : [t("Gör sektionen mörk"), t("Centrera texten i sektionen"), t("Flytta sektionen längst ner på sidan")];
-  const tbBtn = "text-[12px] font-semibold rounded-full px-3 py-1.5 bg-white/10 text-white hover:bg-white/20 flex-shrink-0 disabled:opacity-60";
+  const dockBtn = "text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink hover:border-ink flex-shrink-0 disabled:opacity-60";
 
 
   return (
@@ -1661,137 +1661,6 @@ export default function EditorPage() {
             </div>
           )}
 
-          {selection && content && (
-            <div className="absolute top-3 md:top-4 left-1/2 -translate-x-1/2 z-[45] max-w-[calc(100%-20px)] flex flex-wrap items-center justify-center gap-1.5 bg-ink text-white rounded-2xl px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.28)]">
-              <span className="text-[12px] text-accent font-semibold max-w-[220px] truncate">
-                {selection.target === "image" ? "🖼️ " : selection.target === "field" ? "✏️ " : "📝 "}
-                {selection.label}
-              </span>
-{selection.target === "image" && selectedImageUrl && (
-                  <button
-                    type="button"
-                    onClick={() => setImageEditorOpen(true)}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("✂️ Redigera bild")}
-                  </button>
-                )}
-{canAddGalleryImages && (
-                  <>
-                    <input
-                      ref={galleryFileRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp,image/gif"
-                      multiple
-                      className="hidden"
-                      onChange={(e) => addGalleryImages(Array.from(e.target.files || []))}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => galleryFileRef.current?.click()}
-                      disabled={sending || galleryBusy || savingPick}
-                      className={tbBtn}
-                    >
-                      {galleryBusy || savingPick ? t("Laddar upp …") : t("➕ Lägg till bilder")}
-                    </button>
-                  </>
-                )}
-{selectedGalleryIndex !== null && (
-                  <button
-                    type="button"
-                    onClick={removeGalleryImage}
-                    disabled={sending || galleryBusy || savingPick}
-                    className={tbBtn}
-                  >
-                    {t("🗑 Ta bort bilden")}
-                  </button>
-                )}
-{canEditEmbed && (
-                  <button
-                    type="button"
-                    onClick={openEmbedEditor}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("</> Klistra in kod")}
-                  </button>
-                )}
-{canEditMenu && (
-                  <button
-                    type="button"
-                    onClick={openMenuEditor}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("🍽 Redigera meny")}
-                  </button>
-                )}
-{canEditTeam && (
-                  <button
-                    type="button"
-                    onClick={openTeamEditor}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("👥 Redigera personer")}
-                  </button>
-                )}
-{canPickButtonStyle && (
-                  <button
-                    type="button"
-                    onClick={() => setButtonStyleOpen(true)}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("🔘 Byt knappstil")}
-                  </button>
-                )}
-{canPickLayout && (
-                  <button
-                    type="button"
-                    onClick={() => setLayoutPickerOpen(true)}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("🎨 Byt layout")}
-                  </button>
-                )}
-{canPickIcon && (
-                  <button
-                    type="button"
-                    onClick={() => setIconPickerOpen(true)}
-                    disabled={sending}
-                    className={tbBtn}
-                  >
-                    {t("✎ Byt ikon")}
-                  </button>
-                )}
-              {selection.target === "image" && !selectedImageUrl && (
-                <span className="text-[11.5px] text-white/60 flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
-              )}
-              {selection.target !== "section" && selection.sectionId !== "__header__" && (
-                <button
-                  type="button"
-                  onClick={() => setSelection({ target: "section", key: `${selection.pagePath}::section::${selection.sectionId}`, pagePath: selection.pagePath, sectionId: selection.sectionId, label: t("hela sektionen") })}
-                  className={tbBtn}
-                >
-                  {t("↑ Hela sektionen")}
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => draftInputRef.current?.focus()}
-                className="text-[12px] font-semibold rounded-full px-3 py-1.5 bg-accent text-accent-ink flex-shrink-0"
-              >
-                {t("Fråga Millie")}
-              </button>
-              <button type="button" onClick={() => setSelection(null)} aria-label={t("Ta bort markeringen")} className="text-white/70 text-[16px] font-bold flex-shrink-0 px-1 leading-none">
-                ×
-              </button>
-            </div>
-          )}
-
           {/* Sidopanel: Design eller Inställningar */}
           {panel && content && (
             <div className={`absolute left-0 top-0 bottom-0 w-full ${wide ? "md:w-[460px]" : "md:w-[360px]"} bg-[#F7F5F2] shadow-[12px_0_40px_rgba(0,0,0,0.18)] z-40`}>
@@ -1960,10 +1829,125 @@ export default function EditorPage() {
               )}
               {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
               <div className="flex md:flex-wrap items-center gap-1.5 mb-2 overflow-x-auto md:overflow-visible [&>*]:flex-shrink-0 [&>*]:whitespace-nowrap">
-                {selection && (
-                  <span className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent-soft border border-line max-w-[260px] truncate">
-                    {t("Markerad")}: {selection.label}
-                  </span>
+                {selection && content && (
+                  <>
+                    <span className="text-[12px] font-semibold rounded-full pl-2.5 pr-1.5 py-1 bg-accent-soft border border-line max-w-[260px] flex items-center gap-1.5">
+                      <span className="truncate">{selection.target === "image" ? "🖼️ " : selection.target === "field" ? "✏️ " : "📝 "}{selection.label}</span>
+                      <button type="button" onClick={() => setSelection(null)} aria-label={t("Ta bort markeringen")} className="text-ink-dim text-[14px] font-bold leading-none px-0.5">×</button>
+                    </span>
+{selection.target === "image" && selectedImageUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setImageEditorOpen(true)}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("✂️ Redigera bild")}
+                  </button>
+                )}
+{canAddGalleryImages && (
+                  <>
+                    <input
+                      ref={galleryFileRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      className="hidden"
+                      onChange={(e) => addGalleryImages(Array.from(e.target.files || []))}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => galleryFileRef.current?.click()}
+                      disabled={sending || galleryBusy || savingPick}
+                      className={dockBtn}
+                    >
+                      {galleryBusy || savingPick ? t("Laddar upp …") : t("➕ Lägg till bilder")}
+                    </button>
+                  </>
+                )}
+{selectedGalleryIndex !== null && (
+                  <button
+                    type="button"
+                    onClick={removeGalleryImage}
+                    disabled={sending || galleryBusy || savingPick}
+                    className={dockBtn}
+                  >
+                    {t("🗑 Ta bort bilden")}
+                  </button>
+                )}
+{canEditEmbed && (
+                  <button
+                    type="button"
+                    onClick={openEmbedEditor}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("</> Klistra in kod")}
+                  </button>
+                )}
+{canEditMenu && (
+                  <button
+                    type="button"
+                    onClick={openMenuEditor}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("🍽 Redigera meny")}
+                  </button>
+                )}
+{canEditTeam && (
+                  <button
+                    type="button"
+                    onClick={openTeamEditor}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("👥 Redigera personer")}
+                  </button>
+                )}
+{canPickButtonStyle && (
+                  <button
+                    type="button"
+                    onClick={() => setButtonStyleOpen(true)}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("🔘 Byt knappstil")}
+                  </button>
+                )}
+{canPickLayout && (
+                  <button
+                    type="button"
+                    onClick={() => setLayoutPickerOpen(true)}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("🎨 Byt layout")}
+                  </button>
+                )}
+{canPickIcon && (
+                  <button
+                    type="button"
+                    onClick={() => setIconPickerOpen(true)}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    {t("✎ Byt ikon")}
+                  </button>
+                )}
+              {selection.target === "image" && !selectedImageUrl && (
+                <span className="text-[11.5px] text-ink-dim flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
+              )}
+              {selection.target !== "section" && selection.sectionId !== "__header__" && (
+                <button
+                  type="button"
+                  onClick={() => setSelection({ target: "section", key: `${selection.pagePath}::section::${selection.sectionId}`, pagePath: selection.pagePath, sectionId: selection.sectionId, label: t("hela sektionen") })}
+                  className={dockBtn}
+                >
+                  {t("↑ Hela sektionen")}
+                </button>
+              )}
+                  </>
                 )}
                 {selectionChips.map((c) => (
                   <button
