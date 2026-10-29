@@ -233,6 +233,7 @@ const RAW_SECTION_SCHEMA = {
         email: { type: "string" },
         phone: { type: "string" },
         address: { type: "string" },
+        hours: { type: "string", description: "Öppettider som kort fri text, en rad per dag eller dagintervall, t.ex. \"Mån–fre 9–18\\nLör 10–15\". Sätt bara när kunden själv uppgett tiderna; hitta aldrig på några." },
         bgColor: BG_COLOR_SCHEMA,
       },
       required: ["id", "type", "layout", "heading", "body"],
@@ -667,6 +668,12 @@ export const EDIT_PATCH_PROPERTIES = {
   },
   gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,
   metaPixelId: META_PIXEL_ID_SCHEMA,
+  imageAlts: {
+    type: "object",
+    additionalProperties: { type: "string" },
+    description:
+      "Beskrivande bildtext (alt) för sajtens bilder, med bildens exakta url (imageUrl) som nyckel och texten som värde (under 120 tecken, beskriv vad bilden visar utifrån sektionens egen text, aldrig påhittade fakta). Ta bara med bilder som ska få eller byta text. Tom sträng tar bort en text.",
+  },
   pageOrder: {
     type: "array",
     items: { type: "string" },

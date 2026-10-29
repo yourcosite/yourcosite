@@ -332,6 +332,9 @@ export interface ContactSection {
   email?: string;
   phone?: string;
   address?: string;
+  // Öppettider som fri text, en rad per dag eller dagintervall, t.ex.
+  // "Mån–fre 9–18". Visas i kontaktsektionen och räknas i SEO-analysen.
+  hours?: string;
   // Se HeroSection.bgColor — samma princip.
   bgColor?: string;
 }
@@ -662,6 +665,10 @@ export interface SiteContent {
   // CookieBanner/showCookieBanner i samma fil.
   gaMeasurementId?: string;
   metaPixelId?: string;
+  // Beskrivande bildtext (alt) per bild, med bildens url som nyckel. Satt av
+  // Millie. Läses av ImageOrArt i components/SitePreview.tsx så att varje
+  // bild på sajten får rätt alt utan att varje sektionstyp behöver ett eget fält.
+  imageAlts?: Record<string, string>;
 }
 
 // Räknar hur många av sajtens bildbärande platser (hero + grid-items) som

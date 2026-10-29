@@ -8,6 +8,7 @@ const PROTECTED_PREFIXES = [
   "/redigera",
   "/sidor",
   "/nyheter",
+  "/forbattra",
   "/bokningar",
   "/installningar",
   "/fakturering",

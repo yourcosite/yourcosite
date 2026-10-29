@@ -15,6 +15,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-29-forbattra",
+    date: "2026-10-29",
+    icon: "🔍",
+    title: msg("Förbättra: så synns du bättre på Google"),
+    text: msg("Under Förbättra analyserar vi din sajt mot en lista med sökmotorregler och ger dig ett betyg. Du ser vad som redan är klart, vad som sköts automatiskt och vad du kan göra mer. Millie kan fixa det mesta med ett klick, till exempel sidtitlar, beskrivningar, bildtexter och öppettider."),
+    try: msg("Skriv bildtexter för alla bilder"),
+  },
+  {
     id: "2026-10-23-toningssektion",
     date: "2026-10-23",
     icon: "🌅",

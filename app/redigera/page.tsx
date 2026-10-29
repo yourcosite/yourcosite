@@ -443,6 +443,14 @@ export default function EditorPage() {
           // i menyn. Läses rått ur URL:en (inte next/navigations
           // useSearchParams) för att slippa ett Suspense-krav på en annars
           // helt statisk sida.
+          // Satt av "Förbättra"-sidan (app/forbattra): fyller i meddelanderutan
+          // så kunden bara behöver trycka skicka.
+          try {
+            const ask = new URLSearchParams(window.location.search).get("fraga");
+            if (ask) setDraft(ask.slice(0, 400));
+          } catch {
+            // Ignorera.
+          }
           try {
             const requested = new URLSearchParams(window.location.search).get("sida");
             if (requested && data.site.content.pages.some((p: { path: string }) => p.path === requested)) {
@@ -1451,6 +1459,9 @@ export default function EditorPage() {
           <Link href={`/nyheter${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             {t("Nyheter")}
           </Link>
+          <Link href={`/forbattra${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
+            {t("Förbättra")}
+          </Link>
           <Link href={`/bokningar${site ? `?site=${site.id}` : ""}`} className="text-[12.5px] font-bold text-ink bg-bg border border-line px-3.5 py-2 rounded-full">
             {t("Bokningar")}
           </Link>
@@ -1510,6 +1521,13 @@ export default function EditorPage() {
               className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
             >
               {t("Nyheter")}
+            </Link>
+            <Link
+              href={`/forbattra${site ? `?site=${site.id}` : ""}`}
+              onClick={() => setMobileMenuOpen(false)}
+              className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left"
+            >
+              {t("Förbättra")}
             </Link>
             <Link
               href={`/bokningar${site ? `?site=${site.id}` : ""}`}

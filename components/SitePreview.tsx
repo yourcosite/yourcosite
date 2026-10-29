@@ -167,10 +167,15 @@ type SitePreviewProps = Parameters<typeof SitePreviewInner>[0] & {
   currency?: string | null;
 };
 
+// Bildtexter (alt) per bild-url, se SiteContent.imageAlts. Läses av ImageOrArt.
+const ImageAltContext = createContext<Record<string, string> | undefined>(undefined);
+
 export default function SitePreview({ lang, currency, ...rest }: SitePreviewProps) {
   return (
     <SiteLangProvider lang={lang} currency={currency}>
-      <SitePreviewInner {...rest} />
+      <ImageAltContext.Provider value={rest.content?.imageAlts}>
+        <SitePreviewInner {...rest} />
+      </ImageAltContext.Provider>
     </SiteLangProvider>
   );
 }
@@ -1810,6 +1815,8 @@ function ImageOrArt({
   lazy?: boolean;
 }) {
   const t = useT();
+  const imageAlts = useContext(ImageAltContext);
+  const imgAlt = (imageUrl && imageAlts?.[imageUrl]) || "";
   const openable = !selectable && !!onOpen && !!imageUrl;
   return (
     <div
@@ -1823,12 +1830,12 @@ function ImageOrArt({
     >
       {imageUrl && natural && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt="" loading="lazy" className="block w-full h-auto" />
+        <img src={imageUrl} alt={imgAlt} loading="lazy" className="block w-full h-auto" />
       )}
       {imageUrl && !natural && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt="" loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={imageUrl} alt={imgAlt} loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" />
           {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
         </>
       )}
@@ -5681,6 +5688,12 @@ function SectionBlockInner({
                   <span style={{ color: palette.textDim }}>{section.address}</span>
                 </Field>
               )}
+              {section.hours && (
+                <div className="text-[13.5px]">
+                  <span className="font-semibold">{t("Öppettider:")}</span>
+                  <div className="whitespace-pre-line" style={{ color: palette.textDim }}>{section.hours}</div>
+                </div>
+              )}
               {socialLinks && socialLinks.length > 0 && (
                 <div className="pt-2">
                   <SocialIcons socialLinks={socialLinks} palette={palette} />
@@ -5744,6 +5757,7 @@ function SectionBlockInner({
                 {section.address}
               </Field>
             )}
+            {section.hours && <span className="whitespace-pre-line">{section.hours}</span>}
           </div>
           {socialLinks && socialLinks.length > 0 && (
             <div className="flex justify-center">
