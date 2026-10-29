@@ -2570,5 +2570,13 @@
   "Du har gjort många språkändringar idag. Försök igen imorgon.": "You have made many language changes today. Try again tomorrow.",
   "En ny redigerare": "A new editor",
   "Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort.": "The site now takes the full width and the tools are in the sidebar: Pages, Design, News, Bookings, Improve and Settings open as panels. Millie sits at the bottom. Select something on the site and the options appear there, and Undo last and History are always one click away.",
-  "Öppna Design i sidofältet": "Open Design in the sidebar"
+  "Öppna Design i sidofältet": "Open Design in the sidebar",
+  "Texten innehåller redan sökordet": "The text already contains the keyword",
+  "Optimera den markerade sektionen för Google": "Optimise the selected section for Google",
+  "Optimera den markerade texten för Google": "Optimise the selected text for Google",
+  "✓ Innehåller sökordet": "✓ Contains the keyword",
+  "🔍 Optimera för Google": "🔍 Optimise for Google",
+  "Optimera texter för Google med ett klick": "Optimise texts for Google with one click",
+  "Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra.": "Select a heading, a text or a whole section and press Optimise for Google. Millie rewrites it with the right keyword and tells you what she changed. If she does not know what you want to be found for, she asks first. Everything can be undone.",
+  "Markera en rubrik och tryck Optimera för Google": "Select a heading and press Optimise for Google"
 }

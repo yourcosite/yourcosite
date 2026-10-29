@@ -2570,5 +2570,13 @@
   "Du har gjort många språkändringar idag. Försök igen imorgon.": "Olet tehnyt tänään paljon kielimuutoksia. Yritä uudelleen huomenna.",
   "En ny redigerare": "Uusi muokkain",
   "Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort.": "Sivusto täyttää nyt koko leveyden ja työkalut ovat sivupalkissa: Sivut, Ulkoasu, Uutiset, Varaukset, Paranna ja Asetukset avautuvat paneeleina. Millie on alhaalla. Valitse jotain sivustolta, niin valinnat ilmestyvät siihen, ja Kumoa viimeisin ja Historia ovat aina yhden napsautuksen päässä.",
-  "Öppna Design i sidofältet": "Avaa Ulkoasu sivupalkista"
+  "Öppna Design i sidofältet": "Avaa Ulkoasu sivupalkista",
+  "Texten innehåller redan sökordet": "Teksti sisältää jo hakusanan",
+  "Optimera den markerade sektionen för Google": "Optimoi valittu osio Googlea varten",
+  "Optimera den markerade texten för Google": "Optimoi valittu teksti Googlea varten",
+  "✓ Innehåller sökordet": "✓ Sisältää hakusanan",
+  "🔍 Optimera för Google": "🔍 Optimoi Googlea varten",
+  "Optimera texter för Google med ett klick": "Optimoi tekstit Googlea varten yhdellä napsautuksella",
+  "Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra.": "Valitse otsikko, teksti tai kokonainen osio ja paina Optimoi Googlea varten. Millie kirjoittaa sen uudelleen oikealla hakusanalla ja kertoo mitä muutti. Jos hän ei tiedä, millä haluat löytyä, hän kysyy ensin. Kaiken voi kumota.",
+  "Markera en rubrik och tryck Optimera för Google": "Valitse otsikko ja paina Optimoi Googlea varten"
 }

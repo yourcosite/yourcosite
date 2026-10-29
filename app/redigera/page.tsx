@@ -1541,6 +1541,17 @@ export default function EditorPage() {
     : selection.target === "field"
     ? fieldChips(selection.field)
     : [t("Gör sektionen mörk"), t("Centrera texten i sektionen"), t("Flytta sektionen längst ner på sidan")];
+  // "Optimera för Google": visas på texter och sektioner. Ett klick skickar
+  // uppdraget direkt till Millie, som använder sajtens sökord (eller frågar).
+  // Är sökordet redan med i den markerade texten visas det på knappen.
+  const googleName = selection?.target === "field" ? (selection.field || "").split(".").pop() || "" : "";
+  const googleEligible =
+    !!selection &&
+    ((selection.target === "field" && ["headline", "headlineEmphasis", "heading", "body", "intro", "title", "eyebrow"].includes(googleName)) ||
+      (selection.target === "section" && selection.sectionId !== "__header__"));
+  const seoWords = (content?.seoKeyword || "").toLowerCase().split(/\s+/).filter((w) => w.length > 2);
+  const googleHit =
+    !!selectedFieldText && seoWords.length > 0 && seoWords.every((w) => selectedFieldText.toLowerCase().includes(w.slice(0, Math.max(4, w.length - 2))));
   const dockBtn = "text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink hover:border-ink flex-shrink-0 disabled:opacity-60";
 
 
@@ -1908,6 +1919,17 @@ export default function EditorPage() {
                       <span className="truncate">{selection.target === "image" ? "🖼️ " : selection.target === "field" ? "✏️ " : "📝 "}{selection.label}</span>
                       <button type="button" onClick={() => setSelection(null)} aria-label={t("Ta bort markeringen")} className="text-ink-dim text-[14px] font-bold leading-none px-0.5">×</button>
                     </span>
+                    {googleEligible && (
+                      <button
+                        type="button"
+                        disabled={sending}
+                        title={googleHit ? t("Texten innehåller redan sökordet") : undefined}
+                        onClick={() => send(selection.target === "section" ? t("Optimera den markerade sektionen för Google") : t("Optimera den markerade texten för Google"))}
+                        className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent text-accent-ink flex-shrink-0 disabled:opacity-60"
+                      >
+                        {googleHit ? t("✓ Innehåller sökordet") : t("🔍 Optimera för Google")}
+                      </button>
+                    )}
 {selection.target === "image" && selectedImageUrl && (
                   <button
                     type="button"

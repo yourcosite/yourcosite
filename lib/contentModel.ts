@@ -669,6 +669,10 @@ export interface SiteContent {
   // Millie. Läses av ImageOrArt i components/SitePreview.tsx så att varje
   // bild på sajten får rätt alt utan att varje sektionstyp behöver ett eget fält.
   imageAlts?: Record<string, string>;
+  // Sajtens huvudsökord för Google, t.ex. "frisör i Linköping" (bransch plus
+  // ort). Satt av Millie när kunden ber om Google-optimering; används sedan
+  // som utgångspunkt för alla texter hon optimerar.
+  seoKeyword?: string;
 }
 
 // Räknar hur många av sajtens bildbärande platser (hero + grid-items) som

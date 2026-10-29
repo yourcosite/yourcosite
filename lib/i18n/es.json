@@ -2570,5 +2570,13 @@
   "Du har gjort många språkändringar idag. Försök igen imorgon.": "Has hecho muchos cambios de idioma hoy. Inténtalo de nuevo mañana.",
   "En ny redigerare": "Un nuevo editor",
   "Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort.": "El sitio ocupa ahora todo el ancho y las herramientas están en la barra lateral: Páginas, Diseño, Noticias, Reservas, Mejorar y Ajustes se abren como paneles. Millie está abajo. Selecciona algo en el sitio y las opciones aparecen ahí, y Deshacer la última e Historial están siempre a un clic.",
-  "Öppna Design i sidofältet": "Abre Diseño en la barra lateral"
+  "Öppna Design i sidofältet": "Abre Diseño en la barra lateral",
+  "Texten innehåller redan sökordet": "El texto ya contiene la palabra clave",
+  "Optimera den markerade sektionen för Google": "Optimiza la sección seleccionada para Google",
+  "Optimera den markerade texten för Google": "Optimiza el texto seleccionado para Google",
+  "✓ Innehåller sökordet": "✓ Contiene la palabra clave",
+  "🔍 Optimera för Google": "🔍 Optimizar para Google",
+  "Optimera texter för Google med ett klick": "Optimiza textos para Google con un clic",
+  "Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra.": "Selecciona un título, un texto o una sección entera y pulsa Optimizar para Google. Millie lo reescribe con la palabra clave adecuada y te cuenta qué cambió. Si no sabe por qué quieres que te encuentren, pregunta primero. Todo se puede deshacer.",
+  "Markera en rubrik och tryck Optimera för Google": "Selecciona un título y pulsa Optimizar para Google"
 }

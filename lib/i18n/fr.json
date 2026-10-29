@@ -2570,5 +2570,13 @@
   "Du har gjort många språkändringar idag. Försök igen imorgon.": "Vous avez fait beaucoup de changements de langue aujourd'hui. Réessayez demain.",
   "En ny redigerare": "Un nouvel éditeur",
   "Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort.": "Le site occupe maintenant toute la largeur et les outils sont dans la barre latérale : Pages, Design, Actualités, Réservations, Améliorer et Paramètres s'ouvrent comme des panneaux. Millie est en bas. Sélectionnez quelque chose sur le site et les options apparaissent là, et Annuler la dernière et Historique sont toujours à un clic.",
-  "Öppna Design i sidofältet": "Ouvre Design dans la barre latérale"
+  "Öppna Design i sidofältet": "Ouvre Design dans la barre latérale",
+  "Texten innehåller redan sökordet": "Le texte contient déjà le mot-clé",
+  "Optimera den markerade sektionen för Google": "Optimise la section sélectionnée pour Google",
+  "Optimera den markerade texten för Google": "Optimise le texte sélectionné pour Google",
+  "✓ Innehåller sökordet": "✓ Contient le mot-clé",
+  "🔍 Optimera för Google": "🔍 Optimiser pour Google",
+  "Optimera texter för Google med ett klick": "Optimisez vos textes pour Google en un clic",
+  "Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra.": "Sélectionnez un titre, un texte ou une section entière et cliquez sur Optimiser pour Google. Millie le réécrit avec le bon mot-clé et vous dit ce qu'elle a changé. Si elle ne sait pas sur quoi vous voulez être trouvé, elle pose d'abord la question. Tout peut être annulé.",
+  "Markera en rubrik och tryck Optimera för Google": "Sélectionnez un titre et cliquez sur Optimiser pour Google"
 }

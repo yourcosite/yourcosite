@@ -2570,5 +2570,13 @@
   "Du har gjort många språkändringar idag. Försök igen imorgon.": "Du har lavet mange sprogændringer i dag. Prøv igen i morgen.",
   "En ny redigerare": "En ny editor",
   "Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort.": "Siden fylder nu hele bredden, og værktøjerne ligger i sidepanelet: Sider, Design, Nyheder, Bookinger, Forbedr og Indstillinger åbner som paneler. Millie sidder nederst. Markér noget på siden, så dukker valgene op der, og Fortryd seneste og Historik er altid ét klik væk.",
-  "Öppna Design i sidofältet": "Åbn Design i sidepanelet"
+  "Öppna Design i sidofältet": "Åbn Design i sidepanelet",
+  "Texten innehåller redan sökordet": "Teksten indeholder allerede søgeordet",
+  "Optimera den markerade sektionen för Google": "Optimer den markerede sektion til Google",
+  "Optimera den markerade texten för Google": "Optimer den markerede tekst til Google",
+  "✓ Innehåller sökordet": "✓ Indeholder søgeordet",
+  "🔍 Optimera för Google": "🔍 Optimer til Google",
+  "Optimera texter för Google med ett klick": "Optimer tekster til Google med ét klik",
+  "Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra.": "Markér en overskrift, en tekst eller en hel sektion, og tryk på Optimer til Google. Millie omskriver den med det rigtige søgeord og fortæller, hvad hun ændrede. Hvis hun ikke ved, hvad du vil findes på, spørger hun først. Alt kan fortrydes.",
+  "Markera en rubrik och tryck Optimera för Google": "Markér en overskrift og tryk på Optimer til Google"
 }

@@ -2570,5 +2570,13 @@
   "Du har gjort många språkändringar idag. Försök igen imorgon.": "Sie haben heute viele Sprachänderungen vorgenommen. Versuchen Sie es morgen erneut.",
   "En ny redigerare": "Ein neuer Editor",
   "Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort.": "Die Website nimmt jetzt die volle Breite ein und die Werkzeuge liegen in der Seitenleiste: Seiten, Design, Neuigkeiten, Buchungen, Verbessern und Einstellungen öffnen sich als Panels. Millie sitzt unten. Markieren Sie etwas auf der Website, dann erscheinen die Optionen dort, und Letzte rückgängig und Verlauf sind immer einen Klick entfernt.",
-  "Öppna Design i sidofältet": "Öffne Design in der Seitenleiste"
+  "Öppna Design i sidofältet": "Öffne Design in der Seitenleiste",
+  "Texten innehåller redan sökordet": "Der Text enthält das Suchwort bereits",
+  "Optimera den markerade sektionen för Google": "Optimiere den markierten Abschnitt für Google",
+  "Optimera den markerade texten för Google": "Optimiere den markierten Text für Google",
+  "✓ Innehåller sökordet": "✓ Enthält das Suchwort",
+  "🔍 Optimera för Google": "🔍 Für Google optimieren",
+  "Optimera texter för Google med ett klick": "Texte mit einem Klick für Google optimieren",
+  "Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra.": "Markieren Sie eine Überschrift, einen Text oder einen ganzen Abschnitt und drücken Sie auf Für Google optimieren. Millie schreibt ihn mit dem passenden Suchwort um und sagt, was sie geändert hat. Wenn sie nicht weiß, wofür Sie gefunden werden wollen, fragt sie zuerst. Alles lässt sich rückgängig machen.",
+  "Markera en rubrik och tryck Optimera för Google": "Markieren Sie eine Überschrift und drücken Sie Für Google optimieren"
 }

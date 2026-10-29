@@ -15,6 +15,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-29-optimera-google",
+    date: "2026-10-29",
+    icon: "🔍",
+    title: msg("Optimera texter för Google med ett klick"),
+    text: msg("Markera en rubrik, en text eller en hel sektion och tryck på Optimera för Google. Millie skriver om den med rätt sökord och berättar vad hon ändrade. Vet hon inte vad du vill synas på frågar hon först. Allt går att ångra."),
+    try: msg("Markera en rubrik och tryck Optimera för Google"),
+  },
+  {
     id: "2026-10-29-ny-redigerare",
     date: "2026-10-29",
     icon: "🪄",

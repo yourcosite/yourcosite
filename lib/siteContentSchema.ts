@@ -668,6 +668,11 @@ export const EDIT_PATCH_PROPERTIES = {
   },
   gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,
   metaPixelId: META_PIXEL_ID_SCHEMA,
+  seoKeyword: {
+    type: "string",
+    description:
+      "Sajtens huvudsökord för Google, kort och naturligt (bransch plus ort, t.ex. \"frisör i Linköping\", högst 80 tecken). Sätt bara när du själv med säkerhet kan läsa ut det eller kunden har valt det. Tom sträng tar bort det.",
+  },
   imageAlts: {
     type: "object",
     additionalProperties: { type: "string" },
