@@ -13,6 +13,7 @@ const ICONS = {
   bookings: <><rect x="3" y="5" width="18" height="16" rx="2" /><line x1="3" y1="10" x2="21" y2="10" /><line x1="8" y1="3" x2="8" y2="7" /><line x1="16" y1="3" x2="16" y2="7" /></>,
   improve: <><circle cx="11" cy="11" r="7" /><line x1="21" y1="21" x2="16.5" y2="16.5" /></>,
   settings: <><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" /></>,
+  home: <><path d="M3 11.5 12 4l9 7.5" /><path d="M5.5 10v9.5a1 1 0 0 0 1 1H10v-6h4v6h3.5a1 1 0 0 0 1-1V10" /></>,
   undo: <><path d="M3 7v6h6" /><path d="M21 17a9 9 0 0 0-15-6.7L3 13" /></>,
 } as const;
 
@@ -48,9 +49,11 @@ export default function Rail({
   const t = useT();
   return (
     <aside className="hidden md:flex w-[72px] flex-shrink-0 bg-ink text-white flex-col items-center py-3.5 gap-1 z-20">
-      <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="w-10 h-10 rounded-xl bg-accent text-accent-ink font-extrabold text-[18px] flex items-center justify-center mb-3">
-        Y
+      <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="w-[60px] flex flex-col items-center gap-1 py-1.5 mb-2 rounded-xl text-[10.5px] font-semibold text-white hover:bg-white/10">
+        <span className="w-9 h-9 rounded-xl bg-accent text-accent-ink flex items-center justify-center"><Icon name="home" /></span>
+        {t("Kundzon")}
       </Link>
+      <div className="w-8 h-px bg-white/15 mb-1.5" />
       <button type="button" onClick={() => onPanel(null)} className={itemCls(panel === null)}>
         <Icon name="site" />
         {t("Sajt")}

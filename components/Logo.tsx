@@ -1,4 +1,4 @@
-export default function Logo({ light = true }: { light?: boolean }) {
+export default function Logo({ light = true, compact = false }: { light?: boolean; compact?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
       <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true">
@@ -8,13 +8,13 @@ export default function Logo({ light = true }: { light?: boolean }) {
         <circle cx="16" cy="13" r="1.6" fill="#0C1004" />
         <circle cx="21" cy="13" r="1.6" fill="#0C1004" />
       </svg>
-      <span
+      {!compact && <span
         className={`font-serif font-semibold text-[19px] ${
           light ? "text-white" : "text-ink"
         }`}
       >
         YourCoSite
-      </span>
+      </span>}
     </span>
   );
 }

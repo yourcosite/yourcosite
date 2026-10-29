@@ -16,6 +16,7 @@ import SitePreview, { FieldEditContext } from "@/components/SitePreview";
 // förloppsstapeln, bara när sajtens innehåll eller markeringen ändras.
 const MemoSitePreview = memo(SitePreview);
 import ContactSupportModal from "@/components/ContactSupportModal";
+import Logo from "@/components/Logo";
 import Rail, { type EditorPanel } from "@/components/editor/Rail";
 import DesignPanel from "@/components/editor/DesignPanel";
 import SettingsPanel from "@/components/editor/SettingsPanel";
@@ -159,6 +160,22 @@ const WELCOME_BACK = [
   msg("Åh, du kom tillbaka! Då kör vi. Berätta vad du vill ändra."),
   msg("Hallå där! Jag låg och drömde om perfekta marginaler. Vad kan jag göra för dig?"),
   msg("Välkommen tillbaka, chefen! Din sajt väntar, och det gör jag också. 😄"),
+  msg("Nytt för dagen: noll buggar och en sajt som väntar på dig. ✨"),
+  msg("Jag har räknat om alla pixlar. Det blev fortfarande rätt antal."),
+  msg("Psst, rubriken på startsidan tror att den är viktigast. Låt oss inte säga emot."),
+  msg("Du är tillbaka! Jag hade precis hunnit ordna bland kommatecknen."),
+  msg("God dag! Idag känns som en bra dag för en lite större knapp. Bara en tanke."),
+  msg("Dags att göra något fint? Jag har både tid och idéer."),
+  msg("Jag har övat på färger sedan sist. Fråga mig om turkos."),
+  msg("Hej! Sajten mår bra. Den ville bara att jag skulle hälsa."),
+  msg("Välkommen! Jag hittade ett överflödigt mellanslag och tog det ur tjänst."),
+  msg("Redo, klar, redigera! Vad ska vi göra med sajten idag?"),
+  msg("Tjohej! Jag har varit duktig och inte ändrat något själv. Det var svårt."),
+  msg("Kul att se dig! Säg bara vad du vill ha, så fixar jag det med stil."),
+  msg("Här är jag, redo att flytta rutor, byta rubriker och prata marginaler. 🎨"),
+  msg("Jag tänkte just på dig. Eller, jag tänkte på din sajt. Det är nästan samma sak."),
+  msg("Ny dag, nya möjligheter, samma underbara sajt. Vart ska vi ta den?"),
+  msg("Om du behöver mig sitter jag här och är nöjd med ett hörn av sajten. Det är ett bra hörn."),
 ];
 
 const THINKING_PHRASES = [
@@ -434,6 +451,12 @@ export default function EditorPage() {
   const [millieOpen, setMillieOpen] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
   const restoredAtRef = useRef(0);
+  // Antal meddelanden direkt efter att historiken lästs in (-1 = ingen historik).
+  // Allt efter det är från den här sessionen och får visas som "senaste svar".
+  const restoredLenRef = useRef(-1);
+  // Kvick kommentar från Millie som visas i dockan efter en omladdning, tills
+  // det kommer ett riktigt svar.
+  const [dockQuip, setDockQuip] = useState<string | null>(null);
 
   useEffect(() => {
     // Vilken sajt som ska öppnas — skickas med som ?site=<id> från
@@ -710,12 +733,13 @@ export default function EditorPage() {
       const next: ChatMessage[] = [];
       if (stored.length > 0) {
         next.push(...stored);
+        let g = Math.floor(Math.random() * WELCOME_BACK.length);
+        if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
+        try {
+          localStorage.setItem(`${chatKey}-greeting`, String(g));
+        } catch {}
+        setDockQuip(t(WELCOME_BACK[g]));
         if (!justBack) {
-          let g = Math.floor(Math.random() * WELCOME_BACK.length);
-          if (g === lastGreeting) g = (g + 1) % WELCOME_BACK.length;
-          try {
-            localStorage.setItem(`${chatKey}-greeting`, String(g));
-          } catch {}
           next.push({ from: "bot", text: t(WELCOME_BACK[g]), transient: true });
         }
       }
@@ -740,6 +764,7 @@ export default function EditorPage() {
       if (next.length > 0) {
         // Finns historik ersätter den presentationen; annars behålls
         // presentationen och ett eventuellt tips läggs efter.
+        restoredLenRef.current = stored.length > 0 ? next.length : -1;
         setMessages((m) => (stored.length > 0 ? next : [...m, ...next]));
       }
     })();
@@ -1467,7 +1492,8 @@ export default function EditorPage() {
   // Antal saker kvar att göra i Förbättra (röd siffra i sidofältet).
   // Senaste svaret från Millie (efter välkomstmeddelandet), visas i dockan
   // tillsammans med Ångra och Historik.
-  const lastBot = [...messages].reverse().find((m) => m.from === "bot" && !m.transient && m.text);
+  const sessionBot = [...messages].slice(Math.max(restoredLenRef.current, 0)).reverse().find((m) => m.from === "bot" && !m.transient && m.text);
+  const barText = sessionBot?.text ?? dockQuip;
   const wide = panel === "pages" || panel === "news" || panel === "bookings" || panel === "improve";
   const baseLang = site?.language || "sv";
   const translations: SiteTranslations = site?.translations || {};
@@ -1533,7 +1559,11 @@ export default function EditorPage() {
         {/* Överrad: sajtnamn, Dator/Mobil, Nytt, Tips, Förhandsgranska */}
         <div className="h-14 flex-shrink-0 bg-surface border-b border-line flex items-center justify-between gap-3 px-3.5 md:px-5 relative z-40">
           <div className="flex items-center gap-2.5 min-w-0">
-            <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="md:hidden w-8 h-8 rounded-lg bg-accent text-accent-ink font-extrabold flex items-center justify-center flex-shrink-0">Y</Link>
+            <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="flex-shrink-0 flex items-center">
+              <span className="md:hidden"><Logo light={false} compact /></span>
+              <span className="hidden md:inline"><Logo light={false} /></span>
+            </Link>
+            <div className="hidden sm:block w-px h-6 bg-line flex-shrink-0" />
             <div className="min-w-0">
               <div className="text-[14px] font-semibold truncate">{site?.name || t("Din sajt")}</div>
               <div className="text-[11.5px] text-ink-dim truncate">
@@ -1585,6 +1615,10 @@ export default function EditorPage() {
           </div>
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full right-3.5 mt-1.5 w-[230px] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.14)] p-1.5 z-50">
+            <Link href="/dashboard" onClick={() => setMobileMenuOpen(false)} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
+              {t("Tillbaka till kundzonen")}
+            </Link>
+            <div className="h-px bg-line my-1.5" />
             {([
               [t("Sidor"), () => setPanel("pages")],
               [t("Design"), () => setPanel("design")],
@@ -1853,9 +1887,9 @@ export default function EditorPage() {
               </div>
             )}
             <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] p-2.5">
-              {!millieOpen && lastBot && (
+              {!millieOpen && barText && (
                 <div className="flex items-center justify-between gap-3 px-1.5 pb-2 mb-2 border-b border-line text-[13px]">
-                  <span className="min-w-0 line-clamp-2"><b>Millie:</b> {lastBot.text}</span>
+                  <span className="min-w-0 line-clamp-2"><b>Millie:</b> {barText}</span>
                   <span className="flex gap-3.5 text-[12px] font-semibold flex-shrink-0">
                     {undoStack.length > 0 && (
                       <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60">
