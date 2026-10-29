@@ -15,6 +15,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-29-sprak",
+    date: "2026-10-29",
+    icon: "🌍",
+    title: msg("Din sajt på fler språk"),
+    text: msg("Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt."),
+    try: msg("Lägg till språk"),
+  },
+  {
     id: "2026-10-29-forbattra",
     date: "2026-10-29",
     icon: "🔍",

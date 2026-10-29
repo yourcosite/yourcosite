@@ -19,6 +19,9 @@ import ContactSupportModal from "@/components/ContactSupportModal";
 import Rail, { type EditorPanel } from "@/components/editor/Rail";
 import DesignPanel from "@/components/editor/DesignPanel";
 import SettingsPanel from "@/components/editor/SettingsPanel";
+import LanguageSection from "@/components/editor/LanguageSection";
+import Flag from "@/components/editor/Flag";
+import { applyTranslations, languageStatus, type SiteTranslations } from "@/lib/siteTranslateCore";
 import { analyzeSeo } from "@/lib/seoAnalysis";
 import MyImagesModal, { type MyImage } from "@/components/MyImagesModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
@@ -222,6 +225,7 @@ type SiteMeta = {
   privacy_policy_text: string | null;
   language?: string | null;
   currency?: string | null;
+  translations?: SiteTranslations | null;
 };
 
 // Chattredigeraren — till skillnad från /webbplats (som bara VISAR sajten,
@@ -417,6 +421,10 @@ export default function EditorPage() {
   // Nya redigeraren: Dator/Mobil-läge, sidopanel (Design/Inställningar) och
   // om Millies konversation är utfälld över sajten.
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  // Vilket språk förhandsvisningen visar. null = huvudspråket (redigerbart);
+  // ett annat språk visas som skrivskyddad översättning.
+  const [viewLang, setViewLangRaw] = useState<string | null>(null);
+  const setViewLang = useCallback((l: string | null) => { setSelection(null); setViewLangRaw(l); }, []);
   const [panel, setPanel] = useState<EditorPanel>(null);
   const [millieOpen, setMillieOpen] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
@@ -1449,7 +1457,15 @@ export default function EditorPage() {
   };
 
   // Antal saker kvar att göra i Förbättra (röd siffra i sidofältet).
-  const improveCount = useMemo(() => (content ? analyzeSeo(content, newsArticles).todo : 0), [content, newsArticles]);
+  const baseLang = site?.language || "sv";
+  const translations: SiteTranslations = site?.translations || {};
+  const extraLangs = Object.keys(translations);
+  const activeView = viewLang && translations[viewLang] ? viewLang : null;
+  const viewContent = useMemo(
+    () => (content && activeView ? applyTranslations(content, translations[activeView].memo) : content),
+    [content, activeView, site?.translations],
+  );
+  const improveCount = useMemo(() => (content ? analyzeSeo(content, newsArticles, new Date(), extraLangs.length).todo : 0), [content, newsArticles, extraLangs.length]);
 
   // Förslag i Millies fält som hör till det som är markerat. Bara sådant
   // Millie faktiskt kan göra.
@@ -1494,6 +1510,18 @@ export default function EditorPage() {
               </button>
             ))}
           </div>
+          {extraLangs.length > 0 && (
+            <div className="flex items-center gap-1" role="group" aria-label={t("Språk")}>
+              {[baseLang, ...extraLangs].map((l) => {
+                const on = (activeView ?? baseLang) === l;
+                return (
+                  <button key={l} type="button" onClick={() => setViewLang(l === baseLang ? null : l)} title={l} aria-pressed={on} className={`rounded-full p-0.5 ${on ? "ring-2 ring-ink" : "opacity-60 hover:opacity-100"}`}>
+                    <Flag lang={l} size={22} />
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="flex items-center gap-2 flex-shrink-0">
             <button type="button" onClick={openNews} title={t("Se vad som är nytt")} className="relative text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
               ✨ Nytt
@@ -1587,12 +1615,19 @@ export default function EditorPage() {
                       </div>
                     </div>
                   )}
+                  {activeView && (
+                    <div className="sticky top-0 z-30 bg-ink text-white text-[12.5px] px-4 py-2 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+                      <span>{languageStatus(content!, translations[activeView]) === "done" ? t("Du tittar på den översatta sajten. Byt till huvudspråket för att redigera.") : t("Några texter har ändrats sedan översättningen. Uppdatera för att få med dem.")}</span>
+                      <button type="button" onClick={() => setPanel("settings")} className="font-semibold underline">{t("Språkinställningar")}</button>
+                      <button type="button" onClick={() => setViewLang(null)} className="font-semibold underline">{t("Tillbaka till redigering")}</button>
+                    </div>
+                  )}
                   <FieldEditContext.Provider value={fieldEditValue}>
                     <MemoSitePreview
                       bookingPreviewSiteId={site?.id}
-                      content={content}
+                      content={viewContent!}
                       siteName={site?.name}
-                      lang={site?.language}
+                      lang={activeView ?? site?.language}
                       currency={site?.currency}
                       activePath={activePath}
                       onNavigate={onPreviewNavigate}
@@ -1600,7 +1635,7 @@ export default function EditorPage() {
                       privacyPolicyFileUrl={site?.privacy_policy_file_url}
                       privacyPolicyText={site?.privacy_policy_text}
                       newsArticles={newsArticles}
-                      editable
+                      editable={!activeView}
                       selectedImageKey={selection?.target === "image" ? selection.key : null}
                       onSelectImage={onPreviewSelectImage}
                       selectedSectionKey={selection?.target === "section" ? selection.key : null}
@@ -1757,13 +1792,22 @@ export default function EditorPage() {
                   metaPixelId={content.metaPixelId}
                   onSaved={(values) => setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))}
                   onClose={() => setPanel(null)}
-                />
+                >
+                  <LanguageSection
+                    siteId={site?.id}
+                    baseLang={baseLang}
+                    content={content}
+                    translations={translations}
+                    onChanged={(tr) => setSite((prev) => (prev ? { ...prev, translations: tr } : prev))}
+                    onView={setViewLang}
+                  />
+                </SettingsPanel>
               )}
             </div>
           )}
 
           {/* Millie: flytande fält längst ner, konversationen viks ut över sajten */}
-          <div className={`absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]" : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
+          <div className={`${activeView ? "hidden " : ""}absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]" : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
             {millieOpen && (
               <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] flex flex-col max-h-[48vh]">
                 <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line flex-shrink-0">

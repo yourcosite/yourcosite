@@ -122,7 +122,7 @@ function hasEmptySection(content: SiteContent): boolean {
   return false;
 }
 
-export function analyzeSeo(content: SiteContent, news: SeoNewsInput = [], now: Date = new Date()): SeoResult {
+export function analyzeSeo(content: SiteContent, news: SeoNewsInput = [], now: Date = new Date(), extraLanguages = 0): SeoResult {
   const home = content.pages.find((p) => p.path === "/") ?? content.pages[0];
   const items: SeoItem[] = [];
   const add = (it: Omit<SeoItem, "tone" | "done"> & { tone?: "red" | "amber"; done?: boolean }) =>
@@ -200,9 +200,9 @@ export function analyzeSeo(content: SiteContent, news: SeoNewsInput = [], now: D
   add({ id: "stats", group: "measure", kind: "auto", title: msg("Besöksstatistik"), pts: 4 });
   add({ id: "share", group: "measure", kind: "auto", title: msg("Delningsbild och delningstitel"), pts: 3 });
   // Språkkoppling (hreflang) gäller först när kundens sajt kan ha flera språk.
-  add({ id: "hreflang", group: "measure", kind: "rule", title: msg("Språk kopplas rätt (hreflang)"), pts: 3, done: false });
-  const hl = items[items.length - 1];
-  hl.kind = "na";
+  // Har sajten extra språk lovar YourCoSite att koppla ihop dem (som övriga
+  // "auto"-punkter, publiceringen är inte byggd än); annars räknas punkten inte.
+  add({ id: "hreflang", group: "measure", kind: extraLanguages > 0 ? "auto" : "na", title: msg("Språk kopplas rätt (hreflang)"), pts: 3 });
 
   const counted = items.filter((i) => i.kind !== "na");
   const total = counted.reduce((n, i) => n + i.pts, 0);

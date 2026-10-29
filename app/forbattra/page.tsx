@@ -7,7 +7,7 @@ import Logo from "@/components/Logo";
 import type { SiteContent } from "@/lib/contentModel";
 import { analyzeSeo, type SeoNewsInput } from "@/lib/seoAnalysis";
 
-type Site = { id: string; name?: string; content: SiteContent };
+type Site = { id: string; name?: string; content: SiteContent; translations?: Record<string, unknown> | null };
 
 // "Det här behöver du utveckla": sökmotoranalys av kundens sajt. Reglerna körs
 // i webbläsaren mot sajtens innehåll (lib/seoAnalysis.ts), utan AI-anrop.
@@ -57,7 +57,7 @@ export default function ForbattraPage() {
     return `/redigera${qs ? `?${qs}` : ""}`;
   };
 
-  const res = site ? analyzeSeo(site.content, news) : null;
+  const res = site ? analyzeSeo(site.content, news, new Date(), Object.keys(site.translations || {}).length) : null;
   const label = !res ? "" : res.score >= 90 ? t("Mycket bra") : res.score >= 70 ? t("Bra") : res.score >= 50 ? t("Bra start") : t("Behöver arbete");
 
   return (
