@@ -702,6 +702,21 @@ export const EDIT_PATCH_PROPERTIES = {
       required: ["path", "label", "sections"],
     },
   },
+  fieldEdits: {
+    type: "array",
+    description:
+      "SNABB VÄG för små ändringar i befintliga fält: byt en text, rubrik, knapptext, länk eller bild på ett ställe. Ange sida, sektionens id, fältets väg och det nya värdet — då behöver du INTE skriva ut hela sidan i changedPages (utelämna changedPages helt när bara fieldEdits behövs). Fältväg är egenskapen i sektionen, t.ex. \"headline\", \"body\", \"ctaLabel\" eller \"items.1.title\" för rad 2 i en lista. Värdet är hela den nya texten. Bild: sätt fältet (t.ex. \"imageUrl\" eller \"items.2.imageUrl\") till EXAKT adressen på en bild kunden bifogat. Kan inte användas för att lägga till eller ta bort sektioner eller listobjekt, ändra ordning eller byta layout — då används changedPages.",
+    items: {
+      type: "object",
+      properties: {
+        pagePath: { type: "string", description: "Sidans path, t.ex. \"/\"." },
+        sectionId: { type: "string", description: "Sektionens id." },
+        field: { type: "string", description: "Fältets väg i sektionen, t.ex. \"headline\" eller \"items.1.title\"." },
+        value: { type: "string", description: "Det nya värdet (hela texten)." },
+      },
+      required: ["pagePath", "sectionId", "field", "value"],
+    },
+  },
   removedPagePaths: {
     type: "array",
     items: { type: "string" },
@@ -709,4 +724,4 @@ export const EDIT_PATCH_PROPERTIES = {
   },
 };
 
-export const EDIT_PATCH_REQUIRED = ["changedPages"];
+export const EDIT_PATCH_REQUIRED: string[] = [];

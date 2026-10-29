@@ -2179,7 +2179,7 @@ function IconField({ selected, onSelect, children }: { selected?: boolean; onSel
           className="absolute left-1/2 -translate-x-1/2 top-full mt-3 z-10 text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md whitespace-nowrap"
           style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
         >
-          {t("✎ Byt ikon")}
+          {t("Byt ikon")}
         </button>
       )}
     </span>
@@ -2247,7 +2247,7 @@ function FieldBadge({
               className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
               style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
             >
-              {t("✎ Text")}
+              {t("Text")}
             </button>
           )}
           {edit?.canEditLink && (
@@ -2257,7 +2257,7 @@ function FieldBadge({
               className="text-[11px] font-semibold rounded-full px-2.5 py-1 shadow-md"
               style={{ background: "#4A90D9", color: "#FFFFFF", border: "2px solid #FFFFFF" }}
             >
-              {t("🔗 Länk")}
+              {t("Länk")}
             </button>
           )}
           {edit?.canTestLink && (

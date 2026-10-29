@@ -77,7 +77,7 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
   {
     icon: "🖼️",
     title: msg("Galleri och personer"),
-    hint: msg("Klicka på galleriet eller personerna i förhandsvisningen: ➕ Lägg till bilder laddar upp många bilder på en gång, 👥 Redigera personer fyller i foto, namn, titel, e-post och telefon, och 🎨 Byt layout visar alla uppställningar."),
+    hint: msg("Klicka på galleriet eller personerna i förhandsvisningen: Lägg till bilder laddar upp många bilder på en gång, Redigera personer fyller i foto, namn, titel, e-post och telefon, och Byt layout visar alla uppställningar."),
     examples: [
       msg("Lägg till ett galleri med plats för 12 bilder"),
       msg("Gör galleriet till en mosaik"),
@@ -97,7 +97,7 @@ const GROUPS: { icon: string; title: string; hint?: string; examples: string[] }
   {
     icon: "🍽️",
     title: msg("Restaurangmeny"),
-    hint: msg("Bifoga din meny (PDF, Word, text eller ett foto) med gemet så läser Millie in alla rätter. Sedan ändrar du enskilda rätter och priser genom att skriva till henne. 🎨 Byt layout på menyn visar fyra uppställningar."),
+    hint: msg("Bifoga din meny (PDF, Word, text eller ett foto) med gemet så läser Millie in alla rätter. Sedan ändrar du enskilda rätter och priser genom att skriva till henne. Byt layout på menyn visar fyra uppställningar."),
     examples: [
       msg("Lägg till en menysida med den bifogade menyn"),
       msg("Sänk priset på laxen till 245 kr"),
@@ -174,7 +174,7 @@ export default function MillieHelpModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 border-b border-line">
           <div>
-            <h2 className="text-[19px] font-medium">{t("Hej, jag är Millie! 👋")}</h2>
+            <h2 className="text-[19px] font-medium">{t("Hej, jag är Millie!")}</h2>
             <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">
               {t("Jag är din digitala assistent och hjälper dig med allt som rör din hemsida. Så här kan du be mig om hjälp: skriv som du pratar – eller tryck på mikrofonen vid skrivrutan och prata in det (finns i Chrome, Edge och Safari). Klicka på ett exempel nedan så hamnar det i meddelanderutan – ändra sedan texten så den passar dig. Du kan alltid ångra med knappen i chatten.")}
             </p>

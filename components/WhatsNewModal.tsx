@@ -38,7 +38,7 @@ export default function WhatsNewModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 border-b border-line">
           <div>
-            <h2 className="text-[19px] font-medium">{t("Nytt i YourCoSite ✨")}</h2>
+            <h2 className="text-[19px] font-medium">{t("Nytt i YourCoSite")}</h2>
             <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">{t("Det här kan du göra nu som du inte kunde förut.")}</p>
           </div>
           <button type="button" onClick={onClose} aria-label={t("Stäng")} className="text-[22px] leading-none text-ink-dim px-1">
@@ -81,7 +81,7 @@ export default function WhatsNewModal({
             }}
             className="flex-shrink-0 text-[12.5px] font-bold bg-accent text-accent-ink rounded-full px-4 py-2"
           >
-            {t("💡 Önska en funktion")}
+            {t("Önska en funktion")}
           </button>
         </div>
       </div>

@@ -151,17 +151,17 @@ const EXTRACTABLE_DOC_TYPES = [
 // sidan bara hänger (se intervallet i EditorPage nedan).
 // "Välkommen tillbaka" — en slumpas varje gång man öppnar redigeraren igen.
 const WELCOME_BACK = [
-  msg("Välkommen tillbaka! Jag har hållit din sajt varm åt dig. 🔥"),
+  msg("Välkommen tillbaka! Jag har hållit din sajt varm åt dig."),
   msg("Där är du ju! Jag har suttit här och polerat rubrikerna medan du var borta."),
   msg("Hej igen! Jag hann nästan sakna dig. Nästan."),
-  msg("Tjena! Kaffet är kallt men sajten är redo. ☕ Vad ska vi fixa idag?"),
+  msg("Tjena! Kaffet är kallt men sajten är redo. Vad ska vi fixa idag?"),
   msg("Välkommen åter! Jag har inte rört något. Jag lovar. (Okej, jag tittade lite.)"),
   msg("Där satt den! Fint att se dig igen, vad ska vi förbättra den här gången?"),
-  msg("Hej och välkommen tillbaka! Jag har värmt upp tangentbordet. ⌨️"),
+  msg("Hej och välkommen tillbaka! Jag har värmt upp tangentbordet."),
   msg("Åh, du kom tillbaka! Då kör vi. Berätta vad du vill ändra."),
   msg("Hallå där! Jag låg och drömde om perfekta marginaler. Vad kan jag göra för dig?"),
-  msg("Välkommen tillbaka, chefen! Din sajt väntar, och det gör jag också. 😄"),
-  msg("Nytt för dagen: noll buggar och en sajt som väntar på dig. ✨"),
+  msg("Välkommen tillbaka, chefen! Din sajt väntar, och det gör jag också."),
+  msg("Nytt för dagen: noll buggar och en sajt som väntar på dig."),
   msg("Jag har räknat om alla pixlar. Det blev fortfarande rätt antal."),
   msg("Psst, rubriken på startsidan tror att den är viktigast. Låt oss inte säga emot."),
   msg("Du är tillbaka! Jag hade precis hunnit ordna bland kommatecknen."),
@@ -173,7 +173,7 @@ const WELCOME_BACK = [
   msg("Redo, klar, redigera! Vad ska vi göra med sajten idag?"),
   msg("Tjohej! Jag har varit duktig och inte ändrat något själv. Det var svårt."),
   msg("Kul att se dig! Säg bara vad du vill ha, så fixar jag det med stil."),
-  msg("Här är jag, redo att flytta rutor, byta rubriker och prata marginaler. 🎨"),
+  msg("Här är jag, redo att flytta rutor, byta rubriker och prata marginaler."),
   msg("Jag tänkte just på dig. Eller, jag tänkte på din sajt. Det är nästan samma sak."),
   msg("Ny dag, nya möjligheter, samma underbara sajt. Vart ska vi ta den?"),
   msg("Om du behöver mig sitter jag här och är nöjd med ett hörn av sajten. Det är ett bra hörn."),
@@ -272,7 +272,7 @@ export default function EditorPage() {
     {
       from: "bot",
       transient: true,
-      text: t("Hej, jag heter Millie! 👋 Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion på sajten för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt."),
+      text: t("Hej, jag heter Millie! Enklast är att säga vilken sida du menar och sedan tydligt vad du vill ändra eller lägga till — t.ex. \"På startsidan, byt rubriken till …\" eller \"Lägg till en ruta efter Om oss med texten … och en knapp som länkar till kontaktsidan\". Du kan också klicka direkt på en bild, ett textstycke eller en hel sektion på sajten för att markera precis vad du menar, innan du skriver. Jag uppdaterar sajten åt dig direkt."),
     },
   ]);
   // De senaste versionerna av sajten före Millies ändringar, för "Ångra".
@@ -2662,7 +2662,7 @@ export default function EditorPage() {
           onClose={() => setPreviewNewsId(null)}
           onPublished={(a, published) => {
             setNewsArticles((prev) => prev.map((x) => (x.id === a.id ? a : x)));
-            if (published) setMessages((m) => [...m, { from: "bot", text: t("Nyheten är publicerad! 🎉") }]);
+            if (published) setMessages((m) => [...m, { from: "bot", text: t("Nyheten är publicerad!") }]);
           }}
         />
       )}

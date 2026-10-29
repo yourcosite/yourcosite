@@ -111,7 +111,7 @@ export default function NewsPreviewModal({
       >
         <div className="flex items-start justify-between gap-4 px-6 pt-5 pb-3 border-b border-line">
           <div>
-            <h2 className="text-[19px] font-medium">{t("Så här ser nyheten ut 📰")}</h2>
+            <h2 className="text-[19px] font-medium">{t("Så här ser nyheten ut")}</h2>
             <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">
               {live ? t("Nyheten är publicerad och syns för besökarna.") : t("Nyheten är än så länge ett utkast som bara du ser.")}
             </p>
@@ -167,7 +167,7 @@ export default function NewsPreviewModal({
         <div className="px-6 py-4 border-t border-line flex flex-wrap items-center justify-end gap-3">
           {error && <span className="text-[13px] text-red-600 mr-auto">{error}</span>}
           <button type="button" onClick={() => setEditing((v) => !v)} className="text-[14px] font-semibold px-4 py-2 rounded-lg border border-line">
-            {editing ? t("Dölj redigering") : t("✏️ Redigera")}
+            {editing ? t("Dölj redigering") : t("Redigera")}
           </button>
           {dirty && (
             <button type="button" onClick={() => save(false)} disabled={busy} className="text-[14px] font-semibold px-4 py-2 rounded-lg border border-line disabled:opacity-60">

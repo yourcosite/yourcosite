@@ -133,7 +133,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-12",
     icon: "📄",
     title: msg("Länka till dokument"),
-    text: msg("Du kan nu ladda upp en PDF, ett Word-dokument eller en Excel-fil och låta en knapp eller Läs mer-rad leda till den. Klicka på knappen, välj 🔗 Länk och sedan Dokument. Besökaren kan öppna eller ladda ner filen."),
+    text: msg("Du kan nu ladda upp en PDF, ett Word-dokument eller en Excel-fil och låta en knapp eller Läs mer-rad leda till den. Klicka på knappen, välj Länk och sedan Dokument. Besökaren kan öppna eller ladda ner filen."),
   },
   {
     id: "2026-10-12-dela-forhandsvisning",
@@ -147,7 +147,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-12",
     icon: "🔗",
     title: "Byt länk och text på knappar",
-    text: "Klicka på en knapp eller en Läs mer-rad i förhandsvisningen. Då dyker två små knappar upp: ✎ Text för att byta vad det står, och 🔗 Länk för att välja en av dina sidor eller skriva en egen webbadress.",
+    text: "Klicka på en knapp eller en Läs mer-rad i förhandsvisningen. Då dyker två små knappar upp: Text för att byta vad det står, och Länk för att välja en av dina sidor eller skriva en egen webbadress.",
   },
   {
     id: "2026-10-12-undersidor",
@@ -169,7 +169,7 @@ export const WHATS_NEW: WhatsNewEntry[] = [
     date: "2026-10-11",
     icon: "✂️",
     title: "Redigera bilden innan du laddar upp den",
-    text: "När du bifogar en bild visas knappen ✂️ Redigera bredvid filnamnet. Klicka på den för att beskära, vrida eller justera färgerna innan du skickar.",
+    text: "När du bifogar en bild visas knappen Redigera bredvid filnamnet. Klicka på den för att beskära, vrida eller justera färgerna innan du skickar.",
   },
   {
     id: "2026-10-10-nyhetsforhandsvisning",

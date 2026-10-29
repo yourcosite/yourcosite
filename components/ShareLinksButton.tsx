@@ -93,7 +93,7 @@ export default function ShareLinksButton({
         onClick={toggle}
         className="text-[12.5px] font-semibold text-ink bg-white border border-line rounded-full px-3.5 py-1.5"
       >
-        {t("🔗 Dela förhandsvisning")}
+        {t("Dela förhandsvisning")}
       </button>
       {open && (
         <div

@@ -345,7 +345,7 @@ export default function NewsClient({
 
             {!composer.id && (
               <div className="bg-accent-soft border border-line rounded-lg px-3.5 py-3 mb-4 text-[12.5px] leading-relaxed">
-                {rich(t, "<div>Så skriver du en nyhet</div>Börja med att skriva en kort text i rutan längre ner. Behöver du hjälp? Klicka på <b>✨ Be Millie om hjälp med texten</b> och skriv att du vill att hon ska <b2>utöka texten</b2> eller <b3>skriva om den</b3> — då sätter hon även en rubrik och en ingress åt dig.", { div: (c) => <div className="font-semibold mb-0.5">{c}</div>, b: (c) => <b>{c}</b>, b2: (c) => <b>{c}</b>, b3: (c) => <b>{c}</b> })}</div>
+                {rich(t, "<div>Så skriver du en nyhet</div>Börja med att skriva en kort text i rutan längre ner. Behöver du hjälp? Klicka på <b>Be Millie om hjälp med texten</b> och skriv att du vill att hon ska <b2>utöka texten</b2> eller <b3>skriva om den</b3> — då sätter hon även en rubrik och en ingress åt dig.", { div: (c) => <div className="font-semibold mb-0.5">{c}</div>, b: (c) => <b>{c}</b>, b2: (c) => <b>{c}</b>, b3: (c) => <b>{c}</b> })}</div>
             )}
 
             <label className="block text-[12.5px] font-semibold text-ink-dim mb-1.5">{t("Rubrik")}</label>
@@ -476,7 +476,7 @@ export default function NewsClient({
                 onClick={() => setAssistOpen((v) => !v)}
                 className="text-[12px] font-semibold text-ink-dim flex items-center gap-1"
               >
-                {t("✨ Be Millie om hjälp med texten")}
+                {t("Be Millie om hjälp med texten")}
               </button>
             </div>
 
