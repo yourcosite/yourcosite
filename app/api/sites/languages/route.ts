@@ -6,6 +6,7 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { withErrorLog } from "@/lib/errorLog";
 import { isLocale } from "@/lib/i18n/config";
 import { translateMany } from "@/lib/translate";
+import { rateLimited } from "@/lib/rateLimit";
 import { MAX_EXTRA_LANGUAGES, hashText, missingTexts, type SiteTranslations } from "@/lib/siteTranslateCore";
 
 // Fler språk på kundens sajt. Huvudspråket (sites.language) är alltid sanningen;
@@ -20,6 +21,12 @@ async function POST_handler(request: Request) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
+
+  // Översättning kostar AI-anrop: högst 20 åtgärder per dygn och kund räcker
+  // gott för att lägga till, uppdatera och ta bort språk.
+  if (await rateLimited(`languages:user:${user.id}`, 20, 86400)) {
+    return NextResponse.json({ error: t("Du har gjort många språkändringar idag. Försök igen imorgon.") }, { status: 429 });
+  }
 
   const body = await request.json().catch(() => ({}));
   const action = body.action;

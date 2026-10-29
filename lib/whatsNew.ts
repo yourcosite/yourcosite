@@ -15,6 +15,14 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-10-29-ny-redigerare",
+    date: "2026-10-29",
+    icon: "🪄",
+    title: msg("En ny redigerare"),
+    text: msg("Sajten tar nu hela bredden och verktygen ligger i sidofältet: Sidor, Design, Nyheter, Bokningar, Förbättra och Inställningar öppnas som paneler. Millie sitter längst ner. Markera något på sajten så dyker valen upp där, och Ångra senaste och Historik finns alltid en klick bort."),
+    try: msg("Öppna Design i sidofältet"),
+  },
+  {
     id: "2026-10-29-sprak",
     date: "2026-10-29",
     icon: "🌍",
