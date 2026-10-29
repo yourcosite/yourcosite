@@ -2546,5 +2546,9 @@
   "Ändra namnet till ": "Ændr navnet til ",
   "Ändra telefonnumret till ": "Ændr telefonnummeret til ",
   "Ändra e-postadressen till ": "Ændr e-mailadressen til ",
-  "Ändra adressen till ": "Ændr adressen til "
+  "Ändra adressen till ": "Ændr adressen til ",
+  "Kunde inte byta namn.": "Kunne ikke omdøbe siden.",
+  "Kunde inte byta namn just nu.": "Kunne ikke omdøbe siden lige nu.",
+  "Nytt namn på sidan": "Nyt navn til siden",
+  "Byt namn": "Omdøb"
 }

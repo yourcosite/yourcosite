@@ -130,6 +130,35 @@ export default function PagesManager({
     }
   };
 
+  // Byta namn på en sida: bara namnet i menyn ändras, adressen ligger kvar så
+  // att befintliga länkar inte går sönder.
+  const [renamingPath, setRenamingPath] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameError, setRenameError] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+  const confirmRename = async () => {
+    const label = renameValue.trim();
+    if (!label) { setRenameError(t("Skriv ett namn för sidan.")); return; }
+    if (!site || !renamingPath) return;
+    setRenameSaving(true);
+    setRenameError("");
+    try {
+      const res = await fetch(`/api/sites/${site.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rename", path: renamingPath, label }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setRenameError(data.error || t("Kunde inte byta namn.")); return; }
+      applyContent(data.content);
+      setRenamingPath(null);
+    } catch {
+      setRenameError(t("Kunde inte byta namn just nu."));
+    } finally {
+      setRenameSaving(false);
+    }
+  };
+
   const [moving, setMoving] = useState(false);
   const move = async (path: string, direction: "up" | "down") => {
     if (!site || moving) return;
@@ -379,16 +408,45 @@ export default function PagesManager({
                           <line x1="8" y1="12" x2="16" y2="12" />
                         </svg>
                         <div className={`flex-1 ${embedded ? "min-w-[140px]" : ""}`}>
-                          <div className="font-semibold text-[14.5px]">{p.label}</div>
+                          {renamingPath === p.path ? (
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <input
+                                autoFocus
+                                value={renameValue}
+                                maxLength={60}
+                                onChange={(e) => setRenameValue(e.target.value)}
+                                onKeyDown={(e) => { if (e.key === "Enter") confirmRename(); if (e.key === "Escape") setRenamingPath(null); }}
+                                aria-label={t("Nytt namn på sidan")}
+                                className="flex-1 min-w-[120px] border border-line rounded-lg px-2.5 py-1.5 text-[13.5px]"
+                              />
+                              <button type="button" onClick={confirmRename} disabled={renameSaving} className="text-[12px] font-bold text-accent-ink bg-accent px-3 py-1.5 rounded-lg disabled:opacity-60">
+                                {renameSaving ? t("Sparar …") : t("Spara")}
+                              </button>
+                              <button type="button" onClick={() => setRenamingPath(null)} className="text-[12px] font-semibold text-ink-dim px-2.5 py-1.5 border border-line rounded-lg">{t("Avbryt")}</button>
+                              {renameError && <div className="basis-full text-[12px] text-warm font-semibold">{renameError}</div>}
+                            </div>
+                          ) : (
+                            <div className="font-semibold text-[14.5px]">{p.label}</div>
+                          )}
                           <div className="text-[12px] text-ink-dim mt-0.5">
                             {isChild ? t("Undersida · ") : childCount > 0 ? t(childCount === 1 ? "Huvudsida med {n} undersida · " : "Huvudsida med {n} undersidor · ", { n: childCount }) : ""}{p.path} · {empty ? t("Inget innehåll än") : t(p.sections.length === 1 ? "{n} sektion" : "{n} sektioner", { n: p.sections.length })}
                           </div>
                         </div>
                         {locked && (
-                          <span className="text-[11px] text-ink-dim font-semibold">{t("Krävs av sajten")}</span>
+                          <>
+                            <button type="button" onClick={() => { setRenamingPath(p.path); setRenameValue(p.label); setRenameError(""); }} className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg">{t("Byt namn")}</button>
+                            <span className="text-[11px] text-ink-dim font-semibold">{t("Krävs av sajten")}</span>
+                          </>
                         )}
                         {!locked && !confirming && (
                           <div className={`flex items-center gap-1 ${embedded ? "flex-wrap" : "flex-shrink-0"}`}>
+                            <button
+                              type="button"
+                              onClick={() => { setRenamingPath(p.path); setRenameValue(p.label); setRenameError(""); }}
+                              className="text-[12.5px] font-semibold text-ink-dim px-3 py-1.5 border border-line rounded-lg"
+                            >
+                              {t("Byt namn")}
+                            </button>
                             <button
                               onClick={() => move(p.path, "up")}
                               disabled={moving || !movePage(allPages, p.path, "up")}

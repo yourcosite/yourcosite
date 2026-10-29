@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useT } from "@/components/I18nProvider";
 
-export type EditorPanel = "pages" | "design" | "news" | "bookings" | "settings" | null;
+export type EditorPanel = "pages" | "design" | "news" | "bookings" | "improve" | "settings" | null;
 
 const ICONS = {
   site: <><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /></>,
@@ -27,8 +27,7 @@ function Icon({ name }: { name: keyof typeof ICONS }) {
 const itemCls = (active: boolean) =>
   `relative w-[60px] flex flex-col items-center gap-1 py-2 rounded-xl text-[10.5px] font-medium ${active ? "bg-white/15 text-white" : "text-white/65 hover:text-white hover:bg-white/10"} disabled:opacity-40`;
 
-// Det mörka sidofältet i redigeraren. Alla val utom Förbättra öppnar paneler
-// i redigeraren; Förbättra leder till sin egen sida.
+// Det mörka sidofältet i redigeraren. Alla val öppnar paneler i redigeraren.
 export default function Rail({
   siteId,
   panel,
@@ -47,7 +46,6 @@ export default function Rail({
   improveCount: number;
 }) {
   const t = useT();
-  const q = siteId ? `?site=${siteId}` : "";
   return (
     <aside className="hidden md:flex w-[72px] flex-shrink-0 bg-ink text-white flex-col items-center py-3.5 gap-1 z-20">
       <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="w-10 h-10 rounded-xl bg-accent text-accent-ink font-extrabold text-[18px] flex items-center justify-center mb-3">
@@ -73,7 +71,7 @@ export default function Rail({
         <Icon name="bookings" />
         {t("Bokningar")}
       </button>
-      <Link href={`/forbattra${q}`} className={itemCls(false)}>
+      <button type="button" onClick={() => onPanel(panel === "improve" ? null : "improve")} className={itemCls(panel === "improve")}>
         <Icon name="improve" />
         {t("Förbättra")}
         {improveCount > 0 && (
@@ -81,7 +79,7 @@ export default function Rail({
             {improveCount}
           </span>
         )}
-      </Link>
+      </button>
       <div className="flex-1" />
       <button type="button" onClick={() => onPanel(panel === "settings" ? null : "settings")} className={itemCls(panel === "settings")}>
         <Icon name="settings" />

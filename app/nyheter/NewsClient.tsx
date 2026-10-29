@@ -4,6 +4,7 @@ import { rich } from "@/lib/i18n/rich";
 import { useT, useLocale } from "@/components/I18nProvider";
 import { BCP47 } from "@/lib/i18n/country";
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import StockPhotoModal from "@/components/StockPhotoModal";
 import { withCredit } from "@/lib/stockPhotos";
@@ -333,8 +334,9 @@ export default function NewsClient({
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg> })}</button>
 
-      {composer && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={closeComposer}>
+      {/* Portal till body så rutan hamnar över allt i redigeraren (panel, Millie-dock). */}
+      {composer && createPortal(
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[70]" onClick={closeComposer}>
           <div
             className="bg-surface rounded-2xl w-full max-w-[560px] max-h-[88vh] overflow-y-auto p-6"
             onClick={(e) => e.stopPropagation()}
@@ -578,7 +580,8 @@ export default function NewsClient({
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

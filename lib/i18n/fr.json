@@ -2546,5 +2546,9 @@
   "Ändra namnet till ": "Change le nom en ",
   "Ändra telefonnumret till ": "Change le numéro de téléphone en ",
   "Ändra e-postadressen till ": "Change l'adresse e-mail en ",
-  "Ändra adressen till ": "Change l'adresse en "
+  "Ändra adressen till ": "Change l'adresse en ",
+  "Kunde inte byta namn.": "Impossible de renommer la page.",
+  "Kunde inte byta namn just nu.": "Impossible de renommer la page pour le moment.",
+  "Nytt namn på sidan": "Nouveau nom de la page",
+  "Byt namn": "Renommer"
 }

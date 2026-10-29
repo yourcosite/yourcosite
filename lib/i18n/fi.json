@@ -2546,5 +2546,9 @@
   "Ändra namnet till ": "Muuta nimeksi ",
   "Ändra telefonnumret till ": "Muuta puhelinnumeroksi ",
   "Ändra e-postadressen till ": "Muuta sähköpostiosoitteeksi ",
-  "Ändra adressen till ": "Muuta osoitteeksi "
+  "Ändra adressen till ": "Muuta osoitteeksi ",
+  "Kunde inte byta namn.": "Nimen vaihto epäonnistui.",
+  "Kunde inte byta namn just nu.": "Nimen vaihto ei onnistu juuri nyt.",
+  "Nytt namn på sidan": "Sivun uusi nimi",
+  "Byt namn": "Nimeä uudelleen"
 }

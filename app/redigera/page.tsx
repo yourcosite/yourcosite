@@ -24,6 +24,7 @@ import PanelFrame from "@/components/editor/PanelFrame";
 import NewsPanel from "@/components/editor/NewsPanel";
 import BookingClient from "@/app/bokningar/BookingClient";
 import PagesManager from "@/components/PagesManager";
+import ImproveManager from "@/components/ImproveManager";
 import Flag from "@/components/editor/Flag";
 import { applyTranslations, languageStatus, type SiteTranslations } from "@/lib/siteTranslateCore";
 import { analyzeSeo } from "@/lib/seoAnalysis";
@@ -1467,7 +1468,7 @@ export default function EditorPage() {
   // Senaste svaret från Millie (efter välkomstmeddelandet), visas i dockan
   // tillsammans med Ångra och Historik.
   const lastBot = [...messages].reverse().find((m) => m.from === "bot" && !m.transient && m.text);
-  const wide = panel === "pages" || panel === "news" || panel === "bookings";
+  const wide = panel === "pages" || panel === "news" || panel === "bookings" || panel === "improve";
   const baseLang = site?.language || "sv";
   const translations: SiteTranslations = site?.translations || {};
   const extraLangs = Object.keys(translations);
@@ -1476,6 +1477,15 @@ export default function EditorPage() {
     () => (content && activeView ? applyTranslations(content, translations[activeView].memo) : content),
     [content, activeView, site?.translations],
   );
+  // Nyheter kan ha ändrats i Nyheter-panelen: hämta om listan när panelerna
+  // Nyheter eller Förbättra stängs respektive öppnas, så betyget stämmer.
+  useEffect(() => {
+    if (!site?.id || (panel !== "improve" && panel !== null)) return;
+    fetch(`/api/news?siteId=${encodeURIComponent(site.id)}`)
+      .then((r) => r.json())
+      .then((d) => Array.isArray(d.articles) && setNewsArticles(d.articles))
+      .catch(() => {});
+  }, [panel, site?.id]);
   const improveCount = useMemo(() => (content ? analyzeSeo(content, newsArticles, new Date(), extraLangs.length).todo : 0), [content, newsArticles, extraLangs.length]);
 
   // Förslag i Millies fält som hör till det som är markerat. Bara sådant
@@ -1580,6 +1590,7 @@ export default function EditorPage() {
               [t("Design"), () => setPanel("design")],
               [t("Nyheter"), () => setPanel("news")],
               [t("Bokningar"), () => setPanel("bookings")],
+              [t("Förbättra"), () => setPanel("improve")],
               [t("Inställningar"), () => setPanel("settings")],
             ] as [string, () => void][]).map(([label, fn]) => (
               <button key={label} type="button" onClick={() => { setMobileMenuOpen(false); fn(); }} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
@@ -1587,7 +1598,6 @@ export default function EditorPage() {
               </button>
             ))}
             {([
-              [t("Förbättra"), "/forbattra"],
               [t("Förhandsgranska"), "/forhandsgranska"],
             ] as [string, string][]).map(([label, href]) => (
               <Link key={href} href={`${href}${site ? `?site=${site.id}` : ""}`} onClick={() => setMobileMenuOpen(false)} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
@@ -1693,6 +1703,17 @@ export default function EditorPage() {
                       setActivePath((p) => (c.pages.some((x) => x.path === p) ? p : "/"));
                     }}
                     onOpenPage={(path) => { setActivePath(path); setPanel(null); }}
+                  />
+                </PanelFrame>
+              )}
+              {panel === "improve" && (
+                <PanelFrame title={t("Förbättra")} subtitle={t("Tips för att synas bättre på Google, baserat på din sajt.")} onClose={() => setPanel(null)}>
+                  <ImproveManager
+                    embedded
+                    content={content}
+                    news={newsArticles}
+                    extraLanguages={extraLangs.length}
+                    onAsk={(ask) => { setDraft(ask.slice(0, 400)); setPanel(null); setTimeout(() => draftInputRef.current?.focus(), 50); }}
                   />
                 </PanelFrame>
               )}
