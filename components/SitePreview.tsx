@@ -3,7 +3,7 @@
 import { useT } from "@/components/I18nProvider";
 import { msg } from "@/lib/i18n/config";
 import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n";
-import { useState, useEffect, useRef, useCallback, createContext, useContext, createElement } from "react";
+import { useState, useEffect, useRef, useCallback, createContext, useContext, createElement, Fragment } from "react";
 import Script from "next/script";
 import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
 import type { MenuCategory, MenuItem, MenuSection, SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
@@ -2058,6 +2058,37 @@ export const FieldEditContext = createContext<FieldEditActions | null>(null);
 // fast ritat som en ram runt texten istället för ovanpå en bild. "as"
 // väljer vilken tagg själva texten renderas med (h1/h2/p/div …) så
 // typografin blir exakt densamma som innan fältet blev klickbart.
+// Gör e-postadresser och telefonnummer i vanlig text klickbara (mailto:/tel:).
+const CONTACT_RE = /([A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,})|(\+?\d[\d\s().-]{6,}\d)/g;
+function linkifyContact(text: string): React.ReactNode {
+  if (!text || (!text.includes("@") && !/\d{3}/.test(text))) return text;
+  const out: React.ReactNode[] = [];
+  let last = 0;
+  let m: RegExpExecArray | null;
+  CONTACT_RE.lastIndex = 0;
+  while ((m = CONTACT_RE.exec(text))) {
+    const raw = m[0];
+    let href: string | null = null;
+    if (m[1]) href = `mailto:${raw}`;
+    else {
+      const digits = raw.replace(/[^\d]/g, "");
+      if (digits.length >= 7 && digits.length <= 15 && !/^\d{4}-\d{2}-\d{2}$/.test(raw.trim())) href = `tel:${raw.replace(/[^+\d]/g, "")}`;
+    }
+    if (!href) continue;
+    if (m.index > last) out.push(text.slice(last, m.index));
+    out.push(<a key={m.index} href={href} className="underline decoration-1 underline-offset-2 hover:opacity-80" style={{ color: "inherit" }}>{raw}</a>);
+    last = m.index + raw.length;
+  }
+  if (out.length === 0) return text;
+  if (last < text.length) out.push(text.slice(last));
+  return <>{out}</>;
+}
+function linkifyChildren(node: React.ReactNode): React.ReactNode {
+  if (typeof node === "string") return linkifyContact(node);
+  if (Array.isArray(node)) return node.map((c, i) => <Fragment key={i}>{linkifyChildren(c)}</Fragment>);
+  return node;
+}
+
 function Field({
   editable,
   selected,
@@ -2078,7 +2109,7 @@ function Field({
   const t = useT();
   if (!editable) {
     const Plain = Tag;
-    return <Plain className={className} style={style}>{children}</Plain>;
+    return <Plain className={className} style={style}>{linkifyChildren(children)}</Plain>;
   }
   const Inner = Tag;
   const edit = useContext(FieldEditContext);
@@ -5623,7 +5654,7 @@ function SectionBlockInner({
                   onSelect={() => { const s = fieldSel("email", section.email, "e-postadressen"); s && onSelectField?.(s); }}
                 >
                   <span className="font-semibold">{t("E-post:")} </span>
-                  <span style={{ color: palette.textDim }}>{section.email}</span>
+                  <span style={{ color: palette.textDim }}>{editable ? section.email : <a href={`mailto:${section.email}`} className="hover:underline">{section.email}</a>}</span>
                 </Field>
               )}
               {section.phone && (
@@ -5635,7 +5666,7 @@ function SectionBlockInner({
                   onSelect={() => { const s = fieldSel("phone", section.phone, "telefonnumret"); s && onSelectField?.(s); }}
                 >
                   <span className="font-semibold">{t("Telefon:")} </span>
-                  <span style={{ color: palette.textDim }}>{section.phone}</span>
+                  <span style={{ color: palette.textDim }}>{editable ? section.phone : <a href={`tel:${section.phone.replace(/[^+\d]/g, "")}`} className="hover:underline">{section.phone}</a>}</span>
                 </Field>
               )}
               {section.address && (
