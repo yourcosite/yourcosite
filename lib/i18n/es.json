@@ -2523,5 +2523,15 @@
   "Det här tar upp till en minut. Stäng inte sidan.": "Esto tarda hasta un minuto. No cierres la página.",
   "Du har {n} extra språk, det är max.": "Tienes {n} idiomas adicionales, que es el máximo.",
   "Din sajt på fler språk": "Tu sitio en más idiomas",
-  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "En Ajustes puedes dejar que Millie traduzca todo el sitio a hasta tres idiomas. Los visitantes eligen el idioma con banderas. Si cambias algo en el idioma principal, actualizas las traducciones con un clic y solo se vuelve a traducir lo que ha cambiado."
+  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "En Ajustes puedes dejar que Millie traduzca todo el sitio a hasta tres idiomas. Los visitantes eligen el idioma con banderas. Si cambias algo en el idioma principal, actualizas las traducciones con un clic y solo se vuelve a traducir lo que ha cambiado.",
+  "Sidorna på sajten och i vilken ordning de ligger i menyn.": "Las páginas del sitio y el orden en que aparecen en el menú.",
+  "Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.": "Escribe y publica noticias. Una noticia publicada aparece al instante en la lista de noticias del sitio.",
+  "Bokningar, paket och tider. Besökarna bokar via bokningssektionen på sajten.": "Reservas, paquetes y horarios. Los visitantes reservan mediante la sección de reservas del sitio.",
+  "Historik": "Historial",
+  "↩ Ångra senaste": "↩ Deshacer la última",
+  "Historik ↑": "Historial ↑",
+  "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Arrastra una página para cambiar su orden en el menú. Una página nueva se crea vacía, dile a Millie qué debe contener.",
+  "Visa sidan →": "Ver la página →",
+  "Kunde inte hämta nyheterna.": "No se pudieron cargar las noticias.",
+  "Hämtar …": "Cargando …"
 }

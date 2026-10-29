@@ -2523,5 +2523,15 @@
   "Det här tar upp till en minut. Stäng inte sidan.": "This takes up to a minute. Do not close the page.",
   "Du har {n} extra språk, det är max.": "You have {n} extra languages, which is the maximum.",
   "Din sajt på fler språk": "Your site in more languages",
-  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Under Settings you can let Millie translate the whole site into up to three languages. Visitors pick a language with flags. If you change something in the main language, you update the translations with one click, and only what changed is translated again."
+  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Under Settings you can let Millie translate the whole site into up to three languages. Visitors pick a language with flags. If you change something in the main language, you update the translations with one click, and only what changed is translated again.",
+  "Sidorna på sajten och i vilken ordning de ligger i menyn.": "The pages of the site and the order they have in the menu.",
+  "Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.": "Write and publish news. A published item shows at once in the news list on the site.",
+  "Bokningar, paket och tider. Besökarna bokar via bokningssektionen på sajten.": "Bookings, packages and times. Visitors book through the booking section on the site.",
+  "Historik": "History",
+  "↩ Ångra senaste": "↩ Undo last",
+  "Historik ↑": "History ↑",
+  "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Drag a page to change its order in the menu. A new page starts empty, tell Millie what it should contain.",
+  "Visa sidan →": "View the page →",
+  "Kunde inte hämta nyheterna.": "Could not load the news.",
+  "Hämtar …": "Loading …"
 }

@@ -20,6 +20,10 @@ import Rail, { type EditorPanel } from "@/components/editor/Rail";
 import DesignPanel from "@/components/editor/DesignPanel";
 import SettingsPanel from "@/components/editor/SettingsPanel";
 import LanguageSection from "@/components/editor/LanguageSection";
+import PanelFrame from "@/components/editor/PanelFrame";
+import NewsPanel from "@/components/editor/NewsPanel";
+import BookingClient from "@/app/bokningar/BookingClient";
+import PagesManager from "@/components/PagesManager";
 import Flag from "@/components/editor/Flag";
 import { applyTranslations, languageStatus, type SiteTranslations } from "@/lib/siteTranslateCore";
 import { analyzeSeo } from "@/lib/seoAnalysis";
@@ -499,7 +503,10 @@ export default function EditorPage() {
   const prevMsgCount = useRef(0);
   useEffect(() => {
     const last = messages[messages.length - 1];
-    if (messages.length > prevMsgCount.current && last && !last.transient && restoredAtRef.current > 0 && Date.now() - restoredAtRef.current > 1500) {
+    if (messages.length > prevMsgCount.current && last && !last.transient && restoredAtRef.current > 0 && Date.now() - restoredAtRef.current > 1500 && ((last.options && last.options.length > 0) || last.unsupported)) {
+      // Chatten vecklas bara ut av sig själv när Millie ställer en fråga med
+      // svarsval eller inte kan göra det som önskades. Annars räcker raden
+      // med senaste svaret, Ångra och Historik ovanför skrivfältet.
       setMillieOpen(true);
     }
     prevMsgCount.current = messages.length;
@@ -1457,6 +1464,10 @@ export default function EditorPage() {
   };
 
   // Antal saker kvar att göra i Förbättra (röd siffra i sidofältet).
+  // Senaste svaret från Millie (efter välkomstmeddelandet), visas i dockan
+  // tillsammans med Ångra och Historik.
+  const lastBot = [...messages].reverse().find((m) => m.from === "bot" && !m.transient && m.text);
+  const wide = panel === "pages" || panel === "news" || panel === "bookings";
   const baseLang = site?.language || "sv";
   const translations: SiteTranslations = site?.translations || {};
   const extraLangs = Object.keys(translations);
@@ -1547,7 +1558,10 @@ export default function EditorPage() {
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full right-3.5 mt-1.5 w-[230px] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.14)] p-1.5 z-50">
             {([
+              [t("Sidor"), () => setPanel("pages")],
               [t("Design"), () => setPanel("design")],
+              [t("Nyheter"), () => setPanel("news")],
+              [t("Bokningar"), () => setPanel("bookings")],
               [t("Inställningar"), () => setPanel("settings")],
             ] as [string, () => void][]).map(([label, fn]) => (
               <button key={label} type="button" onClick={() => { setMobileMenuOpen(false); fn(); }} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
@@ -1555,10 +1569,7 @@ export default function EditorPage() {
               </button>
             ))}
             {([
-              [t("Sidor"), "/sidor"],
-              [t("Nyheter"), "/nyheter"],
               [t("Förbättra"), "/forbattra"],
-              [t("Bokningar"), "/bokningar"],
               [t("Förhandsgranska"), "/forhandsgranska"],
             ] as [string, string][]).map(([label, href]) => (
               <Link key={href} href={`${href}${site ? `?site=${site.id}` : ""}`} onClick={() => setMobileMenuOpen(false)} className="flex w-full items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13.5px] font-semibold text-ink text-left">
@@ -1783,7 +1794,31 @@ export default function EditorPage() {
 
           {/* Sidopanel: Design eller Inställningar */}
           {panel && content && (
-            <div className="absolute left-0 top-0 bottom-0 w-full md:w-[360px] bg-[#F7F5F2] shadow-[12px_0_40px_rgba(0,0,0,0.18)] z-40">
+            <div className={`absolute left-0 top-0 bottom-0 w-full ${wide ? "md:w-[460px]" : "md:w-[360px]"} bg-[#F7F5F2] shadow-[12px_0_40px_rgba(0,0,0,0.18)] z-40`}>
+              {panel === "pages" && (
+                <PanelFrame title={t("Sidor")} subtitle={t("Sidorna på sajten och i vilken ordning de ligger i menyn.")} onClose={() => setPanel(null)}>
+                  <PagesManager
+                    key={site?.id}
+                    siteId={site?.id}
+                    embedded
+                    onContentChange={(c) => {
+                      setContent(c);
+                      setActivePath((p) => (c.pages.some((x) => x.path === p) ? p : "/"));
+                    }}
+                    onOpenPage={(path) => { setActivePath(path); setPanel(null); }}
+                  />
+                </PanelFrame>
+              )}
+              {panel === "news" && site && (
+                <PanelFrame title={t("Nyheter")} subtitle={t("Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.")} onClose={() => setPanel(null)}>
+                  <NewsPanel key={site.id} siteId={site.id} />
+                </PanelFrame>
+              )}
+              {panel === "bookings" && site && (
+                <PanelFrame title={t("Bokningar")} subtitle={t("Bokningar, paket och tider. Besökarna bokar via bokningssektionen på sajten.")} onClose={() => setPanel(null)}>
+                  <BookingClient key={site.id} siteId={site.id} />
+                </PanelFrame>
+              )}
               {panel === "design" && <DesignPanel content={content} busy={savingTheme} onChange={saveTheme} onClose={() => setPanel(null)} />}
               {panel === "settings" && (
                 <SettingsPanel
@@ -1807,12 +1842,12 @@ export default function EditorPage() {
           )}
 
           {/* Millie: flytande fält längst ner, konversationen viks ut över sajten */}
-          <div className={`${activeView ? "hidden " : ""}absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]" : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
+          <div className={`${activeView ? "hidden " : ""}absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? (wide ? "left-1/2 md:left-[calc(50%+230px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-500px))]" : "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]") : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
             {millieOpen && (
               <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] flex flex-col max-h-[48vh]">
                 <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line flex-shrink-0">
                   <Millie size={24} />
-                  <div className="text-[13.5px] font-semibold">{t("Chatta med Millie")}</div>
+                  <div className="text-[13.5px] font-semibold">{t("Historik")}</div>
                   <div className="ml-auto flex items-center gap-1.5">
                     {undoStack.length > 0 && (
                       <button type="button" onClick={undo} disabled={undoing || sending} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1 disabled:opacity-60">
@@ -1910,13 +1945,21 @@ export default function EditorPage() {
               </div>
             )}
             <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] p-2.5">
+              {!millieOpen && lastBot && (
+                <div className="flex items-center justify-between gap-3 px-1.5 pb-2 mb-2 border-b border-line text-[13px]">
+                  <span className="min-w-0 line-clamp-2"><b>Millie:</b> {lastBot.text}</span>
+                  <span className="flex gap-3.5 text-[12px] font-semibold flex-shrink-0">
+                    {undoStack.length > 0 && (
+                      <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60">
+                        {undoing ? t("Ångrar …") : t("↩ Ångra senaste")}
+                      </button>
+                    )}
+                    <button type="button" onClick={() => setMillieOpen(true)} className="text-ink-dim">{t("Historik ↑")}</button>
+                  </span>
+                </div>
+              )}
               {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
               <div className="flex md:flex-wrap items-center gap-1.5 mb-2 overflow-x-auto md:overflow-visible [&>*]:flex-shrink-0 [&>*]:whitespace-nowrap">
-                {!millieOpen && (
-                  <button type="button" onClick={() => setMillieOpen(true)} className="text-[12px] font-semibold text-ink-dim bg-bg border border-line rounded-full px-2.5 py-1">
-                    {t("💬 Visa chatten")}
-                  </button>
-                )}
                 {selection && (
                   <span className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent-soft border border-line max-w-[260px] truncate">
                     {t("Markerad")}: {selection.label}

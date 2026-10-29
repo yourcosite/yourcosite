@@ -2523,5 +2523,15 @@
   "Det här tar upp till en minut. Stäng inte sidan.": "Cela prend jusqu'à une minute. Ne fermez pas la page.",
   "Du har {n} extra språk, det är max.": "Vous avez {n} langues supplémentaires, c'est le maximum.",
   "Din sajt på fler språk": "Votre site en plus de langues",
-  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Dans Paramètres, vous pouvez laisser Millie traduire tout le site dans jusqu'à trois langues. Les visiteurs choisissent la langue avec des drapeaux. Si vous modifiez quelque chose dans la langue principale, vous mettez à jour les traductions en un clic, et seul ce qui a changé est retraduit."
+  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Dans Paramètres, vous pouvez laisser Millie traduire tout le site dans jusqu'à trois langues. Les visiteurs choisissent la langue avec des drapeaux. Si vous modifiez quelque chose dans la langue principale, vous mettez à jour les traductions en un clic, et seul ce qui a changé est retraduit.",
+  "Sidorna på sajten och i vilken ordning de ligger i menyn.": "Les pages du site et leur ordre dans le menu.",
+  "Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.": "Rédigez et publiez des actualités. Une actualité publiée apparaît aussitôt dans la liste des actualités du site.",
+  "Bokningar, paket och tider. Besökarna bokar via bokningssektionen på sajten.": "Réservations, forfaits et horaires. Les visiteurs réservent via la section de réservation du site.",
+  "Historik": "Historique",
+  "↩ Ångra senaste": "↩ Annuler la dernière",
+  "Historik ↑": "Historique ↑",
+  "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Faites glisser une page pour changer son ordre dans le menu. Une nouvelle page est créée vide, dites à Millie ce qu'elle doit contenir.",
+  "Visa sidan →": "Voir la page →",
+  "Kunde inte hämta nyheterna.": "Impossible de charger les actualités.",
+  "Hämtar …": "Chargement …"
 }

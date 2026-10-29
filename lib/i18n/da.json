@@ -2523,5 +2523,15 @@
   "Det här tar upp till en minut. Stäng inte sidan.": "Det tager op til et minut. Luk ikke siden.",
   "Du har {n} extra språk, det är max.": "Du har {n} ekstra sprog, det er maksimum.",
   "Din sajt på fler språk": "Din side på flere sprog",
-  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Under Indstillinger kan du lade Millie oversætte hele siden til op til tre sprog. Besøgende vælger sprog med flag. Ændrer du noget på hovedsproget, opdaterer du oversættelserne med ét klik, og kun det der er ændret oversættes igen."
+  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Under Indstillinger kan du lade Millie oversætte hele siden til op til tre sprog. Besøgende vælger sprog med flag. Ændrer du noget på hovedsproget, opdaterer du oversættelserne med ét klik, og kun det der er ændret oversættes igen.",
+  "Sidorna på sajten och i vilken ordning de ligger i menyn.": "Sidens sider og den rækkefølge, de har i menuen.",
+  "Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.": "Skriv og udgiv nyheder. En udgivet nyhed vises straks i nyhedslisten på siden.",
+  "Bokningar, paket och tider. Besökarna bokar via bokningssektionen på sajten.": "Bookinger, pakker og tider. Besøgende booker via booking-sektionen på siden.",
+  "Historik": "Historik",
+  "↩ Ångra senaste": "↩ Fortryd seneste",
+  "Historik ↑": "Historik ↑",
+  "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Træk en side for at ændre rækkefølgen i menuen. En ny side oprettes tom, fortæl Millie, hvad den skal indeholde.",
+  "Visa sidan →": "Vis siden →",
+  "Kunde inte hämta nyheterna.": "Kunne ikke hente nyhederne.",
+  "Hämtar …": "Henter …"
 }

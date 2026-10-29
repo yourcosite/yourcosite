@@ -2523,5 +2523,15 @@
   "Det här tar upp till en minut. Stäng inte sidan.": "Tämä kestää enintään minuutin. Älä sulje sivua.",
   "Du har {n} extra språk, det är max.": "Sinulla on {n} lisäkieltä, mikä on enimmäismäärä.",
   "Din sajt på fler språk": "Sivustosi useammalla kielellä",
-  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Asetuksissa voit antaa Millien kääntää koko sivuston enintään kolmelle kielelle. Kävijät valitsevat kielen lipuilla. Jos muutat jotain pääkielellä, päivität käännökset yhdellä napsautuksella, ja vain muuttuneet kohdat käännetään uudelleen."
+  "Under Inställningar kan du låta Millie översätta hela sajten till upp till tre språk. Besökarna väljer språk med flaggor. Ändrar du något på huvudspråket uppdaterar du översättningarna med ett klick, bara det som ändrats översätts på nytt.": "Asetuksissa voit antaa Millien kääntää koko sivuston enintään kolmelle kielelle. Kävijät valitsevat kielen lipuilla. Jos muutat jotain pääkielellä, päivität käännökset yhdellä napsautuksella, ja vain muuttuneet kohdat käännetään uudelleen.",
+  "Sidorna på sajten och i vilken ordning de ligger i menyn.": "Sivuston sivut ja niiden järjestys valikossa.",
+  "Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.": "Kirjoita ja julkaise uutisia. Julkaistu uutinen näkyy heti sivuston uutislistassa.",
+  "Bokningar, paket och tider. Besökarna bokar via bokningssektionen på sajten.": "Varaukset, paketit ja ajat. Kävijät varaavat sivuston varausosiossa.",
+  "Historik": "Historia",
+  "↩ Ångra senaste": "↩ Kumoa viimeisin",
+  "Historik ↑": "Historia ↑",
+  "Dra en sida för att ändra ordningen i menyn. En ny sida skapas tom, berätta för Millie vad den ska innehålla.": "Vedä sivu muuttaaksesi sen järjestystä valikossa. Uusi sivu luodaan tyhjänä, kerro Millielle, mitä sen pitää sisältää.",
+  "Visa sidan →": "Näytä sivu →",
+  "Kunde inte hämta nyheterna.": "Uutisten haku epäonnistui.",
+  "Hämtar …": "Haetaan …"
 }

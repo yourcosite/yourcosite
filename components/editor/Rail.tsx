@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useT } from "@/components/I18nProvider";
 
-export type EditorPanel = "design" | "settings" | null;
+export type EditorPanel = "pages" | "design" | "news" | "bookings" | "settings" | null;
 
 const ICONS = {
   site: <><rect x="3" y="4" width="18" height="16" rx="2" /><line x1="3" y1="9" x2="21" y2="9" /></>,
@@ -27,8 +27,8 @@ function Icon({ name }: { name: keyof typeof ICONS }) {
 const itemCls = (active: boolean) =>
   `relative w-[60px] flex flex-col items-center gap-1 py-2 rounded-xl text-[10.5px] font-medium ${active ? "bg-white/15 text-white" : "text-white/65 hover:text-white hover:bg-white/10"} disabled:opacity-40`;
 
-// Det mörka sidofältet i redigeraren. Sajt, Design och Inställningar öppnar
-// paneler i redigeraren, övriga leder till sina egna sidor.
+// Det mörka sidofältet i redigeraren. Alla val utom Förbättra öppnar paneler
+// i redigeraren; Förbättra leder till sin egen sida.
 export default function Rail({
   siteId,
   panel,
@@ -57,22 +57,22 @@ export default function Rail({
         <Icon name="site" />
         {t("Sajt")}
       </button>
-      <Link href={`/sidor${q}`} className={itemCls(false)}>
+      <button type="button" onClick={() => onPanel(panel === "pages" ? null : "pages")} className={itemCls(panel === "pages")}>
         <Icon name="pages" />
         {t("Sidor")}
-      </Link>
+      </button>
       <button type="button" onClick={() => onPanel(panel === "design" ? null : "design")} className={itemCls(panel === "design")}>
         <Icon name="design" />
         {t("Design")}
       </button>
-      <Link href={`/nyheter${q}`} className={itemCls(false)}>
+      <button type="button" onClick={() => onPanel(panel === "news" ? null : "news")} className={itemCls(panel === "news")}>
         <Icon name="news" />
         {t("Nyheter")}
-      </Link>
-      <Link href={`/bokningar${q}`} className={itemCls(false)}>
+      </button>
+      <button type="button" onClick={() => onPanel(panel === "bookings" ? null : "bookings")} className={itemCls(panel === "bookings")}>
         <Icon name="bookings" />
         {t("Bokningar")}
-      </Link>
+      </button>
       <Link href={`/forbattra${q}`} className={itemCls(false)}>
         <Icon name="improve" />
         {t("Förbättra")}
