@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/ui/YIcon";
 import { msg } from "@/lib/i18n/config";
 import { useT } from "@/components/I18nProvider";
 // "Vad kan Millie göra?" — en översikt över vad man kan be Millie om, med
@@ -186,7 +187,7 @@ export default function MillieHelpModal({
           {GROUPS.map((g) => (
             <div key={g.title} className="border border-line rounded-xl p-4">
               <div className="font-semibold text-[14px] mb-1">
-                {g.icon} {t(g.title)}
+                <span className="inline-flex items-center gap-2"><EmojiIcon emoji={g.icon} size={19} />{t(g.title)}</span>
               </div>
               {g.hint && <p className="text-[12px] text-ink-dim mb-2 leading-relaxed">{t(g.hint)}</p>}
               <div className="flex flex-col gap-1.5">

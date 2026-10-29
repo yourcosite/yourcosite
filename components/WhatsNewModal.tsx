@@ -1,5 +1,6 @@
 "use client";
 
+import { EmojiIcon } from "@/components/ui/YIcon";
 import { rich } from "@/lib/i18n/rich";
 import { useT } from "@/components/I18nProvider";
 import { WHATS_NEW } from "@/lib/whatsNew";
@@ -49,7 +50,7 @@ export default function WhatsNewModal({
             <div key={e.id} className="border border-line rounded-xl p-4">
               <div className="flex items-baseline justify-between gap-3">
                 <div className="font-semibold text-[14px]">
-                  {e.icon} {t(e.title)}
+                  <span className="inline-flex items-center gap-2"><EmojiIcon emoji={e.icon} size={19} />{t(e.title)}</span>
                 </div>
                 <div className="text-[11.5px] text-ink-dim flex-shrink-0">{e.date}</div>
               </div>

@@ -17,6 +17,7 @@ import SitePreview, { FieldEditContext } from "@/components/SitePreview";
 const MemoSitePreview = memo(SitePreview);
 import ContactSupportModal from "@/components/ContactSupportModal";
 import Logo from "@/components/Logo";
+import YIcon from "@/components/ui/YIcon";
 import Rail, { type EditorPanel } from "@/components/editor/Rail";
 import DesignPanel from "@/components/editor/DesignPanel";
 import SettingsPanel from "@/components/editor/SettingsPanel";
@@ -1552,7 +1553,7 @@ export default function EditorPage() {
   const seoWords = (content?.seoKeyword || "").toLowerCase().split(/\s+/).filter((w) => w.length > 2);
   const googleHit =
     !!selectedFieldText && seoWords.length > 0 && seoWords.every((w) => selectedFieldText.toLowerCase().includes(w.slice(0, Math.max(4, w.length - 2))));
-  const dockBtn = "text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink hover:border-ink flex-shrink-0 disabled:opacity-60";
+  const dockBtn = "flex items-center gap-1.5 text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink hover:border-ink flex-shrink-0 disabled:opacity-60";
 
 
   return (
@@ -1603,12 +1604,14 @@ export default function EditorPage() {
             </div>
           )}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <button type="button" onClick={openNews} title={t("Se vad som är nytt")} className="relative text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
-              ✨ Nytt
+            <button type="button" onClick={openNews} title={t("Se vad som är nytt")} className="relative flex items-center gap-1.5 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
+              <YIcon name="bell" size={16} />
+              {t("Nytt")}
               {hasUnseenNews && <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-surface" aria-label={t("Nya nyheter")} />}
             </button>
-            <button type="button" onClick={() => setHelpOpen(true)} title={t("Se vad du kan be Millie om")} className="hidden sm:block text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
-              {t("💡 Tips")}
+            <button type="button" onClick={() => setHelpOpen(true)} title={t("Se vad du kan be Millie om")} className="hidden sm:flex items-center gap-1.5 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
+              <YIcon name="bulb" size={16} />
+              {t("Tips")}
             </button>
             <Link href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`} className="hidden md:block text-[13px] font-semibold text-ink border border-line px-3.5 py-2 rounded-lg">
               {t("Förhandsgranska")}
@@ -1804,7 +1807,7 @@ export default function EditorPage() {
                   <div className="ml-auto flex items-center gap-1.5">
                     {undoStack.length > 0 && (
                       <button type="button" onClick={undo} disabled={undoing || sending} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1 disabled:opacity-60">
-                        {undoing ? t("Ångrar …") : t("↩ Ångra senaste ändringen")}
+                        <span className="flex items-center gap-1.5"><YIcon name="undo" size={15} />{undoing ? t("Ångrar …") : t("Ångra senaste ändringen")}</span>
                       </button>
                     )}
                     <button type="button" onClick={() => setMillieOpen(false)} className="text-[12px] font-semibold text-ink-dim px-2 py-1">
@@ -1903,11 +1906,12 @@ export default function EditorPage() {
                   <span className="min-w-0 line-clamp-2"><b>Millie:</b> {barText}</span>
                   <span className="flex gap-3.5 text-[12px] font-semibold flex-shrink-0">
                     {undoStack.length > 0 && (
-                      <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60">
-                        {undoing ? t("Ångrar …") : t("↩ Ångra senaste")}
+                      <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">
+                        <YIcon name="undo" size={15} />
+                        {undoing ? t("Ångrar …") : t("Ångra senaste")}
                       </button>
                     )}
-                    <button type="button" onClick={() => setMillieOpen(true)} className="text-ink-dim">{t("Historik ↑")}</button>
+                    <button type="button" onClick={() => setMillieOpen(true)} className="text-ink-dim flex items-center gap-1.5"><YIcon name="history" size={15} />{t("Historik")}</button>
                   </span>
                 </div>
               )}
@@ -1916,7 +1920,8 @@ export default function EditorPage() {
                 {selection && content && (
                   <>
                     <span className="text-[12px] font-semibold rounded-full pl-2.5 pr-1.5 py-1 bg-accent-soft border border-line max-w-[260px] flex items-center gap-1.5">
-                      <span className="truncate">{selection.target === "image" ? "🖼️ " : selection.target === "field" ? "✏️ " : "📝 "}{selection.label}</span>
+                      <YIcon name={selection.target === "image" ? "image" : selection.target === "field" ? "pencil" : "section"} size={15} />
+                      <span className="truncate">{selection.label}</span>
                       <button type="button" onClick={() => setSelection(null)} aria-label={t("Ta bort markeringen")} className="text-ink-dim text-[14px] font-bold leading-none px-0.5">×</button>
                     </span>
                     {googleEligible && (
@@ -1925,9 +1930,10 @@ export default function EditorPage() {
                         disabled={sending}
                         title={googleHit ? t("Texten innehåller redan sökordet") : undefined}
                         onClick={() => send(selection.target === "section" ? t("Optimera den markerade sektionen för Google") : t("Optimera den markerade texten för Google"))}
-                        className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent text-accent-ink flex-shrink-0 disabled:opacity-60"
+                        className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent text-accent-ink flex-shrink-0 disabled:opacity-60 flex items-center gap-1.5"
                       >
-                        {googleHit ? t("✓ Innehåller sökordet") : t("🔍 Optimera för Google")}
+                        <YIcon name={googleHit ? "check" : "search"} size={15} accent="rgba(12,16,4,0.2)" />
+                        {googleHit ? t("Innehåller sökordet") : t("Optimera för Google")}
                       </button>
                     )}
 {selection.target === "image" && selectedImageUrl && (
@@ -1937,7 +1943,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("✂️ Redigera bild")}
+                    <YIcon name="crop" size={15} />{t("Redigera bild")}
                   </button>
                 )}
 {canAddGalleryImages && (
@@ -1956,7 +1962,7 @@ export default function EditorPage() {
                       disabled={sending || galleryBusy || savingPick}
                       className={dockBtn}
                     >
-                      {galleryBusy || savingPick ? t("Laddar upp …") : t("➕ Lägg till bilder")}
+                      <YIcon name="plus" size={15} />{galleryBusy || savingPick ? t("Laddar upp …") : t("Lägg till bilder")}
                     </button>
                   </>
                 )}
@@ -1967,7 +1973,7 @@ export default function EditorPage() {
                     disabled={sending || galleryBusy || savingPick}
                     className={dockBtn}
                   >
-                    {t("🗑 Ta bort bilden")}
+                    <YIcon name="trash" size={15} />{t("Ta bort bilden")}
                   </button>
                 )}
 {canEditEmbed && (
@@ -1977,7 +1983,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("</> Klistra in kod")}
+                    <YIcon name="code" size={15} />{t("Klistra in kod")}
                   </button>
                 )}
 {canEditMenu && (
@@ -1987,7 +1993,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("🍽 Redigera meny")}
+                    <YIcon name="plate" size={15} />{t("Redigera meny")}
                   </button>
                 )}
 {canEditTeam && (
@@ -1997,7 +2003,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("👥 Redigera personer")}
+                    <YIcon name="people" size={15} />{t("Redigera personer")}
                   </button>
                 )}
 {canPickButtonStyle && (
@@ -2007,7 +2013,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("🔘 Byt knappstil")}
+                    <YIcon name="button" size={15} />{t("Byt knappstil")}
                   </button>
                 )}
 {canPickLayout && (
@@ -2017,7 +2023,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("🎨 Byt layout")}
+                    <YIcon name="layout" size={15} />{t("Byt layout")}
                   </button>
                 )}
 {canPickIcon && (
@@ -2027,7 +2033,7 @@ export default function EditorPage() {
                     disabled={sending}
                     className={dockBtn}
                   >
-                    {t("✎ Byt ikon")}
+                    <YIcon name="shapes" size={15} />{t("Byt ikon")}
                   </button>
                 )}
               {selection.target === "image" && !selectedImageUrl && (
@@ -2039,7 +2045,7 @@ export default function EditorPage() {
                   onClick={() => setSelection({ target: "section", key: `${selection.pagePath}::section::${selection.sectionId}`, pagePath: selection.pagePath, sectionId: selection.sectionId, label: t("hela sektionen") })}
                   className={dockBtn}
                 >
-                  {t("↑ Hela sektionen")}
+                  <YIcon name="sectionUp" size={15} />{t("Hela sektionen")}
                 </button>
               )}
                   </>
@@ -2071,7 +2077,7 @@ export default function EditorPage() {
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={a.url} alt="" className="w-7 h-7 rounded object-cover flex-shrink-0" />
                     ) : (
-                      <span className="text-[14px] flex-shrink-0">📄</span>
+                      <YIcon name="pages" size={18} className="text-ink-dim" />
                     )}
                     <span className="text-[12.5px] truncate flex-1">{a.name}</span>
                     {a.kind === "image" && !a.credit && (
@@ -2079,9 +2085,9 @@ export default function EditorPage() {
                         type="button"
                         onClick={() => setEditAtt(i)}
                         disabled={sending}
-                        className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60"
+                        className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink flex-shrink-0 disabled:opacity-60 flex items-center gap-1"
                       >
-                        {t("✂️ Redigera")}
+                        <YIcon name="crop" size={14} />{t("Redigera")}
                       </button>
                     )}
                     <button
@@ -2132,13 +2138,13 @@ export default function EditorPage() {
                     <div className="fixed inset-0 z-30" onClick={() => setAttachMenuOpen(false)} />
                     <div role="menu" className="absolute bottom-full left-0 mb-2 z-40 w-[230px] bg-surface border border-line rounded-xl shadow-lg p-1.5 flex flex-col">
                       <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); fileInputRef.current?.click(); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("📎 Ladda upp")}
+                        <span className="flex items-center gap-2.5"><YIcon name="upload" size={17} />{t("Ladda upp")}</span>
                       </button>
                       <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setMyImagesOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("🗂 Mina bilder")}
+                        <span className="flex items-center gap-2.5"><YIcon name="folder" size={17} />{t("Mina bilder")}</span>
                       </button>
                       <button type="button" role="menuitem" onClick={() => { setAttachMenuOpen(false); setStockOpen(true); }} className="text-left text-[13.5px] px-3 py-2 rounded-lg hover:bg-bg">
-                        {t("🖼 Stockbilder")}
+                        <span className="flex items-center gap-2.5"><YIcon name="image" size={17} />{t("Stockbilder")}</span>
                       </button>
                     </div>
                   </>
@@ -2218,7 +2224,7 @@ export default function EditorPage() {
                     <div className="mt-2">
                       {linkDocUrl && (
                         <div className="text-[13px] mb-1.5 flex items-center gap-2">
-                          <span>📄</span>
+                          <YIcon name="pages" size={16} />
                           <span className="truncate">{linkDocName}</span>
                         </div>
                       )}
@@ -2357,7 +2363,7 @@ export default function EditorPage() {
                             disabled={c.items.length >= MAX_MENU_ITEMS}
                             className="text-[12.5px] font-semibold border border-dashed border-line rounded-lg py-1.5 disabled:opacity-40"
                           >
-                            {t("➕ Lägg till rätt")}
+                            <span className="inline-flex items-center gap-1.5"><YIcon name="plus" size={15} />{t("Lägg till rätt")}</span>
                           </button>
                         </div>
                       </div>
@@ -2368,7 +2374,7 @@ export default function EditorPage() {
                       disabled={menuDraft.length >= MAX_MENU_CATEGORIES}
                       className="text-[13px] font-semibold border border-dashed border-line rounded-xl py-2 disabled:opacity-40"
                     >
-                      {t("➕ Lägg till kategori")}
+                      <span className="inline-flex items-center gap-1.5"><YIcon name="plus" size={15} />{t("Lägg till kategori")}</span>
                     </button>
                     <label className="block">
                       <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Text längst ned, till exempel om allergier (valfritt)")}</span>
@@ -2470,7 +2476,7 @@ export default function EditorPage() {
                       disabled={teamDraft.length >= MAX_TEAM_MEMBERS}
                       className="text-[13px] font-semibold border border-dashed border-line rounded-xl py-2 disabled:opacity-40"
                     >
-                      {t("➕ Lägg till person")}
+                      <span className="inline-flex items-center gap-1.5"><YIcon name="plus" size={15} />{t("Lägg till person")}</span>
                     </button>
                   </div>
                   {teamError && <div className="text-[12.5px] text-red-600 mt-2" role="alert">{teamError}</div>}

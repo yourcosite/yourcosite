@@ -201,3 +201,7 @@ h1, h2, h3 {
 /* Toning (fadeTop/fadeBottom): gradienten ligger över bilden men UNDER text och knappar. */
 .ycs-fadewrap .ycs-fade { z-index: 1; }
 .ycs-fadewrap :is(h1, h2, h3, h4, p, a, button, li, blockquote, input, textarea, label) { position: relative; z-index: 2; }
+
+/* YourCoSites egna ikoner (components/ui/YIcon.tsx): accentelementet fylls med
+   ljusgrönt, resten är linje i textens färg. */
+.yicon .a { fill: var(--ya, #C6FF5E); }
