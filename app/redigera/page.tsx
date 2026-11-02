@@ -1920,9 +1920,24 @@ export default function EditorPage() {
               </div>
             )}
             <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] p-2.5">
-              {!millieOpen && barText && (
+              {!millieOpen && (sending || barText) && (
                 <div className="flex items-center justify-between gap-3 px-1.5 pb-2 mb-2 border-b border-line text-[13px]">
-                  {/* Långa svar kortas till två rader — klick fäller ut hela texten. */}
+                  {sending ? (
+                    // Medan Millie jobbar: samma rad visar vad hon gör och hur långt hon kommit.
+                    <span className="min-w-0 flex-1 flex items-center gap-2.5" aria-live="polite">
+                      <Millie active size={20} />
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-3 text-ink-dim">
+                          <span className="truncate">{thinkingPhrase}</span>
+                          <span className="text-[12px] font-semibold tabular-nums flex-shrink-0">{Math.round(progress * 100)}%</span>
+                        </span>
+                        <span className="mt-1.5 block h-1.5 rounded-full bg-line overflow-hidden">
+                          <span className="block h-full bg-accent rounded-full transition-[width] duration-200" style={{ width: `${Math.round(progress * 100)}%` }} />
+                        </span>
+                      </span>
+                    </span>
+                  ) : barText ? (
+                  // Långa svar kortas till två rader — klick fäller ut hela texten.
                   <span
                     className={`min-w-0 ${barExpanded ? "max-h-[40vh] overflow-y-auto" : "line-clamp-2"} ${barText.length > 110 ? "cursor-pointer" : ""}`}
                     onClick={() => barText.length > 110 && setBarExpanded((v) => !v)}
@@ -1931,6 +1946,7 @@ export default function EditorPage() {
                     <b>Millie:</b> {barText}
                     {barText.length > 110 && <span className="text-ink-dim font-semibold"> {barExpanded ? t("Visa mindre") : t("Visa mer")}</span>}
                   </span>
+                  ) : null}
                   <span className="flex gap-3.5 text-[12px] font-semibold flex-shrink-0">
                     {undoStack.length > 0 && (
                       <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">
