@@ -42,6 +42,7 @@ import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
+import VersionsModal from "@/components/editor/VersionsModal";
 import { getFieldText, getLinkValue, getNewTab, getStat, linkFieldFor, textFieldFor } from "@/lib/fieldPath";
 
 type ChatMessage = {
@@ -451,6 +452,7 @@ export default function EditorPage() {
   const [panel, setPanel] = useState<EditorPanel>(null);
   const [millieOpen, setMillieOpen] = useState(false);
   const [barExpanded, setBarExpanded] = useState(false);
+  const [versionsOpen, setVersionsOpen] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
   const restoredAtRef = useRef(0);
   // Antal meddelanden direkt efter att historiken lästs in (-1 = ingen historik).
@@ -1799,6 +1801,18 @@ export default function EditorPage() {
             </div>
           )}
 
+          {versionsOpen && (
+            <VersionsModal
+              siteId={site?.id}
+              onClose={() => setVersionsOpen(false)}
+              onRestored={(restored, when) => {
+                setContent(restored);
+                setUndoStack([]);
+                setVersionsOpen(false);
+                setMessages((m) => [...m, { from: "bot", text: t("Klart, jag har återställt sajten till versionen från {time}.", { time: when }) }]);
+              }}
+            />
+          )}
           {/* Millie: flytande fält längst ner, konversationen viks ut över sajten */}
           <div className={`${activeView ? "hidden " : ""}absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? (wide ? "left-1/2 md:left-[calc(50%+230px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-500px))]" : "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]") : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
             {millieOpen && (
@@ -1807,6 +1821,9 @@ export default function EditorPage() {
                   <Millie size={24} />
                   <div className="text-[13.5px] font-semibold">{t("Historik")}</div>
                   <div className="ml-auto flex items-center gap-1.5">
+                    <button type="button" onClick={() => setVersionsOpen(true)} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1">
+                      <span className="flex items-center gap-1.5"><YIcon name="history" size={15} />{t("Tidigare versioner")}</span>
+                    </button>
                     {undoStack.length > 0 && (
                       <button type="button" onClick={undo} disabled={undoing || sending} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1 disabled:opacity-60">
                         <span className="flex items-center gap-1.5"><YIcon name="undo" size={15} />{undoing ? t("Ångrar …") : t("Ångra senaste ändringen")}</span>
