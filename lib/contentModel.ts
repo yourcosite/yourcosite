@@ -74,6 +74,8 @@ export interface SiteTheme {
   // svagt igenom). Gäller sidor där första sektionen är en hero med
   // layouten overlay-bottom, fade-bottom eller beam. Satt av Millie.
   headerGlass?: boolean;
+  // Bakgrundsfärg (hex) bakom loggan i sidhuvudet, t.ex. vit så en mörk logga syns. Satt av Millie.
+  logoBg?: string;
   headerCta?: { path?: string; label?: string; off?: boolean; hideFromMenu?: boolean; style?: ButtonStyle; color?: string };
   // FEMTE stilaxeln, samma princip: bunden till varje stilvariant
   // (lib/themeVariants.ts), satt i kod i /api/sites/choose-look. Gäller

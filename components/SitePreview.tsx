@@ -554,6 +554,7 @@ function SitePreviewInner({
         <Header
           siteName={siteName}
           logoUrl={content.logoUrl}
+          logoBg={content.theme.logoBg}
           pages={content.pages}
           palette={palette}
           activePath={page.path}
@@ -700,6 +701,7 @@ function SitePreviewInner({
       <Footer
         siteName={siteName}
         logoUrl={content.logoUrl}
+          logoBg={content.theme.logoBg}
         pages={content.pages}
         activePath={page.path}
         palette={palette}
@@ -934,6 +936,7 @@ function PageviewBeacon({ siteId, path }: { siteId: string; path: string }) {
 function Header({
   siteName,
   logoUrl,
+  logoBg,
   pages,
   palette,
   activePath,
@@ -958,6 +961,7 @@ function Header({
   buttonShape?: ButtonStyle;
   siteName?: string;
   logoUrl?: string;
+  logoBg?: string;
   pages: SiteContent["pages"];
   palette: Palette;
   activePath?: string;
@@ -991,7 +995,10 @@ function Header({
     // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
     // Ovanpå en foto-hero får den en ljus platta bakom sig så den
     // alltid syns oavsett hur ljus/mörk loggan själv är.
-    <div className={overlay && !glass ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}>
+    <div
+      className={logoBg ? "rounded-lg px-3 py-1.5" : overlay && !glass ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}
+      style={logoBg ? { background: logoBg } : undefined}
+    >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoUrl}
@@ -1273,6 +1280,7 @@ function Header({
 function Footer({
   siteName,
   logoUrl,
+  logoBg,
   pages,
   activePath,
   palette,
@@ -1286,6 +1294,7 @@ function Footer({
   photoCredits?: PhotoCredit[];
   siteName?: string;
   logoUrl?: string;
+  logoBg?: string;
   // Hela sajtens sidlista — sidfotsmenyn visar samma sidor som
   // huvudmenyn (se Header ovan), så besökaren alltid kan ta sig vidare
   // härifrån också, inte bara via toppen av sidan.
@@ -1349,8 +1358,10 @@ function Footer({
       {/* Loggan större och centrerad under menyn (kundönskemål). */}
       {logoUrl && (
         <div className="flex justify-center px-8 @3xl:px-12 pb-6 pt-1">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={logoUrl} alt={siteName || t("Logga")} className="h-14 @3xl:h-16 max-w-[220px] @3xl:max-w-[280px] object-contain" />
+          <div className={logoBg ? "rounded-lg px-3 py-1.5" : ""} style={logoBg ? { background: logoBg } : undefined}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={logoUrl} alt={siteName || t("Logga")} className="h-14 @3xl:h-16 max-w-[220px] @3xl:max-w-[280px] object-contain" />
+          </div>
         </div>
       )}
 

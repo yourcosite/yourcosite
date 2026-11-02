@@ -629,6 +629,11 @@ export const EDIT_PATCH_PROPERTIES = {
         description:
           "Headerns uppbyggnad: left = logga vänster och meny höger (klassisk), centered-stacked = logga centrerad med menyn på en egen rad under, split = logga vänster och menyn centrerad. Menyer MED en tydlig knapp (t.ex. Bokning): left-button = klassisk meny med knapp ytterst till höger, split-button = logga vänster, meny i mitten, knapp höger, centered-button = loggan centrerad, knapp uppe till höger och menyn under, pill-bar = menyn i en rundad flytande ruta med knapp höger, minimal = bara logga, knapp och hamburgarmeny även på bred skärm. Sätt bara när kunden ber om en annan header/meny-placering eller en knapp i menyn.",
       },
+      logoBg: {
+        type: "string",
+        description:
+          "Bakgrundsfärg (hex, t.ex. #FFFFFF för vit) på en liten platta bakom loggan i sidhuvudet. Sätt när kunden ber om vit (eller annan) bakgrund bakom loggan. Tom sträng tar bort plattan.",
+      },
       headerGlass: {
         type: "boolean",
         description:
