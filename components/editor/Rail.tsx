@@ -43,7 +43,7 @@ export default function Rail({
       <div className="w-8 h-px bg-white/15 mb-1.5" />
       <button type="button" onClick={() => onPanel(null)} className={itemCls(panel === null)}>
         <Icon name="site" />
-        {t("Sajt")}
+        {t("Redigera")}
       </button>
       <button type="button" onClick={() => onPanel(panel === "pages" ? null : "pages")} className={itemCls(panel === "pages")}>
         <Icon name="pages" />
