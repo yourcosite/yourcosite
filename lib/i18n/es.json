@@ -2396,7 +2396,6 @@
   "Fyll i eller ta bort tomma sektioner": "Rellena o elimina las secciones vacías",
   "Namn, adress och telefon finns": "Nombre, dirección y teléfono están presentes",
   "Lägg in adress och telefon eller e-post i kontaktsektionen.": "Añade una dirección y un teléfono o correo en la sección de contacto.",
-  "Lägg in vår adress och vårt telefonnummer i kontaktsektionen": "Añade nuestra dirección y nuestro teléfono en la sección de contacto",
   "Orten nämns i titel eller rubrik": "La localidad aparece en el título o en un encabezado",
   "Skriv orten i titeln så hittas du av dem som söker i närheten.": "Pon la localidad en el título para que te encuentren quienes buscan cerca.",
   "Lägg in en adress med postnummer och ort först.": "Añade primero una dirección con código postal y localidad.",
@@ -2608,5 +2607,6 @@
   "Sajten byggs sektion för sektion, som ett riktigt bra smörgåsbord.": "El sitio se construye sección por sección, como un buen bufé.",
   "Jag letar rätt ton i varje mening så det låter som er.": "Busco el tono justo en cada frase para que suene a vosotros.",
   "Mellanrummen mellan sektionerna får en omgång frisk luft.": "Los espacios entre secciones toman un poco de aire fresco.",
-  "Hör du ett litet klick? Det är bara en rubrik som hittar sin plats.": "¿Oyes un clic pequeño? Es solo un titular encontrando su sitio."
+  "Hör du ett litet klick? Det är bara en rubrik som hittar sin plats.": "¿Oyes un clic pequeño? Es solo un titular encontrando su sitio.",
+  "Lägg in vår adress och vårt telefonnummer i kontaktsektionen:": "Añade nuestra dirección y nuestro teléfono en la sección de contacto:"
 }

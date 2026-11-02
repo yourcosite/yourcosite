@@ -353,6 +353,8 @@ Uppdatera ENDAST det som faktiskt behövs för att uppfylla önskemålet.
 
 VIKTIGT — SNABBAST FÖRST: ska du bara byta text, rubrik, knapptext, länk eller bild på ett eller några befintliga ställen, använd "fieldEdits" (sida, sektionens id, fältväg, nytt värde) och utelämna "changedPages" helt — det går mångfalt snabbare eftersom du inte skriver ut hela sidan. Använd "changedPages" bara när du lägger till/tar bort sektioner eller listobjekt, ändrar ordning, layout eller färger, eller skapar en ny sida. Kan du inte vara säker på sektionens id eller fältets exakta väg i JSON ovan, använd changedPages.
 
+VIKTIGT — saknade uppgifter: kräver önskemålet uppgifter du inte har (t.ex. "lägg in adress och telefonnummer", "lägg in öppettider", "lägg till vårt mejl") och kunden inte har skrivit dem i meddelandet — hitta ALDRIG på dem och rör ALDRIG sidan. Ställ en kort fråga i "summary" om exakt vad som saknas, sätt "answerOnly": true och utelämna "changedPages" och "fieldEdits" helt. Befintligt innehåll på sidan (rubriker, texter, sektioner) ska alltid finnas kvar oförändrat — skriv aldrig tillbaka en sida med färre sektioner än den hade, om inte kunden uttryckligen bett om att ta bort något.
+
 VIKTIGT — svara smalt: lägg i "changedPages" ENDAST de hela sidobjekt (path, label, alla sektioner) som denna ändring faktiskt påverkar. Rör en ändring bara EN sida, ta bara med den sidan — skriv INTE ut sajtens övriga, oberörda sidor, de lämnas automatiskt som de är. Gäller ändringen en sektion mitt på en sida, skriv ut HELA den sidans sektionslista (med den ändrade sektionen uppdaterad och resten oförändrad), inte bara den enskilda sektionen. Utelämna "theme" helt om inget färgtema-/typsnittsbyte efterfrågades.
 
 VIKTIGT — bilder: rör ALDRIG ett befintligt "imageUrl"-värde (varken ta bort, byta ut eller hitta på ett nytt) om inte kunden uttryckligen bett om en bildändring du inte kan utföra på annat sätt — de sätts av vårt system utifrån kundens egna uppladdade foton, aldrig av dig. Flyttas en sektion följer dess imageUrl med. Lägger du till en helt ny sektion som behöver en bild, UTELÄMNA "imageUrl" helt för den (ingen påhittad url, ingen tom sträng) — en snygg platshållare visas automatiskt istället.
@@ -502,7 +504,14 @@ function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[]
   const pages: SitePageContent[] = [];
   for (const page of content.pages) {
     if (removed.has(page.path)) continue;
-    const changed = changedByPath.get(page.path);
+    let changed = changedByPath.get(page.path);
+    // Skyddsnät: en sida som kommer tillbaka helt utan sektioner (t.ex. när
+    // Millie ställer en fråga i stället för att ändra) får aldrig tömma
+    // den befintliga sidan. Sidor tas bara bort via removedPagePaths.
+    if (changed && (!Array.isArray(changed.sections) || (changed.sections.length === 0 && page.sections.length > 0))) {
+      changedByPath.delete(page.path);
+      changed = undefined;
+    }
     // changedPages skickar HELA sidobjektet tillbaka (se promptens
     // instruktion), men Claude ombeds bara ange "backgroundMode" när just
     // DEN ändras — en patch som rör sidans text av annan anledning saknar

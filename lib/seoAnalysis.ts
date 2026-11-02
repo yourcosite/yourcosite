@@ -175,7 +175,7 @@ export function analyzeSeo(content: SiteContent, news: SeoNewsInput = [], now: D
   const withAddr = contacts.find((c) => c.address && (c.phone || c.email));
   add({ id: "nap", group: "local", kind: "rule", title: msg("Namn, adress och telefon finns"), pts: 6,
     done: !!withAddr, why: msg("Lägg in adress och telefon eller e-post i kontaktsektionen."),
-    ask: msg("Lägg in vår adress och vårt telefonnummer i kontaktsektionen") });
+    ask: msg("Lägg in vår adress och vårt telefonnummer i kontaktsektionen:") });
   const addr = contacts.map((c) => c.address || "").find((a) => cityFromAddress(a));
   const city = addr ? cityFromAddress(addr) : null;
   const cityHaystack = [title, ...(home ? (() => { const s: string[] = []; walkStrings(home.sections, s); return s.slice(0, 6); })() : [])].join(" ").toLowerCase();
