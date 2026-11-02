@@ -13,6 +13,30 @@ const steps = [
   msg("Sätter samman din sajt"),
 ];
 
+const QUIPS = [
+  msg("Jag väljer just nu mellan 47 nyanser av vitt. Det är svårt."),
+  msg("Rubrikerna övar framför spegeln."),
+  msg("Jag letar efter det perfekta kommatecknet."),
+  msg("Marginalerna får en liten pratstund så alla blir överens."),
+  msg("Knapparna tränar på att se inbjudande ut."),
+  msg("Bilderna får sina bästa sidor att synas."),
+  msg("Jag räknar pixlar. Hittills stämmer det."),
+  msg("Någon måste bestämma hur stor rubriken ska vara. Det blir jag."),
+  msg("Jag skickar en vänlig tanke till din meny. Den ska sitta snyggt."),
+  msg("Texterna sträcker på sig innan de ska ut."),
+  msg("Jag dubbelkollar att ingenting hamnar snett."),
+  msg("Bra saker tar den tid de tar. Jag håller koll på klockan åt oss."),
+  msg("Jag har bett färgerna att komma överens. De förhandlar."),
+  msg("Kaffe hade varit bra nu, men jag har inga händer. Jag skriver vidare."),
+  msg("Jag läser om din verksamhet och blir lite sugen på att vara kund."),
+  msg("Sidfoten får också lite omsorg. Ingen ska glömmas bort."),
+  msg("Jag lägger sista handen vid något. Sen lägger jag en till."),
+  msg("Sajten byggs sektion för sektion, som ett riktigt bra smörgåsbord."),
+  msg("Jag letar rätt ton i varje mening så det låter som er."),
+  msg("Mellanrummen mellan sektionerna får en omgång frisk luft."),
+  msg("Hör du ett litet klick? Det är bara en rubrik som hittar sin plats."),
+];
+
 export default function GeneratingPage() {
   const t = useT();
   const router = useRouter();
@@ -20,6 +44,10 @@ export default function GeneratingPage() {
   const [percent, setPercent] = useState(0);
   const [pageInfo, setPageInfo] = useState<{ page: number; pages: number } | null>(null);
   const [error, setError] = useState("");
+  // Roliga kommentarer i stället för ett löfte om hur lång tid det tar —
+  // byts ungefär var fjärde sekund, i slumpad ordning utan upprepning.
+  const [quip, setQuip] = useState<number | null>(null);
+  const [quipShown, setQuipShown] = useState(true);
   // Kort sammanfattning som visas när sajten är klar: vilka dokument som lästes
   // och om extra bilder blev ett galleri.
   const [notes, setNotes] = useState<string[]>([]);
@@ -29,7 +57,22 @@ export default function GeneratingPage() {
   const [siteName, setSiteName] = useState<string | null>(null);
 
   useEffect(() => {
-    let cancelled = false;
+    const order = QUIPS.map((_, i) => i).sort(() => Math.random() - 0.5);
+    let n = 0;
+    setQuip(order[0]);
+    const timer = setInterval(() => {
+      setQuipShown(false);
+      setTimeout(() => {
+        n = (n + 1) % order.length;
+        setQuip(order[n]);
+        setQuipShown(true);
+      }, 350);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false
 
     fetch("/api/onboarding/current")
       .then((r) => r.json())
@@ -129,8 +172,12 @@ export default function GeneratingPage() {
           ? t("Bygger {siteName}s nya sajt", { siteName })
           : " "}
       </h1>
-      <p className="text-[15px] text-[#9E9C97] mb-11">
-        {error ? error : siteName ? t("Det här brukar ta under en minut.") : " "}
+      <p
+        className="text-[15px] text-[#9E9C97] mb-11 text-center min-h-[44px] max-w-[420px] transition-opacity duration-300"
+        style={{ opacity: error || quipShown ? 1 : 0 }}
+        aria-live="polite"
+      >
+        {error ? error : siteName && quip !== null ? t(QUIPS[quip]) : "\u00a0"}
       </p>
 
       {error && (
@@ -146,7 +193,7 @@ export default function GeneratingPage() {
       {!error && siteName && (
         <div className="w-full max-w-[420px] mb-9">
           <div className="flex items-center justify-between text-[13px] mb-2">
-            <span className="text-[#9E9C97]">{percent >= 100 ? "Klart!" : pageInfo ? t("Skriver sidan {page} av {pages}", { page: pageInfo.page, pages: pageInfo.pages }) : t("Förbereder")}</span>
+            <span className="text-[#9E9C97]">{percent >= 100 ? t("Klart!") : pageInfo ? t("Skriver sidan {page} av {pages}", { page: pageInfo.page, pages: pageInfo.pages }) : t("Förbereder")}</span>
             <span className="font-semibold tabular-nums">{Math.round(percent)} %</span>
           </div>
           <div
