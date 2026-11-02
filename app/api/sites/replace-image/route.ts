@@ -1,3 +1,4 @@
+import { saveSiteVersion } from "@/lib/siteVersions";
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
@@ -35,6 +36,7 @@ async function POST_handler(request: Request) {
   }
 
   const site = await getCurrentPublishedSite(supabase, user.id, siteId);
+  if (site) await saveSiteVersion(supabase, site as any, "replace-image");
   if (!site || !isValidSiteContent(site.content)) {
     return NextResponse.json({ error: t("Hittade ingen sajt.") }, { status: 400 });
   }

@@ -1,3 +1,4 @@
+import { saveSiteVersion } from "@/lib/siteVersions";
 import { logAiUsage } from "@/lib/aiUsage";
 import { getT, getLocale } from "@/lib/i18n/server";
 import { LANGUAGE_ENGLISH, isLocale, msg } from "@/lib/i18n/config";
@@ -236,6 +237,8 @@ type EditPatch = {
   seoKeyword?: string;
   pageOrder?: string[];
   changedPages?: SitePageContent[];
+  allowShrink?: boolean;
+  pageMeta?: { path: string; seoTitle?: string; seoDescription?: string }[];
   fieldEdits?: { pagePath: string; sectionId: string; field: string; value: string }[];
   removedPagePaths?: string[];
   siteLanguage?: string;
@@ -381,7 +384,7 @@ VIKTIGT — tätare/luftigare på EN sektion och textjustering: ber kunden om t�
 VIKTIGT — ärlighet: skriv aldrig i "summary" att du har ändrat något som du inte faktiskt har ändrat i det du returnerar. Kan du inte göra det kunden ber om (saknar stöd, eller kräver något du inte har), sätt "unsupported" och förklara kort — låtsas aldrig. Svarar du bara på en fråga eller behövde inget ändras, sätt "answerOnly": true.
 VIKTIGT — bakgrund bakom loggan: ber kunden om vit (eller annan) bakgrund/platta bakom loggan i sidhuvudet, sätt "theme.logoBg" till hex-färgen (vit = #FFFFFF; tom sträng tar bort den). Det är en riktig inställning som verkligen syns — påstå aldrig att du gjort det utan att ha satt theme.logoBg. Ber kunden om bakgrunden OCH att byta loggan i samma önskemål, gör båda: logoAction "set" och theme.logoBg.
 VIKTIGT — logga: ber kunden dig byta/lägga in/ta bort sajtens logga (i sidhuvudet) — och har bifogat en bild — sätt "logoAction" till "set" (den första bifogade bilden blir loggan) eller "remove". Har kunden inte bifogat någon bild, be dem bifoga loggan med gemet (svara i "summary", ändra inget). Påstå ALDRIG att loggan är bytt utan att ha satt "logoAction" — annars händer ingenting.
-VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt "seoTitle" (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och "seoDescription" (120-155 tecken, sann och lockande) på sidan/sidorna det gäller i changedPages — och skriv ut resten av sidan oförändrad. Gäller önskemålet "alla sidor", gör det för alla sidor (det är en liten ändring). Hitta inte på fakta om verksamheten, utgå från sidans egen text.
+VIKTIGT — sökmotorer och delning: ber kunden om bättre Google-text/"så sidan syns i sökningar"/delningstext, sätt titel (under 60 tecken, sidans viktigaste sökord + gärna företagsnamn) och beskrivning (120-155 tecken, sann och lockande) via "pageMeta" (path, seoTitle, seoDescription) — ALDRIG via changedPages, så sidornas innehåll inte rörs. Gäller önskemålet "alla sidor", ta med alla sidor i pageMeta. Hitta inte på fakta om verksamheten, utgå från sidans egen text.
 
 VIKTIGT — ton och omskrivning, EN SIDA I TAGET: ber kunden dig skriva om texten i en annan ton ("mer personligt", "kortare", "mer formellt") — gör det BARA på en sida per svar: den sida kunden pekar ut, annars sidan de tittar på just nu (se ovan). Rör aldrig fler sidor med en tonändring, även om kunden skriver "hela sajten". Avsluta "summary" med en vänlig fråga om vilken sida du ska ta härnäst (nämn gärna nästa sida vid namn). Bevara fakta, namn, siffror, länkar, bilder och struktur — bara formuleringarna ändras.
 
@@ -508,6 +511,16 @@ function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[]
     // Skyddsnät: en sida som kommer tillbaka helt utan sektioner (t.ex. när
     // Millie ställer en fråga i stället för att ändra) får aldrig tömma
     // den befintliga sidan. Sidor tas bara bort via removedPagePaths.
+    // Skyddsnät 2: en sida som kommer tillbaka med mindre än hälften av sina
+    // sektioner räknas som ett misstag om inte kunden bett om borttagning.
+    if (
+      changed && Array.isArray(changed.sections) && page.sections.length >= 3 &&
+      changed.sections.length * 2 < page.sections.length && !patch.allowShrink
+    ) {
+      changedByPath.delete(page.path);
+      changed = undefined;
+      moveErrors.push("shrink:" + page.path);
+    }
     if (changed && (!Array.isArray(changed.sections) || (changed.sections.length === 0 && page.sections.length > 0))) {
       changedByPath.delete(page.path);
       changed = undefined;
@@ -882,6 +895,7 @@ async function POST_handler(request: Request) {
   }
 
   const site = await getCurrentPublishedSite(supabase, user.id, siteId);
+  if (site) await saveSiteVersion(supabase, site as any, "edit");
   if (!site || !isValidSiteContent(site.content)) {
     return NextResponse.json({ error: t("Hittade ingen sajt att redigera.") }, { status: 400 });
   }
@@ -1007,7 +1021,18 @@ async function POST_handler(request: Request) {
   }
 
   const moveErrors: string[] = [];
+  if (/ta bort|radera|rensa|tömma|stryk|remove|delete|clear|slet|poista|löschen|supprim|elimin|borra/i.test(message)) patch.allowShrink = true;
   const updatedContent = dedupeMaps(applyPatch(site.content, patch, moveErrors, currentPath), "flatten-form");
+  if (Array.isArray(patch.pageMeta)) {
+    for (const m of patch.pageMeta.slice(0, 40)) {
+      const idx = updatedContent.pages.findIndex((p) => p.path === m?.path);
+      if (idx < 0) continue;
+      const pg = { ...updatedContent.pages[idx] };
+      if (typeof m.seoTitle === "string" && m.seoTitle.trim()) pg.seoTitle = m.seoTitle.trim().slice(0, 70);
+      if (typeof m.seoDescription === "string" && m.seoDescription.trim()) pg.seoDescription = m.seoDescription.trim().slice(0, 170);
+      updatedContent.pages[idx] = pg;
+    }
+  }
   applyFieldEdits(updatedContent, patch.fieldEdits, attachments.filter((a) => a.kind === "image").map((a) => a.url).concat(uploadedImages.map((a) => a.url)));
   // Säkerhetsnät: nya eller ändrade texter får aldrig innehålla " & ". Redan
   // befintliga texter (t.ex. kundens eget företagsnamn) rörs inte.
@@ -1279,7 +1304,11 @@ async function POST_handler(request: Request) {
     }
   }
 
-  if (!warning && moveErrors.length > 0) {
+  const shrunk = moveErrors.filter((e) => e.startsWith("shrink:"));
+  if (!warning && shrunk.length > 0) {
+    warning = t("Jag stoppade en ändring som skulle ha tagit bort det mesta av innehållet på en sida. Inget har ändrats där. Skriv gärna exakt vad du vill ta bort, så gör jag det.");
+  }
+  if (!warning && moveErrors.some((e) => !e.startsWith("shrink:"))) {
     warning = t("En sida kunde inte flyttas i menyn. Kontrollera att huvudsidan finns och att sidan inte själv har undersidor, så försöker jag igen.");
   }
 

@@ -707,6 +707,20 @@ export const EDIT_PATCH_PROPERTIES = {
       required: ["path", "label", "sections"],
     },
   },
+  pageMeta: {
+    type: "array",
+    description:
+      "Google-titel och Google-beskrivning per sida. Använd ALLTID det här (aldrig changedPages) när du bara ska sätta eller ändra seoTitle/seoDescription — det går snabbt och rör inte sidornas innehåll. Gäller önskemålet alla sidor, ta med alla sidor här.",
+    items: {
+      type: "object",
+      properties: {
+        path: { type: "string", description: "Sidans path." },
+        seoTitle: { type: "string", description: "Under 60 tecken." },
+        seoDescription: { type: "string", description: "120-155 tecken." },
+      },
+      required: ["path"],
+    },
+  },
   fieldEdits: {
     type: "array",
     description:
