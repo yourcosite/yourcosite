@@ -448,52 +448,66 @@ async function generateSite(emit: (p: Progress) => void) {
   ];
 
   let message;
-  try {
-    emit({ value: 0.02, page: 0, pages: pages.length });
-    const stream = client.messages.stream({
-      model: CLAUDE_MODEL,
-      // Gott om utrymme: kundens egna texter ska få plats i sin helhet.
-      max_tokens: documents.length > 0 ? 32000 : 12000,
-      tools: [GENERATE_TOOL],
-      tool_choice: { type: "tool", name: "generate_site" },
-      messages: [{ role: "user", content: promptContent }],
-    });
-    let acc = "";
-    let shown = 0;
-    let pageNow = 0;
-    const push = (value: number, page: number) => {
-      // Aldrig bakåt, och bara när det hänt minst en halv procent.
-      if (value > shown + 0.005) {
-        shown = value;
-        emit({ value, page, pages: pages.length });
-      }
-    };
-    stream.on("inputJson", (partial: string) => {
-      acc += partial;
-      const p = estimateProgress(acc, pages.length);
-      pageNow = p.page;
-      push(0.05 + 0.87 * p.value, p.page);
-    });
-    // Reservlinje: kommer inga framsteg på en stund (AI:n skriver ibland i
-    // stora klumpar) kryper mätaren långsamt upp till högst 35 % så att den
-    // inte ser fastfrusen ut. Verkliga framsteg tar över så fort de kommer.
-    const startedAt = Date.now();
-    const heartbeat = setInterval(() => {
-      const t = (Date.now() - startedAt) / 1000;
-      push(Math.min(0.35, 0.05 + 0.3 * (1 - Math.exp(-t / 60))), pageNow);
-    }, 1500);
+  // Den strömmade verktygs-JSON:en (eager_input_streaming) valideras inte av
+  // Claude och blir ibland ogiltig ("Unexpected non-whitespace character
+  // after JSON"). Då försöker vi igen utan strömning av verktygsdata —
+  // långsammare framsteg i mätaren men giltig JSON.
+  emit({ value: 0.02, page: 0, pages: pages.length });
+  let shown = 0;
+  let lastError: any = null;
+  for (let attempt = 0; attempt < 3 && !message; attempt++) {
+    const eager = attempt === 0;
     try {
-      message = await stream.finalMessage();
-    } finally {
-      clearInterval(heartbeat);
+      const stream = client.messages.stream({
+        model: CLAUDE_MODEL,
+        // Gott om utrymme: kundens egna texter ska få plats i sin helhet.
+        max_tokens: documents.length > 0 ? 32000 : 12000,
+        tools: [{ ...GENERATE_TOOL, eager_input_streaming: eager }],
+        tool_choice: { type: "tool", name: "generate_site" },
+        messages: [{ role: "user", content: promptContent }],
+      });
+      let acc = "";
+      let pageNow = 0;
+      const push = (value: number, page: number) => {
+        // Aldrig bakåt, och bara när det hänt minst en halv procent.
+        if (value > shown + 0.005) {
+          shown = value;
+          emit({ value, page, pages: pages.length });
+        }
+      };
+      stream.on("inputJson", (partial: string) => {
+        acc += partial;
+        const p = estimateProgress(acc, pages.length);
+        pageNow = p.page;
+        push(0.05 + 0.87 * p.value, p.page);
+      });
+      // Reservlinje: kommer inga framsteg på en stund (AI:n skriver ibland i
+      // stora klumpar) kryper mätaren långsamt upp till högst 35 % så att den
+      // inte ser fastfrusen ut. Verkliga framsteg tar över så fort de kommer.
+      const startedAt = Date.now();
+      const heartbeat = setInterval(() => {
+        const t = (Date.now() - startedAt) / 1000;
+        push(Math.min(attempt === 0 ? 0.35 : 0.9, 0.05 + 0.3 * (1 - Math.exp(-t / (attempt === 0 ? 60 : 90)))), pageNow);
+      }, 1500);
+      try {
+        message = await stream.finalMessage();
+      } finally {
+        clearInterval(heartbeat);
+      }
+    } catch (e: any) {
+      lastError = e;
+      console.error("generate attempt", attempt, e?.message);
+      // Bara ogiltig JSON är värd ett nytt försök; andra fel (nyckel, gräns) upprepas inte.
+      if (!/JSON|Unexpected|position/i.test(String(e?.message))) break;
     }
-    emit({ value: 0.94, page: pages.length, pages: pages.length });
-  } catch (e: any) {
+  }
+  if (!message) {
     return NextResponse.json(
-      { error: "Kunde inte generera sajten just nu: " + (e?.message || "okänt fel") },
+      { error: "Kunde inte generera sajten just nu: " + (lastError?.message || "okänt fel") },
       { status: 502 }
     );
   }
+  emit({ value: 0.94, page: pages.length, pages: pages.length });
 
   await logAiUsage({ kind: "generate", model: CLAUDE_MODEL, usage: message.usage, userId: user.id, siteId: site.id });
 
