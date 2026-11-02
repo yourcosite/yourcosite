@@ -450,6 +450,7 @@ export default function EditorPage() {
   const setViewLang = useCallback((l: string | null) => { setSelection(null); setViewLangRaw(l); }, []);
   const [panel, setPanel] = useState<EditorPanel>(null);
   const [millieOpen, setMillieOpen] = useState(false);
+  const [barExpanded, setBarExpanded] = useState(false);
   const [savingTheme, setSavingTheme] = useState(false);
   const restoredAtRef = useRef(0);
   // Antal meddelanden direkt efter att historiken lästs in (-1 = ingen historik).
@@ -1495,6 +1496,7 @@ export default function EditorPage() {
   // tillsammans med Ångra och Historik.
   const sessionBot = [...messages].slice(Math.max(restoredLenRef.current, 0)).reverse().find((m) => m.from === "bot" && !m.transient && m.text);
   const barText = sessionBot?.text ?? dockQuip;
+  useEffect(() => { setBarExpanded(false); }, [barText]);
   const wide = panel === "pages" || panel === "news" || panel === "bookings" || panel === "improve";
   const baseLang = site?.language || "sv";
   const translations: SiteTranslations = site?.translations || {};
@@ -1903,7 +1905,15 @@ export default function EditorPage() {
             <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] p-2.5">
               {!millieOpen && barText && (
                 <div className="flex items-center justify-between gap-3 px-1.5 pb-2 mb-2 border-b border-line text-[13px]">
-                  <span className="min-w-0 line-clamp-2"><b>Millie:</b> {barText}</span>
+                  {/* Långa svar kortas till två rader — klick fäller ut hela texten. */}
+                  <span
+                    className={`min-w-0 ${barExpanded ? "max-h-[40vh] overflow-y-auto" : "line-clamp-2"} ${barText.length > 110 ? "cursor-pointer" : ""}`}
+                    onClick={() => barText.length > 110 && setBarExpanded((v) => !v)}
+                    title={barText.length > 110 ? (barExpanded ? t("Visa mindre") : t("Visa hela svaret")) : undefined}
+                  >
+                    <b>Millie:</b> {barText}
+                    {barText.length > 110 && <span className="text-ink-dim font-semibold"> {barExpanded ? t("Visa mindre") : t("Visa mer")}</span>}
+                  </span>
                   <span className="flex gap-3.5 text-[12px] font-semibold flex-shrink-0">
                     {undoStack.length > 0 && (
                       <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">

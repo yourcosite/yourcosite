@@ -893,11 +893,17 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
 
-  const [existingNewsCategories, { data: bookingSt }, allArticles] = await Promise.all([
+  const [existingNewsCategories, { data: bookingSt }, allArticles, { data: uploadedRows }] = await Promise.all([
     getSiteNewsCategories(supabase, site.id),
     supabase.from("booking_settings").select("timezone").eq("site_id", site.id).maybeSingle(),
     getSiteNewsArticles(supabase, site.id),
+    supabase.from("site_assets").select("file_name, file_url").eq("site_id", site.id).eq("kind", "image").order("created_at", { ascending: false }).limit(60),
   ]);
+  const uploadedImages: { name: string; url: string }[] = (uploadedRows || []).map((r: { file_name: string; file_url: string }) => ({ name: r.file_name, url: r.file_url }));
+  const contentJsonForUsage = JSON.stringify(site.content);
+  const uploadedNote = uploadedImages.length
+    ? `\nKUNDENS UPPLADDADE BILDER (redan sparade i deras bildbank, du behöver INTE att kunden bifogar dem igen): ber kunden dig använda "mina uppladdade bilder", "några av bilderna jag laddat upp" eller liknande utan att bifoga något, välj bland dessa och använd EXAKT webbadressen som "imageUrl" (hitta aldrig på en annan). Du ser inte själva bilderna, bara filnamnen — välj i första hand bilder som inte används än, och säg i "summary" vilka filer du valde så kunden kan byta. Fråga ENDAST efter bilagor om listan är tom. Bilder:\n${uploadedImages.map((a, i) => `${i + 1}. "${a.name}"${contentJsonForUsage.includes(a.url) ? " (används redan på sajten)" : " (används inte än)"}: ${a.url}`).join("\n")}\n`
+    : "";
   // Sajtens tidszon och befintliga artiklar — Millie behöver båda för att
   // kunna schemalägga ("nästa måndag") och ändra publicering på rätt artikel.
   const newsTz: string = (bookingSt as any)?.timezone || DEFAULT_TIMEZONE;
@@ -922,7 +928,7 @@ async function POST_handler(request: Request) {
   const menuStatus = `MENYNS NUVARANDE LÄGE (läs det här, lita inte på tidigare chattmeddelanden): headerLayout=${th.headerLayout ?? "left (standard)"}; menyknapp ${HEADER_BUTTON_LAYOUTS.includes(th.headerLayout) ? "stil med knapp finns" : "stilen har INGEN knapp, så ingen knapp syns"}; headerCta=${JSON.stringify(th.headerCta ?? null)}; headerGlass=${th.headerGlass ? "ja" : "nej"}; startsidans första sektion=${(site.content.pages[0]?.sections[0] as any)?.type ?? "?"}/${(site.content.pages[0]?.sections[0] as any)?.layout ?? "?"} (genomskinlig meny syns bara över en hero med bild i layouten overlay-bottom, fade-bottom eller beam). Säg aldrig att menyn är genomskinlig om den inte syns enligt det här.
 
 `;
-  const promptText = languageRule + menuStatus + buildEditPrompt(site.content, message, buildAttachmentNote(attachments), currentPath, selection, existingNewsCategories, newsContext);
+  const promptText = languageRule + menuStatus + buildEditPrompt(site.content, message, buildAttachmentNote(attachments) + uploadedNote, currentPath, selection, existingNewsCategories, newsContext);
 
   // Bara bildbilagor görs om till egna innehållsblock i ett multimodalt
   // meddelande (Claude ser själva bilderna, en efter en) — textdokument är
@@ -1002,7 +1008,7 @@ async function POST_handler(request: Request) {
 
   const moveErrors: string[] = [];
   const updatedContent = dedupeMaps(applyPatch(site.content, patch, moveErrors, currentPath), "flatten-form");
-  applyFieldEdits(updatedContent, patch.fieldEdits, attachments.filter((a) => a.kind === "image").map((a) => a.url));
+  applyFieldEdits(updatedContent, patch.fieldEdits, attachments.filter((a) => a.kind === "image").map((a) => a.url).concat(uploadedImages.map((a) => a.url)));
   // Säkerhetsnät: nya eller ändrade texter får aldrig innehålla " & ". Redan
   // befintliga texter (t.ex. kundens eget företagsnamn) rörs inte.
   {
