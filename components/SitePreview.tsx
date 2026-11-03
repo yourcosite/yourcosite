@@ -1951,81 +1951,55 @@ function CtaPill({
   // "sm" = den lilla knappen i menyn.
   size?: "sm";
 }) {
-  const fill = colorOverride || accent;
-  if (shape === "underline") {
-    // OBS: till skillnad från den fyllda knappen nedan sitter text-länken
-    // här på SIDANS bakgrund, inte ovanpå accent-/colorOverride-färgen —
-    // bara linjen under är i den färgen. Textfärgen ska därför ALLTID
-    // vara den vanliga, ärvda bläcktonen (textColor), även med en egen
-    // colorOverride — att räkna ut kontrast mot colorOverride här (som för
-    // den fyllda knappen) skulle kunna göra texten osynlig mot sidans
-    // egen, oberoende bakgrund.
-    return (
-      <CtaLink
-        link={link}
-        newTab={newTab}
-        basePath={basePath}
-        onNavigate={onNavigate}
-        className={`inline-flex items-center font-semibold uppercase tracking-[0.07em] pb-1 border-b-2 ${size === "sm" ? "text-[12px] whitespace-nowrap" : "text-[13.5px]"}`}
-        style={{ borderColor: fill, color: textColor }}
-      >
-        {children}
-      </CtaLink>
-    );
-  }
-  // Mjukare knappformer: ingen hård fyllning. Texten följer sidans
-  // textfärg (textColor) eftersom bakgrunden är genomskinlig/ljus.
-  const sizeCls = size === "sm" ? "text-[13px] px-5 py-2.5" : "text-[14px] px-7 py-3.5";
-  if (shape === "soft") {
-    return (
-      <CtaLink
-        link={link}
-        newTab={newTab}
-        basePath={basePath}
-        onNavigate={onNavigate}
-        className={`inline-block font-semibold whitespace-nowrap rounded-xl ${sizeCls}`}
-        style={textColor === "#FFFFFF" ? { background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.55)", backdropFilter: "blur(6px)", color: "#FFFFFF" } : { background: `color-mix(in srgb, ${fill} 20%, transparent)`, border: `1px solid color-mix(in srgb, ${fill} 45%, transparent)`, color: textColor }}
-      >
-        {children}
-      </CtaLink>
-    );
-  }
-  if (shape === "outline") {
-    return (
-      <CtaLink
-        link={link}
-        newTab={newTab}
-        basePath={basePath}
-        onNavigate={onNavigate}
-        className={`inline-block font-semibold whitespace-nowrap rounded-full ${sizeCls}`}
-        style={{ background: "transparent", border: `1.5px solid ${textColor === "#FFFFFF" ? "#FFFFFF" : fill}`, color: textColor }}
-      >
-        {children}
-      </CtaLink>
-    );
-  }
+  const props = ctaShapeProps(shape, accent, { textColor, colorOverride, size });
   return (
-    <CtaLink
-      link={link}
-      newTab={newTab}
-      basePath={basePath}
-      onNavigate={onNavigate}
-      className={`inline-block font-semibold whitespace-nowrap ${sizeCls} ${shape === "square" ? "rounded-md" : shape === "rounded" ? "rounded-xl" : "rounded-full"}`}
-      style={{
-        background: shape === "gradient" ? `linear-gradient(135deg, ${fill}, color-mix(in srgb, ${fill} 70%, transparent))` : fill,
-        // Utan egen färg: mörk text som förut — utom på riktigt mörka
-        // accentfärger (t.ex. svarta knappar i ett skin), där den annars
-        // skulle försvinna.
-        color: colorOverride
-          ? textOn(colorOverride)
-          : relativeLuminance(hexToRgb(fill)) < 0.18
-          ? "#F5F4F1"
-          : "#17171A",
-      }}
-    >
+    <CtaLink link={link} newTab={newTab} basePath={basePath} onNavigate={onNavigate} className={props.className} style={props.style}>
       {children}
     </CtaLink>
   );
+}
+
+// Knappens utseende (form, fyllning, kantlinje) per knappstil. Delas av alla
+// knappar på sajten — CtaPill ovan och formulärens skicka-knappar — så att en
+// ändrad knappstil slår igenom överallt.
+function ctaShapeProps(
+  shape: ButtonStyle,
+  accent: string,
+  opts: { textColor?: string; colorOverride?: string; size?: "sm" } = {}
+): { className: string; style: React.CSSProperties } {
+  const { textColor, colorOverride, size } = opts;
+  const fill = colorOverride || accent;
+  if (shape === "underline") {
+    // Texten sitter på SIDANS bakgrund (inte ovanpå fyllningen): bara linjen
+    // under har knappens färg, texten är alltid den vanliga bläcktonen.
+    return {
+      className: `inline-flex items-center font-semibold uppercase tracking-[0.07em] pb-1 border-b-2 ${size === "sm" ? "text-[12px] whitespace-nowrap" : "text-[13.5px]"}`,
+      style: { borderColor: fill, color: textColor, background: "transparent" },
+    };
+  }
+  const sizeCls = size === "sm" ? "text-[13px] px-5 py-2.5" : "text-[14px] px-7 py-3.5";
+  if (shape === "soft") {
+    return {
+      className: `inline-block font-semibold whitespace-nowrap rounded-xl ${sizeCls}`,
+      style: textColor === "#FFFFFF"
+        ? { background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.55)", backdropFilter: "blur(6px)", color: "#FFFFFF" }
+        : { background: `color-mix(in srgb, ${fill} 20%, transparent)`, border: `1px solid color-mix(in srgb, ${fill} 45%, transparent)`, color: textColor },
+    };
+  }
+  if (shape === "outline") {
+    return {
+      className: `inline-block font-semibold whitespace-nowrap rounded-full ${sizeCls}`,
+      style: { background: "transparent", border: `1.5px solid ${textColor === "#FFFFFF" ? "#FFFFFF" : fill}`, color: textColor },
+    };
+  }
+  return {
+    className: `inline-block font-semibold whitespace-nowrap ${sizeCls} ${shape === "square" ? "rounded-md" : shape === "rounded" ? "rounded-xl" : "rounded-full"}`,
+    style: {
+      background: shape === "gradient" ? `linear-gradient(135deg, ${fill}, color-mix(in srgb, ${fill} 70%, transparent))` : fill,
+      // Utan egen färg: mörk text — utom på riktigt mörka accentfärger.
+      color: colorOverride ? textOn(colorOverride) : relativeLuminance(hexToRgb(fill)) < 0.18 ? "#F5F4F1" : "#17171A",
+    },
+  };
 }
 
 // Beskrivs i SitePreview-kommentaren nedan (samma "editable"-koncept) —
@@ -2320,16 +2294,19 @@ function demoBookingData(t: (k: string) => string): { packages: BookingPkg[]; av
 function BookingBlock({
   palette,
   accent,
+  shape = "pill",
   siteId,
   active,
 }: {
   section: BookingSection;
   palette: Palette;
   accent: string;
+  shape?: ButtonStyle;
   siteId?: string;
   active: boolean;
 }) {
   const t = useSiteT();
+  const formBtn = ctaShapeProps(shape, accent, { textColor: palette.text });
   const { bcp47, currency } = useSiteLocale();
   const demo = !siteId; // saknar datakälla: visa exempel
   const preview = !!siteId && !active; // riktiga paket/tider, men ingen bokning sparas
@@ -2623,7 +2600,7 @@ function BookingBlock({
             </div>
           )}
           {error && <div className="text-[13px] font-semibold" style={{ color: "#c0392b" }}>{error}</div>}
-          <button type="submit" disabled={status === "sending"} className="self-start px-6 py-3 rounded-full text-[14px] font-semibold text-white disabled:opacity-60" style={{ background: accent }}>
+          <button type="submit" disabled={status === "sending"} className={`self-start disabled:opacity-60 ${formBtn.className}`} style={formBtn.style}>
             {status === "sending" ? t("Bokar …") : t("Boka tiden")}
           </button>
         </form>
@@ -2643,6 +2620,7 @@ function ContactFormBlock({
   section,
   palette,
   accent,
+  shape = "pill",
   pagePath,
   siteId,
   active,
@@ -2653,6 +2631,7 @@ function ContactFormBlock({
   section: ContactFormSection;
   palette: Palette;
   accent: string;
+  shape?: ButtonStyle;
   pagePath?: string;
   siteId?: string;
   // true bara på den RIKTIGA, publikt nåbara sajten (se siteId-kommentaren
@@ -2665,6 +2644,7 @@ function ContactFormBlock({
   onSelect?: () => void;
 }) {
   const t = useSiteT();
+  const formBtn = ctaShapeProps(shape, accent, { textColor: palette.text });
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -2741,8 +2721,8 @@ function ContactFormBlock({
         <button
           type="submit"
           disabled={status === "sending"}
-          className="font-semibold text-[14px] px-7 py-3.5 rounded-full disabled:opacity-60"
-          style={{ background: accent, color: "#17171A" }}
+          className={`disabled:opacity-60 ${formBtn.className}`}
+          style={formBtn.style}
         >
           {status === "sending" ? "Skickar…" : section.submitLabel || "Skicka"}
         </button>
@@ -6456,6 +6436,7 @@ function SectionBlockInner({
           section={section}
           palette={palette}
           accent={accent}
+          shape={buttonShape}
           pagePath={pagePath}
           siteId={siteId}
           // Bara ett klick på den RIKTIGA, publikt nåbara sajten ska
@@ -6587,7 +6568,7 @@ function SectionBlockInner({
           </Field>
         ) : null;
       const flow = (
-        <BookingBlock section={section} palette={palette} accent={accent} siteId={bookingSiteId ?? siteId ?? bookingPreviewSiteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
+        <BookingBlock section={section} palette={palette} accent={accent} shape={buttonShape} siteId={bookingSiteId ?? siteId ?? bookingPreviewSiteId} active={!!basePath && !!(bookingSiteId ?? siteId)} />
       );
 
       if (bLayout === "image-left" || bLayout === "image-right") {
