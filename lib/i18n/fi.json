@@ -2735,5 +2735,6 @@
   "Klistra in schema": "Liitä otteluohjelma",
   "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Liitä otteluohjelma tekstinä, esimerkiksi sähköpostista tai taulukosta. Millie lukee ottelut, ja sinä tarkistat ne ennen tallennusta.",
   "Läser …": "Luetaan …",
-  "Läs ut matcher": "Lue ottelut"
+  "Läs ut matcher": "Lue ottelut",
+  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Valmis! Lisäsin otteluohjelmaan {n} ottelua. Tarkista ne ja kerro, jos jotain pitää korjata."
 }

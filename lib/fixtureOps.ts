@@ -98,7 +98,19 @@ export function applyFixtureOps(content: SiteContent, ops: FixtureOp[], currentP
   for (const op of ops.slice(0, 60)) {
     if (!op || typeof op.action !== "string") continue;
     let target = op.sectionId ? all.find((m) => m.section.id === op.sectionId) : undefined;
-    if (!target) target = all.find((m) => m.page === currentPath) ?? all[0];
+    if (!target) target = all.find((m) => m.page === currentPath) ?? (all.length === 1 ? all[0] : undefined);
+    // Finns ingen matchsektion än och matcher ska läggas in skapas den på sidan
+    // kunden står på, så att det inte hänger på att Millie själv hunnit skapa den.
+    if (!target && (op.action === "setFixtures" || op.action === "addFixture")) {
+      const pg = content.pages.find((x) => x.path === currentPath) ?? (all.length === 0 ? content.pages.find((x) => x.path !== "/") : undefined);
+      if (pg) {
+        const sec: any = { id: `fixtures-${Math.random().toString(36).slice(2, 8)}`, type: "fixtures", layout: "list", heading: pg.label || t("Matcher"), items: [] };
+        (pg.sections as any[]).push(sec);
+        target = { page: pg.path, section: sec };
+        all.push(target);
+      }
+    }
+    if (!target) target = all[0];
     if (!target) { errors.push(t("Hittade ingen matchsektion att ändra. Lägg först till en sida eller sektion för spelschema.")); continue; }
     const sec = target.section;
     if (!Array.isArray(sec.items)) sec.items = [];

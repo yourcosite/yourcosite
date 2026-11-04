@@ -21,6 +21,7 @@ import { dedupeMaps } from "@/lib/ensureImageSlots";
 import { withErrorLog } from "@/lib/errorLog";
 import { applyMenuOps, cleanCategories, type MenuOp } from "@/lib/menuOps";
 import { applyFixtureOps, type FixtureOp } from "@/lib/fixtureOps";
+import { extractFixtures } from "@/lib/fixtureExtract";
 
 // Chattredigeraren (/redigera) — till skillnad från /api/sites/generate
 // (som skriver EN HELT NY sajt från onboardingens brief) tar den här
@@ -1154,7 +1155,36 @@ async function POST_handler(request: Request) {
   // sparar vi inget och säger det ärligt till kunden — med möjlighet att
   // skicka önskemålet till oss.
   const baseline = dedupeMaps(applyPatch(site.content, { summary: "" } as EditPatch), "flatten-form");
-  const contentChanged = JSON.stringify(updatedContent) !== JSON.stringify(baseline);
+  let contentChanged = JSON.stringify(updatedContent) !== JSON.stringify(baseline);
+  // Reservväg för spelscheman: ber kunden om spelschema/matcher med en lång
+  // text full av datum och Millie ändå inte fått in några matcher, läser vi ut
+  // dem med ett eget, fokuserat anrop (samma som "Klistra in schema" i
+  // matchrutan) och lägger in dem själva.
+  {
+    const dateHits = (message.match(/\b\d{1,2}\s*(?:jan|feb|mar|apr|maj|jun|jul|aug|sep|okt|nov|dec)[a-zå]*\b|\b\d{4}-\d{2}-\d{2}\b|\b\d{1,2}\/\d{1,2}\b/gi) || []).length;
+    const intent = /spelschema|matchschema|matchprogram|spelprogram|speldagar|matcher|serieschema|fixtures|match schedule|spielplan|kampprogram|otteluohjelma|calendrier|calendario/i.test(message);
+    const fxAlready = Array.isArray(patch.fixtureOps) && patch.fixtureOps.length > 0 && contentChanged;
+    if (intent && dateHits >= 3 && !fxAlready && patch.answerOnly !== true) {
+      try {
+        const ex = await extractFixtures(message, "");
+        await logAiUsage({ kind: "edit", model: CLAUDE_MODEL, usage: ex.usage, userId: user.id, siteId: site.id });
+        if (ex.items.length > 0) {
+          const errs: string[] = [];
+          applyFixtureOps(updatedContent, [{ action: "setFixtures", fixtures: ex.items as any }], currentPath, errs, t);
+          if (ex.teamName) {
+            for (const pg of updatedContent.pages) for (const sec of pg.sections as any[]) if (sec.type === "fixtures" && !sec.teamName) sec.teamName = ex.teamName;
+          }
+          contentChanged = JSON.stringify(updatedContent) !== JSON.stringify(baseline);
+          if (contentChanged) {
+            patch.unsupported = false;
+            patch.summary = t("Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.", { n: ex.items.length }) + (ex.notes ? " " + ex.notes : "");
+          }
+        }
+      } catch {
+        // Faller tillbaka på det vanliga svaret nedan.
+      }
+    }
+  }
   const hasNews = !!(patch.newsArticle && normalizeCategory(patch.newsArticle.category) && patch.newsArticle.title?.trim() && patch.newsArticle.body?.trim()) || !!(patch.newsUpdate?.title?.trim());
   // Menyknappen kräver en stil med knapp. Finns en knapp (headerCta) men stilen
   // saknar knapp byter vi till motsvarande stil med knapp, oavsett vad Millie

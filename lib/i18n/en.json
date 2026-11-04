@@ -2735,5 +2735,6 @@
   "Klistra in schema": "Paste schedule",
   "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Paste a match schedule as text, for example from an email or a table. Millie reads out the matches and you check them before saving.",
   "Läser …": "Reading …",
-  "Läs ut matcher": "Read matches"
+  "Läs ut matcher": "Read matches",
+  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Done! I added {n} matches to the schedule. Check them and tell me if anything needs correcting."
 }

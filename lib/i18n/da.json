@@ -2735,5 +2735,6 @@
   "Klistra in schema": "Indsæt kampprogram",
   "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Indsæt et kampprogram som tekst, for eksempel fra en mail eller en tabel. Millie læser kampene ud, og du kontrollerer dem, før du gemmer.",
   "Läser …": "Læser …",
-  "Läs ut matcher": "Læs kampe ud"
+  "Läs ut matcher": "Læs kampe ud",
+  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Færdig! Jeg har lagt {n} kampe ind i kampprogrammet. Kontrollér dem, og sig til, hvis noget skal rettes."
 }
