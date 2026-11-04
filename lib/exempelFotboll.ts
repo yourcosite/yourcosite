@@ -1,4 +1,4 @@
-import type { SiteContent, MenuCategory } from "./contentModel";
+import type { SiteContent, MenuCategory, FixtureItem } from "./contentModel";
 import type { TFunction } from "./i18n/config";
 
 // Fotbollsklubbens exempel under /exempel/fotboll. Byggt av samma sektioner
@@ -7,6 +7,17 @@ import type { TFunction } from "./i18n/config";
 // till höger. Alla texter går genom t() så exemplet följer besökarens språk.
 export function buildFootballExample(t: TFunction): SiteContent {
   const img = (n: string) => `/images/fotboll-${n}.jpg`;
+
+  // Matcher relativt idag så exemplet alltid visar både kommande matcher och resultat.
+  const day = (offset: number) => new Date(Date.now() + offset * 86400000).toISOString().slice(0, 10);
+  const fixtures: FixtureItem[] = [
+    { id: "ex1", date: day(-21), time: "11:00", opponent: "Vallby IF", home: true, venue: t("Lindvallens IP"), competition: t("Seriespel"), status: "played", ourScore: 4, theirScore: 1 },
+    { id: "ex2", date: day(-14), time: "13:00", opponent: "Östra BK", home: false, competition: t("Seriespel"), status: "played", ourScore: 2, theirScore: 2 },
+    { id: "ex3", date: day(-7), time: "10:30", opponent: "Sunnanå FF", home: true, venue: t("Lindvallens IP"), competition: t("Seriespel"), status: "played", ourScore: 1, theirScore: 3 },
+    { id: "ex4", date: day(5), time: "12:00", opponent: "Kullens IK", home: false, competition: t("Seriespel"), status: "scheduled", note: t("Samling 11.15 vid klubbstugan") },
+    { id: "ex5", date: day(12), time: "11:00", opponent: "Björkby SK", home: true, venue: t("Lindvallens IP"), competition: t("Seriespel"), status: "scheduled" },
+    { id: "ex6", date: day(19), time: "14:00", opponent: "Nordanvind FC", home: true, venue: t("Lindvallens IP"), competition: t("Höstcupen"), status: "scheduled" },
+  ];
 
   const schedule: MenuCategory[] = [
     {
@@ -198,6 +209,13 @@ export function buildFootballExample(t: TFunction): SiteContent {
             intro: t("Tiderna gäller höstterminen. Vid dåligt väder tränar vi i idrottshallen."),
             categories: schedule,
             note: t("Tiderna är ett exempel. Ledarna meddelar ändringar i lagets grupp."),
+          },
+          {
+            id: "l-fixtures", type: "fixtures", layout: "list",
+            heading: t("Matcher och resultat"),
+            intro: t("Här ser du lagets kommande matcher och senaste resultat."),
+            teamName: t("Ungdomslaget"),
+            items: fixtures,
           },
           {
             id: "l-cta", type: "cta", layout: "image-bleed", imageUrl: img("skott"),

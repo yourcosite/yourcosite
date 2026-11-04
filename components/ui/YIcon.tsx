@@ -26,6 +26,7 @@ const ICONS: Record<string, ReactNode> = {
   plus: <><circle className="a" cx="12" cy="12" r="8.5" /><path d="M12 8v8M8 12h8" /></>,
   trash: <><rect className="a" x="4.5" y="5" width="15" height="3.2" rx="1.6" /><path d="M10 5V3.5h4V5M6.5 9l.8 9.5a2 2 0 0 0 2 1.9h5.4a2 2 0 0 0 2-1.9L17.5 9" /></>,
   code: <><circle className="a" cx="12" cy="12" r="1.9" /><path d="M8.5 8L4.5 12l4 4M15.5 8l4 4-4 4" /></>,
+  ball: <><circle cx="12" cy="12" r="8.5" /><path className="a" d="M12 8.6l3 2.2-1.1 3.5h-3.8L9 10.8z" /></>,
   plate: <><circle cx="12" cy="12" r="8.5" /><circle className="a" cx="12" cy="12" r="4.2" /></>,
   people: <><circle cx="9" cy="9" r="3" /><path d="M3.5 19a5.5 5.5 0 0 1 11 0" /><circle className="a" cx="16.6" cy="8.2" r="2.6" /><path d="M15.6 14.4a4.8 4.8 0 0 1 4.9 4.6" /></>,
   button: <><rect className="a" x="3" y="8" width="18" height="8" rx="4" /><path d="M8.5 12h7" /></>,

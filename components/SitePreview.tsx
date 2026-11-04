@@ -6,7 +6,7 @@ import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n
 import { useState, useEffect, useRef, useCallback, createContext, useContext, createElement, Fragment } from "react";
 import Script from "next/script";
 import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
-import type { MenuCategory, MenuItem, MenuSection, SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
+import type { FixtureItem, FixturesSection, MenuCategory, MenuItem, MenuSection, SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
@@ -1604,6 +1604,163 @@ function EmbedFrame({ id, code, height, title }: { id: string; code: string; hei
   );
 }
 
+// Spelschema och resultat (sektionen "fixtures"). Lagnamn och motståndare är
+// kundens egna texter; bara etiketterna (Kommande, Resultat, Hemma ...) översätts.
+function fixtureResult(f: FixtureItem): "W" | "D" | "L" | null {
+  if (f.status !== "played" || typeof f.ourScore !== "number" || typeof f.theirScore !== "number") return null;
+  return f.ourScore > f.theirScore ? "W" : f.ourScore < f.theirScore ? "L" : "D";
+}
+
+function FixturesView({
+  section,
+  palette,
+  accent,
+  sectionBg,
+  editable,
+}: {
+  section: FixturesSection;
+  palette: { text: string; textDim: string; cardBg: string; cardBorder: string; bgAlt: string };
+  accent: string;
+  sectionBg?: string;
+  editable?: boolean;
+}) {
+  const t = useSiteT();
+  const { bcp47 } = useSiteLocale();
+  const layout = section.layout || "list";
+  const items = (Array.isArray(section.items) ? section.items : []).filter((f) => f && typeof f.date === "string" && f.opponent);
+  const team = (section.teamName || "").trim();
+  const played = items.filter((f) => fixtureResult(f)).sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? 1 : -1);
+  const upcoming = items.filter((f) => !fixtureResult(f)).sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1);
+  const fmtDate = (d: string) => {
+    try {
+      return new Intl.DateTimeFormat(bcp47, { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
+    } catch { return d; }
+  };
+  const year = (d: string) => d.slice(0, 4);
+  const sumW = played.filter((f) => fixtureResult(f) === "W").length;
+  const sumD = played.filter((f) => fixtureResult(f) === "D").length;
+  const sumL = played.filter((f) => fixtureResult(f) === "L").length;
+  const gf = played.reduce((n, f) => n + (f.ourScore || 0), 0);
+  const ga = played.reduce((n, f) => n + (f.theirScore || 0), 0);
+  const ourName = team || t("Vi");
+  const BADGE: Record<string, { label: string; bg: string; fg: string }> = {
+    W: { label: t("V"), bg: "#16a34a", fg: "#fff" },
+    D: { label: t("O"), bg: "#9ca3af", fg: "#fff" },
+    L: { label: t("F"), bg: "#dc2626", fg: "#fff" },
+  };
+  const BADGE_TITLE: Record<string, string> = { W: t("Vinst"), D: t("Oavgjort"), L: t("Förlust") };
+
+  const matchup = (f: FixtureItem) => {
+    const a = f.home ? ourName : f.opponent;
+    const b = f.home ? f.opponent : ourName;
+    return (
+      <>
+        <span className={f.home ? "font-semibold" : ""}>{a}</span>
+        <span style={{ color: palette.textDim }}> – </span>
+        <span className={f.home ? "" : "font-semibold"}>{b}</span>
+      </>
+    );
+  };
+  const scoreText = (f: FixtureItem) => (f.home ? `${f.ourScore}–${f.theirScore}` : `${f.theirScore}–${f.ourScore}`);
+  const meta = (f: FixtureItem) =>
+    [f.competition, f.home ? t("Hemma") : t("Borta"), f.venue].filter(Boolean).join(" · ");
+  const statusPill = (f: FixtureItem) =>
+    f.status === "cancelled" || f.status === "postponed" ? (
+      <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: "#fee2e2", color: "#991b1b" }}>
+        {f.status === "cancelled" ? t("Inställd") : t("Uppskjuten")}
+      </span>
+    ) : null;
+
+  const dateBox = (f: FixtureItem) => {
+    const d = new Date(`${f.date}T00:00:00Z`);
+    const day = isNaN(d.getTime()) ? "" : String(d.getUTCDate());
+    let mon = "";
+    try { mon = new Intl.DateTimeFormat(bcp47, { month: "short", timeZone: "UTC" }).format(d); } catch {}
+    return (
+      <div className="flex-shrink-0 w-12 text-center rounded-lg py-1.5" style={{ background: palette.bgAlt }} title={`${fmtDate(f.date)} ${year(f.date)}`}>
+        <div className="text-[17px] font-bold leading-none" style={{ color: accent }}>{day}</div>
+        <div className="text-[10.5px] uppercase tracking-wide mt-1" style={{ color: palette.textDim }}>{mon}</div>
+      </div>
+    );
+  };
+
+  const row = (f: FixtureItem) => {
+    const r = fixtureResult(f);
+    const dim = f.status === "cancelled" || f.status === "postponed";
+    return (
+      <div key={f.id} className={layout === "cards" ? "rounded-xl border p-4 flex flex-col gap-2" : "flex items-center gap-3 rounded-xl border px-3 py-3"} style={{ borderColor: palette.cardBorder, background: palette.cardBg, opacity: dim ? 0.75 : 1 }}>
+        {layout === "cards" ? (
+          <>
+            <div className="flex items-center justify-between gap-2 text-[12px]" style={{ color: palette.textDim }}>
+              <span>{fmtDate(f.date)}{f.time ? ` · ${f.time}` : ""}</span>
+              {statusPill(f)}
+              {r && <span className="font-bold text-[11px] w-6 h-6 rounded-full flex items-center justify-center" style={{ background: BADGE[r].bg, color: BADGE[r].fg }} title={BADGE_TITLE[r]}>{BADGE[r].label}</span>}
+            </div>
+            <div className="text-[15px] leading-snug">{matchup(f)}</div>
+            {r && <div className="font-bold tabular-nums text-[26px] leading-none">{scoreText(f)}</div>}
+            <div className="text-[12px]" style={{ color: palette.textDim }}>{meta(f)}</div>
+            {f.note && <div className="text-[12px]" style={{ color: palette.textDim }}>{f.note}</div>}
+          </>
+        ) : (
+          <>
+            {dateBox(f)}
+            <div className="flex-1 min-w-0">
+              <div className="text-[14.5px] leading-snug">{matchup(f)}</div>
+              <div className="text-[12px] mt-0.5" style={{ color: palette.textDim }}>
+                {[f.time, meta(f), f.note].filter(Boolean).join(" · ")}
+              </div>
+            </div>
+            {statusPill(f)}
+            {r && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <span className="font-bold text-[18px] tabular-nums">{scoreText(f)}</span>
+                <span className="font-bold text-[11px] w-6 h-6 rounded-full flex items-center justify-center" style={{ background: BADGE[r].bg, color: BADGE[r].fg }} title={BADGE_TITLE[r]}>{BADGE[r].label}</span>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    );
+  };
+
+  const list = (arr: FixtureItem[]) => (
+    <div className={layout === "cards" ? "grid gap-3 grid-cols-1 @xl:grid-cols-2 @3xl:grid-cols-3" : "flex flex-col gap-2"}>{arr.map(row)}</div>
+  );
+  const heading = (txt: string) => <h3 className="text-[13px] font-bold uppercase tracking-wider mb-3 mt-8 first:mt-0" style={{ color: palette.textDim }}>{txt}</h3>;
+
+  return (
+    <div className="px-6 @3xl:px-10 py-14 max-w-[900px] mx-auto" style={{ background: sectionBg }}>
+      <h2 className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] text-center mb-2">{section.heading}</h2>
+      {section.intro && <p className="text-center text-[14px] mb-8 max-w-[560px] mx-auto" style={{ color: palette.textDim }}>{section.intro}</p>}
+      {items.length === 0 ? (
+        <div className="rounded-xl border-2 border-dashed p-8 text-[14px] text-center mt-6" style={{ borderColor: palette.cardBorder, color: palette.textDim }}>
+          {t("Inga matcher inlagda än.")}
+        </div>
+      ) : (
+        <>
+          {played.length > 0 && (
+            <div className="grid grid-cols-4 gap-2 mb-8 text-center">
+              {[
+                { v: sumW, l: t("Vinster") },
+                { v: sumD, l: t("Oavgjorda") },
+                { v: sumL, l: t("Förluster") },
+                { v: `${gf}–${ga}`, l: t("Mål") },
+              ].map((x) => (
+                <div key={x.l} className="rounded-xl border py-3" style={{ borderColor: palette.cardBorder, background: palette.cardBg }}>
+                  <div className="font-bold tabular-nums text-[21px] leading-none" style={{ color: accent }}>{x.v}</div>
+                  <div className="text-[11px] mt-1.5" style={{ color: palette.textDim }}>{x.l}</div>
+                </div>
+              ))}
+            </div>
+          )}
+          {upcoming.length > 0 && (<>{heading(t("Kommande matcher"))}{list(upcoming)}</>)}
+          {played.length > 0 && (<>{heading(t("Resultat"))}{list(played)}</>)}
+        </>
+      )}
+    </div>
+  );
+}
+
 // Restaurangmeny (sektionen "menu"): fyra uppställningar. Texterna är kundens
 // egna (rättsnamn, beskrivningar, priser) — bara teckenförklaringen för
 // kostmärkena översätts (sajtens chrome).
@@ -2909,6 +3066,8 @@ function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
       return te("nyhetssektionen “{h}”", { h });
     case "booking":
       return te("bokningssektionen “{h}”", { h });
+    case "fixtures":
+      return h ? te("matchsektionen “{h}”", { h }) : te("matchsektionen");
     case "menu":
       return h ? te("menysektionen “{h}”", { h }) : te("menysektionen");
     case "embed":
@@ -5774,6 +5933,12 @@ function SectionBlockInner({
         );
       }
       return <MenuView section={section} palette={palette} accent={accent} sectionBg={sectionBg} />;
+    }
+
+    case "fixtures": {
+      const has = Array.isArray(section.items) && section.items.length > 0;
+      if (!has && !editable) return null;
+      return <FixturesView section={section} palette={palette as any} accent={accent} sectionBg={sectionBg} editable={editable} />;
     }
 
     case "embed": {

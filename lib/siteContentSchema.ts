@@ -431,6 +431,30 @@ const RAW_SECTION_SCHEMA = {
       type: "object",
       properties: {
         id: { type: "string" },
+        type: { const: "fixtures" },
+        layout: {
+          type: "string",
+          enum: ["list", "cards"],
+          description: "\"list\": rader med datum, motståndare och resultat (vanligast). \"cards\": en ruta per match.",
+        },
+        heading: { type: "string" },
+        intro: { type: "string" },
+        teamName: { type: "string", description: "Lagets namn som det ska stå i matchraden, t.ex. \"Torpa FF P12\". Hitta aldrig på ett namn." },
+        items: {
+          type: "array",
+          description: "Lämna tom. Matcher läggs in av kunden själv eller via fixtureOps, aldrig här.",
+          items: { type: "object" },
+        },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "layout", "heading", "items"],
+      description:
+        "Spelschema och resultat för ett lag eller en förening: kommande matcher och spelade matcher med resultat och en tabell över säsongen. Lägg till sektionen med \"heading\" och gärna \"teamName\" om kunden vill ha matcher/spelschema/resultat på sidan, men hitta ALDRIG på matcher, motståndare, datum eller resultat. Matcher läggs in via \"fixtureOps\" eller av kunden själv. Högst en sådan sektion per sida.",
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
         type: { const: "menu" },
         layout: {
           type: "string",

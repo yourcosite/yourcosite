@@ -37,7 +37,7 @@ import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
-import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, MAX_MENU_CATEGORIES, MAX_MENU_ITEMS, MENU_TAGS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
+import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, MAX_MENU_CATEGORIES, MAX_MENU_ITEMS, MAX_FIXTURES, FIXTURES_LAYOUTS, MENU_TAGS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
@@ -985,13 +985,15 @@ export default function EditorPage() {
   const pickedIconId =
     pickedIconIndex !== null && pickedSection?.type === "grid" ? iconsForItems(pickedSection.items)[pickedIconIndex] ?? null : null;
   const canPickIcon = pickedIconIndex !== null && pickedSection?.type === "grid";
-  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery" || pickedSection?.type === "team" || pickedSection?.type === "menu");
-  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : pickedSection?.type === "team" ? TEAM_LAYOUTS : pickedSection?.type === "menu" ? MENU_LAYOUTS : GRID_LAYOUTS;
+  const canPickLayout = !!selection && selection.target !== "image" && (pickedSection?.type === "grid" || pickedSection?.type === "gallery" || pickedSection?.type === "team" || pickedSection?.type === "menu" || pickedSection?.type === "fixtures");
+  const layoutChoices: string[] = pickedSection?.type === "gallery" ? GALLERY_LAYOUTS : pickedSection?.type === "team" ? TEAM_LAYOUTS : pickedSection?.type === "menu" ? MENU_LAYOUTS : pickedSection?.type === "fixtures" ? FIXTURES_LAYOUTS : GRID_LAYOUTS;
   const layoutLabelOf = (l: string) =>
     pickedSection?.type === "menu"
       ? (MENU_LAYOUT_LABELS as Record<string, string>)[l] ?? l
       : pickedSection?.type === "team"
       ? (TEAM_LAYOUT_LABELS as Record<string, string>)[l] ?? l
+      : pickedSection?.type === "fixtures"
+      ? (l === "cards" ? t("Kort") : t("Lista"))
       : (GRID_LAYOUT_LABELS as Record<string, string>)[l] ?? (GALLERY_LAYOUT_LABELS as Record<string, string>)[l] ?? l;
   const buttonItemMatch = selection?.target === "field" ? selection.field.match(/^items\.(\d+)\.link$/) : null;
   const buttonItemIndex = buttonItemMatch ? Number(buttonItemMatch[1]) : null;
@@ -1033,6 +1035,7 @@ export default function EditorPage() {
       setTeamOpen(false);
       setEmbedOpen(false);
       setMenuOpen(false);
+      setFixturesOpen(false);
       setSelection(null);
       setMessages((m) => [...m, { from: "bot", text: okText }]);
     } catch (e: any) {
@@ -1162,6 +1165,69 @@ export default function EditorPage() {
         })),
       },
       t("Klart! Menyn är sparad. Du kan ångra med knappen om du ändrar dig.")
+    );
+  };
+  type FixtureDraft = { key: string; id: string; date: string; time: string; opponent: string; home: boolean; venue: string; competition: string; status: string; ourScore: string; theirScore: string; note: string };
+  const [fixturesOpen, setFixturesOpen] = useState(false);
+  const [fixturesDraft, setFixturesDraft] = useState<FixtureDraft[]>([]);
+  const [fixturesTeam, setFixturesTeam] = useState("");
+  const [fixturesError, setFixturesError] = useState("");
+  const canEditFixtures = !!selection && pickedSection?.type === "fixtures";
+  const fixKeyRef = useRef(0);
+  const newFixtureRow = (f?: any): FixtureDraft => ({
+    key: `x${++fixKeyRef.current}`,
+    id: f?.id ?? "",
+    date: f?.date ?? "",
+    time: f?.time ?? "",
+    opponent: f?.opponent ?? "",
+    home: f?.home !== false,
+    venue: f?.venue ?? "",
+    competition: f?.competition ?? "",
+    status: f?.status ?? "scheduled",
+    ourScore: typeof f?.ourScore === "number" ? String(f.ourScore) : "",
+    theirScore: typeof f?.theirScore === "number" ? String(f.theirScore) : "",
+    note: f?.note ?? "",
+  });
+  const openFixturesEditor = () => {
+    if (pickedSection?.type !== "fixtures") return;
+    const rows = ((pickedSection.items as any[]) ?? [])
+      .slice()
+      .sort((a, b) => ((a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1))
+      .map(newFixtureRow);
+    setFixturesDraft(rows.length ? rows : [newFixtureRow()]);
+    setFixturesTeam(pickedSection.teamName || "");
+    setFixturesError("");
+    setFixturesOpen(true);
+  };
+  const patchFixture = (key: string, patch: Partial<FixtureDraft>) =>
+    setFixturesDraft((rows) => rows.map((r) => (r.key === key ? { ...r, ...patch } : r)));
+  const saveFixtures = async () => {
+    const rows = fixturesDraft.filter((r) => r.date || r.opponent.trim() || r.ourScore || r.theirScore);
+    for (let n = 0; n < rows.length; n++) {
+      const r = rows[n];
+      if (!r.date || !r.opponent.trim()) { setFixturesError(t("Match {n}: datum och motståndare krävs.", { n: n + 1 })); return; }
+      if (r.status === "played" && (r.ourScore === "" || r.theirScore === "")) { setFixturesError(t("Match {n}: skriv in båda resultatsiffrorna eller välj en annan status.", { n: n + 1 })); return; }
+    }
+    setFixturesError("");
+    await savePick(
+      "/api/sites/edit-fixtures",
+      {
+        teamName: fixturesTeam,
+        fixtures: rows.map((r) => ({
+          id: r.id || undefined,
+          date: r.date,
+          time: r.time,
+          opponent: r.opponent,
+          home: r.home,
+          venue: r.venue,
+          competition: r.competition,
+          status: r.status,
+          ourScore: r.status === "played" ? Number(r.ourScore) : undefined,
+          theirScore: r.status === "played" ? Number(r.theirScore) : undefined,
+          note: r.note,
+        })),
+      },
+      t("Klart! Matcherna är sparade. Du kan ångra med knappen om du ändrar dig.")
     );
   };
   const canEditTeam = !!selection && pickedSection?.type === "team";
@@ -2039,6 +2105,16 @@ export default function EditorPage() {
                     <YIcon name="plate" size={15} />{t("Redigera meny")}
                   </button>
                 )}
+{canEditFixtures && (
+                  <button
+                    type="button"
+                    onClick={openFixturesEditor}
+                    disabled={sending}
+                    className={dockBtn}
+                  >
+                    <YIcon name="ball" size={15} />{t("Redigera matcher")}
+                  </button>
+                )}
 {canEditTeam && (
                   <button
                     type="button"
@@ -2466,6 +2542,76 @@ export default function EditorPage() {
                       {t("Avbryt")}
                     </button>
                     <button type="button" onClick={saveEmbed} disabled={savingPick} className="text-[13px] font-semibold px-3 py-1.5 rounded-full bg-accent text-accent-ink disabled:opacity-60">
+                      {savingPick ? t("Sparar …") : t("Spara")}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {fixturesOpen && canEditFixtures && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-3" role="dialog" aria-modal="true">
+                <div className="bg-surface rounded-2xl p-4 w-full max-w-2xl shadow-xl max-h-[92vh] flex flex-col">
+                  <div className="text-[14px] font-semibold mb-1">{t("Matcher")}</div>
+                  <div className="text-[12px] text-ink-dim mb-3">{t("Skriv in kommande matcher och rapportera resultat. Datum och motståndare krävs. Välj status Spelad och skriv in målen för att visa ett resultat.")}</div>
+                  <label className="block text-[12px] text-ink-dim mb-3">
+                    {t("Lagets namn (visas i matchraden)")}
+                    <input value={fixturesTeam} onChange={(e) => setFixturesTeam(e.target.value)} maxLength={80} placeholder={t("t.ex. Torpa FF P12")} className="mt-1 w-full bg-bg border border-line rounded-lg p-2 text-[13px] text-ink outline-none" />
+                  </label>
+                  <div className="overflow-y-auto pr-1 flex flex-col gap-3">
+                    {fixturesDraft.map((r, ri) => (
+                      <div key={r.key} className="border border-line rounded-xl p-3 grid gap-2">
+                        <div className="flex gap-2 items-center">
+                          <input type="date" value={r.date} onChange={(e) => patchFixture(r.key, { date: e.target.value })} aria-label={t("Datum")} className="bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none" />
+                          <input type="time" value={r.time} onChange={(e) => patchFixture(r.key, { time: e.target.value })} aria-label={t("Tid")} className="bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none" />
+                          <div className="flex-1" />
+                          <button type="button" onClick={() => setFixturesDraft((rows) => moveIn(rows, ri, -1))} disabled={ri === 0} aria-label={t("Flytta upp")} className="w-7 h-7 rounded-full border border-line text-[13px] disabled:opacity-30">↑</button>
+                          <button type="button" onClick={() => setFixturesDraft((rows) => moveIn(rows, ri, 1))} disabled={ri === fixturesDraft.length - 1} aria-label={t("Flytta ner")} className="w-7 h-7 rounded-full border border-line text-[13px] disabled:opacity-30">↓</button>
+                          <button type="button" onClick={() => setFixturesDraft((rows) => rows.filter((x) => x.key !== r.key))} aria-label={t("Ta bort matchen")} className="w-7 h-7 rounded-full border border-line text-[13px] text-red-600">×</button>
+                        </div>
+                        <div className="flex gap-2">
+                          <input value={r.opponent} onChange={(e) => patchFixture(r.key, { opponent: e.target.value })} maxLength={80} placeholder={t("Motståndare")} aria-label={t("Motståndare")} className="flex-1 min-w-0 bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none" />
+                          <select value={r.home ? "home" : "away"} onChange={(e) => patchFixture(r.key, { home: e.target.value === "home" })} aria-label={t("Hemma eller borta")} className="bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none">
+                            <option value="home">{t("Hemma")}</option>
+                            <option value="away">{t("Borta")}</option>
+                          </select>
+                        </div>
+                        <div className="flex gap-2">
+                          <input value={r.venue} onChange={(e) => patchFixture(r.key, { venue: e.target.value })} maxLength={100} placeholder={t("Plan eller arena (valfritt)")} aria-label={t("Plan eller arena")} className="flex-1 min-w-0 bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none" />
+                          <input value={r.competition} onChange={(e) => patchFixture(r.key, { competition: e.target.value })} maxLength={80} placeholder={t("Serie (valfritt)")} aria-label={t("Serie")} className="flex-1 min-w-0 bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none" />
+                        </div>
+                        <div className="flex gap-2 items-center flex-wrap">
+                          <select value={r.status} onChange={(e) => patchFixture(r.key, { status: e.target.value })} aria-label={t("Status")} className="bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none">
+                            <option value="scheduled">{t("Kommande")}</option>
+                            <option value="played">{t("Spelad")}</option>
+                            <option value="cancelled">{t("Inställd")}</option>
+                            <option value="postponed">{t("Uppskjuten")}</option>
+                          </select>
+                          {r.status === "played" && (
+                            <div className="flex items-center gap-1.5 text-[12.5px]">
+                              <span className="text-ink-dim">{t("Mål:")}</span>
+                              <input inputMode="numeric" value={r.ourScore} onChange={(e) => patchFixture(r.key, { ourScore: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })} aria-label={t("Egna mål")} className="w-12 bg-bg border border-line rounded-lg p-1.5 text-[13px] text-center outline-none" />
+                              <span>–</span>
+                              <input inputMode="numeric" value={r.theirScore} onChange={(e) => patchFixture(r.key, { theirScore: e.target.value.replace(/[^0-9]/g, "").slice(0, 3) })} aria-label={t("Motståndarens mål")} className="w-12 bg-bg border border-line rounded-lg p-1.5 text-[13px] text-center outline-none" />
+                              <span className="text-ink-dim">{t("(vårt lag först)")}</span>
+                            </div>
+                          )}
+                          <input value={r.note} onChange={(e) => patchFixture(r.key, { note: e.target.value })} maxLength={200} placeholder={t("Anteckning (valfritt)")} aria-label={t("Anteckning")} className="flex-1 min-w-[140px] bg-bg border border-line rounded-lg p-1.5 text-[13px] outline-none" />
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setFixturesDraft((rows) => [...rows, newFixtureRow()])}
+                      disabled={fixturesDraft.length >= MAX_FIXTURES}
+                      className="text-[13px] font-semibold border border-dashed border-line rounded-xl py-2 disabled:opacity-40"
+                    >
+                      <span className="inline-flex items-center gap-1.5"><YIcon name="plus" size={15} />{t("Lägg till match")}</span>
+                    </button>
+                  </div>
+                  {fixturesError && <div className="text-[12.5px] text-red-600 mt-2" role="alert">{fixturesError}</div>}
+                  <div className="flex justify-end gap-2 mt-3">
+                    <button type="button" onClick={() => setFixturesOpen(false)} disabled={savingPick} className="text-[13px] px-3 py-1.5 rounded-full border border-line">{t("Avbryt")}</button>
+                    <button type="button" onClick={saveFixtures} disabled={savingPick} className="text-[13px] font-semibold px-3 py-1.5 rounded-full bg-accent text-accent-ink disabled:opacity-50">
                       {savingPick ? t("Sparar …") : t("Spara")}
                     </button>
                   </div>

@@ -586,6 +586,41 @@ export interface SectionExtras {
   ctaStyle?: ButtonStyle;
 }
 
+// Spelschema och resultat för ett lag: kommande matcher och spelade matcher
+// med resultat. Sektionen skiljer själv på kommande och spelade (status).
+export type FixtureStatus = "scheduled" | "played" | "cancelled" | "postponed";
+export const FIXTURE_STATUSES: FixtureStatus[] = ["scheduled", "played", "cancelled", "postponed"];
+export const MAX_FIXTURES = 200;
+export interface FixtureItem {
+  id: string;
+  // YYYY-MM-DD
+  date: string;
+  // HH:MM, valfri
+  time?: string;
+  opponent: string;
+  home: boolean;
+  venue?: string;
+  competition?: string;
+  // Mål för laget (ourScore) och motståndaren (theirScore), bara när status är "played".
+  ourScore?: number;
+  theirScore?: number;
+  status: FixtureStatus;
+  note?: string;
+}
+export type FixturesLayout = "list" | "cards";
+export const FIXTURES_LAYOUTS: FixturesLayout[] = ["list", "cards"];
+export interface FixturesSection {
+  id: string;
+  type: "fixtures";
+  layout?: FixturesLayout;
+  heading: string;
+  intro?: string;
+  // Lagets namn som det ska visas i matchraden, t.ex. "Torpa FF P12".
+  teamName?: string;
+  items: FixtureItem[];
+  bgColor?: string;
+}
+
 export type Section = (
   | HeroSection
   | AboutSection
@@ -604,6 +639,7 @@ export type Section = (
   | BookingSection
   | EmbedSection
   | MenuSection
+  | FixturesSection
 ) &
   SectionExtras;
 
@@ -720,6 +756,7 @@ const VALID_SECTION_TYPES = [
   "booking",
   "embed",
   "menu",
+  "fixtures",
 ];
 
 // Samma sidkoll som isValidSiteContent gör per sida, brytes ut för sig så

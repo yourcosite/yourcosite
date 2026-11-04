@@ -9,6 +9,7 @@ export const features = [
   { icon: "history", title: msg("Tidigare versioner"), body: msg("Innan varje ändring sparas en kopia av sajten. Gå tillbaka till hur den såg ut för en stund sedan.") },
   { icon: "pages", title: msg("Sidor på ett ställe"), body: msg("Lägg till, byt namn på, flytta och ta bort sidor direkt i redigeraren, utan att lämna samtalet.") },
   { icon: "news", title: msg("Nyheter"), body: msg("Skriv en artikel i en ruta som öppnas ovanpå sajten, med kategorier och förhandsvisning.") },
+  { icon: "ball", title: msg("Spelschema och resultat"), body: msg("Lägg in matcher och resultat för hand, eller berätta för Millie. Besökarna ser kommande matcher och hur säsongen går.") },
   { icon: "bookings", title: msg("Bokningar"), body: msg("Ta emot bokningar av tider och paket, och hantera dem i redigeraren.") },
   { icon: "search", title: msg("Optimera för Google"), body: msg("Välj ett sökord så skriver Millie om texten så att Google hittar den, och frågar om hon undrar något.") },
   { icon: "bulb", title: msg("Förbättra"), body: msg("En checklista som visar vad som kan bli bättre på sajten. Fixa det med Millie med ett klick.") },
