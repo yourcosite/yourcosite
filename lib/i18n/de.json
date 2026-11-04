@@ -2736,5 +2736,6 @@
   "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Füge einen Spielplan als Text ein, zum Beispiel aus einer E-Mail oder Tabelle. Millie liest die Spiele aus, und du prüfst sie vor dem Speichern.",
   "Läser …": "Liest …",
   "Läs ut matcher": "Spiele auslesen",
-  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Fertig! Ich habe {n} Spiele in den Spielplan eingetragen. Prüfe sie und sag Bescheid, falls etwas korrigiert werden soll."
+  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Fertig! Ich habe {n} Spiele in den Spielplan eingetragen. Prüfe sie und sag Bescheid, falls etwas korrigiert werden soll.",
+  "Spelade matcher": "Gespielte Spiele"
 }

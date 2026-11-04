@@ -2736,5 +2736,6 @@
   "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Collez un calendrier de matchs sous forme de texte, par exemple depuis un e-mail ou un tableau. Millie en extrait les matchs et vous les vérifiez avant d'enregistrer.",
   "Läser …": "Lecture …",
   "Läs ut matcher": "Extraire les matchs",
-  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "C'est fait ! J'ai ajouté {n} matchs au calendrier. Vérifiez-les et dites-moi s'il faut corriger quelque chose."
+  "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "C'est fait ! J'ai ajouté {n} matchs au calendrier. Vérifiez-les et dites-moi s'il faut corriger quelque chose.",
+  "Spelade matcher": "Matchs joués"
 }

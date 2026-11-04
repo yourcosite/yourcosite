@@ -1629,19 +1629,25 @@ function FixturesView({
   const layout = section.layout || "list";
   const items = (Array.isArray(section.items) ? section.items : []).filter((f) => f && typeof f.date === "string" && f.opponent);
   const team = (section.teamName || "").trim();
-  const played = items.filter((f) => fixtureResult(f)).sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? 1 : -1);
-  const upcoming = items.filter((f) => !fixtureResult(f)).sort((a, b) => (a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1);
+  // Matcher vars datum har passerat hamnar under "Spelade matcher", även om
+  // resultatet inte är inlagt än. Uppskjutna matcher räknas som kommande.
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+  const isPast = (f: FixtureItem) => !!fixtureResult(f) || (f.date < todayStr && f.status !== "postponed");
+  const played = items.filter(isPast).sort((a, b) => ((a.date + (a.time || "")) < (b.date + (b.time || "")) ? 1 : -1));
+  const upcoming = items.filter((f) => !isPast(f)).sort((a, b) => ((a.date + (a.time || "")) < (b.date + (b.time || "")) ? -1 : 1));
+  const withResult = played.filter((f) => fixtureResult(f));
   const fmtDate = (d: string) => {
     try {
       return new Intl.DateTimeFormat(bcp47, { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${d}T00:00:00Z`));
     } catch { return d; }
   };
   const year = (d: string) => d.slice(0, 4);
-  const sumW = played.filter((f) => fixtureResult(f) === "W").length;
-  const sumD = played.filter((f) => fixtureResult(f) === "D").length;
-  const sumL = played.filter((f) => fixtureResult(f) === "L").length;
-  const gf = played.reduce((n, f) => n + (f.ourScore || 0), 0);
-  const ga = played.reduce((n, f) => n + (f.theirScore || 0), 0);
+  const sumW = withResult.filter((f) => fixtureResult(f) === "W").length;
+  const sumD = withResult.filter((f) => fixtureResult(f) === "D").length;
+  const sumL = withResult.filter((f) => fixtureResult(f) === "L").length;
+  const gf = withResult.reduce((n, f) => n + (f.ourScore || 0), 0);
+  const ga = withResult.reduce((n, f) => n + (f.theirScore || 0), 0);
   const ourName = team || t("Vi");
   const BADGE: Record<string, { label: string; bg: string; fg: string }> = {
     W: { label: t("V"), bg: "#16a34a", fg: "#fff" },
@@ -1738,7 +1744,7 @@ function FixturesView({
         </div>
       ) : (
         <>
-          {played.length > 0 && (
+          {withResult.length > 0 && (
             <div className="grid grid-cols-4 gap-2 mb-8 text-center">
               {[
                 { v: sumW, l: t("Vinster") },
@@ -1754,7 +1760,7 @@ function FixturesView({
             </div>
           )}
           {upcoming.length > 0 && (<>{heading(t("Kommande matcher"))}{list(upcoming)}</>)}
-          {played.length > 0 && (<>{heading(t("Resultat"))}{list(played)}</>)}
+          {played.length > 0 && (<>{heading(t("Spelade matcher"))}{list(played)}</>)}
         </>
       )}
     </div>
