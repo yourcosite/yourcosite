@@ -6,6 +6,9 @@ import Footer from "@/components/Footer";
 import HeroChatDemo from "@/components/HeroChatDemo";
 import StepsDemo from "@/components/StepsDemo";
 import IncludedAndChat from "@/components/IncludedAndChat";
+import FeatureGrid from "@/components/FeatureGrid";
+import Reveal from "@/components/Reveal";
+import { features, homeFeatureIcons } from "@/lib/marketingFeatures";
 
 export default function LandingPage() {
   const t = getT();
@@ -62,6 +65,25 @@ export default function LandingPage() {
               className="font-semibold text-[14.5px] border-b border-ink pb-0.5"
             >
               {t("Se hur det går till, steg för steg →")}
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Nytt i redigeraren */}
+      <section className="bg-surface border-t border-line">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-20">
+          <Reveal from="up">
+            <div className="text-center mb-11">
+              <div className="text-[12.5px] text-ink-dim tracking-wide font-semibold mb-3">{t("NYTT I REDIGERAREN")}</div>
+              <h2 className="text-[28px] md:text-[32px] font-medium mb-3">{t("Allt du kan göra i samtalet")}</h2>
+              <p className="text-[15.5px] text-ink-dim max-w-[48ch] mx-auto">{t("Millie sitter alltid längst ner i redigeraren. Här är vad som finns runt henne.")}</p>
+            </div>
+          </Reveal>
+          <FeatureGrid items={homeFeatureIcons.map((ic) => features.find((f) => f.icon === ic)!)} />
+          <div className="text-center mt-10">
+            <Link href="/funktioner" className="font-semibold text-[14.5px] border-b border-ink pb-0.5">
+              {t("Se alla funktioner →")}
             </Link>
           </div>
         </div>

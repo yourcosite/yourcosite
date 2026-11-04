@@ -9,7 +9,8 @@ import Footer from "@/components/Footer";
 import IncludedAndChat from "@/components/IncludedAndChat";
 import Reveal from "@/components/Reveal";
 import CountUp from "@/components/CountUp";
-import YIcon from "@/components/ui/YIcon";
+import FeatureGrid from "@/components/FeatureGrid";
+import { features } from "@/lib/marketingFeatures";
 
 export function generateMetadata(): Metadata {
   const t = getT();
@@ -61,20 +62,6 @@ const stats = [
   { n: 0, label: msg("Rader kod") },
 ];
 
-const features = [
-  { icon: "globe", title: msg("Sajten på flera språk"), body: msg("Översätt hela sajten till upp till tre språk till med ett klick, och växla mellan dem med flaggorna.") },
-  { icon: "pointer", title: msg("Markera och be"), body: msg("Klicka på en text, bild eller knapp så får du förslag som passar just den. Skriv sen vad du vill ändra.") },
-  { icon: "undo", title: msg("Ångra och Historik"), body: msg("Ångra senaste ändringen med ett klick, och bläddra i hela samtalet med Millie i Historik.") },
-  { icon: "history", title: msg("Tidigare versioner"), body: msg("Innan varje ändring sparas en kopia av sajten. Gå tillbaka till hur den såg ut för en stund sedan.") },
-  { icon: "pages", title: msg("Sidor på ett ställe"), body: msg("Lägg till, byt namn på, flytta och ta bort sidor direkt i redigeraren, utan att lämna samtalet.") },
-  { icon: "news", title: msg("Nyheter"), body: msg("Skriv en artikel i en ruta som öppnas ovanpå sajten, med kategorier och förhandsvisning.") },
-  { icon: "bookings", title: msg("Bokningar"), body: msg("Ta emot bokningar av tider och paket, och hantera dem i redigeraren.") },
-  { icon: "search", title: msg("Optimera för Google"), body: msg("Välj ett sökord så skriver Millie om texten så att Google hittar den, och frågar om hon undrar något.") },
-  { icon: "bulb", title: msg("Förbättra"), body: msg("En checklista som visar vad som kan bli bättre på sajten. Fixa det med Millie med ett klick.") },
-  { icon: "image", title: msg("Dina bilder"), body: msg("Ladda upp bilder en gång. Millie kan använda dem, byta ut dem och skriva bildtexter åt dig.") },
-  { icon: "design", title: msg("Design på ett ställe"), body: msg("Byt färger, typsnitt, knappar och layout för hela sajten. Formulär och knappar följer med.") },
-  { icon: "wand", title: msg("Millie säger som det är"), body: msg("Kan hon inte göra något säger hon det rakt, och du kan skicka önskemålet till oss.") },
-];
 
 const examples = [
   {
@@ -167,7 +154,7 @@ export default function FeaturesPage() {
                     src={s.img}
                     alt={t(s.alt)}
                     width={760}
-                    height={480}
+                    height={475}
                     className="w-full h-auto"
                   />
                 </div>
@@ -195,19 +182,7 @@ export default function FeaturesPage() {
               <p className="text-[15.5px] text-ink-dim max-w-[48ch] mx-auto">{t("Millie sitter alltid längst ner i redigeraren. Här är vad som finns runt henne.")}</p>
             </div>
           </Reveal>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {features.map((f, i) => (
-              <Reveal key={f.title} from="up" delay={(i % 3) * 90}>
-                <div className="yc-feature h-full bg-white border border-line rounded-2xl p-6">
-                  <div className="relative w-11 h-11 rounded-xl bg-ink text-white flex items-center justify-center mb-4">
-                    <YIcon name={f.icon} size={22} />
-                  </div>
-                  <h3 className="relative text-[17px] font-semibold mb-1.5">{t(f.title)}</h3>
-                  <p className="relative text-[14.5px] leading-relaxed text-ink-dim">{t(f.body)}</p>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+          <FeatureGrid items={features} />
         </div>
 
         <IncludedAndChat />

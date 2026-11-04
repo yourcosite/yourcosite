@@ -314,34 +314,30 @@ export default function StepsDemo() {
                   )}
                 </div>
 
-                <div className="flex-1 flex flex-col justify-end gap-1.5">
-                  <div className="self-end max-w-[88%] bg-accent text-accent-ink text-[11.5px] font-semibold px-2.5 py-1.5 rounded-[10px_10px_3px_10px]">
-                    {t("Byt till en bild på baren")}
+                {/* Samma uppbyggnad som riktiga redigeraren: ett fält längst ner med
+                    Millies svar överst och skrivfältet under. */}
+                <div className="flex-1 flex flex-col justify-end">
+                  <div className="bg-white rounded-xl border border-line shadow-[0_8px_22px_rgba(0,0,0,0.12)] p-1.5">
+                    <div className="flex items-center justify-between gap-2 px-1.5 pb-1.5 mb-1.5 border-b border-line text-[10.5px] min-h-[22px]">
+                      {isLoading ? (
+                        <span className="flex items-center gap-1.5 text-ink-dim">
+                          <span className="w-[9px] h-[9px] rounded-full border-[1.5px] flex-shrink-0" style={{ borderColor: "#D8D5CC", borderTopColor: "#17171A", animation: "yc-spin 0.8s linear infinite" }} />
+                          {t("Millie tänker …")}
+                        </span>
+                      ) : isDone ? (
+                        <>
+                          <span style={{ animation: "yc-fade 0.3s ease" }}><b>Millie:</b> {t("Klart! Kolla ovan.")}</span>
+                          <span className="font-semibold text-[#3B5300] flex-shrink-0">{t("Ångra senaste")}</span>
+                        </>
+                      ) : (
+                        <span className="text-ink-dim">{t("Skriv till Millie …")}</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 bg-bg rounded-lg px-2.5 py-1.5">
+                      <span className="flex-1 text-[11px] text-ink truncate">{t("Byt till en bild på baren")}</span>
+                      <span className="w-5 h-5 rounded-md bg-accent flex items-center justify-center text-accent-ink text-[11px] font-bold">↑</span>
+                    </div>
                   </div>
-                  {isDone && (
-                    <div
-                      className="self-start max-w-[88%] bg-white border border-line text-ink text-[11.5px] px-2.5 py-1.5 rounded-[10px_10px_10px_3px]"
-                      style={{ animation: "yc-fade 0.3s ease" }}
-                    >
-                      {t("Klart! Kolla ovan.")}
-                    </div>
-                  )}
-                  {isLoading && (
-                    <div className="self-start flex gap-1 px-0.5 py-0.5">
-                      <span
-                        className="w-[4.5px] h-[4.5px] rounded-full bg-[#B7B4AC]"
-                        style={{ animation: "yc-pulse 1.2s infinite" }}
-                      />
-                      <span
-                        className="w-[4.5px] h-[4.5px] rounded-full bg-[#B7B4AC]"
-                        style={{ animation: "yc-pulse 1.2s infinite .2s" }}
-                      />
-                      <span
-                        className="w-[4.5px] h-[4.5px] rounded-full bg-[#B7B4AC]"
-                        style={{ animation: "yc-pulse 1.2s infinite .4s" }}
-                      />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
