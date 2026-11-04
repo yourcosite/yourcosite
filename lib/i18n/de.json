@@ -2727,5 +2727,13 @@
   "Ändringen av matchen mot “{name}” blev ogiltig.": "Die Änderung des Spiels gegen „{name}“ war ungültig.",
   "Spelschema och resultat": "Spielplan und Ergebnisse",
   "Lägg in matcher och resultat för hand, eller berätta för Millie. Besökarna ser kommande matcher och hur säsongen går.": "Trage Spiele und Ergebnisse selbst ein oder sag es Millie. Besucher sehen die kommenden Spiele und den Saisonverlauf.",
-  "Mål": "Tore"
+  "Mål": "Tore",
+  "Klistra in texten med matcherna först.": "Füge zuerst den Text mit den Spielen ein.",
+  "Kunde inte läsa schemat just nu.": "Der Spielplan konnte gerade nicht gelesen werden.",
+  "Hittade inga matcher i texten. Kontrollera att datum och motståndare finns med.": "Im Text wurden keine Spiele gefunden. Prüfe, ob Datum und Gegner enthalten sind.",
+  "{n} matcher inlästa. Kontrollera dem nedan och tryck Spara.": "{n} Spiele eingelesen. Prüfe sie unten und drücke Speichern.",
+  "Klistra in schema": "Spielplan einfügen",
+  "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Füge einen Spielplan als Text ein, zum Beispiel aus einer E-Mail oder Tabelle. Millie liest die Spiele aus, und du prüfst sie vor dem Speichern.",
+  "Läser …": "Liest …",
+  "Läs ut matcher": "Spiele auslesen"
 }

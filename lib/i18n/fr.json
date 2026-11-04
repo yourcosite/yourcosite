@@ -2727,5 +2727,13 @@
   "Ändringen av matchen mot “{name}” blev ogiltig.": "La modification du match contre « {name} » était invalide.",
   "Spelschema och resultat": "Calendrier et résultats",
   "Lägg in matcher och resultat för hand, eller berätta för Millie. Besökarna ser kommande matcher och hur säsongen går.": "Ajoutez matchs et résultats à la main, ou dites-le à Millie. Les visiteurs voient les prochains matchs et le déroulement de la saison.",
-  "Mål": "Buts"
+  "Mål": "Buts",
+  "Klistra in texten med matcherna först.": "Collez d'abord le texte contenant les matchs.",
+  "Kunde inte läsa schemat just nu.": "Impossible de lire le calendrier pour le moment.",
+  "Hittade inga matcher i texten. Kontrollera att datum och motståndare finns med.": "Aucun match trouvé dans le texte. Vérifiez que les dates et les adversaires y figurent.",
+  "{n} matcher inlästa. Kontrollera dem nedan och tryck Spara.": "{n} matchs lus. Vérifiez-les ci-dessous et appuyez sur Enregistrer.",
+  "Klistra in schema": "Coller le calendrier",
+  "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Collez un calendrier de matchs sous forme de texte, par exemple depuis un e-mail ou un tableau. Millie en extrait les matchs et vous les vérifiez avant d'enregistrer.",
+  "Läser …": "Lecture …",
+  "Läs ut matcher": "Extraire les matchs"
 }

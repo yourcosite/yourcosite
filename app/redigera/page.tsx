@@ -1172,6 +1172,34 @@ export default function EditorPage() {
   const [fixturesDraft, setFixturesDraft] = useState<FixtureDraft[]>([]);
   const [fixturesTeam, setFixturesTeam] = useState("");
   const [fixturesError, setFixturesError] = useState("");
+  const [fxPasteOpen, setFxPasteOpen] = useState(false);
+  const [fxPasteText, setFxPasteText] = useState("");
+  const [fxParsing, setFxParsing] = useState(false);
+  const [fxNote, setFxNote] = useState("");
+  const parseFixturesText = async () => {
+    setFxParsing(true);
+    setFixturesError("");
+    setFxNote("");
+    try {
+      const res = await fetch("/api/sites/parse-fixtures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: fxPasteText, teamName: fixturesTeam }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) { setFixturesError(data.error || t("Kunde inte läsa schemat just nu.")); return; }
+      const added = (data.fixtures as any[]).map((f) => newFixtureRow({ ...f, id: undefined }));
+      setFixturesDraft((rows) => [...rows.filter((r) => r.date || r.opponent.trim()), ...added]);
+      if (data.teamName && !fixturesTeam.trim()) setFixturesTeam(data.teamName);
+      setFxNote(t("{n} matcher inlästa. Kontrollera dem nedan och tryck Spara.", { n: added.length }) + (data.notes ? " " + data.notes : ""));
+      setFxPasteText("");
+      setFxPasteOpen(false);
+    } catch {
+      setFixturesError(t("Kunde inte läsa schemat just nu."));
+    } finally {
+      setFxParsing(false);
+    }
+  };
   const canEditFixtures = !!selection && pickedSection?.type === "fixtures";
   const fixKeyRef = useRef(0);
   const newFixtureRow = (f?: any): FixtureDraft => ({
@@ -1197,6 +1225,8 @@ export default function EditorPage() {
     setFixturesDraft(rows.length ? rows : [newFixtureRow()]);
     setFixturesTeam(pickedSection.teamName || "");
     setFixturesError("");
+    setFxNote("");
+    setFxPasteOpen(false);
     setFixturesOpen(true);
   };
   const patchFixture = (key: string, patch: Partial<FixtureDraft>) =>
@@ -2557,6 +2587,21 @@ export default function EditorPage() {
                     {t("Lagets namn (visas i matchraden)")}
                     <input value={fixturesTeam} onChange={(e) => setFixturesTeam(e.target.value)} maxLength={80} placeholder={t("t.ex. Torpa FF P12")} className="mt-1 w-full bg-bg border border-line rounded-lg p-2 text-[13px] text-ink outline-none" />
                   </label>
+                  <div className="mb-3">
+                    {!fxPasteOpen ? (
+                      <button type="button" onClick={() => setFxPasteOpen(true)} className="text-[13px] font-semibold underline">{t("Klistra in schema")}</button>
+                    ) : (
+                      <div className="border border-line rounded-xl p-3 grid gap-2">
+                        <div className="text-[12px] text-ink-dim">{t("Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.")}</div>
+                        <textarea value={fxPasteText} onChange={(e) => setFxPasteText(e.target.value)} rows={6} maxLength={30000} className="w-full bg-bg border border-line rounded-lg p-2 text-[13px] outline-none resize-y" />
+                        <div className="flex gap-2 justify-end">
+                          <button type="button" onClick={() => setFxPasteOpen(false)} disabled={fxParsing} className="text-[13px] px-3 py-1.5 rounded-full border border-line">{t("Avbryt")}</button>
+                          <button type="button" onClick={parseFixturesText} disabled={fxParsing || fxPasteText.trim().length < 8} className="text-[13px] font-semibold px-3 py-1.5 rounded-full bg-accent text-accent-ink disabled:opacity-50">{fxParsing ? t("Läser …") : t("Läs ut matcher")}</button>
+                        </div>
+                      </div>
+                    )}
+                    {fxNote && <div className="text-[12.5px] mt-2 text-ink-dim">{fxNote}</div>}
+                  </div>
                   <div className="overflow-y-auto pr-1 flex flex-col gap-3">
                     {fixturesDraft.map((r, ri) => (
                       <div key={r.key} className="border border-line rounded-xl p-3 grid gap-2">

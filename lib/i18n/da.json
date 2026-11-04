@@ -2727,5 +2727,13 @@
   "Ändringen av matchen mot “{name}” blev ogiltig.": "Ændringen af kampen mod “{name}” blev ugyldig.",
   "Spelschema och resultat": "Kampprogram og resultater",
   "Lägg in matcher och resultat för hand, eller berätta för Millie. Besökarna ser kommande matcher och hur säsongen går.": "Tilføj kampe og resultater selv, eller fortæl det til Millie. Besøgende ser kommende kampe og hvordan sæsonen går.",
-  "Mål": "Mål"
+  "Mål": "Mål",
+  "Klistra in texten med matcherna först.": "Indsæt først teksten med kampene.",
+  "Kunde inte läsa schemat just nu.": "Kunne ikke læse kampprogrammet lige nu.",
+  "Hittade inga matcher i texten. Kontrollera att datum och motståndare finns med.": "Fandt ingen kampe i teksten. Kontrollér, at dato og modstander er med.",
+  "{n} matcher inlästa. Kontrollera dem nedan och tryck Spara.": "{n} kampe indlæst. Kontrollér dem nedenfor og tryk Gem.",
+  "Klistra in schema": "Indsæt kampprogram",
+  "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Indsæt et kampprogram som tekst, for eksempel fra en mail eller en tabel. Millie læser kampene ud, og du kontrollerer dem, før du gemmer.",
+  "Läser …": "Læser …",
+  "Läs ut matcher": "Læs kampe ud"
 }

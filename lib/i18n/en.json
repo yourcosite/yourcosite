@@ -2727,5 +2727,13 @@
   "Ändringen av matchen mot “{name}” blev ogiltig.": "The change to the match against “{name}” was invalid.",
   "Spelschema och resultat": "Match schedule and results",
   "Lägg in matcher och resultat för hand, eller berätta för Millie. Besökarna ser kommande matcher och hur säsongen går.": "Add matches and results by hand, or tell Millie. Visitors see upcoming matches and how the season is going.",
-  "Mål": "Goals"
+  "Mål": "Goals",
+  "Klistra in texten med matcherna först.": "Paste the text with the matches first.",
+  "Kunde inte läsa schemat just nu.": "Could not read the schedule right now.",
+  "Hittade inga matcher i texten. Kontrollera att datum och motståndare finns med.": "Found no matches in the text. Check that dates and opponents are included.",
+  "{n} matcher inlästa. Kontrollera dem nedan och tryck Spara.": "{n} matches read in. Check them below and press Save.",
+  "Klistra in schema": "Paste schedule",
+  "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Paste a match schedule as text, for example from an email or a table. Millie reads out the matches and you check them before saving.",
+  "Läser …": "Reading …",
+  "Läs ut matcher": "Read matches"
 }

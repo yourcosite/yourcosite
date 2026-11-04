@@ -2727,5 +2727,13 @@
   "Ändringen av matchen mot “{name}” blev ogiltig.": "Ottelun vastustajaa “{name}” vastaan muutos oli virheellinen.",
   "Spelschema och resultat": "Otteluohjelma ja tulokset",
   "Lägg in matcher och resultat för hand, eller berätta för Millie. Besökarna ser kommande matcher och hur säsongen går.": "Lisää ottelut ja tulokset käsin tai kerro ne Milliellelle. Kävijät näkevät tulevat ottelut ja kauden kulun.",
-  "Mål": "Maalit"
+  "Mål": "Maalit",
+  "Klistra in texten med matcherna först.": "Liitä ensin teksti, jossa ottelut ovat.",
+  "Kunde inte läsa schemat just nu.": "Otteluohjelmaa ei voitu lukea juuri nyt.",
+  "Hittade inga matcher i texten. Kontrollera att datum och motståndare finns med.": "Tekstistä ei löytynyt otteluita. Tarkista, että päivämäärät ja vastustajat ovat mukana.",
+  "{n} matcher inlästa. Kontrollera dem nedan och tryck Spara.": "{n} ottelua luettu. Tarkista ne alta ja paina Tallenna.",
+  "Klistra in schema": "Liitä otteluohjelma",
+  "Klistra in ett spelschema som text, till exempel från ett mejl eller en tabell. Millie läser ut matcherna och du kontrollerar dem innan du sparar.": "Liitä otteluohjelma tekstinä, esimerkiksi sähköpostista tai taulukosta. Millie lukee ottelut, ja sinä tarkistat ne ennen tallennusta.",
+  "Läser …": "Luetaan …",
+  "Läs ut matcher": "Lue ottelut"
 }
