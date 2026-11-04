@@ -2737,5 +2737,6 @@
   "Läser …": "Liest …",
   "Läs ut matcher": "Spiele auslesen",
   "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Fertig! Ich habe {n} Spiele in den Spielplan eingetragen. Prüfe sie und sag Bescheid, falls etwas korrigiert werden soll.",
-  "Spelade matcher": "Gespielte Spiele"
+  "Spelade matcher": "Gespielte Spiele",
+  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "Die Verbindung wurde unterbrochen, bevor Millie antworten konnte. Versuche es gleich noch einmal. Lade die Seite am besten zuerst neu, die Änderung wurde vielleicht schon gespeichert."
 }

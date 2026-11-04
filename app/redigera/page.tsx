@@ -1558,7 +1558,8 @@ export default function EditorPage() {
           : []),
       ]);
     } catch (e: any) {
-      setMessages((m) => [...m, { from: "bot", text: t("Det gick inte: {message}", { message: e.message }) }]);
+      const netErr = e instanceof TypeError || /load failed|failed to fetch|networkerror|network connection/i.test(String(e?.message));
+      setMessages((m) => [...m, { from: "bot", text: netErr ? t("Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.") : t("Det gick inte: {message}", { message: e.message }) }]);
     } finally {
       // Fyll stapeln till 100 % en kort stund så det känns avslutat.
       setProgress(1);

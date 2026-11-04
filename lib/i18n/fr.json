@@ -2737,5 +2737,6 @@
   "Läser …": "Lecture …",
   "Läs ut matcher": "Extraire les matchs",
   "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "C'est fait ! J'ai ajouté {n} matchs au calendrier. Vérifiez-les et dites-moi s'il faut corriger quelque chose.",
-  "Spelade matcher": "Matchs joués"
+  "Spelade matcher": "Matchs joués",
+  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "La connexion a été coupée avant que Millie puisse répondre. Réessayez dans un instant. Rechargez d'abord la page, la modification a peut-être déjà été enregistrée."
 }
