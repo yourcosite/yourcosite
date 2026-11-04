@@ -1,6 +1,6 @@
 import { rich } from "@/lib/i18n/rich";
 import { msg } from "@/lib/i18n/config";
-import { getT } from "@/lib/i18n/server";
+import { getT, getLocale } from "@/lib/i18n/server";
 import Image from "next/image";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -27,7 +27,7 @@ const steps = [
     label: msg("STEG ETT"),
     title: msg("Berätta om er"),
     body: msg("Namn, ton, färger och egna bilder — så mycket eller lite ni vill. Ni svarar på några enkla frågor om verksamheten, precis som att berätta för en kollega."),
-    img: "/images/step1-beratta.jpg",
+    img: "1",
     alt: msg("Skärmdump: formuläret där man berättar om sin verksamhet"),
   },
   {
@@ -35,7 +35,7 @@ const steps = [
     label: msg("STEG TVÅ"),
     title: msg("Vi bygger sajten"),
     body: msg("Text, bilder och design sätts samman snabbt och effektivt utifrån det ni berättat — klart på minuter, inte veckor."),
-    img: "/images/step2-bygger.jpg",
+    img: "2",
     alt: msg("Skärmdump: sajten byggs"),
   },
   {
@@ -43,7 +43,7 @@ const steps = [
     label: msg("STEG TRE"),
     title: msg("Fortsätt i samtalet"),
     body: msg("Be om ändringar när som helst — och se dem direkt i sajten. Ingen kod, inget krångel, bara ett samtal."),
-    img: "/images/step3-samtal.jpg",
+    img: "3",
     alt: msg("Skärmdump: redigera sajten i ett samtal"),
   },
 ];
@@ -89,6 +89,7 @@ const examples = [
 
 export default function FeaturesPage() {
   const t = getT();
+  const locale = getLocale();
   return (
     <div>
       <Header active="/funktioner" />
@@ -151,7 +152,7 @@ export default function FeaturesPage() {
               <Reveal from="zoom" delay={150} className="flex-1 w-full">
                 <div className="yc-step-img w-full rounded-2xl overflow-hidden shadow-[0_24px_50px_rgba(23,23,26,0.18)] border border-line">
                   <Image
-                    src={s.img}
+                    src={`/images/steps/${locale}-${s.img}.jpg`}
                     alt={t(s.alt)}
                     width={760}
                     height={475}
