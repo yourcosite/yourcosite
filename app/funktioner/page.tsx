@@ -7,6 +7,9 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import IncludedAndChat from "@/components/IncludedAndChat";
+import Reveal from "@/components/Reveal";
+import CountUp from "@/components/CountUp";
+import YIcon from "@/components/ui/YIcon";
 
 export function generateMetadata(): Metadata {
   const t = getT();
@@ -44,6 +47,35 @@ const steps = [
   },
 ];
 
+const heroChips = [
+  { text: msg("Översätt sajten till engelska"), cls: "left-[4%] top-[18%] md:left-[10%]", r: "-4deg", d: "0s" },
+  { text: msg("Gör knappen grön"), cls: "right-[4%] top-[28%] md:right-[11%]", r: "3deg", d: "1.2s" },
+  { text: msg("Optimera för Google"), cls: "left-[10%] bottom-[12%] md:left-[17%]", r: "2deg", d: "2.4s" },
+  { text: msg("Ångra senaste"), cls: "right-[8%] bottom-[16%] md:right-[16%]", r: "-3deg", d: "3.4s" },
+];
+
+const stats = [
+  { n: 7, label: msg("Språk i verktyget") },
+  { n: 4, label: msg("Språk per sajt") },
+  { n: 50, label: msg("Sparade versioner") },
+  { n: 0, label: msg("Rader kod") },
+];
+
+const features = [
+  { icon: "globe", title: msg("Sajten på flera språk"), body: msg("Översätt hela sajten till upp till tre språk till med ett klick, och växla mellan dem med flaggorna.") },
+  { icon: "pointer", title: msg("Markera och be"), body: msg("Klicka på en text, bild eller knapp så får du förslag som passar just den. Skriv sen vad du vill ändra.") },
+  { icon: "undo", title: msg("Ångra och Historik"), body: msg("Ångra senaste ändringen med ett klick, och bläddra i hela samtalet med Millie i Historik.") },
+  { icon: "history", title: msg("Tidigare versioner"), body: msg("Innan varje ändring sparas en kopia av sajten. Gå tillbaka till hur den såg ut för en stund sedan.") },
+  { icon: "pages", title: msg("Sidor på ett ställe"), body: msg("Lägg till, byt namn på, flytta och ta bort sidor direkt i redigeraren, utan att lämna samtalet.") },
+  { icon: "news", title: msg("Nyheter"), body: msg("Skriv en artikel i en ruta som öppnas ovanpå sajten, med kategorier och förhandsvisning.") },
+  { icon: "bookings", title: msg("Bokningar"), body: msg("Ta emot bokningar av tider och paket, och hantera dem i redigeraren.") },
+  { icon: "search", title: msg("Optimera för Google"), body: msg("Välj ett sökord så skriver Millie om texten så att Google hittar den, och frågar om hon undrar något.") },
+  { icon: "bulb", title: msg("Förbättra"), body: msg("En checklista som visar vad som kan bli bättre på sajten. Fixa det med Millie med ett klick.") },
+  { icon: "image", title: msg("Dina bilder"), body: msg("Ladda upp bilder en gång. Millie kan använda dem, byta ut dem och skriva bildtexter åt dig.") },
+  { icon: "design", title: msg("Design på ett ställe"), body: msg("Byt färger, typsnitt, knappar och layout för hela sajten. Formulär och knappar följer med.") },
+  { icon: "wand", title: msg("Millie säger som det är"), body: msg("Kan hon inte göra något säger hon det rakt, och du kan skicka önskemålet till oss.") },
+];
+
 const examples = [
   {
     href: "/exempel/restaurang",
@@ -74,16 +106,33 @@ export default function FeaturesPage() {
     <div>
       <Header active="/funktioner" />
 
-      <section className="bg-ink">
-        <div className="max-w-3xl mx-auto text-center px-6 py-16 md:py-[70px]">
-          <div className="text-[13.5px] text-[#9E9C97] tracking-wide mb-3.5">
-            {t("FUNKTIONER")}
+      <section className="bg-ink relative overflow-hidden">
+        <div aria-hidden className="yc-glow absolute left-1/2 top-[-120px] -translate-x-1/2 w-[620px] h-[620px] rounded-full pointer-events-none" style={{ background: "radial-gradient(closest-side, rgba(198,255,94,0.28), transparent)" }} />
+        {heroChips.map((c) => (
+          <div key={c.text} aria-hidden className={`hidden sm:block absolute ${c.cls}`}>
+            <div
+              className="yc-float text-[12.5px] font-semibold text-[#C9C7C2] border border-white/15 bg-white/5 backdrop-blur-sm rounded-full px-3.5 py-1.5"
+              style={{ ["--r" as string]: c.r, animationDelay: c.d }}
+            >
+              {t(c.text)}
+            </div>
           </div>
-          <h1 className="text-[36px] md:text-[42px] leading-[1.15] font-medium text-white">{rich(t, "Så bygger ni en hemsida genom <span>ett samtal</span>", { span: (c) => <span className="italic text-accent">{c}</span> })}
-          </h1>
-          <p className="text-[16px] leading-relaxed text-[#C9C7C2] mt-4 max-w-[36ch] mx-auto">
-            {t("Tre steg från idé till färdig sajt — och sen fortsätter ni bara att be om ändringar.")}
-          </p>
+        ))}
+        <div className="relative max-w-3xl mx-auto text-center px-6 py-16 md:py-[84px]">
+          <Reveal from="up">
+            <div className="text-[13.5px] text-[#9E9C97] tracking-wide mb-3.5">
+              {t("FUNKTIONER")}
+            </div>
+          </Reveal>
+          <Reveal from="up" delay={100}>
+            <h1 className="text-[36px] md:text-[42px] leading-[1.15] font-medium text-white">{rich(t, "Så bygger ni en hemsida genom <span>ett samtal</span>", { span: (c) => <span className="italic text-accent">{c}</span> })}
+            </h1>
+          </Reveal>
+          <Reveal from="up" delay={220}>
+            <p className="text-[16px] leading-relaxed text-[#C9C7C2] mt-4 max-w-[36ch] mx-auto">
+              {t("Tre steg från idé till färdig sajt — och sen fortsätter ni bara att be om ändringar.")}
+            </p>
+          </Reveal>
         </div>
       </section>
 
@@ -96,9 +145,9 @@ export default function FeaturesPage() {
                 i % 2 === 1 ? "md:flex-row-reverse" : ""
               }`}
             >
-              <div className="flex-1">
+              <Reveal from={i % 2 === 1 ? "right" : "left"} className="flex-1">
                 <div className="flex items-center gap-2.5 mb-3.5">
-                  <span className="font-serif italic text-accent-ink bg-accent w-8 h-8 rounded-full inline-flex items-center justify-center text-[15px]">
+                  <span className="yc-ring font-serif italic text-accent-ink bg-accent w-8 h-8 rounded-full inline-flex items-center justify-center text-[15px]">
                     {s.n}
                   </span>
                   <span className="text-[12.5px] text-ink-dim tracking-wide font-semibold">
@@ -111,18 +160,54 @@ export default function FeaturesPage() {
                 <p className="text-[15.5px] leading-relaxed text-ink-dim max-w-[36ch]">
                   {t(s.body)}
                 </p>
-              </div>
-              <div className="flex-1 w-full rounded-2xl overflow-hidden shadow-[0_24px_50px_rgba(23,23,26,0.18)] border border-line">
-                <Image
-                  src={s.img}
-                  alt={t(s.alt)}
-                  width={760}
-                  height={480}
-                  className="w-full h-auto"
-                />
-              </div>
+              </Reveal>
+              <Reveal from="zoom" delay={150} className="flex-1 w-full">
+                <div className="yc-step-img w-full rounded-2xl overflow-hidden shadow-[0_24px_50px_rgba(23,23,26,0.18)] border border-line">
+                  <Image
+                    src={s.img}
+                    alt={t(s.alt)}
+                    width={760}
+                    height={480}
+                    className="w-full h-auto"
+                  />
+                </div>
+              </Reveal>
             </div>
           ))}
+        </div>
+
+        <div className="bg-ink px-6 md:px-12 py-14">
+          <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {stats.map((st, i) => (
+              <Reveal key={st.label} from="up" delay={i * 90}>
+                <div className="font-serif text-[44px] md:text-[52px] leading-none text-accent"><CountUp to={st.n} /></div>
+                <div className="text-[13px] text-[#C9C7C2] mt-2">{t(st.label)}</div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+
+        <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-[72px]">
+          <Reveal from="up">
+            <div className="text-center mb-11">
+              <div className="text-[12.5px] text-ink-dim tracking-wide font-semibold mb-3">{t("NYTT I REDIGERAREN")}</div>
+              <h2 className="text-[28px] md:text-[32px] font-medium mb-3">{t("Allt du kan göra i samtalet")}</h2>
+              <p className="text-[15.5px] text-ink-dim max-w-[48ch] mx-auto">{t("Millie sitter alltid längst ner i redigeraren. Här är vad som finns runt henne.")}</p>
+            </div>
+          </Reveal>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {features.map((f, i) => (
+              <Reveal key={f.title} from="up" delay={(i % 3) * 90}>
+                <div className="yc-feature h-full bg-white border border-line rounded-2xl p-6">
+                  <div className="relative w-11 h-11 rounded-xl bg-ink text-white flex items-center justify-center mb-4">
+                    <YIcon name={f.icon} size={22} />
+                  </div>
+                  <h3 className="relative text-[17px] font-semibold mb-1.5">{t(f.title)}</h3>
+                  <p className="relative text-[14.5px] leading-relaxed text-ink-dim">{t(f.body)}</p>
+                </div>
+              </Reveal>
+            ))}
+          </div>
         </div>
 
         <IncludedAndChat />

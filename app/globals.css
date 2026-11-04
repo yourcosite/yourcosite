@@ -205,3 +205,53 @@ h1, h2, h3 {
 /* YourCoSites egna ikoner (components/ui/YIcon.tsx): accentelementet fylls med
    ljusgrönt, resten är linje i textens färg. */
 .yicon .a { fill: var(--ya, #C6FF5E); }
+
+/* Funktionssidan: inglidande innehåll, flytande chips och kort med liv.
+   Allt stängs av för den som valt "minska rörelse". */
+.yc-reveal { transition: opacity 0.7s cubic-bezier(.2,.7,.2,1), transform 0.7s cubic-bezier(.2,.7,.2,1); }
+.yc-reveal[data-state="hidden"] { opacity: 0; }
+.yc-reveal[data-state="hidden"][data-from="up"] { transform: translateY(28px); }
+.yc-reveal[data-state="hidden"][data-from="left"] { transform: translateX(-36px); }
+.yc-reveal[data-state="hidden"][data-from="right"] { transform: translateX(36px); }
+.yc-reveal[data-state="hidden"][data-from="zoom"] { transform: scale(0.94); }
+
+@keyframes yc-float {
+  0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+  50% { transform: translateY(-10px) rotate(var(--r, 0deg)); }
+}
+@keyframes yc-glow {
+  0%, 100% { opacity: 0.35; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(1.12); }
+}
+@keyframes yc-wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg) scale(1.1); }
+  60% { transform: rotate(8deg) scale(1.1); }
+}
+@keyframes yc-ring {
+  0% { box-shadow: 0 0 0 0 rgba(198,255,94,0.55); }
+  100% { box-shadow: 0 0 0 16px rgba(198,255,94,0); }
+}
+@keyframes yc-draw {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+.yc-float { animation: yc-float 6s ease-in-out infinite; }
+.yc-glow { animation: yc-glow 7s ease-in-out infinite; }
+.yc-ring { animation: yc-ring 2.4s ease-out infinite; }
+.yc-feature { transition: transform 0.3s cubic-bezier(.2,.7,.2,1), box-shadow 0.3s, border-color 0.3s; position: relative; overflow: hidden; }
+.yc-feature::before {
+  content: ""; position: absolute; inset: 0; opacity: 0; transition: opacity 0.35s;
+  background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), rgba(198,255,94,0.28), transparent 70%);
+  pointer-events: none;
+}
+.yc-feature:hover { transform: translateY(-5px); box-shadow: 0 18px 36px rgba(23,23,26,0.12); border-color: #C6FF5E; }
+.yc-feature:hover::before { opacity: 1; }
+.yc-feature:hover .yicon { animation: yc-wiggle 0.7s ease; }
+.yc-step-img { transition: transform 0.5s cubic-bezier(.2,.7,.2,1), box-shadow 0.5s; }
+.yc-step-img:hover { transform: translateY(-6px) scale(1.015); box-shadow: 0 34px 60px rgba(23,23,26,0.24); }
+@media (prefers-reduced-motion: reduce) {
+  .yc-reveal { transition: none; }
+  .yc-float, .yc-glow, .yc-ring, .yc-feature:hover .yicon { animation: none; }
+  .yc-feature, .yc-step-img { transition: none; }
+}
