@@ -53,7 +53,7 @@ export async function sendEmail(opts: {
 }
 
 // Enkel, prydlig mejlmall (tabellbaserad, fungerar i alla mejlprogram).
-export function emailLayout(opts: { title: string; intro: string; rows: [string, string][]; extra?: { heading: string; text: string }; brand?: { name: string; logoUrl?: string | null }; footer?: string; button?: { label: string; url: string }; poweredBy?: string; lang?: string }): string {
+export function emailLayout(opts: { title: string; intro: string; rows: [string, string][]; extra?: { heading: string; text: string }; brand?: { name: string; logoUrl?: string | null }; footer?: string; footerLinks?: { label: string; url: string }[]; button?: { label: string; url: string }; poweredBy?: string; lang?: string }): string {
   const rows = opts.rows
     .filter(([, v]) => v)
     .map(
@@ -78,7 +78,7 @@ ${brandHtml}<h1 style="margin:0 0 10px;font-size:21px;color:#1a1a18">${escapeHtm
 <table cellpadding="0" cellspacing="0">${rows}</table>
 ${extra ? `<div style="margin:22px 0 0;padding:14px 16px;background:#f5f4f0;border-radius:10px"><div style="font-size:13px;font-weight:700;color:#1a1a18;margin-bottom:4px">${escapeHtml(extra.heading)}</div><div style="font-size:14px;line-height:1.55;color:#3a3a37;white-space:pre-line">${escapeHtml(extra.text)}</div></div>` : ""}
 ${button}
-${opts.footer ? `<p style="margin:24px 0 0;font-size:12.5px;line-height:1.5;color:#8a8984">${escapeHtml(opts.footer)}</p>` : ""}
+${opts.footer ? `<p style="margin:24px 0 0;font-size:12.5px;line-height:1.5;color:#8a8984">${escapeHtml(opts.footer)}${opts.footerLinks && opts.footerLinks.length ? `<br>${opts.footerLinks.map((l) => `<a href="${escapeHtml(l.url)}" style="color:#6b6a66;text-decoration:underline">${escapeHtml(l.label)}</a>`).join(" &middot; ")}` : ""}</p>` : ""}
 <p style="margin:24px 0 0;padding-top:14px;border-top:1px solid #ecebe6;font-size:12px;color:#a09f99;text-align:center">${escapeHtml(opts.poweredBy ?? "Bokat via YourCoSite")}</p>
 </td></tr></table></td></tr></table></body></html>`;
 }
