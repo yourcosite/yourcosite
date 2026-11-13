@@ -2801,5 +2801,7 @@
   "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Enter your email address and we will send a link to choose a new password.",
   "Skicka återställningslänk": "Send reset link",
   "Dina ändringar är slut för den här månaden": "You have used all your changes for this month",
-  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Your latest request was not carried out. Add more changes to continue right away, otherwise the counter resets when a new month begins."
+  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Your latest request was not carried out. Add more changes to continue right away, otherwise the counter resets when a new month begins.",
+  "30 ändringar/månad per sajt (50 första månaden)": "30 changes/month per site (50 the first month)",
+  "En sajt till på samma konto, med egna 30 ändringar per månad": "One more site on the same account, with its own 30 changes per month"
 }

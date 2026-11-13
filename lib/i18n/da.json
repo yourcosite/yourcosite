@@ -2801,5 +2801,7 @@
   "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Skriv din e-mailadresse, så sender vi et link til at vælge en ny adgangskode.",
   "Skicka återställningslänk": "Send nulstillingslink",
   "Dina ändringar är slut för den här månaden": "Dine ændringer er brugt op for denne måned",
-  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Din seneste anmodning blev ikke udført. Tilføj flere ændringer for at fortsætte med det samme, ellers nulstilles tælleren, når en ny måned begynder."
+  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Din seneste anmodning blev ikke udført. Tilføj flere ændringer for at fortsætte med det samme, ellers nulstilles tælleren, når en ny måned begynder.",
+  "30 ändringar/månad per sajt (50 första månaden)": "30 ændringer/måned pr. side (50 den første måned)",
+  "En sajt till på samma konto, med egna 30 ändringar per månad": "En side mere på samme konto, med egne 30 ændringer pr. måned"
 }

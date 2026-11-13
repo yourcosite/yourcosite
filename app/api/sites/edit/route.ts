@@ -860,8 +860,21 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten.") }, { status: 429 });
   }
 
-  // Månadens ändringar: 30 ingår, fler köps som tillägg (se lib/changeLimit.ts).
-  const usageBefore = await getChangeUsage(supabase, user.id, user.created_at);
+  const body = await request.json();
+  const message = typeof body.message === "string" ? body.message.trim() : "";
+  if (!message) return NextResponse.json({ error: t("Skriv vad du vill ändra.") }, { status: 400 });
+  // Vilken av kundens (eventuellt flera) sajter redigeringen gäller — skickas
+  // med från app/redigera/page.tsx. Se getCurrentPublishedSite för varför
+  // den annars kunde träffa fel sajt på ett konto med flera.
+  const siteId = typeof body.siteId === "string" ? body.siteId : null;
+
+  // Månadens ändringar per sajt: 30 ingår, fler köps som tillägg (se lib/changeLimit.ts).
+  let siteCreatedAt: string | null = null;
+  if (siteId) {
+    const { data: siteRow } = await supabase.from("sites").select("created_at").eq("id", siteId).eq("owner_id", user.id).maybeSingle();
+    siteCreatedAt = siteRow?.created_at ?? null;
+  }
+  const usageBefore = await getChangeUsage(supabase, user.id, siteCreatedAt ?? user.created_at, siteCreatedAt ? siteId : null);
   if (usageBefore.enabled && usageBefore.used >= usageBefore.limit) {
     return NextResponse.json(
       {
@@ -873,14 +886,6 @@ async function POST_handler(request: Request) {
       { status: 402 }
     );
   }
-
-  const body = await request.json();
-  const message = typeof body.message === "string" ? body.message.trim() : "";
-  if (!message) return NextResponse.json({ error: t("Skriv vad du vill ändra.") }, { status: 400 });
-  // Vilken av kundens (eventuellt flera) sajter redigeringen gäller — skickas
-  // med från app/redigera/page.tsx. Se getCurrentPublishedSite för varför
-  // den annars kunde träffa fel sajt på ett konto med flera.
-  const siteId = typeof body.siteId === "string" ? body.siteId : null;
 
   // Flera bilagor på en gång (t.ex. en hel hög bilder till ett nytt
   // bildgalleri) — se handleFiles i app/redigera/page.tsx. Taket här är

@@ -503,11 +503,12 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const lowWarnedRef = useRef(false);
   useEffect(() => {
     if (demo) return;
-    fetch("/api/sites/change-usage")
+    lowWarnedRef.current = false;
+    fetch(`/api/sites/change-usage${site?.id ? `?siteId=${encodeURIComponent(site.id)}` : ""}`)
       .then((r) => r.json())
-      .then((d) => { if (d && d.enabled) setUsage({ used: d.used, limit: d.limit }); })
+      .then((d) => { setUsage(d && d.enabled ? { used: d.used, limit: d.limit } : null); })
       .catch(() => {});
-  }, [demo]);
+  }, [demo, site?.id]);
   const orderAddon = async () => {
     setAddonBusy(true);
     setAddonError("");

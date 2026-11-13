@@ -1,7 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { inDemo } from "@/lib/demoStore";
 
-// Spärr på antal ändringar per månad. 30 ingår i paketet; extra ändringar
+// Spärr på antal ändringar per månad OCH SAJT: varje sajt har egna 30 (50 de
+// första 30 dagarna efter att sajten skapats). Extra ändringar
 // (tillägget "50 extra ändringar") läggs in av admin per månad i tabellen
 // change_addons. En "ändring" är ett Millie-svar som faktiskt ändrade sajten
 // (rad i site_changes) — frågor och avvisade önskemål räknas inte, inte heller
@@ -26,7 +27,10 @@ function monthStartIso(d = new Date()): string {
   return new Date(Date.UTC(y, m - 1, 1, -2)).toISOString();
 }
 
-export async function getChangeUsage(supabase: SupabaseClient, userId: string, createdAt?: string | null): Promise<ChangeUsage> {
+// siteId: sajten som räknas (varje sajt har egen gräns). Utan siteId räknas
+// kontots alla ändringar, med kontots registreringsdatum som start.
+// createdAt: när sajten skapades (annars kontot).
+export async function getChangeUsage(supabase: SupabaseClient, userId: string, createdAt?: string | null, siteId?: string | null): Promise<ChangeUsage> {
   const off = { enabled: false, used: 0, limit: BASE_CHANGES, extra: 0 };
   if (inDemo()) return off;
   try {
@@ -37,17 +41,22 @@ export async function getChangeUsage(supabase: SupabaseClient, userId: string, c
     const inStart = Date.now() < startEnd;
     const since = inStart ? new Date(created).toISOString() : new Date(Math.max(new Date(monthStartIso()).getTime(), startEnd)).toISOString();
     const base = inStart ? START_CHANGES : BASE_CHANGES;
-    const { count, error } = await supabase
+    let countQuery = supabase
       .from("site_changes")
       .select("id", { count: "exact", head: true })
       .eq("owner_id", userId)
       .gte("created_at", since);
+    if (siteId) countQuery = countQuery.eq("site_id", siteId);
+    const { count, error } = await countQuery;
     if (error) return off;
-    const { data: addons, error: addErr } = await supabase
+    // Tillägg gäller en sajt (site_id). Äldre rader utan site_id gäller kontots alla sajter.
+    let addonQuery = supabase
       .from("change_addons")
       .select("amount")
       .eq("owner_id", userId)
       .eq("month", monthKey());
+    if (siteId) addonQuery = addonQuery.or(`site_id.eq.${siteId},site_id.is.null`);
+    const { data: addons, error: addErr } = await addonQuery;
     const extra = addErr ? 0 : (addons || []).reduce((s: number, r: { amount: number }) => s + (r.amount || 0), 0);
     return { enabled: true, used: count ?? 0, limit: base + extra, extra };
   } catch {

@@ -17,11 +17,20 @@ async function createdAtOf(admin: ReturnType<typeof createAdminClient>, id: stri
   }
 }
 
-async function GET_handler(_request: Request, { params }: { params: { id: string } }) {
+// Varje sajt har egna ändringar, så båda anropen gäller en sajt (siteId).
+async function usageFor(admin: ReturnType<typeof createAdminClient>, ownerId: string, siteId: string | null) {
+  if (siteId) {
+    const { data: siteRow } = await admin.from("sites").select("created_at").eq("id", siteId).eq("owner_id", ownerId).maybeSingle();
+    if (siteRow) return getChangeUsage(admin, ownerId, siteRow.created_at, siteId);
+  }
+  return getChangeUsage(admin, ownerId, await createdAtOf(admin, ownerId));
+}
+
+async function GET_handler(request: Request, { params }: { params: { id: string } }) {
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
   const admin = createAdminClient();
-  return NextResponse.json(await getChangeUsage(admin, params.id, await createdAtOf(admin, params.id)));
+  return NextResponse.json(await usageFor(admin, params.id, new URL(request.url).searchParams.get("siteId")));
 }
 
 async function POST_handler(request: Request, { params }: { params: { id: string } }) {
@@ -35,8 +44,9 @@ async function POST_handler(request: Request, { params }: { params: { id: string
     return NextResponse.json({ error: t("Ange ett antal mellan 1 och 1000.") }, { status: 400 });
   }
 
+  const siteId = typeof body.siteId === "string" && body.siteId ? body.siteId : null;
   const admin = createAdminClient();
-  const { error } = await admin.from("change_addons").insert({ owner_id: params.id, month: monthKey(), amount });
+  const { error } = await admin.from("change_addons").insert({ owner_id: params.id, month: monthKey(), amount, ...(siteId ? { site_id: siteId } : {}) });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   const { data: profile } = await admin.from("profiles").select("full_name, email").eq("id", params.id).single();
@@ -49,7 +59,7 @@ async function POST_handler(request: Request, { params }: { params: { id: string
     targetLabel: profile?.full_name || profile?.email || params.id,
   });
 
-  return NextResponse.json({ ok: true, usage: await getChangeUsage(admin, params.id, await createdAtOf(admin, params.id)) });
+  return NextResponse.json({ ok: true, usage: await usageFor(admin, params.id, siteId) });
 }
 
 export const GET = withErrorLog("GET /api/admin/customers/[id]/addons", GET_handler);

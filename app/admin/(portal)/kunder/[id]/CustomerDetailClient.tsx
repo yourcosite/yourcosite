@@ -91,19 +91,21 @@ export default function CustomerDetailClient({
   const [planValue, setPlanValue] = useState(site?.plan ?? "bas");
   const [changeUsage, setChangeUsage] = useState<{ enabled: boolean; used: number; limit: number } | null>(null);
   const [addingChanges, setAddingChanges] = useState(false);
+  // Varje sajt har egna ändringar: välj sajt när kunden har flera.
+  const [usageSiteId, setUsageSiteId] = useState<string | undefined>(site?.id);
   useEffect(() => {
-    fetch(`/api/admin/customers/${customer.id}/addons`)
+    fetch(`/api/admin/customers/${customer.id}/addons${usageSiteId ? `?siteId=${usageSiteId}` : ""}`)
       .then((r) => r.json())
       .then((d) => setChangeUsage(d))
       .catch(() => {});
-  }, [customer.id]);
+  }, [customer.id, usageSiteId]);
   const addExtraChanges = async () => {
     setAddingChanges(true);
     try {
       const res = await fetch(`/api/admin/customers/${customer.id}/addons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: 50 }),
+        body: JSON.stringify({ amount: 50, siteId: usageSiteId }),
       });
       const d = await res.json();
       if (res.ok) setChangeUsage(d.usage);
@@ -384,7 +386,18 @@ export default function CustomerDetailClient({
                       </button>
                     </div>
                     <div className="mt-4 pt-3.5 border-t border-line">
-                      <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Ändringar denna månad</div>
+                      <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Ändringar denna månad (per sajt)</div>
+                      {(customer.sites?.length ?? 0) > 1 && (
+                        <select
+                          value={usageSiteId}
+                          onChange={(e) => setUsageSiteId(e.target.value)}
+                          className="mb-2 border border-line rounded-lg px-2.5 py-1.5 text-[13px] bg-surface"
+                        >
+                          {customer.sites!.map((s: { id: string; name: string }) => (
+                            <option key={s.id} value={s.id}>{s.name}</option>
+                          ))}
+                        </select>
+                      )}
                       <div className="flex items-center gap-2.5 text-[13.5px]">
                         <span>
                           {changeUsage?.enabled ? `${changeUsage.used} av ${changeUsage.limit} använda` : "Spärren är inte aktiv (kör andringar-spark.sql)"}

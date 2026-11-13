@@ -34,6 +34,7 @@ async function POST_handler(request: Request) {
     `Tillägg: ${ADDONS[kind]}`,
     `Kund: ${user.email || user.id}`,
     `Sajt: ${site?.name || "okänd"}`,
+    `Sajt-id: ${site?.id || "okänd"}`,
     `Kund-id: ${user.id}`,
   ];
   const res = await sendEmail({

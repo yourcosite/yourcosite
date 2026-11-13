@@ -2801,5 +2801,7 @@
   "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Saisissez votre adresse e-mail et nous vous enverrons un lien pour choisir un nouveau mot de passe.",
   "Skicka återställningslänk": "Envoyer le lien de réinitialisation",
   "Dina ändringar är slut för den här månaden": "Vos modifications de ce mois sont épuisées",
-  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Votre dernière demande n'a pas été exécutée. Ajoutez des modifications pour continuer tout de suite, sinon le compteur est remis à zéro au début du mois suivant."
+  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Votre dernière demande n'a pas été exécutée. Ajoutez des modifications pour continuer tout de suite, sinon le compteur est remis à zéro au début du mois suivant.",
+  "30 ändringar/månad per sajt (50 första månaden)": "30 modifications/mois par site (50 le premier mois)",
+  "En sajt till på samma konto, med egna 30 ändringar per månad": "Un site de plus sur le même compte, avec ses propres 30 modifications par mois"
 }
