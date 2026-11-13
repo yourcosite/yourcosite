@@ -56,6 +56,8 @@ async function GET_handler(request: Request) {
       min_notice_hours: s?.min_notice_hours ?? 12,
       max_days_ahead: s?.max_days_ahead ?? 60,
       timezone: s?.timezone || DEFAULT_TIMEZONE,
+      require_email: s?.require_email ?? true,
+      require_phone: s?.require_phone ?? true,
       confirm_subject: s?.confirm_subject ?? "",
       confirm_intro: s?.confirm_intro ?? "",
       confirm_extra: s?.confirm_extra ?? "",
@@ -205,13 +207,16 @@ async function POST_handler(request: Request) {
       const ahead = Math.round(Number(body.max_days_ahead));
       if (!(notice >= 0 && notice <= 720)) return fail(t("Förvarningen måste vara mellan 0 och 720 timmar."));
       if (!(ahead >= 1 && ahead <= 365)) return fail(t("Hur långt fram måste vara mellan 1 och 365 dagar."));
-      const { error } = await supabase.from("booking_settings").upsert({
+      const base = {
         site_id: site.id, notify_email: email || null, min_notice_hours: notice, max_days_ahead: ahead, timezone: tz,
         confirm_subject: txt(body.confirm_subject, 150) || null,
         confirm_intro: txt(body.confirm_intro, 1000) || null,
         confirm_extra: txt(body.confirm_extra, 1500) || null,
         cancel_intro: txt(body.cancel_intro, 1000) || null,
-      });
+      };
+      let { error } = await supabase.from("booking_settings").upsert({ ...base, require_email: body.require_email !== false, require_phone: body.require_phone !== false });
+      // Kolumnerna finns inte förrän supabase/bokning-obligatoriska.sql körts: spara då övrigt som vanligt.
+      if (error && /require_(email|phone)/.test(error.message)) ({ error } = await supabase.from("booking_settings").upsert(base));
       if (error) return fail(t("Kunde inte spara inställningarna."), 500);
       return NextResponse.json({ ok: true });
     }

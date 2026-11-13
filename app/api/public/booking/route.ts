@@ -36,6 +36,8 @@ async function GET_handler(request: Request) {
       packages: packages.map((p) => ({ id: p.id, name: p.name, description: p.description, duration_min: p.duration_min, price_sek: p.price_sek, image_url: p.image_url ?? null })),
       timezone: data.settings.timezone,
       terms: (data.settings as any).terms_text ?? null,
+      requireEmail: (data.settings as any).require_email !== false,
+      requirePhone: (data.settings as any).require_phone !== false,
     });
   }
   const pkg = packages.find((p) => p.id === packageId);
@@ -69,16 +71,21 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("Bokningen saknar uppgifter.") }, { status: 400 });
   }
   if (!name) return NextResponse.json({ error: t("Skriv ditt namn.") }, { status: 400 });
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  // Vilka fält som är obligatoriska styrs av sajtens bokningsinställningar.
+  const reqDb = createAdminClient();
+  const reqSettings = (await loadSiteBookingData(reqDb, siteId)).settings as any;
+  const requireEmail = reqSettings.require_email !== false;
+  const requirePhone = reqSettings.require_phone !== false;
+  if ((requireEmail || email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: t("Skriv en giltig e-postadress, dit bekräftelsen skickas.") }, { status: 400 });
   }
-  if (phone.replace(/\D/g, "").length < 6) {
+  if ((requirePhone || phone) && phone.replace(/\D/g, "").length < 6) {
     return NextResponse.json({ error: t("Skriv ditt telefonnummer.") }, { status: 400 });
   }
 
   // Samma e-postadress får inte boka hur många tider som helst per timme,
   // och en sajt får inte översköljas.
-  if (await rateLimited(`booking:mail:${email.toLowerCase()}`, 4, 3600) || await rateLimited(`booking:site:${siteId}`, 60, 3600)) {
+  if ((email && await rateLimited(`booking:mail:${email.toLowerCase()}`, 4, 3600)) || await rateLimited(`booking:site:${siteId}`, 60, 3600)) {
     return NextResponse.json({ error: t(TOO_MANY) }, { status: 429 });
   }
 
@@ -117,8 +124,8 @@ async function POST_handler(request: Request) {
       starts_at: start.toISOString(),
       ends_at: end.toISOString(),
       customer_name: name,
-      customer_email: email,
-      customer_phone: phone,
+      customer_email: email || null,
+      customer_phone: phone || null,
       message: message || null,
       ...(terms ? { terms_accepted_at: new Date().toISOString(), terms_snapshot: terms } : {}),
     })

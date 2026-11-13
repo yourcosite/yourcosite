@@ -2529,6 +2529,8 @@ function BookingBlock({
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
   const [hp, setHp] = useState("");
+  const [requireEmail, setRequireEmail] = useState(true);
+  const [requirePhone, setRequirePhone] = useState(true);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">("idle");
   const [error, setError] = useState("");
   const [confirmed, setConfirmed] = useState<{ startsAt: string; packageName: string; emailSent: boolean } | null>(null);
@@ -2541,6 +2543,8 @@ function BookingBlock({
         setPackages(d.packages || []);
         setTerms(typeof d.terms === "string" && d.terms.trim() ? d.terms : null);
         if (d.timezone) setTz(d.timezone);
+        setRequireEmail(d.requireEmail !== false);
+        setRequirePhone(d.requirePhone !== false);
       })
       .catch(() => setPackages([]));
   }, [demo, siteId]);
@@ -2614,7 +2618,7 @@ function BookingBlock({
           {confirmed.packageName} · {fmtLong(confirmed.startsAt)}
         </div>
         <div className="text-[13px] mt-3" style={{ color: palette.textDim }}>
-          {demo || preview ? t("Det här är en förhandsvisning, ingen bokning har sparats.") : confirmed.emailSent ? t("En bekräftelse är skickad till din e-post.") : t("Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu.")}
+          {demo || preview ? t("Det här är en förhandsvisning, ingen bokning har sparats.") : confirmed.emailSent ? t("En bekräftelse är skickad till din e-post.") : !email.trim() ? t("Spara gärna tiden.") : t("Spara gärna tiden. Bekräftelsemejlet kunde inte skickas just nu.")}
         </div>
       </div>
     );
@@ -2791,8 +2795,8 @@ function BookingBlock({
           <div className={stepTitle} style={{ color: palette.textDim }}>{t("3. Dina uppgifter")}</div>
           <div className="text-[13.5px] font-semibold">{pkg.name} · {fmtLong(time)}</div>
           <input type="text" placeholder={t("Namn")} required value={name} onChange={(e) => setName(e.target.value)} className={inputClass} style={inputStyle} />
-          <input type="email" placeholder={t("E-post (hit skickas bekräftelsen)")} required value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
-          <input type="tel" placeholder={t("Telefon")} required value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="email" placeholder={requireEmail ? t("E-post (hit skickas bekräftelsen)") : t("E-post (valfritt, hit skickas bekräftelsen)")} required={requireEmail} value={email} onChange={(e) => setEmail(e.target.value)} className={inputClass} style={inputStyle} />
+          <input type="tel" placeholder={requirePhone ? t("Telefon") : t("Telefon (valfritt)")} required={requirePhone} value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} style={inputStyle} />
           <textarea placeholder={t("Meddelande (valfritt)")} rows={3} value={message} onChange={(e) => setMessage(e.target.value)} className={`${inputClass} resize-none`} style={inputStyle} />
           {terms && (
             <div className="rounded-xl border p-3.5" style={{ borderColor: palette.cardBorder, background: palette.cardBg }}>

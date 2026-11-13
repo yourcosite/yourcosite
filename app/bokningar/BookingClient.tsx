@@ -25,13 +25,13 @@ type Slot = { id: string; package_id: string | null; starts_at: string; ends_at:
 type Block = { id: string; starts_at: string; ends_at: string; note: string | null };
 type Booking = {
   id: string; package_name: string; duration_min: number; price_sek: number | null; starts_at: string;
-  customer_name: string; customer_email: string; customer_phone: string | null; message: string | null; status: string;
+  customer_name: string; customer_email: string | null; customer_phone: string | null; message: string | null; status: string;
 };
 type Data = {
   siteName?: string;
   siteLang?: string;
   currency?: string;
-  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string; terms_text?: string; terms_ack_at?: string | null };
+  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; require_email?: boolean; require_phone?: boolean; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string; terms_text?: string; terms_ack_at?: string | null };
   packages: Pkg[]; rules: Rule[]; slots: Slot[]; blocks: Block[]; bookings: Booking[]; mailConfigured: boolean;
 };
 
@@ -181,8 +181,8 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
       <div className="mt-2 text-[13px]">
         <div className="font-semibold">{b.customer_name}</div>
         <div className="text-ink-dim">
-          <a href={`mailto:${b.customer_email}`} className="underline">{b.customer_email}</a>
-          {b.customer_phone ? ` · ${b.customer_phone}` : ""}
+          {b.customer_email && <a href={`mailto:${b.customer_email}`} className="underline">{b.customer_email}</a>}
+          {b.customer_phone ? `${b.customer_email ? " · " : ""}${b.customer_phone}` : ""}
         </div>
         {b.message && <div className="mt-1.5 text-ink-dim whitespace-pre-line">&ldquo;{b.message}&rdquo;</div>}
       </div>
@@ -542,6 +542,8 @@ function SettingsTab({ data, busy, act, siteId }: { data: Data; busy: boolean; a
     notify_email: st.notify_email,
     min_notice_hours: String(st.min_notice_hours),
     max_days_ahead: String(st.max_days_ahead),
+    require_email: st.require_email !== false,
+    require_phone: st.require_phone !== false,
     confirm_subject: st.confirm_subject || "",
     confirm_intro: st.confirm_intro || "",
     confirm_extra: st.confirm_extra || "",
@@ -567,6 +569,19 @@ function SettingsTab({ data, busy, act, siteId }: { data: Data; busy: boolean; a
           <input type="number" min={1} className={`${input} w-full`} value={s.max_days_ahead} onChange={(e) => setS({ ...s, max_days_ahead: e.target.value })} />
         </label>
         <p className="text-[12px] text-ink-dim mt-3">{t("Tider räknas i tidszonen {tz}.", { tz: data.settings.timezone })}</p>
+      </div>
+
+      <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[560px]">
+        <h2 className="text-[15px] font-semibold mb-1">{t("Uppgifter besökaren fyller i")}</h2>
+        <p className="text-[13px] text-ink-dim mb-3">{t("Namn krävs alltid. Välj om e-post och telefon också måste fyllas i. Utan e-post kan ingen bekräftelse skickas till besökaren, men du får alltid ett mejl om varje ny bokning.")}</p>
+        <label className="flex items-center gap-2.5 text-[13.5px] mb-2">
+          <input type="checkbox" checked={s.require_email} onChange={(e) => setS({ ...s, require_email: e.target.checked })} />
+          {t("E-post är obligatoriskt")}
+        </label>
+        <label className="flex items-center gap-2.5 text-[13.5px]">
+          <input type="checkbox" checked={s.require_phone} onChange={(e) => setS({ ...s, require_phone: e.target.checked })} />
+          {t("Telefon är obligatoriskt")}
+        </label>
       </div>
 
       <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[560px]">

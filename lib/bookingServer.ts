@@ -55,6 +55,8 @@ export async function loadSiteBookingData(db: SupabaseClient, siteId: string): P
       max_days_ahead: s?.max_days_ahead ?? DEFAULT_SETTINGS.max_days_ahead,
       timezone: s?.timezone || DEFAULT_SETTINGS.timezone,
       notify_email: s?.notify_email ?? null,
+      require_email: s?.require_email ?? true,
+      require_phone: s?.require_phone ?? true,
       confirm_subject: s?.confirm_subject ?? null,
       confirm_intro: s?.confirm_intro ?? null,
       confirm_extra: s?.confirm_extra ?? null,
@@ -78,7 +80,7 @@ type BookingRow = {
   price_sek: number | null;
   starts_at: string;
   customer_name: string;
-  customer_email: string;
+  customer_email: string | null;
   customer_phone: string | null;
   message: string | null;
   cancel_token: string;
@@ -140,7 +142,7 @@ export async function sendBookingEmails(opts: {
   const extraText = termsText ? (baseExtra ? `${baseExtra}\n\n${t("Villkor")}:\n${termsText}` : termsText) : baseExtra;
   const extraHeading = termsText && !baseExtra ? t("Villkor") : t("Bra att veta");
 
-  const customer = sendEmail({
+  const customer = !b.customer_email ? Promise.resolve({ sent: false }) : sendEmail({
     to: b.customer_email,
     subject,
     html: emailLayout({
@@ -171,14 +173,14 @@ export async function sendBookingEmails(opts: {
           rows: [
             ...ownerRows,
             [ownerT("Namn"), b.customer_name],
-            [ownerT("E-post"), b.customer_email],
+            [ownerT("E-post"), b.customer_email || ""],
             [ownerT("Telefon"), b.customer_phone || ""],
             [ownerT("Meddelande"), b.message || ""],
           ],
           button: { label: ownerT("Öppna bokningarna"), url: `${origin}/bokningar?site=${siteId}` },
         }),
-        text: `${ownerT("Ny bokning på {sajt}", { sajt: siteName })}\n\n${[...ownerRows, [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email], [ownerT("Telefon"), b.customer_phone || ""], [ownerT("Meddelande"), b.message || ""]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
-        replyTo: b.customer_email,
+        text: `${ownerT("Ny bokning på {sajt}", { sajt: siteName })}\n\n${[...ownerRows, [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email || ""], [ownerT("Telefon"), b.customer_phone || ""], [ownerT("Meddelande"), b.message || ""]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
+        replyTo: b.customer_email || undefined,
       })
     : Promise.resolve({ sent: false });
 
@@ -235,10 +237,10 @@ export async function sendCancellationEmails(opts: {
           poweredBy: ownerT("Bokat via YourCoSite"),
           title: ownerT("En bokning har avbokats"),
           intro: ownerT("{namn} har avbokat sin tid. Tiden är ledig igen.", { namn: b.customer_name }),
-          rows: [[ownerT("Tjänst"), b.package_name], [ownerT("Tid"), ownerWhen], [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email]],
+          rows: [[ownerT("Tjänst"), b.package_name], [ownerT("Tid"), ownerWhen], [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email || ""]],
         }),
         text: `${ownerT("{namn} har avbokat.", { namn: b.customer_name })}\n\n${ownerT("Tjänst")}: ${b.package_name}\n${ownerT("Tid")}: ${ownerWhen}`,
-        replyTo: b.customer_email,
+        replyTo: b.customer_email || undefined,
       })
     );
   }

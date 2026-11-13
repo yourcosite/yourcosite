@@ -177,6 +177,9 @@ export type MailTexts = {
   confirm_extra?: string | null;
   cancel_intro?: string | null;
   terms_text?: string | null;
+  // Vilka uppgifter besökaren måste fylla i (standard: båda).
+  require_email?: boolean;
+  require_phone?: boolean;
 };
 export const MAIL_PLACEHOLDERS = ["{namn}", "{tjänst}", "{tid}", "{längd}", "{pris}", "{sajt}"];
 export const DEFAULT_CONFIRM_SUBJECT = "Bokningsbekräftelse: {tjänst}, {tid}";
