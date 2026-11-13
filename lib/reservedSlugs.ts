@@ -4,7 +4,7 @@
 // med här, så en ny sida inte råkar krocka med en kunds adress.
 export const RESERVED_SLUGS = new Set<string>([
   // Mappar och sidor i appen
-  "admin", "anvandarvillkor", "api", "aterstall-losenord", "auth", "avboka", "bokningar", "bygger",
+  "admin", "anvandarvillkor", "api", "aterstall-losenord", "avanmal", "auth", "avboka", "bokningar", "bygger",
   "dashboard", "dela", "demo", "exempel", "fakturering", "forbattra", "forhandsgranska", "forslag",
   "funktioner", "guide", "icon", "installningar", "integritetspolicy", "kontakt", "logga-in", "nyheter",
   "om-oss", "onboarding", "opengraph-image", "priser", "publik", "redigera", "robots", "robots.txt",

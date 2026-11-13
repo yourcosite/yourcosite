@@ -18,6 +18,7 @@ export async function sendEmail(opts: {
   html: string;
   text: string;
   replyTo?: string;
+  headers?: Record<string, string>;
 }): Promise<EmailResult> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.EMAIL_FROM;
@@ -36,6 +37,7 @@ export async function sendEmail(opts: {
         html: opts.html,
         text: opts.text,
         ...(opts.replyTo ? { reply_to: opts.replyTo } : {}),
+        ...(opts.headers ? { headers: opts.headers } : {}),
       }),
     });
     if (!res.ok) {

@@ -216,8 +216,11 @@ function SitePreviewInner({
   onSelectSection,
   selectedFieldKey,
   onSelectField,
+  hideChrome,
 }: {
   content: SiteContent;
+  // Mallgalleriet visar bara själva sektionen, utan sajtens meny och sidfot.
+  hideChrome?: boolean;
   siteName?: string;
   // Sajtens id i databasen — bara för vår egen, cookiefria besöksstatistik
   // (PageviewBeacon nedan). Valfri eftersom den bara ska skickas med från
@@ -557,6 +560,7 @@ function SitePreviewInner({
       }}
     >
       <div className={overlayHeader ? "relative" : undefined}>
+        {!hideChrome && (
         <Header
           siteName={siteName}
           logoUrl={content.logoUrl}
@@ -576,6 +580,7 @@ function SitePreviewInner({
           accent={accent}
           buttonShape={buttonShape}
         />
+        )}
         {overlayHeader && firstSection && (
           <div className={`contents ycs-blk${(firstSection as any).fadeBottom || (firstSection as any).fadeTop ? " ycs-fadewrap" : ""}`} data-ycs-align={firstSection.textAlign ?? content.theme.textAlign}>
           <SectionBlock
@@ -704,6 +709,7 @@ function SitePreviewInner({
           </div>
         ))
       )}
+      {!hideChrome && (
       <Footer
         siteName={siteName}
         logoUrl={content.logoUrl}
@@ -718,6 +724,7 @@ function SitePreviewInner({
         privacyPolicyFileUrl={privacyPolicyFileUrl}
         photoCredits={creditsInUse(content)}
       />
+      )}
       {showCookieBanner && cookieChoice === "pending" && (
         <CookieBanner
           palette={palette}

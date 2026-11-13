@@ -113,3 +113,19 @@ drop trigger if exists protect_site_publishing on sites;
 create trigger protect_site_publishing
   before insert or update on sites
   for each row execute function public.protect_site_publishing();
+
+-- ============================================================
+-- AUTOMATISKA MEJL (välkomst, tips dagen efter, påminnelse efter en vecka)
+-- lifecycle_emails minns vad som redan skickats så ingen får samma mejl två
+-- gånger. email_opt_out sätts när kunden klickar på avanmälan i mejlet.
+-- Skrivs bara av servern (service role), ingen policy behövs.
+-- ============================================================
+alter table profiles add column if not exists email_opt_out boolean not null default false;
+
+create table if not exists lifecycle_emails (
+  user_id uuid not null references profiles (id) on delete cascade,
+  kind text not null,
+  sent_at timestamptz not null default now(),
+  primary key (user_id, kind)
+);
+alter table lifecycle_emails enable row level security;

@@ -42,6 +42,7 @@ import { installDemoFetch } from "@/lib/demoClient";
 import { ADDON_PRICES, currencyForLocale, formatMoney } from "@/lib/pricing";
 import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, MAX_MENU_CATEGORIES, MAX_MENU_ITEMS, MAX_FIXTURES, FIXTURES_LAYOUTS, MENU_TAGS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
+import SectionGalleryModal from "@/components/editor/SectionGalleryModal";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
 import type { NewsArticle } from "@/lib/newsArticles";
 import NewsPreviewModal from "@/components/NewsPreviewModal";
@@ -1055,6 +1056,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   // Visuella väljare: ikon för en ruta och layout för en rutnätssektion.
   const [iconPickerOpen, setIconPickerOpen] = useState(false);
   const [layoutPickerOpen, setLayoutPickerOpen] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
   const [buttonStyleOpen, setButtonStyleOpen] = useState(false);
   const [savingPick, setSavingPick] = useState(false);
   const [customBtnColor, setCustomBtnColor] = useState<string | null>(null);
@@ -2111,6 +2113,9 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   <Millie size={24} />
                   <div className="text-[13.5px] font-semibold">{t("Historik")}</div>
                   <div className="ml-auto flex items-center gap-1.5">
+                    <button type="button" onClick={() => setGalleryOpen(true)} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1">
+                      <span className="flex items-center gap-1.5"><YIcon name="layout" size={15} />{t("Mallar")}</span>
+                    </button>
                     <button type="button" onClick={() => setVersionsOpen(true)} className="text-[12px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1">
                       <span className="flex items-center gap-1.5"><YIcon name="history" size={15} />{t("Tidigare versioner")}</span>
                     </button>
@@ -2250,11 +2255,13 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                       </button>
                     )}
                     <button type="button" onClick={() => setMillieOpen(true)} className="text-ink-dim flex items-center gap-1.5"><YIcon name="history" size={15} />{t("Historik")}</button>
+                    <button type="button" onClick={() => setGalleryOpen(true)} className="text-ink-dim flex items-center gap-1.5"><YIcon name="layout" size={15} />{t("Mallar")}</button>
                   </span>
                 </div>
               )}
               {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
               <div className="flex md:flex-wrap items-center gap-1.5 mb-2 overflow-x-auto md:overflow-visible [&>*]:flex-shrink-0 [&>*]:whitespace-nowrap">
+                <button type="button" onClick={() => setGalleryOpen(true)} className="text-[12px] font-semibold rounded-full px-2.5 py-1 border border-line bg-bg text-ink flex items-center gap-1.5"><YIcon name="layout" size={14} />{t("Mallar")}</button>
                 {selection && content && (
                   <>
                     <span className="text-[12px] font-semibold rounded-full pl-2.5 pr-1.5 py-1 bg-accent-soft border border-line max-w-[260px] flex items-center gap-1.5">
@@ -2998,6 +3005,12 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   </div>
                 </div>
               </div>
+            )}
+            {galleryOpen && (
+              <SectionGalleryModal
+                onClose={() => setGalleryOpen(false)}
+                onUse={(text) => { setDraft(text); setGalleryOpen(false); }}
+              />
             )}
             {layoutPickerOpen && canPickLayout && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4" role="dialog" aria-modal="true">
