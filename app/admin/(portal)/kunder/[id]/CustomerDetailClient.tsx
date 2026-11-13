@@ -348,9 +348,9 @@ export default function CustomerDetailClient({
                         onChange={(e) => setPlanValue(e.target.value)}
                         className="border border-line rounded-[9px] px-3 py-2 text-[13.5px] bg-surface"
                       >
-                        <option value="bas">Bas — {formatMoney(planPrice("bas", cur), cur)}/mån</option>
-                        <option value="standard">Standard — {formatMoney(planPrice("standard", cur), cur)}/mån</option>
-                        <option value="premium">Premium — {formatMoney(planPrice("premium", cur), cur)}/mån</option>
+                        <option value="bas">Paket — {formatMoney(planPrice("bas", cur), cur)}/mån</option>
+                        <option value="standard">Standard (äldre) — {formatMoney(planPrice("standard", cur), cur)}/mån</option>
+                        <option value="premium">Premium (äldre) — {formatMoney(planPrice("premium", cur), cur)}/mån</option>
                       </select>
                       <button
                         onClick={handleSavePlan}

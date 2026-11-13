@@ -7,10 +7,10 @@ import { createClient } from "@/lib/supabase/server";
 
 // Exempelfakturor (visas tills riktig betalning är kopplad).
 const invoices = [
-  { date: "2026-10-01", plan: "standard", status: "Betald" },
-  { date: "2026-09-01", plan: "standard", status: "Betald" },
-  { date: "2026-08-01", plan: "standard", status: "Betald" },
-  { date: "2026-07-01", plan: "standard", status: "Betald" },
+  { date: "2026-10-01", plan: "bas", status: "Betald" },
+  { date: "2026-09-01", plan: "bas", status: "Betald" },
+  { date: "2026-08-01", plan: "bas", status: "Betald" },
+  { date: "2026-07-01", plan: "bas", status: "Betald" },
 ];
 
 export default async function BillingPage() {
@@ -34,7 +34,7 @@ export default async function BillingPage() {
   }
 
   const currency = billingCurrencyFor(country);
-  const price = formatMoney(planPrice("standard", currency), currency, locale);
+  const price = formatMoney(planPrice("bas", currency), currency, locale);
   const fmtDate = (iso: string) =>
     new Intl.DateTimeFormat(BCP47[locale] ?? locale, { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" }).format(new Date(iso));
 
@@ -53,7 +53,7 @@ export default async function BillingPage() {
                   {t("Nuvarande plan")}
                 </div>
                 <div className="font-semibold text-[20px] mt-1">
-                  {t("Standardplan — {price}/mån", { price })}
+                  {t("Paket — {price}/mån", { price })}
                 </div>
               </div>
               <Link
@@ -66,13 +66,13 @@ export default async function BillingPage() {
 
             <div className="flex justify-between text-[13px] text-ink-dim mb-1.5">
               <span>{t("Ändringar denna period")}</span>
-              <span>{t("38 av 60")}</span>
+              <span>{t("21 av 30")}</span>
             </div>
             <div className="h-2 rounded-full bg-bg overflow-hidden">
-              <div className="h-full bg-accent" style={{ width: "63%" }} />
+              <div className="h-full bg-accent" style={{ width: "70%" }} />
             </div>
             <div className="text-[12.5px] text-ink-dim mt-2">
-              {t("Nästa betalning dras {date}", { date: fmtDate("2026-11-01") })}
+              {t("Nästa faktura skickas {date}", { date: fmtDate("2026-11-01") })}
             </div>
 
             <div className="mt-4.5 pt-4 border-t border-line flex items-center justify-between">

@@ -3,22 +3,32 @@ import { BCP47, type Currency } from "@/lib/i18n/country";
 // Prisnivåer — måste hållas i synk med priserna som visas på /priser.
 // Kronor i Sverige, euro i alla andra länder (utkast på euro-nivåerna:
 // ungefär kronpriset omräknat och avrundat).
+// Från november 2026 säljs ETT paket ("bas" i databasen, visas som "Paket")
+// plus tillägg. "standard" och "premium" finns kvar bara för äldre
+// kunder/testdata och går inte längre att välja vid registrering.
 export const PLAN_PRICES: Record<string, number> = {
-  bas: 149,
+  bas: 200,
   standard: 249,
   premium: 399,
 };
 export const PLAN_PRICES_EUR: Record<string, number> = {
-  bas: 14,
+  bas: 19,
   standard: 24,
   premium: 39,
 };
 
 export const PLAN_LABELS: Record<string, string> = {
-  bas: "Bas",
-  standard: "Standard",
-  premium: "Premium",
+  bas: "Paket",
+  standard: "Standard (äldre)",
+  premium: "Premium (äldre)",
 };
+
+// Tillägg per månad (kr och euro). Faktureras manuellt tills vidare.
+export const ADDON_PRICES = {
+  changes50: { SEK: 99, EUR: 9 },
+  language1: { SEK: 39, EUR: 4 },
+  language2: { SEK: 59, EUR: 6 },
+} as const;
 
 export function planPrice(plan: string | null | undefined, currency: Currency = "SEK"): number {
   if (!plan) return 0;

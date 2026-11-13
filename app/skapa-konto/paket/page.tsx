@@ -18,23 +18,9 @@ import { createClient } from "@/lib/supabase/client";
 const PLANS = [
   {
     id: "bas",
-    name: msg("Bas"),
-    body: msg("För er som vill komma igång enkelt med en sajt."),
-    features: [msg("1 sajt"), msg("25 ändringar/månad"), msg("Egen domän")],
-    popular: false,
-  },
-  {
-    id: "standard",
-    name: msg("Standard"),
-    body: msg("För verksamheter som finslipar sajten löpande."),
-    features: [msg("60 ändringar/månad"), msg("Nyhetsmodul med AI-förslag"), msg("Flerspråkigt (2 språk)")],
-    popular: true,
-  },
-  {
-    id: "premium",
-    name: msg("Premium"),
-    body: msg("För er med flera sajter eller högre tempo."),
-    features: [msg("Upp till 3 sajter"), msg("150 ändringar/månad"), msg("Prioriterad support")],
+    name: msg("Paket"),
+    body: msg("Allt ni behöver för en egen sajt. Tillägg för fler ändringar och språk."),
+    features: [msg("1 sajt, egen domän, hosting och SSL"), msg("30 ändringar/månad"), msg("Nyhetsmodul med AI-förslag"), msg("Faktureras en gång i månaden")],
     popular: false,
   },
 ] as const;
@@ -100,7 +86,7 @@ export default function SignupPlanPage() {
           {t("Du kan byta paket när som helst senare i Fakturering. Det går bra att hoppa över det här steget helt för nu också.")}
         </p>
 
-        <div className="grid sm:grid-cols-3 gap-3.5 mb-7">
+        <div className="grid gap-3.5 mb-7 max-w-[360px]">
           {PLANS.map((p) => (
             <button
               key={p.id}
