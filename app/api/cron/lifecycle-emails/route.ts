@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { emailLayout, sendEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
+import { brandedEmail } from "@/lib/emailBrand";
 import { buildLifecycleEmail as build, type LifecycleKind as Kind, type LifecycleProfile } from "@/lib/lifecycleEmails";
 import { unsubscribeUrl } from "@/lib/unsubscribe";
 import { withErrorLog } from "@/lib/errorLog";
@@ -65,8 +66,13 @@ async function GET_handler(request: Request) {
     const { error: lockErr } = await admin.from("lifecycle_emails").insert({ user_id: p.id, kind });
     if (lockErr) continue;
     const m = build(kind, p);
-    const html = emailLayout({ title: m.title, intro: m.intro, rows: [], extra: m.extra, footer: m.footer, footerLinks: m.footerLinks, button: m.button, poweredBy: m.poweredBy, lang: m.lang });
-    const text = [m.title, "", m.intro, "", m.extra.heading, m.extra.text, "", `${m.button.label}: ${m.button.url}`, "", m.footer, ...m.footerLinks.map((l) => `${l.label}: ${l.url}`)].join("\n");
+    const html = brandedEmail(m);
+    const text = [
+      m.title, "", m.intro, "",
+      ...(m.steps ?? []).flatMap((st, n) => [`${n + 1}. ${st.title}`, st.text, ""]),
+      ...(m.note ? [m.note.heading, m.note.text, ""] : []),
+      `${m.button.label}: ${m.button.url}`, "", m.footer, ...m.footerLinks.map((l) => `${l.label}: ${l.url}`),
+    ].join("\n");
     const res = await sendEmail({
       to: p.email as string,
       subject: m.subject,
