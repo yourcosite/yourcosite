@@ -467,6 +467,18 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  // Sidan behåller sina proportioner när man zoomar ut: layoutbredden är
+  // alltid behållarens bredd och hela sidan krymper, centrerad.
+  const zoomHostRef = useRef<HTMLDivElement | null>(null);
+  const [zoomHostW, setZoomHostW] = useState(0);
+  useEffect(() => {
+    const el = zoomHostRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const ro = new ResizeObserver(() => setZoomHostW(el.clientWidth));
+    ro.observe(el);
+    setZoomHostW(el.clientWidth);
+    return () => ro.disconnect();
+  });
   const changeZoom = (dir: 1 | -1) => {
     const i = ZOOM_STEPS.indexOf(zoom);
     const next = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, (i < 0 ? 0 : i) + dir))];
@@ -1864,7 +1876,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                       <button type="button" onClick={() => setViewLang(null)} className="font-semibold underline">{t("Tillbaka till redigering")}</button>
                     </div>
                   )}
-                  <div style={device === "desktop" && zoom < 1 ? ({ zoom } as React.CSSProperties) : undefined}>
+                  <div ref={zoomHostRef}>
+                  <div style={device === "desktop" && zoom < 1 ? ({ zoom, width: zoomHostW || undefined, margin: "0 auto" } as React.CSSProperties) : undefined}>
                   <FieldEditContext.Provider value={fieldEditValue}>
                     <MemoSitePreview
                       bookingPreviewSiteId={site?.id}
@@ -1887,6 +1900,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                       onSelectField={onPreviewSelectField}
                     />
                   </FieldEditContext.Provider>
+                  </div>
                   </div>
                   <div className="h-40" />
                 </div>
