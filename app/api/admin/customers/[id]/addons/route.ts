@@ -64,3 +64,5 @@ async function POST_handler(request: Request, { params }: { params: { id: string
 
 export const GET = withErrorLog("GET /api/admin/customers/[id]/addons", GET_handler);
 export const POST = withErrorLog("POST /api/admin/customers/[id]/addons", POST_handler);
+
+export const dynamic = "force-dynamic";

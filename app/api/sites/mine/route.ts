@@ -37,3 +37,5 @@ async function GET_handler(request: Request) {
 }
 
 export const GET = withErrorLog("GET /api/sites/mine", GET_handler);
+
+export const dynamic = "force-dynamic";

@@ -27,3 +27,5 @@ async function GET_handler() {
 }
 
 export const GET = withErrorLog("GET /api/onboarding/current", GET_handler);
+
+export const dynamic = "force-dynamic";

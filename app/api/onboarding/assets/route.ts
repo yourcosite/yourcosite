@@ -95,3 +95,5 @@ async function POST_handler(request: Request) {
 
 export const GET = withErrorLog("GET /api/onboarding/assets", GET_handler);
 export const POST = withErrorLog("POST /api/onboarding/assets", POST_handler);
+
+export const dynamic = "force-dynamic";

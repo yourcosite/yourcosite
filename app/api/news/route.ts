@@ -112,3 +112,5 @@ async function POST_handler(request: Request) {
 
 export const GET = withErrorLog("GET /api/news", GET_handler);
 export const POST = withErrorLog("POST /api/news", POST_handler);
+
+export const dynamic = "force-dynamic";

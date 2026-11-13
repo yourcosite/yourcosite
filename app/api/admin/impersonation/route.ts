@@ -69,3 +69,5 @@ async function POST_handler(request: Request) {
 
 export const GET = withErrorLog("GET /api/admin/impersonation", GET_handler);
 export const POST = withErrorLog("POST /api/admin/impersonation", POST_handler);
+
+export const dynamic = "force-dynamic";

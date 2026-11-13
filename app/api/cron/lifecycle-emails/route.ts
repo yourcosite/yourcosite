@@ -91,3 +91,5 @@ async function GET_handler(request: Request) {
 }
 
 export const GET = withErrorLog("GET /api/cron/lifecycle-emails", GET_handler);
+
+export const dynamic = "force-dynamic";

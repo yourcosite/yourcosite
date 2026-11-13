@@ -75,3 +75,5 @@ async function GET_handler(request: Request, { params }: { params: { id: string 
 }
 
 export const GET = withErrorLog("GET /api/admin/customers/[id]/export", GET_handler);
+
+export const dynamic = "force-dynamic";

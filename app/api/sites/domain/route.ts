@@ -98,3 +98,5 @@ async function DELETE_handler(request: Request) {
 export const GET = withErrorLog("GET /api/sites/domain", GET_handler);
 export const POST = withErrorLog("POST /api/sites/domain", POST_handler);
 export const DELETE = withErrorLog("DELETE /api/sites/domain", DELETE_handler);
+
+export const dynamic = "force-dynamic";
