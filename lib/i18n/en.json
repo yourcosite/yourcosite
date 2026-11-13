@@ -3006,5 +3006,11 @@
   "Ikon i webbläsarfliken (kvadratisk)": "Browser tab icon (square)",
   "Automatisk": "Automatic",
   "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "This page has no {section} section to change the layout of. Select a section of the right type, or ask Millie to add one.",
-  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Done! The section “{name}” now has the {layout} layout. You can undo it with the button if you change your mind."
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Done! The section “{name}” now has the {layout} layout. You can undo it with the button if you change your mind.",
+  "bildsektionen": "the image section",
+  "Ren bild (utan text)": "Plain image (no text)",
+  "Bara bilden": "Image only",
+  "Tonar uppåt": "Fades upward",
+  "Tonar nedåt": "Fades downward",
+  "Tonar åt båda håll": "Fades both ways"
 }

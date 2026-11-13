@@ -3006,5 +3006,11 @@
   "Ikon i webbläsarfliken (kvadratisk)": "Ikon i browserfanen (kvadratisk)",
   "Automatisk": "Automatisk",
   "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Denne side har ingen {section}-sektion at skifte layout på. Vælg en sektion af den rigtige type, eller bed Millie tilføje en.",
-  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Færdigt! Sektionen ”{name}” har fået layoutet {layout}. Du kan fortryde med knappen, hvis du ombestemmer dig."
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Færdigt! Sektionen ”{name}” har fået layoutet {layout}. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "bildsektionen": "billedsektionen",
+  "Ren bild (utan text)": "Rent billede (uden tekst)",
+  "Bara bilden": "Kun billedet",
+  "Tonar uppåt": "Toner opad",
+  "Tonar nedåt": "Toner nedad",
+  "Tonar åt båda håll": "Toner til begge sider"
 }

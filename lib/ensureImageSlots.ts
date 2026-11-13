@@ -131,6 +131,7 @@ type AnySection = Record<string, any>;
 function wantsImage(s: AnySection): boolean {
   switch (s.type) {
     case "hero":
+    case "image":
       return true;
     case "about":
       return ["image-full", "image-stats", "image-left", "image-right"].includes(s.layout);

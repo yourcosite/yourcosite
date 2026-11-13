@@ -3006,5 +3006,11 @@
   "Ikon i webbläsarfliken (kvadratisk)": "Symbol im Browser-Tab (quadratisch)",
   "Automatisk": "Automatisch",
   "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Diese Seite hat keinen {section}-Abschnitt, dessen Layout geändert werden könnte. Wähle einen Abschnitt des richtigen Typs oder bitte Millie, einen hinzuzufügen.",
-  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Fertig! Der Abschnitt „{name}“ hat jetzt das Layout {layout}. Du kannst es mit dem Button rückgängig machen, falls du es dir anders überlegst."
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Fertig! Der Abschnitt „{name}“ hat jetzt das Layout {layout}. Du kannst es mit dem Button rückgängig machen, falls du es dir anders überlegst.",
+  "bildsektionen": "den Bildabschnitt",
+  "Ren bild (utan text)": "Reines Bild (ohne Text)",
+  "Bara bilden": "Nur das Bild",
+  "Tonar uppåt": "Blendet nach oben aus",
+  "Tonar nedåt": "Blendet nach unten aus",
+  "Tonar åt båda håll": "Blendet in beide Richtungen aus"
 }

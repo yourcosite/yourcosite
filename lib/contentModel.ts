@@ -114,6 +114,7 @@ export type FaqLayout = "stacked" | "two-column";
 export type BookingLayout = "standard" | "compact" | "image-left" | "image-right" | "image-background";
 export type MapLayout = "inline" | "full-bleed";
 export type VideoLayout = "inline" | "full-bleed";
+export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both";
 
 export interface HeroSection {
   id: string;
@@ -424,6 +425,18 @@ export interface MapSection {
   bgColor?: string;
 }
 
+// Ren bild över hela sidans bredd, utan text eller knappar. Layouten styr om
+// bilden tonar ut uppåt, nedåt eller åt båda håll mot sidans bakgrund.
+export interface ImageSection {
+  id: string;
+  type: "image";
+  layout?: ImageLayout;
+  // Satt i kod (kundens egna foton), aldrig av AI:n.
+  imageUrl?: string;
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
+}
+
 // Inbäddad YouTube-video utifrån en länk — samma idé som MapSection (en
 // iframe, ingen API-nyckel). Laddas via youtube-nocookie.com och bara från
 // ett id som klarat parseYouTubeId (lib/youtube.ts).
@@ -633,6 +646,7 @@ export type Section = (
   | FaqSection
   | MapSection
   | VideoSection
+  | ImageSection
   | SocialSection
   | ContactFormSection
   | NewsListSection
@@ -757,6 +771,7 @@ const VALID_SECTION_TYPES = [
   "faq",
   "map",
   "video",
+  "image",
   "social",
   "contactForm",
   "newsList",

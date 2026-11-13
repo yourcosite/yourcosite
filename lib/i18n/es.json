@@ -3006,5 +3006,11 @@
   "Ikon i webbläsarfliken (kvadratisk)": "Icono de la pestaña del navegador (cuadrado)",
   "Automatisk": "Automático",
   "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Esta página no tiene una sección {section} a la que cambiar el diseño. Elige una sección del tipo correcto o pide a Millie que añada una.",
-  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "¡Listo! La sección «{name}» ahora tiene el diseño {layout}. Puedes deshacerlo con el botón si cambias de opinión."
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "¡Listo! La sección «{name}» ahora tiene el diseño {layout}. Puedes deshacerlo con el botón si cambias de opinión.",
+  "bildsektionen": "la sección de imagen",
+  "Ren bild (utan text)": "Imagen sola (sin texto)",
+  "Bara bilden": "Solo la imagen",
+  "Tonar uppåt": "Se desvanece hacia arriba",
+  "Tonar nedåt": "Se desvanece hacia abajo",
+  "Tonar åt båda håll": "Se desvanece en ambos sentidos"
 }

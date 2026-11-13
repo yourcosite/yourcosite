@@ -3006,5 +3006,11 @@
   "Ikon i webbläsarfliken (kvadratisk)": "Icône de l'onglet du navigateur (carrée)",
   "Automatisk": "Automatique",
   "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Cette page n'a pas de section {section} dont changer la mise en page. Choisis une section du bon type, ou demande à Millie d'en ajouter une.",
-  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! La section « {name} » a maintenant la mise en page {layout}. Tu peux annuler avec le bouton si tu changes d'avis."
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! La section « {name} » a maintenant la mise en page {layout}. Tu peux annuler avec le bouton si tu changes d'avis.",
+  "bildsektionen": "la section image",
+  "Ren bild (utan text)": "Image seule (sans texte)",
+  "Bara bilden": "Image seule",
+  "Tonar uppåt": "Fondu vers le haut",
+  "Tonar nedåt": "Fondu vers le bas",
+  "Tonar åt båda håll": "Fondu dans les deux sens"
 }

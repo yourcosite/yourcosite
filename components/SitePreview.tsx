@@ -3079,6 +3079,8 @@ function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
       return h ? te("kartsektionen “{h}”", { h }) : te("kartsektionen");
     case "video":
       return h ? te("videosektionen “{h}”", { h }) : te("videosektionen");
+    case "image":
+      return te("bildsektionen");
     case "social":
       return h ? te("flödessektionen “{h}”", { h }) : te("flödessektionen");
     case "newsList":
@@ -6475,6 +6477,32 @@ function SectionBlockInner({
           </Field>
           <div className={layout === "two-column" ? "grid @3xl:grid-cols-2 gap-2.5 items-start" : "flex flex-col gap-2.5"}>
             {section.items.map(renderFaqItem)}
+          </div>
+        </div>
+      );
+    }
+
+    case "image": {
+      // Ren bild över hela bredden, utan text. Tonar uppåt, nedåt eller åt
+      // båda håll mot sidans (eller sektionens) bakgrund.
+      const lay = section.layout || "plain";
+      const fadeTo = sectionBg || palette.bg;
+      const top = lay === "fade-top" || lay === "fade-both";
+      const bottom = lay === "fade-bottom" || lay === "fade-both";
+      return (
+        <div className="relative" style={{ background: sectionBg }}>
+          <div className="relative h-[240px] @3xl:h-[460px]">
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              fill
+              dark={mode === "dark"}
+              selectable={editable}
+              selected={!!heroSelection && selectedImageKey === heroSelection.key}
+              onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+            />
+            {top && <div className="absolute inset-x-0 top-0 h-1/3 pointer-events-none" style={{ background: `linear-gradient(180deg, ${fadeTo} 0%, transparent 100%)` }} />}
+            {bottom && <div className="absolute inset-x-0 bottom-0 h-1/3 pointer-events-none" style={{ background: `linear-gradient(0deg, ${fadeTo} 0%, transparent 100%)` }} />}
           </div>
         </div>
       );

@@ -73,6 +73,10 @@ export const SECTION_CATALOG: CatalogType[] = [
       L("dark-split", msg("Mörk delad")), L("fade-bottom", msg("Bild som tonar nedåt")), L("fade-both", msg("Toningssektion")),
     ],
   },
+  {
+    type: "image", name: msg("Ren bild (utan text)"),
+    layouts: [L("plain", msg("Bara bilden")), L("fade-top", msg("Tonar uppåt")), L("fade-bottom", msg("Tonar nedåt")), L("fade-both", msg("Tonar åt båda håll"))],
+  },
   { type: "contact", name: msg("Kontaktuppgifter"), layouts: [L("centered", msg("Centrerad")), L("split-info", msg("Delad med uppgifter"))] },
   { type: "faq", name: msg("Vanliga frågor"), layouts: [L("stacked", msg("En lång lista")), L("two-column", msg("Två spalter"))] },
   {
@@ -99,6 +103,9 @@ export function sampleContent(type: string, layout: string): SiteContent | null 
   const demo = buildDemoContent();
   let source = demo;
   let section: Section | undefined = demo.pages.flatMap((p) => p.sections).find((s) => s.type === type);
+  if (!section && type === "image") {
+    section = { id: "gallery-sample", type: "image", layout: "plain", imageUrl: "/images/salong-herr.jpg" } as Section;
+  }
   if (!section && type === "fixtures") {
     source = buildFootballExample((s: string) => s);
     section = source.pages.flatMap((p) => p.sections).find((s) => s.type === "fixtures");

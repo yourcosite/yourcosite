@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useT, useLocale } from "@/components/I18nProvider";
 import SitePreview from "@/components/SitePreview";
 import { SECTION_CATALOG, sampleContent } from "@/lib/sectionCatalog";
@@ -41,7 +41,13 @@ export default function SectionGalleryModal({
   const t = useT();
   const locale = useLocale();
   const [typeIdx, setTypeIdx] = useState(0);
-  const cur = SECTION_CATALOG[typeIdx];
+  // Toppbilden först, resten i bokstavsordning på det språk som visas.
+  const catalog = useMemo(() => {
+    const hero = SECTION_CATALOG.filter((c) => c.type === "hero");
+    const rest = SECTION_CATALOG.filter((c) => c.type !== "hero").sort((a, b) => t(a.name).localeCompare(t(b.name), locale));
+    return [...hero, ...rest];
+  }, [t, locale]);
+  const cur = catalog[typeIdx];
   const noun = t(cur.name).replace(/\s*\(.*\)\s*$/, "");
 
   return (
@@ -58,7 +64,7 @@ export default function SectionGalleryModal({
             <button type="button" onClick={onClose} className="text-[13px] font-semibold border border-line rounded-lg px-3.5 py-1.5 flex-shrink-0">{t("Stäng")}</button>
           </div>
           <div className="flex gap-1.5 mt-3 overflow-x-auto pb-1">
-            {SECTION_CATALOG.map((c, i) => (
+            {catalog.map((c, i) => (
               <button
                 key={c.type}
                 type="button"

@@ -3006,5 +3006,11 @@
   "Ikon i webbläsarfliken (kvadratisk)": "Selainvälilehden kuvake (neliö)",
   "Automatisk": "Automaattinen",
   "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Tällä sivulla ei ole {section}-osiota, jonka ulkoasun voisi vaihtaa. Valitse oikeantyyppinen osio tai pyydä Millietä lisäämään sellainen.",
-  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Valmis! Osion ”{name}” ulkoasuksi on vaihdettu {layout}. Voit kumota muutoksen painikkeella, jos muutat mielesi."
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Valmis! Osion ”{name}” ulkoasuksi on vaihdettu {layout}. Voit kumota muutoksen painikkeella, jos muutat mielesi.",
+  "bildsektionen": "kuvaosio",
+  "Ren bild (utan text)": "Pelkkä kuva (ei tekstiä)",
+  "Bara bilden": "Pelkkä kuva",
+  "Tonar uppåt": "Häipyy ylöspäin",
+  "Tonar nedåt": "Häipyy alaspäin",
+  "Tonar åt båda håll": "Häipyy molempiin suuntiin"
 }
