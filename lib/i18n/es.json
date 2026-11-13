@@ -2738,5 +2738,8 @@
   "Läs ut matcher": "Leer partidos",
   "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "¡Listo! He añadido {n} partidos al calendario. Revísalos y dime si hay algo que corregir.",
   "Spelade matcher": "Partidos jugados",
-  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "La conexión se interrumpió antes de que Millie pudiera responder. Inténtalo de nuevo en un momento. Recarga primero la página, el cambio puede haberse guardado ya."
+  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "La conexión se interrumpió antes de que Millie pudiera responder. Inténtalo de nuevo en un momento. Recarga primero la página, el cambio puede haberse guardado ya.",
+  "Zooma sidan": "Ampliar la página",
+  "Zooma ut sidan": "Alejar",
+  "Zooma in sidan": "Acercar"
 }

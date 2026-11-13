@@ -2738,5 +2738,8 @@
   "Läs ut matcher": "Read matches",
   "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Done! I added {n} matches to the schedule. Check them and tell me if anything needs correcting.",
   "Spelade matcher": "Played matches",
-  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "The connection dropped before Millie could answer. Try again in a moment. Reload the page first if you can, the change may already have been saved."
+  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "The connection dropped before Millie could answer. Try again in a moment. Reload the page first if you can, the change may already have been saved.",
+  "Zooma sidan": "Zoom the page",
+  "Zooma ut sidan": "Zoom out",
+  "Zooma in sidan": "Zoom in"
 }

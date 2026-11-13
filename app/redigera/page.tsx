@@ -445,6 +445,26 @@ export default function EditorPage() {
   // Nya redigeraren: Dator/Mobil-läge, sidopanel (Design/Inställningar) och
   // om Millies konversation är utfälld över sajten.
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
+  // Zoom på själva sajtförhandsvisningen (inte på rutan där man skriver).
+  // Mindre än 100 % ger sidan mer plats, som att zooma ut i webbläsaren.
+  const ZOOM_STEPS = [1, 0.9, 0.8, 0.7, 0.6];
+  const [zoom, setZoom] = useState(1);
+  useEffect(() => {
+    try {
+      const saved = Number(localStorage.getItem("ycs_editor_zoom"));
+      if (ZOOM_STEPS.includes(saved)) setZoom(saved);
+      else if (window.innerWidth < 1280) setZoom(0.8);
+    } catch {
+      // Ignorera: standardzoom gäller.
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  const changeZoom = (dir: 1 | -1) => {
+    const i = ZOOM_STEPS.indexOf(zoom);
+    const next = ZOOM_STEPS[Math.min(ZOOM_STEPS.length - 1, Math.max(0, (i < 0 ? 0 : i) + dir))];
+    setZoom(next);
+    try { localStorage.setItem("ycs_editor_zoom", String(next)); } catch {}
+  };
   // Vilket språk förhandsvisningen visar. null = huvudspråket (redigerbart);
   // ett annat språk visas som skrivskyddad översättning.
   const [viewLang, setViewLangRaw] = useState<string | null>(null);
@@ -1692,6 +1712,13 @@ export default function EditorPage() {
               </button>
             ))}
           </div>
+          {device === "desktop" && (
+            <div className="hidden md:flex items-center bg-bg border border-line rounded-full p-0.5 text-[12.5px] font-semibold" role="group" aria-label={t("Zooma sidan")}>
+              <button type="button" onClick={() => changeZoom(1)} disabled={zoom >= ZOOM_STEPS[ZOOM_STEPS.length - 1]} title={t("Zooma ut sidan")} aria-label={t("Zooma ut sidan")} className="w-7 h-7 rounded-full text-ink disabled:opacity-30">−</button>
+              <span className="px-1 min-w-[38px] text-center tabular-nums text-ink-dim" aria-live="polite">{Math.round(zoom * 100)}%</span>
+              <button type="button" onClick={() => changeZoom(-1)} disabled={zoom >= 1} title={t("Zooma in sidan")} aria-label={t("Zooma in sidan")} className="w-7 h-7 rounded-full text-ink disabled:opacity-30">+</button>
+            </div>
+          )}
           {extraLangs.length > 0 && (
             <div className="flex items-center gap-1" role="group" aria-label={t("Språk")}>
               {[baseLang, ...extraLangs].map((l) => {
@@ -1810,6 +1837,7 @@ export default function EditorPage() {
                       <button type="button" onClick={() => setViewLang(null)} className="font-semibold underline">{t("Tillbaka till redigering")}</button>
                     </div>
                   )}
+                  <div style={device === "desktop" && zoom < 1 ? ({ zoom } as React.CSSProperties) : undefined}>
                   <FieldEditContext.Provider value={fieldEditValue}>
                     <MemoSitePreview
                       bookingPreviewSiteId={site?.id}
@@ -1832,6 +1860,7 @@ export default function EditorPage() {
                       onSelectField={onPreviewSelectField}
                     />
                   </FieldEditContext.Provider>
+                  </div>
                   <div className="h-40" />
                 </div>
               </div>

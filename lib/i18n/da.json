@@ -2738,5 +2738,8 @@
   "Läs ut matcher": "Læs kampe ud",
   "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Færdig! Jeg har lagt {n} kampe ind i kampprogrammet. Kontrollér dem, og sig til, hvis noget skal rettes.",
   "Spelade matcher": "Spillede kampe",
-  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "Forbindelsen blev afbrudt, før Millie nåede at svare. Prøv igen om lidt. Genindlæs gerne siden først, ændringen kan være blevet gemt."
+  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "Forbindelsen blev afbrudt, før Millie nåede at svare. Prøv igen om lidt. Genindlæs gerne siden først, ændringen kan være blevet gemt.",
+  "Zooma sidan": "Zoom siden",
+  "Zooma ut sidan": "Zoom ud",
+  "Zooma in sidan": "Zoom ind"
 }

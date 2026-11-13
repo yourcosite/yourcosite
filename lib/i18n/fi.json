@@ -2738,5 +2738,8 @@
   "Läs ut matcher": "Lue ottelut",
   "Klart! Jag har lagt in {n} matcher i spelschemat. Kontrollera dem och säg till om något ska rättas.": "Valmis! Lisäsin otteluohjelmaan {n} ottelua. Tarkista ne ja kerro, jos jotain pitää korjata.",
   "Spelade matcher": "Pelatut ottelut",
-  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "Yhteys katkesi ennen kuin Millie ehti vastata. Yritä hetken kuluttua uudelleen. Lataa sivu ensin uudelleen, muutos on voinut ehtiä tallentua."
+  "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "Yhteys katkesi ennen kuin Millie ehti vastata. Yritä hetken kuluttua uudelleen. Lataa sivu ensin uudelleen, muutos on voinut ehtiä tallentua.",
+  "Zooma sidan": "Zoomaa sivua",
+  "Zooma ut sidan": "Loitonna",
+  "Zooma in sidan": "Lähennä"
 }
