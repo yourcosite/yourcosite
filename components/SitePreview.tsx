@@ -711,7 +711,7 @@ function SitePreviewInner({
       )}
       {!hideChrome && (
       <Footer
-        siteName={siteName}
+        siteName={content.footerName || siteName}
         logoUrl={content.logoUrl}
           logoBg={content.theme.logoBg}
         pages={content.pages}

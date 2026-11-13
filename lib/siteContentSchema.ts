@@ -697,6 +697,11 @@ export const EDIT_PATCH_PROPERTIES = {
   },
   gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,
   metaPixelId: META_PIXEL_ID_SCHEMA,
+  footerName: {
+    type: "string",
+    description:
+      "Namnet som står i sidfoten (t.ex. \"CS Kommunikationsbyrå AB\"), högst 80 tecken, ren text. Sätt när kunden ber om att ändra vad som står i sidfoten/footern (bolagsnamn, lägga till AB osv). Tom sträng tar bort det så sajtens namn används igen. Själva texten \"Byggd med YourCoSite\" ändras inte.",
+  },
   socialLinks: {
     type: "array",
     maxItems: 8,

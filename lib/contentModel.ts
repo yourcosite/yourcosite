@@ -711,6 +711,9 @@ export interface SiteContent {
   // ort). Satt av Millie när kunden ber om Google-optimering; används sedan
   // som utgångspunkt för alla texter hon optimerar.
   seoKeyword?: string;
+  // Namnet som står i sidfoten, t.ex. "CS Kommunikationsbyrå AB". Saknas det
+  // används sajtens namn. Satt av Millie.
+  footerName?: string;
 }
 
 // Räknar hur många av sajtens bildbärande platser (hero + grid-items) som
