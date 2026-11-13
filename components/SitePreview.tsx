@@ -3938,7 +3938,7 @@ function SectionBlockInner({
         // Bilden täcker hela sektionens bakgrund, texten ligger i en egen ruta
         // (samma kort som i "centered") mitt över bilden.
         return (
-          <div className={`relative flex items-center justify-center px-5 @3xl:px-10 py-12 @3xl:py-16 ${heroEmphasis ? "min-h-[560px] @3xl:min-h-[720px]" : "min-h-[460px] @3xl:min-h-[560px]"}`}>
+          <div className={`relative flex items-center justify-center px-4 @3xl:px-10 py-8 @3xl:py-16 ${heroEmphasis ? "min-h-[460px] @3xl:min-h-[720px]" : "min-h-[380px] @3xl:min-h-[560px]"}`}>
             <ImageOrArt
               imageUrl={section.imageUrl}
               art={art}
@@ -3950,14 +3950,14 @@ function SectionBlockInner({
             />
             <HeroTint mode={mode} />
             <div
-              className="relative max-w-2xl w-full text-center px-8 @3xl:px-12 py-10 @3xl:py-12 rounded-2xl"
+              className="relative max-w-2xl w-full text-center px-5 @3xl:px-12 py-6 @3xl:py-12 rounded-2xl"
               style={{ background: `color-mix(in srgb, ${palette.cardBg} 68%, transparent)`, backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", boxShadow: "0 16px 40px rgba(0,0,0,0.25)" }}
             >
               {section.eyebrow && (
                 <Field
                   editable={editable}
                   as="div"
-                  className="text-[12px] tracking-[0.12em] font-semibold mb-4"
+                  className="text-[12px] tracking-[0.12em] font-semibold mb-3 @3xl:mb-4"
                   style={{ color: accent }}
                   selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
                   onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
@@ -3968,7 +3968,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="h1"
-                className="font-heading leading-[1.12] mb-5 text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(42px*var(--ycs-ts,1))]"
+                className="font-heading leading-[1.12] mb-3 @3xl:mb-5 text-[length:calc(26px*var(--ycs-ts,1))] @3xl:text-[length:calc(42px*var(--ycs-ts,1))]"
                 selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
                 onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
               >
@@ -3977,7 +3977,7 @@ function SectionBlockInner({
               <Field
                 editable={editable}
                 as="p"
-                className="leading-relaxed mb-7 text-[15.5px]"
+                className="leading-relaxed mb-5 @3xl:mb-7 text-[14.5px] @3xl:text-[15.5px]"
                 style={{ color: palette.textDim }}
                 selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
                 onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
