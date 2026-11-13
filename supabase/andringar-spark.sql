@@ -52,3 +52,18 @@ alter table profiles add column if not exists extra_sites integer not null defau
 -- används av fakturaunderlaget (/api/admin/billing-export).
 alter table profiles add column if not exists billing_exempt boolean not null default false;
 alter table profiles add column if not exists extra_languages integer not null default 0;
+
+-- ============================================================
+-- PUBLICERING OCH EGEN DOMÄN
+-- slug = adressen www.yourcosite.com/s/<slug>. custom_domain = kundens egen
+-- domän (utan www). custom_domain_status: 'pending' (väntar på DNS) eller
+-- 'active' (pekar rätt). Spärren "en live-sajt per konto" tas bort eftersom
+-- extra sajter (tillägg) ska kunna vara live samtidigt.
+-- ============================================================
+alter table sites add column if not exists slug text;
+create unique index if not exists sites_slug_key on sites (lower(slug)) where slug is not null;
+alter table sites add column if not exists custom_domain text;
+create unique index if not exists sites_custom_domain_key on sites (lower(custom_domain)) where custom_domain is not null;
+alter table sites add column if not exists custom_domain_status text;
+alter table sites add column if not exists published_at timestamptz;
+drop index if exists one_live_site_per_owner;

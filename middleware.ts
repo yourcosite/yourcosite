@@ -24,7 +24,27 @@ const PROTECTED_PREFIXES = [
 const ADMIN_PREFIXES = ["/admin"];
 const ADMIN_LOGIN_PATH = "/admin/logga-in";
 
+// Värdnamn som tillhör själva tjänsten. Allt annat är en kunds egen domän och
+// visar kundens publicerade sajt (app/publik). Kundens sajt behöver bara de
+// publika API:erna (kontaktformulär, bokning, besöksräkning).
+const APP_HOST = /^(?:www\.)?yourcosite\.com$|^localhost$|^127\.0\.0\.1$|\.vercel\.app$/;
+const CUSTOMER_HOST_ALLOWED_API = ["/api/public/", "/api/analytics/track"];
+
+function customerHostResponse(request: NextRequest): NextResponse | null {
+  const host = (request.headers.get("host") || "").toLowerCase().replace(/:\d+$/, "");
+  if (!host || APP_HOST.test(host)) return null;
+  const path = request.nextUrl.pathname;
+  if (CUSTOMER_HOST_ALLOWED_API.some((p) => path.startsWith(p))) return NextResponse.next();
+  if (path.startsWith("/api/") || path.startsWith("/publik/")) return new NextResponse("Not found", { status: 404 });
+  const url = request.nextUrl.clone();
+  url.pathname = `/publik/${encodeURIComponent(host)}${path === "/" ? "" : path}`;
+  return NextResponse.rewrite(url);
+}
+
 export async function middleware(request: NextRequest) {
+  const customer = customerHostResponse(request);
+  if (customer) return customer;
+
   // Språk. Har adressen ett språkprefix (/en/priser) gäller det och skrivs om
   // internt till /priser. Annars vinner kakan (besökarens eget val), sedan
   // webbläsarens språk. Språket skickas vidare som rubrik så att även allra

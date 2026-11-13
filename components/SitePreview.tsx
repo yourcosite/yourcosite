@@ -170,6 +170,12 @@ type SitePreviewProps = Parameters<typeof SitePreviewInner>[0] & {
 // Bildtexter (alt) per bild-url, se SiteContent.imageAlts. Läses av ImageOrArt.
 const ImageAltContext = createContext<Record<string, string> | undefined>(undefined);
 
+// Adressen till en sida. basePath "/" betyder att sajten ligger på roten av en
+// egen domän (inget prefix); annars är den ett prefix, t.ex. /s/namn.
+export function siteHref(basePath: string, p: string): string {
+  return basePath === "/" ? p : `${basePath}${p === "/" ? "" : p}`;
+}
+
 export default function SitePreview({ lang, currency, ...rest }: SitePreviewProps) {
   return (
     <SiteLangProvider lang={lang} currency={currency}>
@@ -717,7 +723,7 @@ function SitePreviewInner({
           palette={palette}
           policyHref={
             privacyPolicyMode === "generated"
-              ? `${basePath}${PRIVACY_POLICY_PATH}`
+              ? siteHref(basePath, PRIVACY_POLICY_PATH)
               : privacyPolicyMode === "uploaded"
               ? privacyPolicyFileUrl || undefined
               : undefined
@@ -985,7 +991,7 @@ function Header({
 }) {
   const t = useSiteT();
   const [menuOpen, setMenuOpen] = useState(false);
-  const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
+  const homeHref = (p: string) => (basePath ? siteHref(basePath, p) : "#");
   const linkColor = (active: boolean) =>
     overlay ? (active ? "#FFFFFF" : "rgba(255,255,255,0.8)") : active ? palette.text : palette.textDim;
   const hamburgerColor = overlay ? "#FFFFFF" : palette.text;
@@ -1316,9 +1322,9 @@ function Footer({
     privacyPolicyMode === "uploaded"
       ? privacyPolicyFileUrl || undefined
       : privacyPolicyMode === "generated"
-      ? `${basePath || ""}/integritetspolicy`
+      ? siteHref(basePath || "", "/integritetspolicy")
       : undefined;
-  const homeHref = (p: string) => (basePath ? `${basePath}${p === "/" ? "" : p}` : "#");
+  const homeHref = (p: string) => (basePath ? siteHref(basePath, p) : "#");
   const linkClass = "text-[12.5px] font-semibold";
 
   return (
@@ -2068,7 +2074,7 @@ function CtaLink({
       </button>
     );
   }
-  const href = isExternal ? link : basePath ? `${basePath}${link === "/" ? "" : link}` : "#";
+  const href = isExternal ? link : basePath ? siteHref(basePath, link) : "#";
   return (
     <a href={href} target={opensNew ? "_blank" : undefined} rel={opensNew ? "noopener noreferrer" : undefined} className={className} style={style}>
       {children}

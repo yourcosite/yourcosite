@@ -1,5 +1,6 @@
 "use client";
 
+import PublishModal from "@/components/editor/PublishModal";
 import MenuStyleThumb, { type MenuStyleId } from "@/components/MenuStyleThumb";
 import { rich } from "@/lib/i18n/rich";
 import { msg } from "@/lib/i18n/config";
@@ -496,6 +497,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   // Månadens ändringar (30 ingår, 50 första 30 dagarna) och köp av fler.
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
   const [addonOpen, setAddonOpen] = useState(false);
+  const [publishOpen, setPublishOpen] = useState(false);
   const [addonLimitHit, setAddonLimitHit] = useState(false);
   const [addonBusy, setAddonBusy] = useState(false);
   const [addonDone, setAddonDone] = useState(false);
@@ -1848,8 +1850,9 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
             <Link href={`/forhandsgranska${site ? `?site=${site.id}` : ""}`} className="hidden md:block text-[13px] font-semibold text-ink border border-line px-3.5 py-2 rounded-lg">
               {t("Förhandsgranska")}
             </Link>
-            <button type="button" disabled title={t("Publicering till en riktig domän byggs i ett senare steg")} className="hidden md:block text-[13px] font-semibold text-ink-dim bg-bg border border-line px-3.5 py-2 rounded-lg cursor-not-allowed opacity-70">
-              {t("Publicera (kommer snart)")}
+            <button type="button" onClick={() => setPublishOpen(true)} disabled={!site} className="hidden md:flex items-center gap-1.5 text-[13px] font-semibold bg-accent text-accent-ink px-3.5 py-2 rounded-lg disabled:opacity-60">
+              {site?.status === "live" && <span className="w-2 h-2 rounded-full bg-[#16A34A]" />}
+              {site?.status === "live" ? t("Publicerad") : t("Publicera")}
             </button>
               </>
             )}
@@ -1888,7 +1891,11 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
             ))}
             <div className="h-px bg-line my-1.5" />
             <div className="px-3 py-2 text-[12.5px] text-ink-dim leading-relaxed">
-              {demo ? <Link href="/skapa-konto" className="font-semibold underline">{t("Skapa din egen sajt")}</Link> : t("Publicera (kommer snart) — publicering till en riktig domän byggs i ett senare steg.")}
+              {demo ? <Link href="/skapa-konto" className="font-semibold underline">{t("Skapa din egen sajt")}</Link> : (
+                <button type="button" onClick={() => { setMobileMenuOpen(false); setPublishOpen(true); }} className="font-semibold underline">
+                  {site?.status === "live" ? t("Publicerad") : t("Publicera")}
+                </button>
+              )}
             </div>
           </div>
         )}
@@ -2033,6 +2040,15 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                 </SettingsPanel>
               )}
             </div>
+          )}
+
+          {publishOpen && site && !demo && (
+            <PublishModal
+              siteId={site.id}
+              status={site.status}
+              onStatus={(st) => setSite((prev) => (prev ? { ...prev, status: st } : prev))}
+              onClose={() => setPublishOpen(false)}
+            />
           )}
 
           {addonOpen && (
