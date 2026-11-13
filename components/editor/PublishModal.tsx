@@ -128,7 +128,8 @@ export default function PublishModal({
           </>
         ) : (
           <>
-            <div className="font-semibold text-[18px] mb-3">{t("Din sajt är publicerad")}</div>
+            <div className="font-semibold text-[18px] mb-1.5">{t("Din sajt är publicerad")}</div>
+            <p className="text-[13px] text-ink-dim mb-4">{t("Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.")}</p>
             {publicUrl && (
               <div className="mb-5">
                 <div className="text-[12px] text-ink-dim uppercase tracking-wide mb-1">{t("Adress")}</div>

@@ -3036,5 +3036,6 @@
   "Byt översta sektionen till {section}": "Vaihda ylin osio tyypiksi {section}",
   "Lägg till en ny {section}-sektion": "Lisää uusi {section}-osio",
   "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Tällä sivulla ei ole {section}-osiota. Mitä haluat tehdä?",
-  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Valmis! Uusi {section}-osio on lisätty asettelulla {layout}. Voit kumota painikkeella, jos muutat mielesi."
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Valmis! Uusi {section}-osio on lisätty asettelulla {layout}. Voit kumota painikkeella, jos muutat mielesi.",
+  "Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.": "Kaikki muutokset, jotka teet tästä eteenpäin, näkyvät heti julkaistulla sivustollasi. Sinun ei tarvitse julkaista uudelleen."
 }

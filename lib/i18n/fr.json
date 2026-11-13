@@ -3036,5 +3036,6 @@
   "Byt översta sektionen till {section}": "Changer la première section en {section}",
   "Lägg till en ny {section}-sektion": "Ajouter une nouvelle section {section}",
   "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Cette page n'a pas de section {section}. Que souhaitez-vous faire ?",
-  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! Une nouvelle section {section} a été ajoutée avec la mise en page {layout}. Vous pouvez annuler avec le bouton si vous changez d'avis."
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! Une nouvelle section {section} a été ajoutée avec la mise en page {layout}. Vous pouvez annuler avec le bouton si vous changez d'avis.",
+  "Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.": "Toutes les modifications que vous faites à partir de maintenant apparaissent immédiatement sur votre site publié. Vous n'avez pas besoin de publier à nouveau."
 }
