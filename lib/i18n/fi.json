@@ -3072,5 +3072,21 @@
   "Tillbaka": "Takaisin",
   "Visas först när du klickar på Bokningar": "Näytetään ensin, kun napsautat Varaukset",
   "Visa den här först": "Näytä tämä ensin",
-  "Kunde inte spara valet.": "Valintaa ei voitu tallentaa."
+  "Kunde inte spara valet.": "Valintaa ei voitu tallentaa.",
+  "Kalender för dina bokningar": "Kalenteri varauksillesi",
+  "Under Bokningar finns nu en kalender med dag-, vecka- och månadsvy där du ser dina bokningar, lediga tider och stängda tider. Dra i kalendern för att markera en tid och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den. Har du flera sajter väljer du själv vilken som visas först.": "Kohdassa Varaukset on nyt kalenteri päivä-, viikko- ja kuukausinäkymillä, jossa näet varauksesi, vapaat ajat ja suljetut ajat. Vedä kalenterissa valitaksesi ajan ja valitse sitten, haluatko avata ajan, lisätä varauksen vai sulkea ajan. Jos sinulla on useita sivustoja, valitset itse, mikä näytetään ensin.",
+  "Välj vilka uppgifter som krävs vid bokning": "Valitse, mitä tietoja varauksessa vaaditaan",
+  "Under Bokningar, Inställningar väljer du om e-post och telefon är obligatoriska. Du får alltid ett mejl om varje ny bokning, och besökaren får en bekräftelse om hen lämnat sin e-post.": "Kohdassa Varaukset, Asetukset valitset, onko sähköposti ja puhelin pakollisia. Saat aina sähköpostin jokaisesta uudesta varauksesta, ja kävijä saa vahvistuksen, jos hän on antanut sähköpostiosoitteensa.",
+  "Ren bild och utfällbara rutor": "Pelkkä kuva ja laajennettavat laatikot",
+  "Två nya sektioner. Ren bild är en bild utan text som kan tona uppåt, nedåt eller åt båda håll, och finns också extra hög eller som en rad med tre eller fyra bilder. Utfällbara rutor liknar frågor och svar men passar till allt, till exempel tjänster eller steg. En knapp under rutorna låter dig välja om den första, alla eller ingen är utfälld från start.": "Kaksi uutta osiota. Pelkkä kuva on kuva ilman tekstiä, joka voi häipyä ylös, alas tai molempiin suuntiin, ja jota on myös erityisen korkeana tai kolmen tai neljän kuvan rivinä. Laajennettavat laatikot muistuttavat kysymyksiä ja vastauksia, mutta sopivat mihin tahansa, esimerkiksi palveluihin tai vaiheisiin. Laatikoiden alla olevalla painikkeella valitset, onko ensimmäinen, kaikki vai ei yksikään auki alussa.",
+  "Lägg till en sektion med utfällbara rutor om våra tjänster": "Lisää osio laajennettavilla laatikoilla palveluistamme",
+  "Byt layout direkt i Mallar": "Vaihda asettelua suoraan Malleissa",
+  "Mallar byter layout på en sektion direkt, utan Millie och utan att räknas som en ändring. Markera en sektion så kan du också byta dess typ. Finns ingen sådan sektion på sidan får du välja mellan att byta den översta sektionen eller lägga till en ny. Med Mer luft och Mindre luft ändrar du avståndet i en sektion, och toppbilden finns nu också med en halvtransparent ruta över hela bilden.": "Mallit vaihtavat osion asettelun suoraan ilman Milliea eikä se lasketa muutokseksi. Valitse osio, niin voit vaihtaa myös sen tyypin. Jos sivulla ei ole sellaista osiota, voit valita, vaihdatko ylimmän osion vai lisäätkö uuden. Painikkeilla Enemmän tilaa ja Vähemmän tilaa muutat osion väliä, ja yläkuvaa on nyt myös puoliksi läpinäkyvällä laatikolla koko kuvan päällä.",
+  "Snygg delning och egen ikon": "Hieno jakaminen ja oma kuvake",
+  "När din sajt delas på Facebook och andra ställen får den en snygg bild och rubrik, och den får en egen ikon i webbläsarfliken. Under Inställningar, Delning och ikon kan du ladda upp egna bilder.": "Kun sivustosi jaetaan Facebookissa ja muualla, se saa kauniin kuvan ja otsikon, ja se saa oman kuvakkeen selaimen välilehteen. Kohdassa Asetukset, Jakaminen ja kuvake voit ladata omia kuvia.",
+  "Egen sidfot och länkar till sociala medier": "Oma alatunniste ja linkit sosiaaliseen mediaan",
+  "Be Millie ändra namnet i sidfoten eller lägga till länkar till Facebook, LinkedIn och Instagram. Loggan i toppen länkar nu till startsidan.": "Pyydä Milliea muuttamaan alatunnisteen nimeä tai lisäämään linkkejä Facebookiin, LinkedIniin ja Instagramiin. Ylhäällä oleva logo linkittää nyt etusivulle.",
+  "Lägg till en länk till vår Facebooksida i sidfoten": "Lisää linkki Facebook-sivullemme alatunnisteeseen",
+  "Större bilder går bra": "Suuremmat kuvat sopivat",
+  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Voit nyt ladata jopa 15 Mt:n kuvia. Pienennämme ne automaattisesti, jotta sivusto latautuu nopeasti."
 }

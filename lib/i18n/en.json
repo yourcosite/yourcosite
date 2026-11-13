@@ -3072,5 +3072,21 @@
   "Tillbaka": "Back",
   "Visas först när du klickar på Bokningar": "Shown first when you click Bookings",
   "Visa den här först": "Show this one first",
-  "Kunde inte spara valet.": "Could not save the choice."
+  "Kunde inte spara valet.": "Could not save the choice.",
+  "Kalender för dina bokningar": "A calendar for your bookings",
+  "Under Bokningar finns nu en kalender med dag-, vecka- och månadsvy där du ser dina bokningar, lediga tider och stängda tider. Dra i kalendern för att markera en tid och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den. Har du flera sajter väljer du själv vilken som visas först.": "Under Bookings there is now a calendar with day, week and month views where you see your bookings, available times and closed times. Drag in the calendar to select a time, then choose whether to open the time, add a booking or close it. If you have several sites you choose which one is shown first.",
+  "Välj vilka uppgifter som krävs vid bokning": "Choose which details are required when booking",
+  "Under Bokningar, Inställningar väljer du om e-post och telefon är obligatoriska. Du får alltid ett mejl om varje ny bokning, och besökaren får en bekräftelse om hen lämnat sin e-post.": "Under Bookings, Settings you choose whether email and phone are required. You always get an email about each new booking, and the visitor gets a confirmation if they provided their email.",
+  "Ren bild och utfällbara rutor": "Plain image and expandable boxes",
+  "Två nya sektioner. Ren bild är en bild utan text som kan tona uppåt, nedåt eller åt båda håll, och finns också extra hög eller som en rad med tre eller fyra bilder. Utfällbara rutor liknar frågor och svar men passar till allt, till exempel tjänster eller steg. En knapp under rutorna låter dig välja om den första, alla eller ingen är utfälld från start.": "Two new sections. Plain image is an image without text that can fade upwards, downwards or both ways, and also comes extra tall or as a row of three or four images. Expandable boxes are like questions and answers but suit anything, for example services or steps. A button under the boxes lets you choose whether the first, all or none is expanded from the start.",
+  "Lägg till en sektion med utfällbara rutor om våra tjänster": "Add a section with expandable boxes about our services",
+  "Byt layout direkt i Mallar": "Change layout directly in Templates",
+  "Mallar byter layout på en sektion direkt, utan Millie och utan att räknas som en ändring. Markera en sektion så kan du också byta dess typ. Finns ingen sådan sektion på sidan får du välja mellan att byta den översta sektionen eller lägga till en ny. Med Mer luft och Mindre luft ändrar du avståndet i en sektion, och toppbilden finns nu också med en halvtransparent ruta över hela bilden.": "Templates change the layout of a section directly, without Millie and without counting as a change. Select a section and you can also change its type. If the page has no such section you can choose between changing the top section or adding a new one. With More space and Less space you change the spacing in a section, and the top image now also comes with a semi-transparent box over the whole image.",
+  "Snygg delning och egen ikon": "Nice sharing and your own icon",
+  "När din sajt delas på Facebook och andra ställen får den en snygg bild och rubrik, och den får en egen ikon i webbläsarfliken. Under Inställningar, Delning och ikon kan du ladda upp egna bilder.": "When your site is shared on Facebook and elsewhere it gets a nice image and title, and it gets its own icon in the browser tab. Under Settings, Sharing and icon you can upload your own images.",
+  "Egen sidfot och länkar till sociala medier": "Your own footer and social media links",
+  "Be Millie ändra namnet i sidfoten eller lägga till länkar till Facebook, LinkedIn och Instagram. Loggan i toppen länkar nu till startsidan.": "Ask Millie to change the name in the footer or add links to Facebook, LinkedIn and Instagram. The logo at the top now links to the home page.",
+  "Lägg till en länk till vår Facebooksida i sidfoten": "Add a link to our Facebook page in the footer",
+  "Större bilder går bra": "Larger images are fine",
+  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "You can now upload images of up to 15 MB. We shrink them automatically so the site loads quickly."
 }

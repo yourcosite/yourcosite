@@ -3072,5 +3072,21 @@
   "Tillbaka": "Tilbage",
   "Visas först när du klickar på Bokningar": "Vises først, når du klikker på Bookinger",
   "Visa den här först": "Vis denne først",
-  "Kunde inte spara valet.": "Kunne ikke gemme valget."
+  "Kunde inte spara valet.": "Kunne ikke gemme valget.",
+  "Kalender för dina bokningar": "Kalender til dine bookinger",
+  "Under Bokningar finns nu en kalender med dag-, vecka- och månadsvy där du ser dina bokningar, lediga tider och stängda tider. Dra i kalendern för att markera en tid och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den. Har du flera sajter väljer du själv vilken som visas först.": "Under Bookinger finder du nu en kalender med dag-, uge- og månedsvisning, hvor du ser dine bookinger, ledige tider og lukkede tider. Træk i kalenderen for at markere et tidspunkt, og vælg derefter, om du vil åbne tiden, lægge en booking ind eller lukke den. Har du flere sider, vælger du selv, hvilken der vises først.",
+  "Välj vilka uppgifter som krävs vid bokning": "Vælg, hvilke oplysninger der kræves ved booking",
+  "Under Bokningar, Inställningar väljer du om e-post och telefon är obligatoriska. Du får alltid ett mejl om varje ny bokning, och besökaren får en bekräftelse om hen lämnat sin e-post.": "Under Bookinger, Indstillinger vælger du, om e-mail og telefon er påkrævet. Du får altid en mail om hver ny booking, og den besøgende får en bekræftelse, hvis vedkommende har oplyst sin e-mail.",
+  "Ren bild och utfällbara rutor": "Ren billede og udfoldelige bokse",
+  "Två nya sektioner. Ren bild är en bild utan text som kan tona uppåt, nedåt eller åt båda håll, och finns också extra hög eller som en rad med tre eller fyra bilder. Utfällbara rutor liknar frågor och svar men passar till allt, till exempel tjänster eller steg. En knapp under rutorna låter dig välja om den första, alla eller ingen är utfälld från start.": "To nye sektioner. Ren billede er et billede uden tekst, der kan tone opad, nedad eller begge veje, og som også findes ekstra høj eller som en række med tre eller fire billeder. Udfoldelige bokse ligner spørgsmål og svar, men passer til alt, for eksempel ydelser eller trin. En knap under boksene lader dig vælge, om den første, alle eller ingen er udfoldet fra start.",
+  "Lägg till en sektion med utfällbara rutor om våra tjänster": "Tilføj en sektion med udfoldelige bokse om vores ydelser",
+  "Byt layout direkt i Mallar": "Skift layout direkte i Skabeloner",
+  "Mallar byter layout på en sektion direkt, utan Millie och utan att räknas som en ändring. Markera en sektion så kan du också byta dess typ. Finns ingen sådan sektion på sidan får du välja mellan att byta den översta sektionen eller lägga till en ny. Med Mer luft och Mindre luft ändrar du avståndet i en sektion, och toppbilden finns nu också med en halvtransparent ruta över hela bilden.": "Skabeloner skifter layout på en sektion direkte, uden Millie og uden at tælle som en ændring. Markér en sektion, så kan du også skifte dens type. Findes der ingen sådan sektion på siden, kan du vælge mellem at skifte den øverste sektion eller tilføje en ny. Med Mere luft og Mindre luft ændrer du afstanden i en sektion, og topbilledet findes nu også med en halvgennemsigtig boks over hele billedet.",
+  "Snygg delning och egen ikon": "Flot deling og eget ikon",
+  "När din sajt delas på Facebook och andra ställen får den en snygg bild och rubrik, och den får en egen ikon i webbläsarfliken. Under Inställningar, Delning och ikon kan du ladda upp egna bilder.": "Når din side deles på Facebook og andre steder, får den et flot billede og en flot overskrift, og den får et eget ikon i browserfanen. Under Indstillinger, Deling og ikon kan du uploade egne billeder.",
+  "Egen sidfot och länkar till sociala medier": "Egen sidefod og links til sociale medier",
+  "Be Millie ändra namnet i sidfoten eller lägga till länkar till Facebook, LinkedIn och Instagram. Loggan i toppen länkar nu till startsidan.": "Bed Millie om at ændre navnet i sidefoden eller tilføje links til Facebook, LinkedIn og Instagram. Logoet øverst linker nu til forsiden.",
+  "Lägg till en länk till vår Facebooksida i sidfoten": "Tilføj et link til vores Facebook-side i sidefoden",
+  "Större bilder går bra": "Større billeder går fint",
+  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Du kan nu uploade billeder på op til 15 MB. Vi formindsker dem automatisk, så siden indlæses hurtigt."
 }

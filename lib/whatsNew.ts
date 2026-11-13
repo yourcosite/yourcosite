@@ -15,6 +15,57 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-13-bokningskalender",
+    date: "2026-11-13",
+    icon: "📅",
+    title: msg("Kalender för dina bokningar"),
+    text: msg("Under Bokningar finns nu en kalender med dag-, vecka- och månadsvy där du ser dina bokningar, lediga tider och stängda tider. Dra i kalendern för att markera en tid och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den. Har du flera sajter väljer du själv vilken som visas först."),
+  },
+  {
+    id: "2026-11-13-bokning-obligatoriska",
+    date: "2026-11-13",
+    icon: "✅",
+    title: msg("Välj vilka uppgifter som krävs vid bokning"),
+    text: msg("Under Bokningar, Inställningar väljer du om e-post och telefon är obligatoriska. Du får alltid ett mejl om varje ny bokning, och besökaren får en bekräftelse om hen lämnat sin e-post."),
+  },
+  {
+    id: "2026-11-13-nya-sektioner",
+    date: "2026-11-13",
+    icon: "🖼️",
+    title: msg("Ren bild och utfällbara rutor"),
+    text: msg("Två nya sektioner. Ren bild är en bild utan text som kan tona uppåt, nedåt eller åt båda håll, och finns också extra hög eller som en rad med tre eller fyra bilder. Utfällbara rutor liknar frågor och svar men passar till allt, till exempel tjänster eller steg. En knapp under rutorna låter dig välja om den första, alla eller ingen är utfälld från start."),
+    try: msg("Lägg till en sektion med utfällbara rutor om våra tjänster"),
+  },
+  {
+    id: "2026-11-13-mallar",
+    date: "2026-11-13",
+    icon: "🎨",
+    title: msg("Byt layout direkt i Mallar"),
+    text: msg("Mallar byter layout på en sektion direkt, utan Millie och utan att räknas som en ändring. Markera en sektion så kan du också byta dess typ. Finns ingen sådan sektion på sidan får du välja mellan att byta den översta sektionen eller lägga till en ny. Med Mer luft och Mindre luft ändrar du avståndet i en sektion, och toppbilden finns nu också med en halvtransparent ruta över hela bilden."),
+  },
+  {
+    id: "2026-11-13-delning-ikon",
+    date: "2026-11-13",
+    icon: "🔗",
+    title: msg("Snygg delning och egen ikon"),
+    text: msg("När din sajt delas på Facebook och andra ställen får den en snygg bild och rubrik, och den får en egen ikon i webbläsarfliken. Under Inställningar, Delning och ikon kan du ladda upp egna bilder."),
+  },
+  {
+    id: "2026-11-13-sidfot-lankar",
+    date: "2026-11-13",
+    icon: "🦶",
+    title: msg("Egen sidfot och länkar till sociala medier"),
+    text: msg("Be Millie ändra namnet i sidfoten eller lägga till länkar till Facebook, LinkedIn och Instagram. Loggan i toppen länkar nu till startsidan."),
+    try: msg("Lägg till en länk till vår Facebooksida i sidfoten"),
+  },
+  {
+    id: "2026-11-13-stora-bilder",
+    date: "2026-11-13",
+    icon: "📷",
+    title: msg("Större bilder går bra"),
+    text: msg("Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt."),
+  },
+  {
     id: "2026-10-29-optimera-google",
     date: "2026-10-29",
     icon: "🔍",
