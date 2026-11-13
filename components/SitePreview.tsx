@@ -3947,7 +3947,7 @@ function SectionBlockInner({
             <HeroTint mode={mode} />
             <div
               className="relative max-w-2xl w-full text-center px-8 @3xl:px-12 py-10 @3xl:py-12 rounded-2xl"
-              style={{ background: palette.cardBg, boxShadow: "0 16px 40px rgba(0,0,0,0.25)" }}
+              style={{ background: `color-mix(in srgb, ${palette.cardBg} 68%, transparent)`, backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", boxShadow: "0 16px 40px rgba(0,0,0,0.25)" }}
             >
               {section.eyebrow && (
                 <Field
