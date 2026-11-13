@@ -3057,5 +3057,11 @@
   "Nästa vecka": "Semana siguiente",
   "Bokad": "Reservado",
   "Ledig tid att boka": "Hora disponible para reservar",
-  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "No hay nada programado esta semana. Añade horarios de apertura en Horarios y aparecerán aquí."
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "No hay nada programado esta semana. Añade horarios de apertura en Horarios y aparecerán aquí.",
+  "Dag": "Día",
+  "Vecka": "Semana",
+  "Månad": "Mes",
+  "Föregående": "Anterior",
+  "Nästa": "Siguiente",
+  "+{n} till": "+{n} más"
 }

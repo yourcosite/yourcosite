@@ -37,13 +37,15 @@ async function GET_handler(request: Request) {
   const { supabase, site } = ctx;
 
   const since = new Date(Date.now() - 2 * 86400000).toISOString();
+  // Bokningar sparas och visas ett helt år bakåt (kalendern och listan).
+  const bookingsSince = new Date(Date.now() - 365 * 86400000).toISOString();
   const [settings, packages, rules, slots, blocks, bookings] = await Promise.all([
     supabase.from("booking_settings").select("*").eq("site_id", site.id).maybeSingle(),
     supabase.from("booking_packages").select("*").eq("site_id", site.id).order("sort_order").order("created_at"),
     supabase.from("booking_rules").select("*").eq("site_id", site.id).order("weekday").order("start_time"),
     supabase.from("booking_slots").select("*").eq("site_id", site.id).gte("ends_at", since).order("starts_at"),
     supabase.from("booking_blocks").select("*").eq("site_id", site.id).gte("ends_at", since).order("starts_at"),
-    supabase.from("bookings").select("*").eq("site_id", site.id).gte("starts_at", since).order("starts_at").limit(300),
+    supabase.from("bookings").select("*").eq("site_id", site.id).gte("starts_at", bookingsSince).order("starts_at").limit(2000),
   ]);
   const s: any = settings.data;
   const L = await siteLocale(createAdminClient(), site.id);

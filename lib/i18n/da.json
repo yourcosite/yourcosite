@@ -3057,5 +3057,11 @@
   "Nästa vecka": "Næste uge",
   "Bokad": "Booket",
   "Ledig tid att boka": "Ledig tid at booke",
-  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Intet er lagt ind i denne uge. Tilføj åbningstider under Tider, så vises de her."
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Intet er lagt ind i denne uge. Tilføj åbningstider under Tider, så vises de her.",
+  "Dag": "Dag",
+  "Vecka": "Uge",
+  "Månad": "Måned",
+  "Föregående": "Forrige",
+  "Nästa": "Næste",
+  "+{n} till": "+{n} mere"
 }

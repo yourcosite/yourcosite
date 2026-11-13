@@ -3057,5 +3057,11 @@
   "Nästa vecka": "Seuraava viikko",
   "Bokad": "Varattu",
   "Ledig tid att boka": "Vapaa aika varattavaksi",
-  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Tällä viikolla ei ole mitään. Lisää aukioloajat kohdassa Ajat, niin ne näkyvät tässä."
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Tällä viikolla ei ole mitään. Lisää aukioloajat kohdassa Ajat, niin ne näkyvät tässä.",
+  "Dag": "Päivä",
+  "Vecka": "Viikko",
+  "Månad": "Kuukausi",
+  "Föregående": "Edellinen",
+  "Nästa": "Seuraava",
+  "+{n} till": "+{n} lisää"
 }

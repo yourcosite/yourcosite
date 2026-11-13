@@ -153,7 +153,7 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
   };
   const now = Date.now();
   const upcoming = data.bookings.filter((b) => b.status === "confirmed" && new Date(b.starts_at).getTime() >= now);
-  const earlier = data.bookings.filter((b) => !(b.status === "confirmed" && new Date(b.starts_at).getTime() >= now)).reverse();
+  const earlier = data.bookings.filter((b) => !(b.status === "confirmed" && new Date(b.starts_at).getTime() >= now)).reverse().slice(0, 50);
 
   const row = (b: Booking, canCancel: boolean) => (
     <div key={b.id} className={`border border-line rounded-xl px-4 py-3.5 bg-surface ${b.status === "cancelled" ? "opacity-60" : ""}`}>
