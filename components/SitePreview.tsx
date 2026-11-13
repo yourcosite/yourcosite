@@ -3930,6 +3930,72 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "card-over") {
+        // Bilden täcker hela sektionens bakgrund, texten ligger i en egen ruta
+        // (samma kort som i "centered") mitt över bilden.
+        return (
+          <div className={`relative flex items-center justify-center px-5 @3xl:px-10 py-12 @3xl:py-16 ${heroEmphasis ? "min-h-[560px] @3xl:min-h-[720px]" : "min-h-[460px] @3xl:min-h-[560px]"}`}>
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              fill
+              dark={mode === "dark"}
+              selectable={editable}
+              selected={!!heroSelection && selectedImageKey === heroSelection.key}
+              onSelect={() => heroSelection && onSelectImage?.(heroSelection)}
+            />
+            <HeroTint mode={mode} />
+            <div
+              className="relative max-w-2xl w-full text-center px-8 @3xl:px-12 py-10 @3xl:py-12 rounded-2xl"
+              style={{ background: palette.cardBg, boxShadow: "0 16px 40px rgba(0,0,0,0.25)" }}
+            >
+              {section.eyebrow && (
+                <Field
+                  editable={editable}
+                  as="div"
+                  className="text-[12px] tracking-[0.12em] font-semibold mb-4"
+                  style={{ color: accent }}
+                  selected={selectedFieldKey === fieldSel("eyebrow", section.eyebrow, "förtexten")?.key}
+                  onSelect={() => { const s = fieldSel("eyebrow", section.eyebrow, "förtexten"); s && onSelectField?.(s); }}
+                >
+                  {section.eyebrow.toUpperCase()}
+                </Field>
+              )}
+              <Field
+                editable={editable}
+                as="h1"
+                className="font-heading leading-[1.12] mb-5 text-[length:calc(30px*var(--ycs-ts,1))] @3xl:text-[length:calc(42px*var(--ycs-ts,1))]"
+                selected={selectedFieldKey === fieldSel("headline", section.headline, "rubriken")?.key}
+                onSelect={() => { const s = fieldSel("headline", section.headline, "rubriken"); s && onSelectField?.(s); }}
+              >
+                {section.headline}
+              </Field>
+              <Field
+                editable={editable}
+                as="p"
+                className="leading-relaxed mb-7 text-[15.5px]"
+                style={{ color: palette.textDim }}
+                selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+                onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+              >
+                {section.body}
+              </Field>
+              {section.ctaLabel && (
+                <FieldBadge
+                  editable={editable}
+                  selected={selectedFieldKey === fieldSel("ctaLabel", section.ctaLabel, "knapptexten")?.key}
+                  onSelect={() => { const s = fieldSel("ctaLabel", section.ctaLabel, "knapptexten"); s && onSelectField?.(s); }}
+                >
+                  <CtaPill accent={accent} link={section.ctaLink} newTab={(section as any).ctaNewTab} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} colorOverride={section.ctaColor} textColor={palette.text}>
+                    {section.ctaLabel}
+                  </CtaPill>
+                </FieldBadge>
+              )}
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "fade-both") {
         // TONINGSSEKTION: bilden tonar ut mot sidans bakgrund både uppåt och
         // nedåt, text och knapp ligger centrerade över bilden.

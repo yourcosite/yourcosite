@@ -100,7 +100,7 @@ export interface SiteTheme {
   ctaLayout?: CtaLayout;
 }
 
-export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "fade-both" | "collage" | "quad" | "editorial" | "beam";
+export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "fade-both" | "card-over" | "collage" | "quad" | "editorial" | "beam";
 export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right";
 export const GRID_LAYOUTS: GridLayout[] = [
   "cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided",

@@ -29,6 +29,7 @@ export const SECTION_CATALOG: CatalogType[] = [
       L("overlay-bottom", msg("Text nedtill över bilden")),
       L("fade-bottom", msg("Bild som tonar nedåt")),
       L("fade-both", msg("Toningssektion")),
+      L("card-over", msg("Ruta över helbild")),
       L("collage", msg("Bildcollage")),
       L("quad", msg("Text och hög bild")),
       L("editorial", msg("Redaktionell")),
