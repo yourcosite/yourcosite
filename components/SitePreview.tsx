@@ -6406,9 +6406,9 @@ function SectionBlockInner({
 
     case "toggle": {
       const layout = section.layout || "list";
+      const openStateNow = section.openState || "first";
       const renderItem = (item: (typeof section.items)[number], i: number) => {
-        const openState = section.openState || "first";
-        const open = toggleOpen[i] ?? (openState === "all" || (openState === "first" && i === 0));
+        const open = toggleOpen[i] ?? (openStateNow === "all" || (openStateNow === "first" && i === 0));
         const itemSel = gridItemSelection(i, item.title);
         const boxed = layout !== "list";
         return (
@@ -6497,11 +6497,27 @@ function SectionBlockInner({
           {section.intro}
         </Field>
       ) : null;
+      // Bara i redigeraren: liten knapp som växlar vilka rutor som är utfällda från start.
+      const openLabel = openStateNow === "all" ? "Utfällt: alla" : openStateNow === "none" ? "Utfällt: ingen" : "Utfällt: första";
+      const openPill = editable ? (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelectField?.({ key: `${pagePath}::${section.id}::toggleOpenState`, pagePath: pagePath as string, sectionId: section.id, field: "toggleOpenState", label: openLabel });
+          }}
+          className="mt-4 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[12px] font-semibold"
+          style={{ borderColor: palette.cardBorder, color: palette.text, background: "transparent" }}
+          title="Klicka för att växla mellan första, alla eller ingen utfälld"
+        >
+          {openLabel}
+        </button>
+      ) : null;
       if (layout === "side-by-side") {
         return (
           <div className="grid @3xl:grid-cols-[0.8fr_1.2fr] gap-8 @3xl:gap-14 px-8 @3xl:px-14 py-14 @3xl:py-20 max-w-[1040px] mx-auto" style={{ background: sectionBg }}>
             <div>{heading}{intro}</div>
-            <div className="flex flex-col gap-2.5">{section.items.map(renderItem)}</div>
+            <div><div className="flex flex-col gap-2.5">{section.items.map(renderItem)}</div>{openPill}</div>
           </div>
         );
       }
@@ -6512,6 +6528,7 @@ function SectionBlockInner({
           <div className={layout === "cards" ? "flex flex-col gap-2.5" : "flex flex-col border-t"} style={layout === "list" ? { borderColor: palette.cardBorder } : undefined}>
             {section.items.map(renderItem)}
           </div>
+          {openPill}
         </div>
       );
     }

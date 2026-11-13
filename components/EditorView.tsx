@@ -412,7 +412,14 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   }, []);
   const onPreviewSelectImage = useCallback((sel: any) => setSelection((prev) => (prev?.key === sel.key ? null : { target: "image", ...sel })), []);
   const onPreviewSelectSection = useCallback((sel: any) => setSelection((prev) => (prev?.key === sel.key ? null : { target: "section", ...sel })), []);
-  const onPreviewSelectField = useCallback((sel: any) => setSelection((prev) => (prev?.key === sel.key ? null : { target: "field", ...sel })), []);
+  const onPreviewSelectField = useCallback((sel: any) => {
+    if (sel.field === "toggleOpenState") {
+      cycleToggleOpenRef.current?.(sel.pagePath, sel.sectionId);
+      return;
+    }
+    setSelection((prev) => (prev?.key === sel.key ? null : { target: "field", ...sel }));
+  }, []);
+  const cycleToggleOpenRef = useRef<((pagePath: string, sectionId: string) => void) | null>(null);
 
   // Flera bilagor samtidigt (t.ex. en hel hög bilder till ett nytt
   // bildgalleri) — se handleFiles nedan.
@@ -1185,12 +1192,31 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     }
     return savePick("/api/sites/edit-section-style", { spacing: next }, t("Klart! Avståndet i sektionen är ändrat. Du kan ångra med knappen om du ändrar dig."));
   };
-  // Utfällbara rutor: välj vilka som är öppna från start (första, alla, ingen).
-  const canToggleOpen = !!selection && pickedSection?.type === "toggle";
-  const cycleToggleOpen = () => {
-    const cur: string = pickedSection?.openState ?? "first";
+  // Utfällbara rutor: knappen sitter i själva sektionen (SitePreview) och växlar
+  // mellan första, alla och ingen utfälld från start. Ingen markering krävs.
+  cycleToggleOpenRef.current = async (pagePath: string, sectionId: string) => {
+    if (!content || savingPick) return;
+    const sec: any = content.pages.find((p) => p.path === pagePath)?.sections.find((x) => x.id === sectionId);
+    if (!sec || sec.type !== "toggle") return;
+    const cur: string = sec.openState ?? "first";
     const next = cur === "first" ? "all" : cur === "all" ? "none" : "first";
-    return savePick("/api/sites/edit-section-style", { openState: next }, t("Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.", { state: next === "all" ? t("alla rutor utfällda") : next === "none" ? t("alla rutor hopfällda") : t("första rutan utfälld") }));
+    setSavingPick(true);
+    try {
+      const res = await fetch("/api/sites/edit-section-style", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site?.id, pagePath, sectionId, openState: next }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setMessages((m) => [...m, { from: "bot", text: t("Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.", { state: next === "all" ? t("alla rutor utfällda") : next === "none" ? t("alla rutor hopfällda") : t("första rutan utfälld") }) }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: t("Ändringen kunde inte sparas: {message}", { message: e.message }) }]);
+    } finally {
+      setSavingPick(false);
+    }
   };
   const saveButtonStyle = (style: string | null) =>
     savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex, header: isHeaderBtn }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
@@ -2434,12 +2460,6 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     className={dockBtn}
                   >
                     <YIcon name="button" size={15} />{t("Byt knappstil")}
-                  </button>
-                )}
-{canToggleOpen && (
-                  <button type="button" onClick={cycleToggleOpen} disabled={sending || savingPick} className={dockBtn}>
-                    <YIcon name="layout" size={15} />
-                    {(pickedSection?.openState ?? "first") === "all" ? t("Utfällt: alla") : (pickedSection?.openState ?? "first") === "none" ? t("Utfällt: ingen") : t("Utfällt: första")}
                   </button>
                 )}
 {canSpacing && (
