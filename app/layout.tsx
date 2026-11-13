@@ -72,7 +72,7 @@ export function generateMetadata(): Metadata {
   } catch {}
   return {
     alternates,
-    metadataBase: new URL("https://yourcosite.vercel.app"),
+    metadataBase: new URL("https://www.yourcosite.com"),
     title: { default: m.title, template: "%s — YourCoSite" },
     description: m.description,
   };

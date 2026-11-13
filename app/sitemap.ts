@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { LOCALES, LOCALIZED_SITEMAP_PATHS, localizedPath } from "@/lib/i18n/config";
 
-const BASE = "https://yourcosite.vercel.app";
+const BASE = "https://www.yourcosite.com";
 
 // Varje publik sida finns i sju språkversioner som pekar på varandra.
 export default function sitemap(): MetadataRoute.Sitemap {

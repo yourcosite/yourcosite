@@ -83,8 +83,8 @@ export async function logError(input: ErrorInput): Promise<void> {
         `<p><b>Nytt fel i YourCoSite</b> (${input.source === "server" ? "servern" : "webbläsaren"})</p>` +
         `<p>${escapeHtml(input.message.slice(0, 400))}</p>` +
         `<p>Plats: ${escapeHtml(where)}</p>` +
-        `<p>Se alla fel: <a href="https://yourcosite.vercel.app/admin/fel">/admin/fel</a></p>`;
-      const text = `Nytt fel i YourCoSite (${input.source})\n${input.message.slice(0, 400)}\nPlats: ${where}\nhttps://yourcosite.vercel.app/admin/fel`;
+        `<p>Se alla fel: <a href="https://www.yourcosite.com/admin/fel">/admin/fel</a></p>`;
+      const text = `Nytt fel i YourCoSite (${input.source})\n${input.message.slice(0, 400)}\nPlats: ${where}\nhttps://www.yourcosite.com/admin/fel`;
       await sendEmail({ to, subject: `Fel i YourCoSite: ${input.message.slice(0, 70)}`, html, text });
     }
   } catch (e) {
