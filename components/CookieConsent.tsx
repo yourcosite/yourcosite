@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 import { useT } from "@/components/I18nProvider";
 
-// Frågar om statistikcookies (Google Tag Manager / Analytics) på de publika
+// Frågar om statistik- och marknadsföringscookies (Google Tag Manager / Analytics, Meta Pixel) på de publika
 // sidorna. Svaret sparas i webbläsaren; tills besökaren sagt ja skickas inga
-// analyscookies (Consent Mode i app/layout.tsx).
+// analys- eller marknadsföringscookies (Consent Mode i app/layout.tsx).
 const KEY = "ycs-consent";
 
 declare global {
-  interface Window { gtag?: (...args: unknown[]) => void }
+  interface Window { gtag?: (...args: unknown[]) => void; fbq?: (...args: unknown[]) => void }
 }
 
 export default function CookieConsent() {
@@ -27,6 +27,7 @@ export default function CookieConsent() {
   const answer = (granted: boolean) => {
     try { localStorage.setItem(KEY, granted ? "granted" : "denied"); } catch { /* tyst */ }
     window.gtag?.("consent", "update", { analytics_storage: granted ? "granted" : "denied" });
+    window.fbq?.("consent", granted ? "grant" : "revoke");
     setShow(false);
   };
 
@@ -34,7 +35,7 @@ export default function CookieConsent() {
   return (
     <div role="dialog" aria-label={t("Cookies")} className="fixed bottom-3 left-3 right-3 md:left-auto md:right-5 md:bottom-5 md:max-w-[380px] z-[80] bg-surface border border-line rounded-2xl p-4 shadow-xl">
       <p className="text-[13px] text-ink leading-relaxed mb-3">
-        {t("Vi använder cookies för anonym besöksstatistik så att vi kan förbättra sajten. Du väljer själv.")}{" "}
+        {t("Vi använder cookies för besöksstatistik och för att mäta vår marknadsföring (Google och Meta). Du väljer själv.")}{" "}
         <a href="/integritetspolicy" className="underline font-semibold">{t("Läs mer")}</a>
       </p>
       <div className="flex gap-2">

@@ -81,13 +81,20 @@ export function generateMetadata(): Metadata {
 
 // Google Tag Manager på våra egna publika sidor (startsida, priser m.fl.), inte
 // i inloggade vyer eller på kundernas sajter. Consent Mode: ingen analys-
-// cookie sätts förrän besökaren godkänt i CookieConsent.
+// cookie sätts förrän besökaren godkänt i CookieConsent. Meta Pixel följer samma
+// val (fbq consent revoke/grant) och noscript-bilden används inte, eftersom den
+// skulle skicka data utan samtycke.
 const GTM_ID = "GTM-MDL9GDQB";
+const META_PIXEL_ID = "774829522558659";
 const GTM_SNIPPET = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;
 gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});
 try{if(localStorage.getItem('ycs-consent')==='granted')gtag('consent','update',{analytics_storage:'granted'});}catch(e){}
 dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});
-var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtm.js?id=${GTM_ID}';document.head.appendChild(s);`;
+var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtm.js?id=${GTM_ID}';document.head.appendChild(s);
+!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+fbq('consent','revoke');
+try{if(localStorage.getItem('ycs-consent')==='granted')fbq('consent','grant');}catch(e){}
+fbq('init','${META_PIXEL_ID}');fbq('track','PageView');`;
 
 export default function RootLayout({
   children,
