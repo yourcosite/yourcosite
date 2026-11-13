@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ImpersonationBanner from "@/components/ImpersonationBanner";
+import CookieConsent from "@/components/CookieConsent";
 import ErrorReporter from "@/components/ErrorReporter";
 import { I18nProvider } from "@/components/I18nProvider";
 import { getLocale } from "@/lib/i18n/server";
@@ -78,12 +79,24 @@ export function generateMetadata(): Metadata {
   };
 }
 
+// Google Tag Manager på våra egna publika sidor (startsida, priser m.fl.), inte
+// i inloggade vyer eller på kundernas sajter. Consent Mode: ingen analys-
+// cookie sätts förrän besökaren godkänt i CookieConsent.
+const GTM_ID = "GTM-MDL9GDQB";
+const GTM_SNIPPET = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}window.gtag=gtag;
+gtag('consent','default',{analytics_storage:'denied',ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',wait_for_update:500});
+try{if(localStorage.getItem('ycs-consent')==='granted')gtag('consent','update',{analytics_storage:'granted'});}catch(e){}
+dataLayer.push({'gtm.start':new Date().getTime(),event:'gtm.js'});
+var s=document.createElement('script');s.async=true;s.src='https://www.googletagmanager.com/gtm.js?id=${GTM_ID}';document.head.appendChild(s);`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   const locale = getLocale();
+  let publicPage = false;
+  try { publicPage = !!headers().get("x-ycs-route"); } catch {}
   const m = META[locale] || META.sv;
   const jsonLd = [
     {
@@ -106,17 +119,24 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <head>
+        {publicPage && <script dangerouslySetInnerHTML={{ __html: GTM_SNIPPET }} />}
         <link
           href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;1,500&family=Work+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
       <body className="font-sans">
+        {publicPage && (
+          <noscript>
+            <iframe src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`} height="0" width="0" style={{ display: "none", visibility: "hidden" }} />
+          </noscript>
+        )}
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
         <I18nProvider locale={locale} dict={DICTIONARIES[locale]}>
           {children}
           <ImpersonationBanner />
           <ErrorReporter />
+          {publicPage && <CookieConsent />}
         </I18nProvider>
       </body>
     </html>
