@@ -37,7 +37,7 @@ export default function ImpersonationBanner() {
 
   return (
     <div
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100] flex flex-wrap items-center justify-center gap-3 bg-ink text-white rounded-full px-4 py-2.5 shadow-lg max-w-[calc(100vw-24px)]"
+      className="fixed top-2 left-1/2 -translate-x-1/2 z-[100] flex flex-wrap items-center justify-center gap-3 bg-ink text-white rounded-full pl-4 pr-1.5 py-1.5 shadow-lg opacity-95 max-w-[calc(100vw-24px)]"
       role="status"
     >
       <span className="text-[13px]">
@@ -47,7 +47,7 @@ export default function ImpersonationBanner() {
         type="button"
         onClick={back}
         disabled={busy}
-        className="text-[13px] font-semibold bg-white text-ink rounded-full px-3.5 py-1.5 disabled:opacity-60"
+        className="text-[12.5px] font-semibold bg-white text-ink rounded-full px-3 py-1 disabled:opacity-60"
       >
         {busy ? "Går tillbaka …" : "← Tillbaka till admin"}
       </button>
