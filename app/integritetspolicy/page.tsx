@@ -25,8 +25,8 @@ export default function Page() {
       <p>
         {rich(
           t,
-          "CS Kommunikationsbyrå AB, org.nr 5592612120, Rördromsvägen 3, 591 74 Borensberg, är personuppgiftsansvarig för de personuppgifter som behandlas inom YourCoSite. Kontakta oss på <mail>dataskydd@yourcosite.com</mail> vid frågor.",
-          { mail: (c) => <a href="mailto:dataskydd@yourcosite.com">{c}</a> }
+          "CS Kommunikationsbyrå AB, org.nr 5592612120, Rördromsvägen 3, 591 74 Borensberg, är personuppgiftsansvarig för de personuppgifter som behandlas inom YourCoSite. Kontakta oss på <mail>hej@cskb.se</mail> (mejladressen till CS Kommunikationsbyrå AB) vid frågor.",
+          { mail: (c) => <a href="mailto:hej@cskb.se">{c}</a> }
         )}
       </p>
 
@@ -119,8 +119,8 @@ export default function Page() {
       <p>
         {rich(
           t,
-          "Kunden har rätt att begära tillgång till, rättelse av, eller radering av sina personuppgifter, samt rätt till dataportabilitet och att invända mot viss behandling. Kontakta <mail>dataskydd@yourcosite.com</mail>. Kunden har också rätt att klaga hos en tillsynsmyndighet, i Sverige Integritetsskyddsmyndigheten (IMY).",
-          { mail: (c) => <a href="mailto:dataskydd@yourcosite.com">{c}</a> }
+          "Kunden har rätt att begära tillgång till, rättelse av, eller radering av sina personuppgifter, samt rätt till dataportabilitet och att invända mot viss behandling. Kontakta <mail>hej@cskb.se</mail> (mejladressen till CS Kommunikationsbyrå AB). Kunden har också rätt att klaga hos en tillsynsmyndighet, i Sverige Integritetsskyddsmyndigheten (IMY).",
+          { mail: (c) => <a href="mailto:hej@cskb.se">{c}</a> }
         )}
       </p>
 

@@ -41,11 +41,14 @@ export default function SupportPage() {
                 {t("Mejla oss, vi svarar vanligtvis inom 24 timmar på vardagar.")}
               </p>
               <a
-                href="mailto:support@yourcosite.com"
+                href="mailto:hej@cskb.se"
                 className="inline-flex items-center gap-2 bg-accent text-accent-ink font-bold text-[13.5px] px-4.5 py-2.5 rounded-lg"
               >
-                {t("support@yourcosite.com")}
+                hej@cskb.se
               </a>
+              <p className="text-[12px] text-[#9E9C97] leading-relaxed mt-3.5">
+                {t("Det är mejladressen till CS Kommunikationsbyrå AB, som äger och driver YourCoSite.")}
+              </p>
             </div>
 
             <ContactForm />
