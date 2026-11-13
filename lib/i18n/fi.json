@@ -2741,5 +2741,12 @@
   "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "Yhteys katkesi ennen kuin Millie ehti vastata. Yritä hetken kuluttua uudelleen. Lataa sivu ensin uudelleen, muutos on voinut ehtiä tallentua.",
   "Zooma sidan": "Zoomaa sivua",
   "Zooma ut sidan": "Loitonna",
-  "Zooma in sidan": "Lähennä"
+  "Zooma in sidan": "Lähennä",
+  "Demon har nått sin gräns för AI-hjälp just nu. Prova igen om en stund, eller skapa en egen sajt så får du full tillgång.": "Demo on tällä hetkellä saavuttanut tekoälyavun rajan. Yritä hetken kuluttua uudelleen tai luo oma sivusto, niin saat täyden käyttöoikeuden.",
+  "Uppladdning av egna bilder är avstängd i demon. Be Millie om en bild från bildbanken, eller skapa din egen sajt.": "Omien kuvien lataus on pois käytöstä demossa. Pyydä Milliea hakemaan kuva kuvapankista tai luo oma sivusto.",
+  "Det här är en demo med ett påhittat företag. Klicka på texter och bilder, eller be Millie ändra något. Inget sparas.": "Tämä on demo kuvitteellisella yrityksellä. Klikkaa tekstejä ja kuvia tai pyydä Milliea muuttamaan jotain. Mitään ei tallenneta.",
+  "Skapa din egen sajt": "Luo oma sivusto",
+  "Till YourCoSite": "YourCoSiteen",
+  "Prova redigeraren": "Kokeile muokkausta",
+  "Prova demon": "Kokeile demoa"
 }

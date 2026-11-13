@@ -1,3 +1,4 @@
+import { inDemo } from "@/lib/demoStore";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 // Loggar verklig förbrukning för varje AI-anrop (tabellen ai_usage), så att
@@ -33,7 +34,7 @@ export async function logAiUsage(opts: {
   siteId?: string | null;
 }): Promise<void> {
   try {
-    if (!opts.usage) return;
+    if (!opts.usage || inDemo()) return;
     const u = opts.usage;
     await createAdminClient().from("ai_usage").insert({
       user_id: opts.userId ?? null,

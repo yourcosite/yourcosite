@@ -38,6 +38,12 @@ export default function LandingPage() {
               >
                 {t("Se exempel")}
               </Link>
+              <Link
+                href="/demo"
+                className="text-white font-semibold text-[15.5px] border-b border-white/40 pb-0.5 self-center"
+              >
+                {t("Prova redigeraren")}
+              </Link>
             </div>
           </div>
 

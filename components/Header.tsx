@@ -9,6 +9,7 @@ const navLinks = [
   { href: "/funktioner", label: msg("Funktioner") },
   { href: "/priser", label: msg("Priser") },
   { href: "/exempel", label: msg("Exempel") },
+  { href: "/demo", label: msg("Prova demon") },
   { href: "/om-oss", label: msg("Om oss") },
   { href: "/kontakt", label: msg("Kontakt") },
 ];

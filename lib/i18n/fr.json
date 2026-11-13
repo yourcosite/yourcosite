@@ -2741,5 +2741,12 @@
   "Anslutningen bröts innan Millie hann svara. Försök igen om en stund. Ladda gärna om sidan först, ändringen kan ha hunnit sparas.": "La connexion a été coupée avant que Millie puisse répondre. Réessayez dans un instant. Rechargez d'abord la page, la modification a peut-être déjà été enregistrée.",
   "Zooma sidan": "Zoomer la page",
   "Zooma ut sidan": "Dézoomer",
-  "Zooma in sidan": "Zoomer"
+  "Zooma in sidan": "Zoomer",
+  "Demon har nått sin gräns för AI-hjälp just nu. Prova igen om en stund, eller skapa en egen sajt så får du full tillgång.": "La démo a atteint sa limite d'aide IA pour le moment. Réessayez dans un instant, ou créez votre propre site pour un accès complet.",
+  "Uppladdning av egna bilder är avstängd i demon. Be Millie om en bild från bildbanken, eller skapa din egen sajt.": "Le téléversement de vos propres images est désactivé dans la démo. Demandez à Millie une image de la banque d'images, ou créez votre propre site.",
+  "Det här är en demo med ett påhittat företag. Klicka på texter och bilder, eller be Millie ändra något. Inget sparas.": "Ceci est une démo avec une entreprise fictive. Cliquez sur les textes et les images, ou demandez à Millie de modifier quelque chose. Rien n'est enregistré.",
+  "Skapa din egen sajt": "Créez votre propre site",
+  "Till YourCoSite": "Vers YourCoSite",
+  "Prova redigeraren": "Essayer l'éditeur",
+  "Prova demon": "Essayer la démo"
 }

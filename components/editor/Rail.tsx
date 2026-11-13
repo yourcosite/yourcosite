@@ -24,6 +24,7 @@ export default function Rail({
   undoing,
   onUndo,
   improveCount,
+  demo = false,
 }: {
   siteId?: string;
   panel: EditorPanel;
@@ -32,13 +33,14 @@ export default function Rail({
   undoing: boolean;
   onUndo: () => void;
   improveCount: number;
+  demo?: boolean;
 }) {
   const t = useT();
   return (
     <aside className="hidden md:flex w-[72px] flex-shrink-0 bg-ink text-white flex-col items-center py-3.5 gap-1 z-20">
-      <Link href="/dashboard" title={t("Tillbaka till kundzonen")} className="w-[60px] flex flex-col items-center gap-1 py-1.5 mb-2 rounded-xl text-[10.5px] font-semibold text-white hover:bg-white/10">
+      <Link href={demo ? "/" : "/dashboard"} title={demo ? t("Till YourCoSite") : t("Tillbaka till kundzonen")} className="w-[60px] flex flex-col items-center gap-1 py-1.5 mb-2 rounded-xl text-[10.5px] font-semibold text-white hover:bg-white/10">
         <span className="w-9 h-9 rounded-xl bg-accent text-accent-ink flex items-center justify-center"><Icon name="home" /></span>
-        {t("Kundzon")}
+        {demo ? t("Startsida") : t("Kundzon")}
       </Link>
       <div className="w-8 h-px bg-white/15 mb-1.5" />
       <button type="button" onClick={() => onPanel(null)} className={itemCls(panel === null)}>
@@ -57,10 +59,10 @@ export default function Rail({
         <Icon name="news" />
         {t("Nyheter")}
       </button>
-      <button type="button" onClick={() => onPanel(panel === "bookings" ? null : "bookings")} className={itemCls(panel === "bookings")}>
+      {!demo && <button type="button" onClick={() => onPanel(panel === "bookings" ? null : "bookings")} className={itemCls(panel === "bookings")}>
         <Icon name="bookings" />
         {t("Bokningar")}
-      </button>
+      </button>}
       <button type="button" onClick={() => onPanel(panel === "improve" ? null : "improve")} className={itemCls(panel === "improve")}>
         <Icon name="improve" />
         {t("Förbättra")}
@@ -71,10 +73,10 @@ export default function Rail({
         )}
       </button>
       <div className="flex-1" />
-      <button type="button" onClick={() => onPanel(panel === "settings" ? null : "settings")} className={itemCls(panel === "settings")}>
+      {!demo && <button type="button" onClick={() => onPanel(panel === "settings" ? null : "settings")} className={itemCls(panel === "settings")}>
         <Icon name="settings" />
         {t("Inställningar")}
-      </button>
+      </button>}
       <button type="button" onClick={onUndo} disabled={!canUndo || undoing} title={t("Ångra den senaste ändringen")} className={itemCls(false)}>
         <Icon name="undo" />
         {undoing ? t("Ångrar …") : t("Ångra senaste")}

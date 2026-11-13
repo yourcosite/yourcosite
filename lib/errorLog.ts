@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { inDemo } from "@/lib/demoStore";
 import { sendEmail, escapeHtml } from "@/lib/email";
 
 // Felövervakning utan extern tjänst: fel sparas i tabellen error_log och
@@ -40,6 +41,7 @@ function fingerprintOf(i: ErrorInput): string {
 
 export async function logError(input: ErrorInput): Promise<void> {
   try {
+    if (inDemo()) return; // demon loggar inget
     const db = createAdminClient();
     const fingerprint = fingerprintOf(input);
     const now = Date.now();
