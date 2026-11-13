@@ -18,16 +18,17 @@ import {
   formatWhen,
 } from "@/lib/booking";
 import { createClient } from "@/lib/supabase/client";
+import CalendarTab from "./CalendarTab";
 
 type Pkg = { id: string; name: string; description: string | null; duration_min: number; buffer_min?: number | null; price_sek: number | null; image_url?: string | null; active: boolean };
 type Rule = { package_id: string | null; weekday: number; start_time: string; end_time: string };
 type Slot = { id: string; package_id: string | null; starts_at: string; ends_at: string };
 type Block = { id: string; starts_at: string; ends_at: string; note: string | null };
-type Booking = {
+export type Booking = {
   id: string; package_name: string; duration_min: number; price_sek: number | null; starts_at: string;
   customer_name: string; customer_email: string | null; customer_phone: string | null; message: string | null; status: string;
 };
-type Data = {
+export type Data = {
   siteName?: string;
   siteLang?: string;
   currency?: string;
@@ -38,6 +39,7 @@ type Data = {
 const DAYS = [msg("Måndag"), msg("Tisdag"), msg("Onsdag"), msg("Torsdag"), msg("Fredag"), msg("Lördag"), msg("Söndag")];
 const TABS = [
   { id: "bookings", label: msg("Bokningar") },
+  { id: "calendar", label: msg("Kalender") },
   { id: "packages", label: msg("Paket") },
   { id: "times", label: msg("Tider") },
   { id: "settings", label: msg("Inställningar") },
@@ -126,6 +128,7 @@ export default function BookingClient({ siteId }: { siteId: string }) {
       {notice && <div className="bg-accent-soft rounded-lg px-4 py-3 mb-4 text-[13px] font-semibold">{notice}</div>}
 
       {tab === "bookings" && <BookingsTab data={data} tz={tz} busy={busy} act={act} />}
+      {tab === "calendar" && <CalendarTab data={data} tz={tz} busy={busy} act={act} />}
       {tab === "packages" && <PackagesTab data={data} busy={busy} act={act} />}
       {tab === "times" && <TimesTab data={data} tz={tz} busy={busy} act={act} pkgName={pkgName} />}
       {tab === "settings" && <SettingsTab data={data} busy={busy} act={act} siteId={siteId} />}
@@ -133,7 +136,7 @@ export default function BookingClient({ siteId }: { siteId: string }) {
   );
 }
 
-type Act = (payload: Record<string, unknown>, okMsg?: string) => Promise<boolean>;
+export type Act = (payload: Record<string, unknown>, okMsg?: string) => Promise<boolean>;
 
 function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: boolean; act: Act }) {
   const t = useT();

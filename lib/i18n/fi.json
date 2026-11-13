@@ -3050,5 +3050,12 @@
   "E-post är obligatoriskt": "Sähköposti on pakollinen",
   "Telefon är obligatoriskt": "Puhelin on pakollinen",
   "Spara gärna tiden.": "Tallenna aika muistiin.",
-  "E-post (valfritt, hit skickas bekräftelsen)": "Sähköposti (valinnainen, vahvistus lähetetään tänne)"
+  "E-post (valfritt, hit skickas bekräftelsen)": "Sähköposti (valinnainen, vahvistus lähetetään tänne)",
+  "Kalender": "Kalenteri",
+  "Vecka {n}": "Viikko {n}",
+  "Föregående vecka": "Edellinen viikko",
+  "Nästa vecka": "Seuraava viikko",
+  "Bokad": "Varattu",
+  "Ledig tid att boka": "Vapaa aika varattavaksi",
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Tällä viikolla ei ole mitään. Lisää aukioloajat kohdassa Ajat, niin ne näkyvät tässä."
 }

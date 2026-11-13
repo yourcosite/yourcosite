@@ -3050,5 +3050,12 @@
   "E-post är obligatoriskt": "E-Mail ist erforderlich",
   "Telefon är obligatoriskt": "Telefon ist erforderlich",
   "Spara gärna tiden.": "Merke dir den Termin gern.",
-  "E-post (valfritt, hit skickas bekräftelsen)": "E-Mail (optional, die Bestätigung wird hierhin gesendet)"
+  "E-post (valfritt, hit skickas bekräftelsen)": "E-Mail (optional, die Bestätigung wird hierhin gesendet)",
+  "Kalender": "Kalender",
+  "Vecka {n}": "Woche {n}",
+  "Föregående vecka": "Vorherige Woche",
+  "Nästa vecka": "Nächste Woche",
+  "Bokad": "Gebucht",
+  "Ledig tid att boka": "Buchbare freie Zeit",
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Diese Woche ist nichts eingetragen. Lege unter Zeiten Öffnungszeiten an, dann erscheinen sie hier."
 }

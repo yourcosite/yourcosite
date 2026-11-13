@@ -3050,5 +3050,12 @@
   "E-post är obligatoriskt": "L'e-mail est obligatoire",
   "Telefon är obligatoriskt": "Le téléphone est obligatoire",
   "Spara gärna tiden.": "Pensez à noter l'heure.",
-  "E-post (valfritt, hit skickas bekräftelsen)": "E-mail (facultatif, la confirmation est envoyée ici)"
+  "E-post (valfritt, hit skickas bekräftelsen)": "E-mail (facultatif, la confirmation est envoyée ici)",
+  "Kalender": "Calendrier",
+  "Vecka {n}": "Semaine {n}",
+  "Föregående vecka": "Semaine précédente",
+  "Nästa vecka": "Semaine suivante",
+  "Bokad": "Réservé",
+  "Ledig tid att boka": "Créneau disponible",
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Rien n'est prévu cette semaine. Ajoutez des horaires d'ouverture sous Horaires et ils apparaîtront ici."
 }

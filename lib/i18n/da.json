@@ -3050,5 +3050,12 @@
   "E-post är obligatoriskt": "E-mail er påkrævet",
   "Telefon är obligatoriskt": "Telefon er påkrævet",
   "Spara gärna tiden.": "Gem gerne tidspunktet.",
-  "E-post (valfritt, hit skickas bekräftelsen)": "E-mail (valgfrit, bekræftelsen sendes hertil)"
+  "E-post (valfritt, hit skickas bekräftelsen)": "E-mail (valgfrit, bekræftelsen sendes hertil)",
+  "Kalender": "Kalender",
+  "Vecka {n}": "Uge {n}",
+  "Föregående vecka": "Forrige uge",
+  "Nästa vecka": "Næste uge",
+  "Bokad": "Booket",
+  "Ledig tid att boka": "Ledig tid at booke",
+  "Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.": "Intet er lagt ind i denne uge. Tilføj åbningstider under Tider, så vises de her."
 }
