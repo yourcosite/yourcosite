@@ -3023,5 +3023,7 @@
   "Utfällbara rutor": "Laajennettavat laatikot",
   "Rader med linjer": "Rivit viivoilla",
   "Rutor": "Laatikot",
-  "Rubrik bredvid rutorna": "Otsikko laatikoiden vieressä"
+  "Rubrik bredvid rutorna": "Otsikko laatikoiden vieressä",
+  "Bilden är större än 15 MB.": "Kuva on suurempi kuin 15 Mt.",
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, enintään 15 Mt per kuva, enintään {MAX_IMAGES} kpl. Täysin vapaaehtoinen."
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import { rich } from "@/lib/i18n/rich";
 import { useT, useLocale } from "@/components/I18nProvider";
 import { BCP47 } from "@/lib/i18n/country";
@@ -10,7 +11,7 @@ import StockPhotoModal from "@/components/StockPhotoModal";
 import { withCredit } from "@/lib/stockPhotos";
 import { DEFAULT_NEWS_CATEGORY, type NewsArticle } from "@/lib/newsArticles";
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = MAX_UPLOAD_IMAGE_BYTES;
 const IMAGE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const NEW_CATEGORY_VALUE = "__new__";
 
@@ -121,11 +122,12 @@ export default function NewsClient({
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));
-      const ext = file.name.split(".").pop() || "bin";
+      const upFile = await prepareImage(file);
+      const ext = upFile.name.split(".").pop() || "bin";
       const path = `${user.id}/nyhet-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
       const { error: uploadError } = await supabase.storage
         .from("uploads")
-        .upload(path, file, { contentType: file.type || undefined });
+        .upload(path, upFile, { contentType: upFile.type || undefined });
       if (uploadError) throw new Error(uploadError.message);
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       setComposer((prev) => (prev ? { ...prev, imageUrl: pub.publicUrl } : prev));

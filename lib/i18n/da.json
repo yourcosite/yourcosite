@@ -3023,5 +3023,7 @@
   "Utfällbara rutor": "Udfoldelige bokse",
   "Rader med linjer": "Rækker med linjer",
   "Rutor": "Bokse",
-  "Rubrik bredvid rutorna": "Overskrift ved siden af boksene"
+  "Rubrik bredvid rutorna": "Overskrift ved siden af boksene",
+  "Bilden är större än 15 MB.": "Billedet er større end 15 MB.",
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, maks. 15 MB pr. billede, op til {MAX_IMAGES} stk. Helt valgfrit."
 }

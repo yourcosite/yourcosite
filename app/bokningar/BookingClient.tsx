@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import { msg } from "@/lib/i18n/config";
 import { rich } from "@/lib/i18n/rich";
 import { useT, useLocale } from "@/components/I18nProvider";
@@ -283,8 +284,8 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
       setUploadError(t("Bilden måste vara PNG, JPG, WEBP eller GIF."));
       return;
     }
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError(t("Bilden är större än 5 MB."));
+    if (file.size > MAX_UPLOAD_IMAGE_BYTES) {
+      setUploadError(t("Bilden är större än 15 MB."));
       return;
     }
     setUploading(true);
@@ -293,9 +294,10 @@ function PackagesTab({ data, busy, act }: { data: Data; busy: boolean; act: Act 
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error(t("Du är inte inloggad längre, ladda om sidan."));
-      const ext = file.name.split(".").pop() || "bin";
+      const upFile = await prepareImage(file);
+      const ext = upFile.name.split(".").pop() || "bin";
       const path = `${user.id}/paket-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("uploads").upload(path, file, { contentType: file.type || undefined });
+      const { error: upErr } = await supabase.storage.from("uploads").upload(path, upFile, { contentType: upFile.type || undefined });
       if (upErr) throw new Error(upErr.message);
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);
       setForm((f) => (f ? { ...f, image_url: pub.publicUrl } : f));

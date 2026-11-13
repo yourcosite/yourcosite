@@ -3023,5 +3023,7 @@
   "Utfällbara rutor": "Aufklappbare Boxen",
   "Rader med linjer": "Zeilen mit Linien",
   "Rutor": "Boxen",
-  "Rubrik bredvid rutorna": "Überschrift neben den Boxen"
+  "Rubrik bredvid rutorna": "Überschrift neben den Boxen",
+  "Bilden är större än 15 MB.": "Das Bild ist größer als 15 MB.",
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, max. 15 MB pro Bild, bis zu {MAX_IMAGES} Stück. Völlig optional."
 }

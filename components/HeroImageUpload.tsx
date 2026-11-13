@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import { useT } from "@/components/I18nProvider";
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -53,12 +54,13 @@ export default function HeroImageUpload({
         return;
       }
 
-      const ext = file.name.split(".").pop() || "jpg";
+      const upFile = await prepareImage(file);
+      const ext = upFile.name.split(".").pop() || "jpg";
       const path = `${user.id}/hero-${Date.now()}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("uploads")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, upFile, { contentType: upFile.type });
       if (uploadError) throw new Error(uploadError.message);
 
       const { data: pub } = supabase.storage.from("uploads").getPublicUrl(path);

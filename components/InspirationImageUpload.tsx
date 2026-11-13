@@ -1,16 +1,16 @@
 "use client";
 
+import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import { rich } from "@/lib/i18n/rich";
 import { useT } from "@/components/I18nProvider";
 import { useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
-// Lägre gräns än de övriga uppladdningarna (15 MB) — de här bilderna
-// skickas som bilddata direkt till Claude vid genereringen, och stora
+// Bilderna förminskas i webbläsaren till max 1600 px (se prepareImage) —
+// de skickas som bilddata direkt till Claude vid genereringen, och stora
 // bilder blir både dyrare (fler tokens) och riskerar att gå över
-// AI-tjänstens egen storleksgräns per bild. 5 MB räcker gott för en
-// skärmdump eller ett foto.
-const MAX_BYTES = 5 * 1024 * 1024;
+// AI-tjänstens egen storleksgräns per bild (5 MB).
+const MAX_BYTES = MAX_UPLOAD_IMAGE_BYTES;
 const MAX_IMAGES = 6;
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
@@ -71,16 +71,17 @@ export default function InspirationImageUpload({
         continue;
       }
       if (file.size > MAX_BYTES) {
-        skipped.push(t("{name} (större än 5 MB)", { name: file.name }));
+        skipped.push(t("{name} (större än 15 MB)", { name: file.name }));
         continue;
       }
 
-      const ext = file.name.split(".").pop() || "jpg";
+      const upFile = await prepareImage(file, { maxDim: 1600 });
+      const ext = upFile.name.split(".").pop() || "jpg";
       const path = `${user.id}/inspo-${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("uploads")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, upFile, { contentType: upFile.type });
       if (uploadError) {
         skipped.push(t("{name} (gick inte att ladda upp: {message})", { name: file.name, message: uploadError.message }));
         continue;
@@ -138,7 +139,7 @@ export default function InspirationImageUpload({
         <div className="font-semibold text-[14.5px]">
           {uploading ? t("Laddar upp …") : t("Ladda upp skärmdumpar av andra hemsidor")}
         </div>
-        <div className="text-[12.5px] text-ink-dim mt-1">{rich(t, "PNG/JPG/WEBP, max 5 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.", {}, { MAX_IMAGES })}</div>
+        <div className="text-[12.5px] text-ink-dim mt-1">{rich(t, "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.", {}, { MAX_IMAGES })}</div>
         <div className="text-[12.5px] text-ink-dim mt-2.5 max-w-[420px] mx-auto">
           {t("Används bara som inspiration för känsla och layout — hamnar aldrig på din sajt eller någon annans, och sparas inte kvar hos oss efter att din sajt byggts.")}
         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import PublishModal from "@/components/editor/PublishModal";
 import MenuStyleThumb, { type MenuStyleId } from "@/components/MenuStyleThumb";
 import { rich } from "@/lib/i18n/rich";
@@ -140,7 +141,7 @@ const GALLERY_LAYOUT_LABELS: Record<GalleryLayout, string> = {
   carousel: msg("Svepbar rad"),
 };
 
-const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const MAX_IMAGE_BYTES = MAX_UPLOAD_IMAGE_BYTES;
 const MAX_DOC_BYTES = 10 * 1024 * 1024;
 // Flera bilder på en gång är framförallt till för att fylla ett bildspel/
 // galleri i ett svep — ingen anledning att tillåta hur många som helst i
@@ -637,6 +638,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     }
 
     if (demo) throw demoNoUpload();
+    if (isImage) file = await prepareImage(file);
     const supabase = createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error(t("Du är inte inloggad längre — ladda om sidan."));

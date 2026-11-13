@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareImage } from "@/lib/imageUpload";
 import { useState } from "react";
 import { useT } from "@/components/I18nProvider";
 
@@ -43,7 +44,7 @@ export default function SettingsPanel({
       const fd = new FormData();
       fd.append("kind", kind);
       if (siteId) fd.append("siteId", siteId);
-      if (file) fd.append("file", file);
+      if (file) fd.append("file", await prepareImage(file, { maxDim: kind === "favicon" ? 512 : 1600 }));
       else fd.append("remove", "1");
       const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
       const data = await res.json().catch(() => ({}));

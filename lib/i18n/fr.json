@@ -3023,5 +3023,7 @@
   "Utfällbara rutor": "Blocs dépliables",
   "Rader med linjer": "Lignes séparées",
   "Rutor": "Blocs",
-  "Rubrik bredvid rutorna": "Titre à côté des blocs"
+  "Rubrik bredvid rutorna": "Titre à côté des blocs",
+  "Bilden är större än 15 MB.": "L'image dépasse 15 Mo.",
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, 15 Mo max par image, jusqu'à {MAX_IMAGES}. Entièrement facultatif."
 }

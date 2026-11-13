@@ -3023,5 +3023,7 @@
   "Utfällbara rutor": "Cajas desplegables",
   "Rader med linjer": "Filas con líneas",
   "Rutor": "Cajas",
-  "Rubrik bredvid rutorna": "Título junto a las cajas"
+  "Rubrik bredvid rutorna": "Título junto a las cajas",
+  "Bilden är större än 15 MB.": "La imagen supera los 15 MB.",
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, máx. 15 MB por imagen, hasta {MAX_IMAGES}. Totalmente opcional."
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import { useT } from "@/components/I18nProvider";
 import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -90,12 +91,13 @@ export default function FileDropzone({
         continue;
       }
 
-      const ext = file.name.split(".").pop() || "bin";
+      const upFile = file.type.startsWith("image/") ? await prepareImage(file) : file;
+      const ext = upFile.name.split(".").pop() || "bin";
       const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
 
       const { error: uploadError } = await supabase.storage
         .from("uploads")
-        .upload(path, file, { contentType: file.type });
+        .upload(path, upFile, { contentType: upFile.type });
 
       if (uploadError) {
         skipped.push(t("{name} (gick inte att ladda upp: {message})", { name: file.name, message: uploadError.message }));
