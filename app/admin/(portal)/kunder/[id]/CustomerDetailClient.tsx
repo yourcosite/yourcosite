@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PLAN_LABELS, formatMoney, planPrice } from "@/lib/pricing";
@@ -89,6 +89,29 @@ export default function CustomerDetailClient({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [siteStatus, setSiteStatus] = useState(site?.status);
   const [planValue, setPlanValue] = useState(site?.plan ?? "bas");
+  const [changeUsage, setChangeUsage] = useState<{ enabled: boolean; used: number; limit: number } | null>(null);
+  const [addingChanges, setAddingChanges] = useState(false);
+  useEffect(() => {
+    fetch(`/api/admin/customers/${customer.id}/addons`)
+      .then((r) => r.json())
+      .then((d) => setChangeUsage(d))
+      .catch(() => {});
+  }, [customer.id]);
+  const addExtraChanges = async () => {
+    setAddingChanges(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${customer.id}/addons`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ amount: 50 }),
+      });
+      const d = await res.json();
+      if (res.ok) setChangeUsage(d.usage);
+      else alert(d.error || "Det gick inte att lägga till.");
+    } finally {
+      setAddingChanges(false);
+    }
+  };
   const [savingPlan, setSavingPlan] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -359,6 +382,23 @@ export default function CustomerDetailClient({
                       >
                         {savingPlan ? "Sparar …" : "Spara plan"}
                       </button>
+                    </div>
+                    <div className="mt-4 pt-3.5 border-t border-line">
+                      <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Ändringar denna månad</div>
+                      <div className="flex items-center gap-2.5 text-[13.5px]">
+                        <span>
+                          {changeUsage?.enabled ? `${changeUsage.used} av ${changeUsage.limit} använda` : "Spärren är inte aktiv (kör andringar-spark.sql)"}
+                        </span>
+                        {changeUsage?.enabled && (
+                          <button
+                            onClick={addExtraChanges}
+                            disabled={addingChanges}
+                            className="border border-line font-semibold text-[13px] px-3.5 py-1.5 rounded-lg disabled:opacity-60"
+                          >
+                            {addingChanges ? "Lägger till …" : "Lägg till 50 extra"}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ) : (

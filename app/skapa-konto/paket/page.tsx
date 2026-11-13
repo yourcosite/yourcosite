@@ -20,7 +20,7 @@ const PLANS = [
     id: "bas",
     name: msg("Paket"),
     body: msg("Allt ni behöver för en egen sajt. Tillägg för fler ändringar och språk."),
-    features: [msg("1 sajt, egen domän, hosting och SSL"), msg("30 ändringar/månad"), msg("Nyhetsmodul med AI-förslag"), msg("Faktureras en gång i månaden")],
+    features: [msg("1 sajt, egen domän, hosting och SSL"), msg("30 ändringar/månad (50 första månaden)"), msg("Bokningsmodul"), msg("Nyhetsmodul med AI-förslag"), msg("Faktureras en gång i månaden")],
     popular: false,
   },
 ] as const;

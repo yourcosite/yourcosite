@@ -5,6 +5,7 @@ import { LANGUAGE_ENGLISH, isLocale, msg } from "@/lib/i18n/config";
 import { childPagesOf } from "@/lib/pageTree";
 import { NextResponse } from "next/server";
 import { rateLimited } from "@/lib/rateLimit";
+import { getChangeUsage, recordChange } from "@/lib/changeLimit";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
@@ -859,6 +860,20 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("Du har nått dagens gräns för AI-hjälp. Försök igen i morgon eller hör av dig till supporten.") }, { status: 429 });
   }
 
+  // Månadens ändringar: 30 ingår, fler köps som tillägg (se lib/changeLimit.ts).
+  const usageBefore = await getChangeUsage(supabase, user.id, user.created_at);
+  if (usageBefore.enabled && usageBefore.used >= usageBefore.limit) {
+    return NextResponse.json(
+      {
+        error: t("Du har använt alla dina {limit} ändringar den här månaden. De nollställs när en ny månad börjar, eller så kan du lägga till fler.", { limit: usageBefore.limit }),
+        limitReached: true,
+        used: usageBefore.used,
+        limit: usageBefore.limit,
+      },
+      { status: 402 }
+    );
+  }
+
   const body = await request.json();
   const message = typeof body.message === "string" ? body.message.trim() : "";
   if (!message) return NextResponse.json({ error: t("Skriv vad du vill ändra.") }, { status: 400 });
@@ -1249,6 +1264,10 @@ async function POST_handler(request: Request) {
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });
 
+  // En ändring räknas först när den faktiskt sparats.
+  await recordChange(supabase, user.id, site.id);
+  const usageAfter = usageBefore.enabled ? { used: usageBefore.used + 1, limit: usageBefore.limit } : null;
+
   // Sajtens språk (cookiebanner, bokning, kundmejl) följer med när kunden
   // bett Millie översätta sajten. Kolumnen finns efter supabase/sprak.sql.
   let newSiteLanguage: string | null = null;
@@ -1412,6 +1431,7 @@ async function POST_handler(request: Request) {
     warning,
     followUp,
     siteLanguage: newSiteLanguage,
+    usage: usageAfter,
   });
 }
 

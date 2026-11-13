@@ -36,7 +36,8 @@ const checkIcon = (
 
 const packageFeatures = [
   msg("1 sajt"),
-  msg("30 ändringar/månad"),
+  msg("30 ändringar/månad (50 första månaden)"),
+  msg("Bokningsmodul"),
   msg("Egen domän"),
   msg("SSL och hosting ingår"),
   msg("Nyhetsmodul med AI-förslag"),
@@ -105,6 +106,7 @@ export default function PricingPage() {
                   [t("50 extra ändringar"), t("Gäller den månaden"), ADDON_PRICES.changes50],
                   [t("1 extra språk"), t("Sajten översätts och hålls översatt"), ADDON_PRICES.language1],
                   [t("2 extra språk"), t("Samma sak, till ett lägre pris"), ADDON_PRICES.language2],
+                  [t("1 extra sajt"), t("En sajt till på samma konto"), ADDON_PRICES.site],
                 ].map(([name, note, price]) => {
                   const p = price as { SEK: number; EUR: number };
                   return (

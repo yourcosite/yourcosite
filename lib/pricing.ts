@@ -28,6 +28,7 @@ export const ADDON_PRICES = {
   changes50: { SEK: 99, EUR: 9 },
   language1: { SEK: 39, EUR: 4 },
   language2: { SEK: 59, EUR: 6 },
+  site: { SEK: 150, EUR: 14 },
 } as const;
 
 export function planPrice(plan: string | null | undefined, currency: Currency = "SEK"): number {

@@ -38,6 +38,7 @@ import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
 import { createClient } from "@/lib/supabase/client";
 import { installDemoFetch } from "@/lib/demoClient";
+import { ADDON_PRICES, currencyForLocale, formatMoney } from "@/lib/pricing";
 import { isValidSiteContent, GRID_LAYOUTS, GALLERY_LAYOUTS, TEAM_LAYOUTS, MENU_LAYOUTS, MAX_GALLERY_IMAGES, MAX_TEAM_MEMBERS, MAX_MENU_CATEGORIES, MAX_MENU_ITEMS, MAX_FIXTURES, FIXTURES_LAYOUTS, MENU_TAGS, type GalleryLayout, type GridLayout, type TeamLayout, type MenuLayout, type SiteContent } from "@/lib/contentModel";
 import GridLayoutThumb from "@/components/GridLayoutThumb";
 import { GridIcon, GRID_ICON_IDS, iconsForItems } from "@/lib/gridIcons";
@@ -56,6 +57,8 @@ type ChatMessage = {
   // kundens ursprungliga önskemål, sparat för att kunna förifylla
   // "Skicka önskemål till oss"-rutan med rätt sammanhang.
   unsupported?: boolean;
+  // Satt när månadens ändringar är slut eller snart slut: visar knappen "Köp fler".
+  buyMore?: boolean;
   requestText?: string;
   // Förslag kunden kan klicka på för att fylla i meddelanderutan.
   chips?: string[];
@@ -490,6 +493,38 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const [viewLang, setViewLangRaw] = useState<string | null>(null);
   const setViewLang = useCallback((l: string | null) => { setSelection(null); setViewLangRaw(l); }, []);
   const [panel, setPanel] = useState<EditorPanel>(null);
+  // Månadens ändringar (30 ingår, 50 första 30 dagarna) och köp av fler.
+  const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
+  const [addonOpen, setAddonOpen] = useState(false);
+  const [addonBusy, setAddonBusy] = useState(false);
+  const [addonDone, setAddonDone] = useState(false);
+  const [addonError, setAddonError] = useState("");
+  const lowWarnedRef = useRef(false);
+  useEffect(() => {
+    if (demo) return;
+    fetch("/api/sites/change-usage")
+      .then((r) => r.json())
+      .then((d) => { if (d && d.enabled) setUsage({ used: d.used, limit: d.limit }); })
+      .catch(() => {});
+  }, [demo]);
+  const orderAddon = async () => {
+    setAddonBusy(true);
+    setAddonError("");
+    try {
+      const res = await fetch("/api/sites/order-addon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "changes50", siteId: site?.id }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || t("Det gick inte att skicka beställningen just nu. Försök igen om en stund."));
+      setAddonDone(true);
+    } catch (e: any) {
+      setAddonError(e.message);
+    } finally {
+      setAddonBusy(false);
+    }
+  };
   const [millieOpen, setMillieOpen] = useState(false);
   const [barExpanded, setBarExpanded] = useState(false);
   const [versionsOpen, setVersionsOpen] = useState(false);
@@ -1565,7 +1600,13 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
         }),
       });
       const data = await res.json();
+      if (res.status === 402 && data.limitReached) {
+        setUsage({ used: data.used, limit: data.limit });
+        setMessages((m) => [...m, { from: "bot", text: data.error, buyMore: true }]);
+        return;
+      }
       if (!res.ok) throw new Error(data.error || t("Något gick fel."));
+      if (data.usage) setUsage({ used: data.usage.used, limit: data.usage.limit });
       const isQuestion = Array.isArray(data.options) && data.options.length >= 2;
       if (!isQuestion && !data.noChange) {
         if (content) setUndoStack((st) => [...st.slice(-9), content]);
@@ -1579,6 +1620,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
         setNewsArticles((prev) => [data.newsArticle, ...prev.filter((a) => a.id !== data.newsArticle.id)]);
         setPreviewNewsId(data.newsArticle.id);
       }
+      if (data.usage && data.usage.limit - data.usage.used <= 5) lowWarnedRef.current = true;
       setMessages((m) => [
         ...m,
         {
@@ -1591,6 +1633,17 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
         },
         // Varning från servern (t.ex. en nyhet utan nyhetslista att visas i)
         // kommer som ett eget meddelande, med klickbara förslag.
+        ...(data.usage && data.usage.limit - data.usage.used <= 5 && !lowWarnedRef.current
+          ? [
+              {
+                from: "bot" as const,
+                text: data.usage.limit - data.usage.used <= 0
+                  ? t("Det var din sista ändring för den här månaden. Du kan lägga till fler när du vill.")
+                  : t("Du har {n} ändringar kvar den här månaden. Behöver du fler kan du lägga till 50 extra.", { n: data.usage.limit - data.usage.used }),
+                buyMore: true,
+              },
+            ]
+          : []),
         ...(data.warning
           ? [
               {
@@ -1763,6 +1816,16 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
             </div>
           )}
           <div className="flex items-center gap-2 flex-shrink-0">
+            {usage && !demo && (
+              <button
+                type="button"
+                onClick={() => setAddonOpen(true)}
+                title={t("Ändringar kvar den här månaden")}
+                className={`hidden sm:flex items-center gap-1.5 text-[12.5px] font-semibold border rounded-full px-3 py-1.5 ${usage.limit - usage.used <= 0 ? "bg-red-50 border-red-300 text-red-700" : usage.limit - usage.used <= 5 ? "bg-amber-50 border-amber-300 text-amber-800" : "bg-bg border-line text-ink"}`}
+              >
+                {t("{n} ändringar kvar", { n: Math.max(0, usage.limit - usage.used) })}
+              </button>
+            )}
             <button type="button" onClick={openNews} title={t("Se vad som är nytt")} className="relative flex items-center gap-1.5 text-[12.5px] font-semibold text-ink bg-bg border border-line rounded-full px-3 py-1.5">
               <YIcon name="bell" size={16} />
               {t("Nytt")}
@@ -1968,6 +2031,42 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
             </div>
           )}
 
+          {addonOpen && (
+            <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4" onClick={() => setAddonOpen(false)}>
+              <div className="bg-surface rounded-2xl p-6 w-full max-w-[420px] shadow-xl" onClick={(e) => e.stopPropagation()}>
+                <div className="font-semibold text-[18px] mb-1.5">{t("Fler ändringar")}</div>
+                {usage && (
+                  <p className="text-[13.5px] text-ink-dim mb-4">
+                    {t("Du har använt {used} av {limit} ändringar den här månaden. De nollställs när en ny månad börjar.", { used: usage.used, limit: usage.limit })}
+                  </p>
+                )}
+                <div className="border border-line rounded-xl p-4 flex items-center justify-between gap-4 mb-4">
+                  <div>
+                    <div className="font-semibold text-[14.5px]">{t("50 extra ändringar")}</div>
+                    <div className="text-[12.5px] text-ink-dim">{t("Gäller den månaden")}</div>
+                  </div>
+                  <div className="font-semibold whitespace-nowrap">
+                    {formatMoney(currencyForLocale(locale) === "EUR" ? ADDON_PRICES.changes50.EUR : ADDON_PRICES.changes50.SEK, currencyForLocale(locale), locale)}
+                  </div>
+                </div>
+                {addonDone ? (
+                  <p className="text-[13.5px] text-ink mb-4">{t("Tack! Vi lägger till ändringarna och fakturerar tillägget. Du hör av oss inom ett dygn.")}</p>
+                ) : (
+                  <p className="text-[12.5px] text-ink-dim mb-4">{t("Tillägget faktureras tillsammans med din ordinarie faktura. Alla priser exkl. moms.")}</p>
+                )}
+                {addonError && <p className="text-[13px] text-red-700 mb-3">{addonError}</p>}
+                <div className="flex gap-2.5 justify-end">
+                  <button type="button" onClick={() => setAddonOpen(false)} className="text-[13.5px] font-semibold border border-line rounded-lg px-4 py-2">{t("Stäng")}</button>
+                  {!addonDone && (
+                    <button type="button" onClick={orderAddon} disabled={addonBusy} className="text-[13.5px] font-semibold bg-accent text-accent-ink rounded-lg px-4 py-2 disabled:opacity-60">
+                      {addonBusy ? t("Skickar …") : t("Beställ 50 extra")}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {versionsOpen && (
             <VersionsModal
               siteId={site?.id}
@@ -2049,6 +2148,11 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                         </button>
                       ))}
                     </div>
+                  )}
+                  {m.buyMore && (
+                    <button type="button" onClick={() => setAddonOpen(true)} className="mt-2.5 block text-[12.5px] font-semibold underline text-ink">
+                      {t("Lägg till fler ändringar →")}
+                    </button>
                   )}
                   {m.unsupported && (
                     <button
