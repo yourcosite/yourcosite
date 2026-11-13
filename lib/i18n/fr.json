@@ -3063,5 +3063,11 @@
   "Månad": "Mois",
   "Föregående": "Précédent",
   "Nästa": "Suivant",
-  "+{n} till": "+{n} de plus"
+  "+{n} till": "+{n} de plus",
+  "Tips: dra i kalendern för att markera en tid, och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den.": "Astuce : faites glisser dans le calendrier pour sélectionner un créneau, puis choisissez d'ouvrir le créneau, d'ajouter une réservation ou de le fermer.",
+  "Vald tid": "Créneau sélectionné",
+  "Öppna för": "Ouvrir pour",
+  "Öppna tiden": "Ouvrir le créneau",
+  "Ny bokning": "Nouvelle réservation",
+  "Tillbaka": "Retour"
 }

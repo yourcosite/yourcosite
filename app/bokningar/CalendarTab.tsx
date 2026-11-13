@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useT, useLocale } from "@/components/I18nProvider";
 import { BCP47 } from "@/lib/i18n/country";
 import { addDays, formatPrice, formatWhen, isoWeekday, localDateOf, localTimeOf, zonedTimeToUtc } from "@/lib/booking";
@@ -12,6 +12,12 @@ import type { Act, Booking, Data } from "./BookingClient";
 const HOUR_PX = 44;
 const DEFAULT_START = 7;
 const DEFAULT_END = 20;
+
+const SNAP = 15;
+const input = "border border-line rounded-lg px-3 py-2 text-[13.5px] bg-surface";
+const btnPrimary = "text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60";
+const btnGhost = "text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg disabled:opacity-60";
+const hhmm = (m: number) => `${String(Math.floor(Math.min(m, 1439) / 60)).padStart(2, "0")}:${String(Math.min(m, 1439) % 60).padStart(2, "0")}`;
 
 const mins = (hhmm: string) => {
   const [h, m] = hhmm.split(":").map(Number);
@@ -51,6 +57,15 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
   const [anchor, setAnchor] = useState(today);
   const [picked, setPicked] = useState<Booking | null>(null);
   const [confirming, setConfirming] = useState(false);
+
+  // Markera en tid genom att dra i kalendern (som i Google Kalender).
+  const [sel, setSel] = useState<{ date: string; a: number; b: number } | null>(null);
+  const [panel, setPanel] = useState<null | "choose" | "booking">(null);
+  const dragRef = useRef<{ date: string; r0: number; top: number } | null>(null);
+  const skipClick = useRef(false);
+  const [slotPkg, setSlotPkg] = useState("");
+  const [bk, setBk] = useState({ package_id: "", package_name: "", name: "", phone: "", email: "", message: "", sendMail: false });
+  const activePk = data.packages.filter((p) => p.active);
 
   const weekStart = mondayOf(anchor);
   const monthFirst = `${anchor.slice(0, 7)}-01`;
@@ -152,6 +167,74 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
   })();
 
   const gridH = hours.length * HOUR_PX;
+  const rawMin = (clientY: number, top: number) =>
+    Math.min(endH * 60, Math.max(startH * 60, startH * 60 + ((clientY - top) / HOUR_PX) * 60));
+  const range = (r0: number, r1: number) => {
+    const lo = Math.floor(Math.min(r0, r1) / SNAP) * SNAP;
+    let hi = Math.ceil(Math.max(r0, r1) / SNAP) * SNAP;
+    if (hi - lo < SNAP) hi = lo + SNAP;
+    return { lo, hi: Math.min(hi, 1439) };
+  };
+  const openPanel = (date: string, lo: number, hi: number) => {
+    setSel({ date, a: lo, b: hi });
+    setPanel("choose");
+    setPicked(null);
+    setBk({ package_id: activePk[0]?.id || "", package_name: "", name: "", phone: "", email: "", message: "", sendMail: false });
+  };
+  const colHandlers = (date: string) => ({
+    onPointerDown: (e: React.PointerEvent<HTMLDivElement>) => {
+      skipClick.current = e.pointerType !== "touch";
+      if (e.pointerType === "touch" || e.button !== 0) return;
+      const top = e.currentTarget.getBoundingClientRect().top;
+      const r0 = rawMin(e.clientY, top);
+      dragRef.current = { date, r0, top };
+      const { lo, hi } = range(r0, r0);
+      setSel({ date, a: lo, b: hi });
+      setPanel(null);
+      e.currentTarget.setPointerCapture(e.pointerId);
+    },
+    onPointerMove: (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = dragRef.current;
+      if (!d) return;
+      const { lo, hi } = range(d.r0, rawMin(e.clientY, d.top));
+      setSel({ date: d.date, a: lo, b: hi });
+    },
+    onPointerUp: (e: React.PointerEvent<HTMLDivElement>) => {
+      const d = dragRef.current;
+      if (!d) return;
+      dragRef.current = null;
+      const r1 = rawMin(e.clientY, d.top);
+      let { lo, hi } = range(d.r0, r1);
+      // Ett enkelt klick ger en timme.
+      if (Math.abs(r1 - d.r0) < 8) hi = Math.min(lo + 60, 1439);
+      openPanel(d.date, lo, hi);
+    },
+    onClick: (e: React.MouseEvent<HTMLDivElement>) => {
+      // Tryck på pekskärm (mus hanteras ovan).
+      if (skipClick.current) return;
+      const top = e.currentTarget.getBoundingClientRect().top;
+      const lo = Math.floor(rawMin(e.clientY, top) / SNAP) * SNAP;
+      openPanel(date, lo, Math.min(lo + 60, 1439));
+    },
+  });
+  const clearSel = () => { setSel(null); setPanel(null); dragRef.current = null; };
+  const selLabel = sel ? `${fmtDay(sel.date, { weekday: "short", day: "numeric", month: "short" })} ${hhmm(sel.a)}–${hhmm(sel.b)}` : "";
+  const doOpenSlot = async () => {
+    if (!sel) return;
+    if (await act({ action: "addSlot", date: sel.date, start: hhmm(sel.a), end: hhmm(sel.b), package_id: slotPkg || null }, t("Tiden är tillagd."))) clearSel();
+  };
+  const doBlock = async () => {
+    if (!sel) return;
+    if (await act({ action: "addBlock", startDate: sel.date, endDate: sel.date, allDay: false, start: hhmm(sel.a), end: hhmm(sel.b), note: "" }, t("Tiden är stängd."))) clearSel();
+  };
+  const doBooking = async () => {
+    if (!sel) return;
+    const ok = await act({
+      action: "addBooking", package_id: bk.package_id || "", package_name: bk.package_name, duration_min: sel.b - sel.a,
+      date: sel.date, time: hhmm(sel.a), name: bk.name, phone: bk.phone, email: bk.email, message: bk.message, sendMail: bk.sendMail && !!bk.email,
+    }, t("Bokningen är sparad."));
+    if (ok) clearSel();
+  };
   const hasAnything = perDay.some((d) => d.open.length || d.bookings.length || d.blocks.length);
 
   return (
@@ -176,6 +259,9 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
         <span className="inline-flex items-center gap-1.5"><span className="inline-block w-3.5 h-3.5 rounded border border-line" style={{ background: "repeating-linear-gradient(45deg,#e5e5e5,#e5e5e5 3px,#f5f5f5 3px,#f5f5f5 6px)" }} />{t("Stängt")}</span>
       </div>
 
+      {view !== "month" && (
+        <div className="text-[12.5px] text-ink-dim mb-2">{t("Tips: dra i kalendern för att markera en tid, och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den.")}</div>
+      )}
       {view !== "month" && !hasAnything && (
         <div className="border border-line rounded-xl bg-surface px-4 py-3 text-[13px] text-ink-dim mb-3">
           {t("Inget är inlagt den här veckan. Lägg upp öppettider under Tider, så syns de här.")}
@@ -201,7 +287,7 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
               ))}
             </div>
             {perDay.map((d) => (
-              <div key={d.date} className={`relative border-l border-line ${d.date === today ? "bg-[#FAFAF7]" : ""}`} style={{ height: gridH }}>
+              <div key={d.date} {...colHandlers(d.date)} className={`relative border-l border-line select-none cursor-crosshair ${d.date === today ? "bg-[#FAFAF7]" : ""}`} style={{ height: gridH }}>
                 {hours.map((h) => (
                   <div key={h} className="absolute left-0 right-0 border-t border-line/60" style={{ top: (h - startH) * HOUR_PX }} />
                 ))}
@@ -219,7 +305,8 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
                   <button
                     type="button"
                     key={s.b.id}
-                    onClick={() => { setPicked(s.b); setConfirming(false); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => { e.stopPropagation(); clearSel(); setPicked(s.b); setConfirming(false); }}
                     className={`absolute left-1 right-1 rounded bg-accent text-accent-ink text-left overflow-hidden px-1.5 py-0.5 text-[11px] leading-tight shadow-sm ${picked?.id === s.b.id ? "ring-2 ring-ink" : ""}`}
                     style={{ top: top(s.startMin), height: height(s.startMin, s.endMin) }}
                   >
@@ -227,6 +314,11 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
                     <div className="truncate opacity-80">{s.b.package_name}</div>
                   </button>
                 ))}
+                {sel && sel.date === d.date && (
+                  <div className="absolute left-0.5 right-0.5 rounded border-2 border-ink bg-ink/10 pointer-events-none text-[10.5px] font-semibold px-1 overflow-hidden" style={{ top: top(sel.a), height: height(sel.a, sel.b) }}>
+                    {hhmm(sel.a)}–{hhmm(sel.b)}
+                  </div>
+                )}
                 {d.date === today && nowMin >= startH * 60 && nowMin <= endH * 60 && (
                   <div className="absolute left-0 right-0 h-[2px] bg-warm pointer-events-none" style={{ top: top(nowMin) }} />
                 )}
@@ -235,6 +327,72 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
           </div>
         </div>
       </div>
+      )}
+
+      {view !== "month" && sel && panel && (
+        <div className="sticky bottom-3 z-20 mt-3 border border-line rounded-xl bg-surface shadow-lg p-4 max-w-[640px]">
+          <div className="text-[14px] font-semibold mb-3">{t("Vald tid")}: {selLabel}</div>
+          {panel === "choose" ? (
+            <>
+              <label className="block mb-3 max-w-[320px]">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Öppna för")}</span>
+                <select className={`${input} w-full`} value={slotPkg} onChange={(e) => setSlotPkg(e.target.value)}>
+                  <option value="">{t("Alla paket")}</option>
+                  {activePk.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" className={btnPrimary} disabled={busy} onClick={doOpenSlot}>{t("Öppna tiden")}</button>
+                <button type="button" className={btnPrimary} disabled={busy} onClick={() => setPanel("booking")}>{t("Ny bokning")}</button>
+                <button type="button" className={btnGhost} disabled={busy} onClick={doBlock}>{t("Stäng tiden")}</button>
+                <button type="button" className={btnGhost} onClick={clearSel}>{t("Avbryt")}</button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="grid md:grid-cols-2 gap-3 mb-3">
+                <label className="block md:col-span-2">
+                  <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Paket")}</span>
+                  <select className={`${input} w-full`} value={bk.package_id} onChange={(e) => setBk({ ...bk, package_id: e.target.value })}>
+                    {activePk.map((p) => <option key={p.id} value={p.id}>{p.name} · {p.duration_min} min</option>)}
+                    <option value="">{t("Annat (skriv själv)")}</option>
+                  </select>
+                </label>
+                {!bk.package_id && (
+                  <label className="block md:col-span-2">
+                    <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Vad gäller bokningen?")} ({sel.b - sel.a} min)</span>
+                    <input className={`${input} w-full`} value={bk.package_name} onChange={(e) => setBk({ ...bk, package_name: e.target.value })} />
+                  </label>
+                )}
+                <label className="block">
+                  <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Namn")}</span>
+                  <input className={`${input} w-full`} value={bk.name} onChange={(e) => setBk({ ...bk, name: e.target.value })} />
+                </label>
+                <label className="block">
+                  <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Telefon")}</span>
+                  <input type="tel" className={`${input} w-full`} value={bk.phone} onChange={(e) => setBk({ ...bk, phone: e.target.value })} />
+                </label>
+                <label className="block md:col-span-2">
+                  <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("E-post (valfri)")}</span>
+                  <input type="email" className={`${input} w-full`} value={bk.email} onChange={(e) => setBk({ ...bk, email: e.target.value })} />
+                </label>
+                <label className="block md:col-span-2">
+                  <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Anteckning (valfri)")}</span>
+                  <input className={`${input} w-full`} value={bk.message} onChange={(e) => setBk({ ...bk, message: e.target.value })} />
+                </label>
+                <label className="flex items-center gap-2 md:col-span-2 text-[13px]">
+                  <input type="checkbox" checked={bk.sendMail && !!bk.email} disabled={!bk.email} onChange={(e) => setBk({ ...bk, sendMail: e.target.checked })} />
+                  {t("Skicka bekräftelse till kunden")}
+                </label>
+              </div>
+              <div className="flex gap-2">
+                <button type="button" className={btnPrimary} disabled={busy} onClick={doBooking}>{t("Spara bokningen")}</button>
+                <button type="button" className={btnGhost} onClick={() => setPanel("choose")}>{t("Tillbaka")}</button>
+                <button type="button" className={btnGhost} onClick={clearSel}>{t("Avbryt")}</button>
+              </div>
+            </>
+          )}
+        </div>
       )}
 
       {view === "month" && (

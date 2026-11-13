@@ -3063,5 +3063,11 @@
   "Månad": "Måned",
   "Föregående": "Forrige",
   "Nästa": "Næste",
-  "+{n} till": "+{n} mere"
+  "+{n} till": "+{n} mere",
+  "Tips: dra i kalendern för att markera en tid, och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den.": "Tip: træk i kalenderen for at markere et tidspunkt, og vælg derefter, om du vil åbne tiden, lægge en booking ind eller lukke den.",
+  "Vald tid": "Valgt tid",
+  "Öppna för": "Åbn for",
+  "Öppna tiden": "Åbn tiden",
+  "Ny bokning": "Ny booking",
+  "Tillbaka": "Tilbage"
 }

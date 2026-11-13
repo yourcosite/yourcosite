@@ -3063,5 +3063,11 @@
   "Månad": "Kuukausi",
   "Föregående": "Edellinen",
   "Nästa": "Seuraava",
-  "+{n} till": "+{n} lisää"
+  "+{n} till": "+{n} lisää",
+  "Tips: dra i kalendern för att markera en tid, och välj sedan om du vill öppna tiden, lägga in en bokning eller stänga den.": "Vinkki: vedä kalenterissa valitaksesi ajan ja valitse sitten, haluatko avata ajan, lisätä varauksen vai sulkea ajan.",
+  "Vald tid": "Valittu aika",
+  "Öppna för": "Avaa kohteelle",
+  "Öppna tiden": "Avaa aika",
+  "Ny bokning": "Uusi varaus",
+  "Tillbaka": "Takaisin"
 }
