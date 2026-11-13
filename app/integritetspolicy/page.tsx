@@ -12,7 +12,7 @@ export default function Page() {
   return (
     <LegalLayout
       title={t("Integritetspolicy")}
-      updated="2026-10-22"
+      updated="2026-11-13"
       intro={
         <>
           {t("Detta är mallar baserade på svensk och EU-rättslig standardpraxis (GDPR m.fl.) — inte juridisk rådgivning. CS Kommunikationsbyrå AB granskar och uppdaterar denna policy löpande.")}
@@ -97,9 +97,17 @@ export default function Page() {
         {t("Vi delar uppgifter med underleverantörer (personuppgiftsbiträden) som hjälper oss leverera tjänsten: databas och inloggning (Supabase), molnhosting/serverdrift (Vercel), betallösning (Stripe), en AI-leverantör (Anthropic) som bearbetar de texter, bilder och dokument Kunden skickar till Millie och de uppgifter som behövs för att skapa och ändra webbplatsen, bildtjänsten Unsplash när Kunden söker och väljer stockbilder, och eventuella tjänster för e-postutskick, analys eller support. Alla biträden regleras av personuppgiftsbiträdesavtal (DPA). Vi säljer aldrig personuppgifter till tredje part.")}
       </p>
 
+      <p>
+        {t("På publicerade webbplatser använder vi, med besökarens samtycke, Google Tag Manager och Google Analytics (Google) för besöksstatistik samt Meta Pixel (Meta) för att mäta marknadsföring. Utan samtycke skickas inga statistik- eller marknadsföringscookies. E-post från tjänsten, till exempel kvitton och svar från kontaktformulär, skickas via en e-posttjänst som fungerar som personuppgiftsbiträde.")}
+      </p>
+
       <h3>{t("5. Överföring utanför EU/EES")}</h3>
       <p>
         {t("Kundens uppgifter och sajtinnehåll lagras i en databas hos Supabase i Irland (inom EU), och våra serverfunktioner körs hos Vercel i Dublin. Vissa underleverantörer, framför allt Anthropic (AI-leverantören bakom Millie), Stripe och Unsplash samt bolagen bakom Vercel och Supabase, har sitt säte eller kan behandla uppgifter även utanför EU/EES, bland annat i USA. Det gäller särskilt de texter, bilder och dokument Kunden skickar till Millie, som bearbetas av Anthropic och kan behandlas utanför EU/EES. Vid sådan överföring säkerställer vi lämpliga skyddsmekanismer, t.ex. EU-kommissionens standardavtalsklausuler (SCC) eller att mottagaren är certifierad enligt dataskyddsramverket EU–USA (Data Privacy Framework).")}
+      </p>
+
+      <p>
+        {t("Google och Meta är bolag med säte i USA och kan behandla besöksdata där. Vi förlitar oss då på EU-kommissionens standardavtalsklausuler (SCC) eller på att mottagaren är certifierad enligt dataskyddsramverket EU–USA. Du kan läsa mer i Googles och Metas egna integritetspolicyer.")}
       </p>
 
       <h3>{t("6. Lagringstid")}</h3>
@@ -180,12 +188,15 @@ export default function Page() {
 
       <h3>{t("Hantera samtycke")}</h3>
       <p>
-        {t("Vid första besöket visas en cookiebanner där besökaren kan välja \"Acceptera alla\", \"Endast nödvändiga\" eller \"Hantera val\" för att välja per kategori. Valet går att ändra när som helst via en länk i sidfoten (\"Cookieinställningar\"). Samtycket sparas i 12 månader, därefter tillfrågas besökaren igen.")}
+        {t("Vid första besöket visas en cookiebanner där besökaren väljer \"Godkänn\" eller \"Avböj\" för statistik- och marknadsföringscookies. Väljer besökaren \"Avböj\", eller inte svarar, skickas inga sådana cookies. Valet sparas i webbläsaren på den enheten. Besökaren kan ändra sig genom att rensa webbplatsdata för sajten i webbläsaren, varefter bannern visas igen.")}
       </p>
 
       <h3>{t("Tredjepartscookies")}</h3>
       <p>
-        {t("Om analys- eller marknadsföringsverktyg från tredje part (t.ex. Google Analytics, Meta) aktiveras på en kunds webbplats listas dessa specifikt i cookiebannerns detaljvy, med länk till leverantörens egen integritetspolicy.")}
+        {t("När samtycke ges används följande verktyg: Google Tag Manager och Google Analytics (Google), som mäter sidvisningar, enhetstyp och ungefärlig plats, samt Meta Pixel (Meta), som används för att mäta och rikta marknadsföring på Facebook och Instagram. Verktygen kan sätta egna cookies och skicka uppgifter till Google respektive Meta. Läs mer i Googles och Metas egna integritetspolicyer.")}
+      </p>
+      <p>
+        {t("Lägger en kund in egna spårningskoder (till exempel ett eget Google Analytics-ID eller Meta Pixel) på sin webbplats är kunden själv personuppgiftsansvarig för den insamlingen och ansvarar för att besökarna informeras.")}
       </p>
     </LegalLayout>
   );
