@@ -1846,7 +1846,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
 
           {content && (
             <div className="absolute inset-0 flex justify-center p-2.5 md:p-5">
-              <div className={`h-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col ${device === "mobile" ? "w-[390px] max-w-full" : "w-full max-w-[1500px]"}`}>
+              <div className={`h-full bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.12)] overflow-hidden flex flex-col ${device === "mobile" ? "w-[390px] max-w-full" : "w-full max-w-[1500px]"}`} style={device === "desktop" && zoom < 1 ? { width: `${zoom * 100}%` } : undefined}>
                 <div className="h-[34px] bg-[#F1EFE9] flex items-center gap-1.5 px-3.5 flex-shrink-0">
                   <div className="w-2.5 h-2.5 rounded-full bg-[#E4635A]" />
                   <div className="w-2.5 h-2.5 rounded-full bg-[#E8B14A]" />
@@ -1877,7 +1877,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     </div>
                   )}
                   <div ref={zoomHostRef}>
-                  <div style={device === "desktop" && zoom < 1 ? ({ zoom, width: zoomHostW || undefined, margin: "0 auto" } as React.CSSProperties) : undefined}>
+                  <div style={device === "desktop" && zoom < 1 ? ({ zoom, width: zoomHostW ? zoomHostW / zoom : undefined } as React.CSSProperties) : undefined}>
                   <FieldEditContext.Provider value={fieldEditValue}>
                     <MemoSitePreview
                       bookingPreviewSiteId={site?.id}
