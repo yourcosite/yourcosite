@@ -2,7 +2,9 @@ import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import BookingClient from "./BookingClient";
+import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import DefaultSiteButton, { BOOKING_SITE_COOKIE } from "./DefaultSiteButton";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 
 export const dynamic = "force-dynamic";
@@ -20,12 +22,15 @@ export default async function BokningarPage({ searchParams }: { searchParams?: {
   let userEmail = "";
   let site: { id: string; name: string } | null = null;
   let allSites: { id: string; name: string }[] = [];
+  let preferredId: string | null = null;
 
   if (user) {
     userEmail = user.email ?? "";
     const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
     userName = profile?.full_name || userEmail;
-    site = await getCurrentPublishedSite(supabase, user.id, searchParams?.site || null);
+    // Utan ?site= visas sajten kunden valt att se först (annars den senaste).
+    preferredId = cookies().get(BOOKING_SITE_COOKIE)?.value || null;
+    site = await getCurrentPublishedSite(supabase, user.id, searchParams?.site || preferredId);
     const { data: rows } = await supabase
       .from("sites")
       .select("id, name")
@@ -63,6 +68,7 @@ export default async function BokningarPage({ searchParams }: { searchParams?: {
                   {s.name}
                 </Link>
               ))}
+              <DefaultSiteButton siteId={site.id} isDefault={(preferredId && allSites.some((x) => x.id === preferredId) ? preferredId : allSites[0]?.id) === site.id} />
             </div>
           )}
           {!site ? (

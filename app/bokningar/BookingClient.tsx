@@ -53,7 +53,7 @@ const btnGhost = "text-[12.5px] font-semibold text-ink-dim px-3 py-2 border bord
 export default function BookingClient({ siteId }: { siteId: string }) {
   const t = useT();
   const [data, setData] = useState<Data | null>(null);
-  const [tab, setTab] = useState<Tab>("bookings");
+  const [tab, setTab] = useState<Tab>("calendar");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);

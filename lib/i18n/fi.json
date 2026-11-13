@@ -3069,5 +3069,7 @@
   "Öppna för": "Avaa kohteelle",
   "Öppna tiden": "Avaa aika",
   "Ny bokning": "Uusi varaus",
-  "Tillbaka": "Takaisin"
+  "Tillbaka": "Takaisin",
+  "Visas först när du klickar på Bokningar": "Näytetään ensin, kun napsautat Varaukset",
+  "Visa den här först": "Näytä tämä ensin"
 }
