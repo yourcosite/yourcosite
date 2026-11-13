@@ -2871,5 +2871,8 @@
   "Kontrollera igen": "Erneut prüfen",
   "Guide för ditt webbhotell": "Anleitung für deinen Webhoster",
   "Ta bort domänen": "Domain entfernen",
-  "Avpublicera sajten": "Website zurückziehen"
+  "Avpublicera sajten": "Website zurückziehen",
+  "Så här gör du hos ditt webbhotell": "So gehst du bei deinem Webhoster vor",
+  "Klicka sedan på Kontrollera igen här nedanför, så ser du direkt om kopplingen fungerar.": "Klicke danach unten auf Erneut prüfen, dann siehst du sofort, ob die Verbindung funktioniert.",
+  "När du lagt in posterna: klicka på Kontrollera igen. Vi kollar också automatiskt var 15:e sekund medan det här fönstret är öppet.": "Wenn du die Einträge hinzugefügt hast, klicke auf Erneut prüfen. Wir prüfen außerdem automatisch alle 15 Sekunden, solange dieses Fenster geöffnet ist."
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { useT } from "@/components/I18nProvider";
+import { useT, useLocale } from "@/components/I18nProvider";
+import DomainGuide from "@/components/editor/DomainGuide";
 
 type DomainInfo = {
   slug: string | null;
@@ -26,6 +26,7 @@ export default function PublishModal({
   onClose: () => void;
 }) {
   const t = useT();
+  const locale = useLocale();
   const [busy, setBusy] = useState<"" | "publish" | "domain" | "check">("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState<DomainInfo | null>(null);
@@ -46,6 +47,13 @@ export default function PublishModal({
     if (live) load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [live, siteId]);
+
+  // Medan domänen väntar kollar vi själva var 15:e sekund.
+  useEffect(() => {
+    if (!live || !info?.domain || info.status === "active") return;
+    const id = setInterval(() => { fetch(`/api/sites/domain?siteId=${siteId}`).then((r) => r.json()).then((d) => { if (d && d.domain) setInfo(d); }).catch(() => {}); }, 15000);
+    return () => clearInterval(id);
+  }, [live, siteId, info?.domain, info?.status]);
 
   const publish = async (value: boolean) => {
     if (!value && !window.confirm(t("Avpublicera sajten? Besökare ser då inte längre sajten."))) return;
@@ -99,7 +107,7 @@ export default function PublishModal({
     }).catch(() => {});
   };
 
-  const publicUrl = info?.slug ? `https://www.yourcosite.com/s/${info.slug}` : "";
+  const publicUrl = info?.slug ? `https://www.yourcosite.com/${info.slug}` : "";
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
@@ -163,6 +171,7 @@ export default function PublishModal({
                   {info.status !== "active" && (
                     <>
                       <p className="text-[13px] text-ink-dim mb-2">{t("Lägg in dessa DNS-poster hos ditt webbhotell:")}</p>
+                      
                       <div className="border border-line rounded-lg overflow-hidden mb-2">
                         <table className="w-full text-[13px]">
                           <thead>
@@ -191,6 +200,8 @@ export default function PublishModal({
                         {t("Ändringen kan ta från några minuter upp till ett dygn. Rör inte dina MX-poster, de styr din e-post.")}
                       </p>
                       {info.manual && <p className="text-[12.5px] text-ink-dim mb-3">{t("Vi aktiverar domänen hos oss inom ett dygn.")}</p>}
+                      <DomainGuide domain={info.domain} records={info.records} locale={locale} />
+                      <p className="text-[13px] font-semibold mb-3">{t("När du lagt in posterna: klicka på Kontrollera igen. Vi kollar också automatiskt var 15:e sekund medan det här fönstret är öppet.")}</p>
                     </>
                   )}
                   <div className="flex flex-wrap items-center gap-3">
@@ -199,9 +210,6 @@ export default function PublishModal({
                         {busy === "check" ? t("Kontrollerar …") : t("Kontrollera igen")}
                       </button>
                     )}
-                    <Link href={`/guide/egen-doman?domain=${encodeURIComponent(info.domain)}`} target="_blank" className="text-[13px] font-semibold underline">
-                      {t("Guide för ditt webbhotell")}
-                    </Link>
                     <button type="button" onClick={removeDomain} disabled={busy === "domain"} className="text-[13px] text-ink-dim underline ml-auto">
                       {t("Ta bort domänen")}
                     </button>

@@ -2871,5 +2871,8 @@
   "Kontrollera igen": "Tarkista uudelleen",
   "Guide för ditt webbhotell": "Ohje palveluntarjoajallesi",
   "Ta bort domänen": "Poista verkkotunnus",
-  "Avpublicera sajten": "Peru sivuston julkaisu"
+  "Avpublicera sajten": "Peru sivuston julkaisu",
+  "Så här gör du hos ditt webbhotell": "Näin toimit verkkopalveluntarjoajallasi",
+  "Klicka sedan på Kontrollera igen här nedanför, så ser du direkt om kopplingen fungerar.": "Napsauta sitten alla Tarkista uudelleen, niin näet heti, toimiiko yhteys.",
+  "När du lagt in posterna: klicka på Kontrollera igen. Vi kollar också automatiskt var 15:e sekund medan det här fönstret är öppet.": "Kun olet lisännyt tietueet, napsauta Tarkista uudelleen. Tarkistamme myös automaattisesti 15 sekunnin välein, kun tämä ikkuna on auki."
 }

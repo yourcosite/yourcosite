@@ -608,7 +608,7 @@ async function generateSite(emit: (p: Progress) => void) {
 
   const { error: saveError } = await supabase
     .from("sites")
-    .update({ content: finalContent, status: "draft", inspiration_image_urls: [] })
+    .update({ content: finalContent, inspiration_image_urls: [] })
     .eq("id", site.id);
 
   if (saveError) return NextResponse.json({ error: saveError.message }, { status: 500 });

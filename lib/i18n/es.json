@@ -2871,5 +2871,8 @@
   "Kontrollera igen": "Comprobar de nuevo",
   "Guide för ditt webbhotell": "Guía para tu proveedor",
   "Ta bort domänen": "Quitar el dominio",
-  "Avpublicera sajten": "Despublicar el sitio"
+  "Avpublicera sajten": "Despublicar el sitio",
+  "Så här gör du hos ditt webbhotell": "Cómo hacerlo en tu proveedor de alojamiento",
+  "Klicka sedan på Kontrollera igen här nedanför, så ser du direkt om kopplingen fungerar.": "Después haz clic en Comprobar de nuevo más abajo y verás enseguida si la conexión funciona.",
+  "När du lagt in posterna: klicka på Kontrollera igen. Vi kollar också automatiskt var 15:e sekund medan det här fönstret är öppet.": "Cuando hayas añadido los registros, haz clic en Comprobar de nuevo. También comprobamos automáticamente cada 15 segundos mientras esta ventana esté abierta."
 }

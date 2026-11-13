@@ -4,9 +4,10 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidSiteContent } from "@/lib/contentModel";
 import { withErrorLog } from "@/lib/errorLog";
+import { isReservedSlug } from "@/lib/reservedSlugs";
 
 // Publicera eller avpublicera en sajt. En publicerad sajt får en publik adress
-// (www.yourcosite.com/s/<slug>) och visas för alla; en egen domän kopplas
+// (www.yourcosite.com/<slug>) och visas för alla; en egen domän kopplas
 // separat (/api/sites/domain). Admin kan pausa en sajt (status "pausad"):
 // då kan kunden inte publicera den igen själv.
 function slugify(name: string): string {
@@ -21,7 +22,7 @@ function slugify(name: string): string {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 40);
-  return s || "sajt";
+  return s.length >= 3 ? s : (s ? `${s}-sajt` : "sajt");
 }
 
 async function POST_handler(request: Request) {
@@ -58,6 +59,7 @@ async function POST_handler(request: Request) {
     const base = slugify(site.name || "sajt");
     for (let i = 0; i < 20 && !slug; i++) {
       const candidate = i === 0 ? base : `${base}-${i + 1}`;
+      if (isReservedSlug(candidate)) continue;
       const { data: taken } = await admin.from("sites").select("id").ilike("slug", candidate).maybeSingle();
       if (!taken) slug = candidate;
     }

@@ -22,6 +22,9 @@ const PROTECTED_PREFIXES = [
 
 // Sidor som kräver att man är inloggad som admin.
 const ADMIN_PREFIXES = ["/admin"];
+// Exakt mapp eller undersida: "/sidor" ska inte träffa en kunds adress "/sidor-och-mer".
+const hasPrefix = (path: string, p: string) => path === p || path.startsWith(p + "/");
+
 const ADMIN_LOGIN_PATH = "/admin/logga-in";
 
 // Värdnamn som tillhör själva tjänsten. Allt annat är en kunds egen domän och
@@ -115,8 +118,8 @@ export async function middleware(request: NextRequest) {
   const path = effectivePath;
 
   const isAdminPath =
-    ADMIN_PREFIXES.some((p) => path.startsWith(p)) && path !== ADMIN_LOGIN_PATH;
-  const isProtectedPath = PROTECTED_PREFIXES.some((p) => path.startsWith(p));
+    ADMIN_PREFIXES.some((p) => hasPrefix(path, p)) && path !== ADMIN_LOGIN_PATH;
+  const isProtectedPath = PROTECTED_PREFIXES.some((p) => hasPrefix(path, p));
 
   if (isAdminPath) {
     if (!user) {

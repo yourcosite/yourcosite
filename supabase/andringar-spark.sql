@@ -55,7 +55,7 @@ alter table profiles add column if not exists extra_languages integer not null d
 
 -- ============================================================
 -- PUBLICERING OCH EGEN DOMÄN
--- slug = adressen www.yourcosite.com/s/<slug>. custom_domain = kundens egen
+-- slug = adressen www.yourcosite.com/<slug>. custom_domain = kundens egen
 -- domän (utan www). custom_domain_status: 'pending' (väntar på DNS) eller
 -- 'active' (pekar rätt). Spärren "en live-sajt per konto" tas bort eftersom
 -- extra sajter (tillägg) ska kunna vara live samtidigt.
@@ -67,3 +67,49 @@ create unique index if not exists sites_custom_domain_key on sites (lower(custom
 alter table sites add column if not exists custom_domain_status text;
 alter table sites add column if not exists published_at timestamptz;
 drop index if exists one_live_site_per_owner;
+
+-- ============================================================
+-- SKYDD: kunder får inte själva ändra publicering eller domän
+-- Kolumnerna status, slug, custom_domain, custom_domain_status och
+-- published_at får bara ändras av servern (service role), av personal eller
+-- direkt i SQL-editorn. En kund som försöker ändra dem via sin egen
+-- inloggning (till exempel för att kringgå en pausad sajt eller ta någon
+-- annans domän) stoppas här, oavsett vad appen gör. Nya sajter blir alltid
+-- utkast utan adress.
+-- ============================================================
+create or replace function public.protect_site_publishing()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  -- Ingen inloggad kund (SQL-editor) eller servern med service role: tillåt.
+  if auth.uid() is null or auth.role() = 'service_role' or public.is_staff() then
+    return new;
+  end if;
+
+  if tg_op = 'INSERT' then
+    new.status := 'draft';
+    new.slug := null;
+    new.custom_domain := null;
+    new.custom_domain_status := null;
+    new.published_at := null;
+    return new;
+  end if;
+
+  if new.status is distinct from old.status
+     or new.slug is distinct from old.slug
+     or new.custom_domain is distinct from old.custom_domain
+     or new.custom_domain_status is distinct from old.custom_domain_status
+     or new.published_at is distinct from old.published_at then
+    raise exception 'Publicering och domän kan inte ändras direkt.' using errcode = '42501';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists protect_site_publishing on sites;
+create trigger protect_site_publishing
+  before insert or update on sites
+  for each row execute function public.protect_site_publishing();
