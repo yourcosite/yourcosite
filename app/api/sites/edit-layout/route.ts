@@ -7,6 +7,7 @@ import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { withErrorLog } from "@/lib/errorLog";
 import { SECTION_CATALOG } from "@/lib/sectionCatalog";
 import { prepareImageSection, fillMissingImages } from "@/lib/ensureImageSlots";
+import { convertSection } from "@/lib/convertSection";
 
 // Byte av layout på en rutnätssektion via den visuella väljaren i redigeraren.
 export const dynamic = "force-dynamic";
@@ -30,7 +31,21 @@ async function POST_handler(request: Request) {
   }
   const content: SiteContent = JSON.parse(JSON.stringify(site.content));
   const page = content.pages.find((p) => p.path === body.pagePath);
-  const section = page?.sections.find((s) => s.id === body.sectionId) as any;
+  let section = page?.sections.find((s) => s.id === body.sectionId) as any;
+  if (!page || !section) {
+    return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
+  }
+  // Annan sektionstyp vald i mallgalleriet: sektionen byter typ och behåller
+  // rubrik, text, bild och knapp där det går.
+  if (typeof body.type === "string" && body.type !== section.type) {
+    const catalogOk = catalogLayouts(body.type).includes(body.layout);
+    const converted = catalogOk ? convertSection(section, body.type, body.layout) : null;
+    if (!converted) {
+      return NextResponse.json({ error: t("Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.") }, { status: 400 });
+    }
+    page.sections[page.sections.indexOf(section)] = converted as any;
+    section = converted;
+  }
   const allowed: string[] = section ? catalogLayouts(section.type) : [];
   if (!section || !allowed.includes(body.layout)) {
     return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });

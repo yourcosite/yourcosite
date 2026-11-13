@@ -3016,5 +3016,7 @@
   "Extra hög": "Extra hoch",
   "Extra hög, tonar åt båda håll": "Extra hoch, blendet in beide Richtungen aus",
   "Tre bilder på rad": "Drei Bilder in einer Reihe",
-  "Fyra bilder på rad": "Vier Bilder in einer Reihe"
+  "Fyra bilder på rad": "Vier Bilder in einer Reihe",
+  "Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.": "Dieser Abschnittstyp lässt sich nicht aus einem anderen Abschnitt erstellen. Bitte Millie, ihn hinzuzufügen.",
+  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Diese Seite hat keinen {section}-Abschnitt. Markiere einen Abschnitt in der Vorschau und wähle das Layout erneut, dann wechselt er den Typ."
 }

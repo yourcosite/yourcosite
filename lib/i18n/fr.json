@@ -3016,5 +3016,7 @@
   "Extra hög": "Extra haute",
   "Extra hög, tonar åt båda håll": "Extra haute, fondu dans les deux sens",
   "Tre bilder på rad": "Trois images en ligne",
-  "Fyra bilder på rad": "Quatre images en ligne"
+  "Fyra bilder på rad": "Quatre images en ligne",
+  "Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.": "Ce type de section ne peut pas être créé à partir d'une autre section. Demande à Millie de l'ajouter.",
+  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Cette page n'a pas de section {section}. Sélectionne une section dans l'aperçu et choisis à nouveau la mise en page, elle changera de type."
 }

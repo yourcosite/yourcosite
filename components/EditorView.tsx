@@ -1139,16 +1139,16 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     const markedPage = selection ? content.pages.find((p) => p.path === selection.pagePath) : undefined;
     const marked = markedPage?.sections.find((sec) => sec.id === selection?.sectionId);
     let target: { pagePath: string; sectionId: string } | null = null;
-    if (marked && marked.type === pick.type) target = { pagePath: markedPage!.path, sectionId: marked.id };
+    // Den markerade sektionen går alltid först: är den av en annan typ byter
+    // den typ (rubrik, text och bild följer med där det går).
+    if (marked) target = { pagePath: markedPage!.path, sectionId: marked.id };
     if (!target) {
-      // Bara på sidan som visas (eller den markerade sektionens sida), aldrig
-      // på en annan sida, så ändringen inte hamnar där kunden inte tittar.
-      const page = markedPage ?? content.pages.find((p) => p.path === activePath);
+      const page = content.pages.find((p) => p.path === activePath);
       const sec = page?.sections.find((x) => x.type === pick.type);
       if (page && sec) target = { pagePath: page.path, sectionId: sec.id };
     }
     if (!target) {
-      say(t("Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.", { section: pick.noun }));
+      say(t("Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.", { section: pick.noun }));
       return;
     }
     const targetSec: any = content.pages.find((p) => p.path === target!.pagePath)?.sections.find((x) => x.id === target!.sectionId);
@@ -1158,7 +1158,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       const res = await fetch("/api/sites/edit-layout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId: site?.id, ...target, layout: pick.layout }),
+        body: JSON.stringify({ siteId: site?.id, ...target, layout: pick.layout, type: pick.type }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t("Något gick fel."));

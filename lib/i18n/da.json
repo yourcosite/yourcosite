@@ -3016,5 +3016,7 @@
   "Extra hög": "Ekstra høj",
   "Extra hög, tonar åt båda håll": "Ekstra høj, toner til begge sider",
   "Tre bilder på rad": "Tre billeder på række",
-  "Fyra bilder på rad": "Fire billeder på række"
+  "Fyra bilder på rad": "Fire billeder på række",
+  "Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.": "Den sektionstype kan ikke oprettes ud fra en anden sektion. Bed Millie tilføje den.",
+  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Denne side har ingen {section}-sektion. Markér en sektion i forhåndsvisningen og vælg layoutet igen, så skifter den type."
 }
