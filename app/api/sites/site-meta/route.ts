@@ -13,7 +13,7 @@ import { withErrorLog } from "@/lib/errorLog";
 export const dynamic = "force-dynamic";
 
 const OK_TYPES = ["image/png", "image/jpeg", "image/webp"];
-const MAX = { share: 5 * 1024 * 1024, favicon: 1024 * 1024 };
+const MAX = { share: 4 * 1024 * 1024, favicon: 1024 * 1024 };
 
 async function POST_handler(request: Request) {
   const t = getT();
