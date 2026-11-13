@@ -3032,5 +3032,9 @@
   "första rutan utfälld": "die erste Box aufgeklappt",
   "Utfällt: alla": "Aufgeklappt: alle",
   "Utfällt: ingen": "Aufgeklappt: keine",
-  "Utfällt: första": "Aufgeklappt: erste"
+  "Utfällt: första": "Aufgeklappt: erste",
+  "Byt översta sektionen till {section}": "Oberste Sektion in {section} ändern",
+  "Lägg till en ny {section}-sektion": "Neue {section}-Sektion hinzufügen",
+  "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Diese Seite hat keine {section}-Sektion. Was möchtest du tun?",
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Fertig! Eine neue {section}-Sektion wurde mit dem Layout {layout} hinzugefügt. Du kannst es mit der Schaltfläche rückgängig machen."
 }

@@ -3032,5 +3032,9 @@
   "första rutan utfälld": "le premier bloc est déplié",
   "Utfällt: alla": "Dépliés : tous",
   "Utfällt: ingen": "Dépliés : aucun",
-  "Utfällt: första": "Dépliés : le premier"
+  "Utfällt: första": "Dépliés : le premier",
+  "Byt översta sektionen till {section}": "Changer la première section en {section}",
+  "Lägg till en ny {section}-sektion": "Ajouter une nouvelle section {section}",
+  "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Cette page n'a pas de section {section}. Que souhaitez-vous faire ?",
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! Une nouvelle section {section} a été ajoutée avec la mise en page {layout}. Vous pouvez annuler avec le bouton si vous changez d'avis."
 }

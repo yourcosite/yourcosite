@@ -3032,5 +3032,9 @@
   "första rutan utfälld": "den første boks udfoldet",
   "Utfällt: alla": "Udfoldet: alle",
   "Utfällt: ingen": "Udfoldet: ingen",
-  "Utfällt: första": "Udfoldet: første"
+  "Utfällt: första": "Udfoldet: første",
+  "Byt översta sektionen till {section}": "Skift den øverste sektion til {section}",
+  "Lägg till en ny {section}-sektion": "Tilføj en ny {section}-sektion",
+  "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Denne side har ingen {section}-sektion. Hvad vil du gøre?",
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Færdig! En ny {section}-sektion er tilføjet med layoutet {layout}. Du kan fortryde med knappen, hvis du ombestemmer dig."
 }

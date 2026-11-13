@@ -1,5 +1,6 @@
 "use client";
 
+import { CONVERTIBLE_TYPES } from "@/lib/convertSection";
 import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import PublishModal from "@/components/editor/PublishModal";
 import MenuStyleThumb, { type MenuStyleId } from "@/components/MenuStyleThumb";
@@ -68,6 +69,8 @@ type ChatMessage = {
   // Millies kontrollfråga: svarsalternativ som skickas direkt vid klick.
   // Visas bara på det SISTA meddelandet och sparas inte i historiken.
   options?: string[];
+  // Knappar som utför en åtgärd direkt i redigeraren (utan Millie). Sparas inte i historiken.
+  actions?: { label: string; run: () => void }[];
   // Förhandsbild per alternativ (menystilar), samma ordning som options.
   optionPreviews?: MenuStyleId[];
   // Visas men sparas inte i historiken (presentation, hälsning, tips).
@@ -1157,10 +1160,30 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       if (page && sec) target = { pagePath: page.path, sectionId: sec.id };
     }
     if (!target) {
-      say(t("Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.", { section: pick.noun }));
+      // Ingen sektion av typen på sidan: erbjud knappar direkt i chatten.
+      const page = content.pages.find((p) => p.path === activePath);
+      const first = page?.sections[0];
+      const actions: { label: string; run: () => void }[] = [];
+      const canMake = CONVERTIBLE_TYPES.includes(pick.type);
+      if (!canMake) {
+        say(t("Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.", { section: pick.noun }));
+        return;
+      }
+      if (page && first) {
+        actions.push({ label: t("Byt översta sektionen till {section}", { section: pick.noun }), run: () => { void applyGalleryLayoutTo(pick, { pagePath: page.path, sectionId: first.id }); } });
+      }
+      if (page) {
+        actions.push({ label: t("Lägg till en ny {section}-sektion", { section: pick.noun }), run: () => { void applyGalleryLayoutTo(pick, { pagePath: page.path, add: true }); } });
+      }
+      setMessages((m) => [...m, { from: "bot", text: t("Den här sidan har ingen {section}-sektion. Vad vill du göra?", { section: pick.noun }), actions }]);
       return;
     }
-    const targetSec: any = content.pages.find((p) => p.path === target!.pagePath)?.sections.find((x) => x.id === target!.sectionId);
+    await applyGalleryLayoutTo(pick, target);
+  };
+  const applyGalleryLayoutTo = async (pick: { type: string; layout: string; noun: string }, target: { pagePath: string; sectionId?: string; add?: boolean }) => {
+    if (!content) return;
+    const say = (text: string) => setMessages((m) => [...m, { from: "bot", text }]);
+    const targetSec: any = content.pages.find((p) => p.path === target.pagePath)?.sections.find((x) => x.id === target.sectionId);
     const targetName: string = String(targetSec?.headline || targetSec?.heading || pick.noun).slice(0, 40);
     setSavingPick(true);
     try {
@@ -1174,7 +1197,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
       setSelection(null);
-      say(t("Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { name: targetName, layout: pick.layout }));
+      if (target.add) say(t("Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { section: pick.noun, layout: pick.layout }));
+      else say(t("Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { name: targetName, layout: pick.layout }));
     } catch (e: any) {
       say(t("Ändringen kunde inte sparas: {message}", { message: e.message }));
     } finally {
@@ -2265,6 +2289,21 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                         >
                           {m.optionPreviews?.[oi] && <MenuStyleThumb style={m.optionPreviews[oi]} accent={content?.theme.accentColor} />}
                           <span>{o}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {m.actions && m.actions.length > 0 && i === messages.length - 1 && !sending && (
+                    <div className="flex flex-col gap-1.5 mt-2.5">
+                      {m.actions.filter((a) => typeof a.run === "function").map((a) => (
+                        <button
+                          key={a.label}
+                          type="button"
+                          disabled={savingPick}
+                          onClick={a.run}
+                          className="text-left text-[12.5px] font-semibold bg-surface border border-line rounded-xl px-3 py-2 text-ink hover:border-ink"
+                        >
+                          {a.label}
                         </button>
                       ))}
                     </div>

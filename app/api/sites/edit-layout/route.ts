@@ -20,7 +20,8 @@ async function POST_handler(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const catalogLayouts = (type: string): string[] => SECTION_CATALOG.find((c) => c.type === type)?.layouts.map((l) => l.id) ?? [];
-  if (typeof body.pagePath !== "string" || typeof body.sectionId !== "string" || typeof body.layout !== "string") {
+  const adding = body.add === true;
+  if (typeof body.pagePath !== "string" || (!adding && typeof body.sectionId !== "string") || typeof body.layout !== "string") {
     return NextResponse.json({ error: t("Det gick inte att avgöra vilken layout som ska användas.") }, { status: 400 });
   }
 
@@ -32,12 +33,26 @@ async function POST_handler(request: Request) {
   const content: SiteContent = JSON.parse(JSON.stringify(site.content));
   const page = content.pages.find((p) => p.path === body.pagePath);
   let section = page?.sections.find((s) => s.id === body.sectionId) as any;
+  // Ny sektion: skapas av en tom "om oss"-sektion med platshållartexter och
+  // läggs överst (hero) eller sist (övriga typer).
+  if (page && adding) {
+    if (typeof body.type !== "string" || !catalogLayouts(body.type).includes(body.layout)) {
+      return NextResponse.json({ error: t("Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.") }, { status: 400 });
+    }
+    const fresh = convertSection({ id: `${body.type}-${Math.random().toString(36).slice(2, 8)}`, type: "about", heading: "", body: "" }, body.type, body.layout);
+    if (!fresh) {
+      return NextResponse.json({ error: t("Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.") }, { status: 400 });
+    }
+    if (body.type === "hero") page.sections.unshift(fresh as any);
+    else page.sections.push(fresh as any);
+    section = fresh;
+  }
   if (!page || !section) {
     return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
   }
   // Annan sektionstyp vald i mallgalleriet: sektionen byter typ och behåller
   // rubrik, text, bild och knapp där det går.
-  if (typeof body.type === "string" && body.type !== section.type) {
+  if (!adding && typeof body.type === "string" && body.type !== section.type) {
     const catalogOk = catalogLayouts(body.type).includes(body.layout);
     const converted = catalogOk ? convertSection(section, body.type, body.layout) : null;
     if (!converted) {

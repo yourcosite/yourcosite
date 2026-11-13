@@ -3032,5 +3032,9 @@
   "första rutan utfälld": "ensimmäinen laatikko avattuna",
   "Utfällt: alla": "Avattu: kaikki",
   "Utfällt: ingen": "Avattu: ei yhtään",
-  "Utfällt: första": "Avattu: ensimmäinen"
+  "Utfällt: första": "Avattu: ensimmäinen",
+  "Byt översta sektionen till {section}": "Vaihda ylin osio tyypiksi {section}",
+  "Lägg till en ny {section}-sektion": "Lisää uusi {section}-osio",
+  "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Tällä sivulla ei ole {section}-osiota. Mitä haluat tehdä?",
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Valmis! Uusi {section}-osio on lisätty asettelulla {layout}. Voit kumota painikkeella, jos muutat mielesi."
 }

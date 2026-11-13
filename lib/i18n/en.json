@@ -3032,5 +3032,9 @@
   "första rutan utfälld": "the first box expanded",
   "Utfällt: alla": "Expanded: all",
   "Utfällt: ingen": "Expanded: none",
-  "Utfällt: första": "Expanded: first"
+  "Utfällt: första": "Expanded: first",
+  "Byt översta sektionen till {section}": "Change the top section to {section}",
+  "Lägg till en ny {section}-sektion": "Add a new {section} section",
+  "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "This page has no {section} section. What would you like to do?",
+  "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Done! A new {section} section has been added with the {layout} layout. You can undo with the button if you change your mind."
 }
