@@ -1141,16 +1141,18 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     let target: { pagePath: string; sectionId: string } | null = null;
     if (marked && marked.type === pick.type) target = { pagePath: markedPage!.path, sectionId: marked.id };
     if (!target) {
-      const order = [content.pages.find((p) => p.path === activePath), ...content.pages].filter((p): p is NonNullable<typeof p> => !!p);
-      for (const p of order) {
-        const sec = p.sections.find((x) => x.type === pick.type);
-        if (sec) { target = { pagePath: p.path, sectionId: sec.id }; break; }
-      }
+      // Bara på sidan som visas (eller den markerade sektionens sida), aldrig
+      // på en annan sida, så ändringen inte hamnar där kunden inte tittar.
+      const page = markedPage ?? content.pages.find((p) => p.path === activePath);
+      const sec = page?.sections.find((x) => x.type === pick.type);
+      if (page && sec) target = { pagePath: page.path, sectionId: sec.id };
     }
     if (!target) {
-      say(t("Sajten har ingen {section}-sektion att byta layout på än. Be Millie lägga till en först.", { section: pick.noun }));
+      say(t("Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.", { section: pick.noun }));
       return;
     }
+    const targetSec: any = content.pages.find((p) => p.path === target!.pagePath)?.sections.find((x) => x.id === target!.sectionId);
+    const targetName: string = String(targetSec?.headline || targetSec?.heading || pick.noun).slice(0, 40);
     setSavingPick(true);
     try {
       const res = await fetch("/api/sites/edit-layout", {
@@ -1163,8 +1165,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
       setSelection(null);
-      if (target.pagePath !== activePath) setActivePath(target.pagePath);
-      say(t("Klart! Sektionen har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { layout: pick.layout }));
+      say(t("Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { name: targetName, layout: pick.layout }));
     } catch (e: any) {
       say(t("Ändringen kunde inte sparas: {message}", { message: e.message }));
     } finally {

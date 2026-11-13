@@ -3004,5 +3004,7 @@
   "Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.": "Billedet, der vises, når nogen deler dit site på Facebook, LinkedIn eller i en besked, og ikonet i browserfanen. Uploader du ikke noget, oprettes begge automatisk ud fra dit topbillede, dit navn og dine farver.",
   "Delningsbild (helst 1200 x 630)": "Delebillede (helst 1200 x 630)",
   "Ikon i webbläsarfliken (kvadratisk)": "Ikon i browserfanen (kvadratisk)",
-  "Automatisk": "Automatisk"
+  "Automatisk": "Automatisk",
+  "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Denne side har ingen {section}-sektion at skifte layout på. Vælg en sektion af den rigtige type, eller bed Millie tilføje en.",
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Færdigt! Sektionen ”{name}” har fået layoutet {layout}. Du kan fortryde med knappen, hvis du ombestemmer dig."
 }

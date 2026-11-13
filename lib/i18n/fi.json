@@ -3004,5 +3004,7 @@
   "Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.": "Kuva, joka näkyy, kun joku jakaa sivustosi Facebookissa, LinkedInissä tai viestissä, sekä selainvälilehden kuvake. Jos et lataa mitään, molemmat luodaan automaattisesti yläkuvastasi, nimestäsi ja väreistäsi.",
   "Delningsbild (helst 1200 x 630)": "Jakokuva (mieluiten 1200 x 630)",
   "Ikon i webbläsarfliken (kvadratisk)": "Selainvälilehden kuvake (neliö)",
-  "Automatisk": "Automaattinen"
+  "Automatisk": "Automaattinen",
+  "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Tällä sivulla ei ole {section}-osiota, jonka ulkoasun voisi vaihtaa. Valitse oikeantyyppinen osio tai pyydä Millietä lisäämään sellainen.",
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Valmis! Osion ”{name}” ulkoasuksi on vaihdettu {layout}. Voit kumota muutoksen painikkeella, jos muutat mielesi."
 }

@@ -3004,5 +3004,7 @@
   "Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.": "L'image affichée quand quelqu'un partage ton site sur Facebook, LinkedIn ou dans un message, et l'icône de l'onglet du navigateur. Si tu ne téléverses rien, les deux sont créées automatiquement à partir de ton image d'en-tête, de ton nom et de tes couleurs.",
   "Delningsbild (helst 1200 x 630)": "Image de partage (de préférence 1200 x 630)",
   "Ikon i webbläsarfliken (kvadratisk)": "Icône de l'onglet du navigateur (carrée)",
-  "Automatisk": "Automatique"
+  "Automatisk": "Automatique",
+  "Den här sidan har ingen {section}-sektion att byta layout på. Välj en sektion av rätt typ, eller be Millie lägga till en.": "Cette page n'a pas de section {section} dont changer la mise en page. Choisis une section du bon type, ou demande à Millie d'en ajouter une.",
+  "Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "C'est fait ! La section « {name} » a maintenant la mise en page {layout}. Tu peux annuler avec le bouton si tu changes d'avis."
 }
