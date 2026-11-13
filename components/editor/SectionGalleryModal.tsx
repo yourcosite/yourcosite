@@ -35,7 +35,7 @@ export default function SectionGalleryModal({
   onUse,
   onClose,
 }: {
-  onUse: (text: string) => void;
+  onUse: (pick: { type: string; layout: string; noun: string }) => void;
   onClose: () => void;
 }) {
   const t = useT();
@@ -89,7 +89,7 @@ export default function SectionGalleryModal({
                     <div className="text-[12px] text-ink-dim font-mono mt-0.5">{l.id}</div>
                     <button
                       type="button"
-                      onClick={() => onUse(t("Byt sektionen {section} till layouten {layout}.", { section: noun, layout: l.id }))}
+                      onClick={() => onUse({ type: cur.type, layout: l.id, noun })}
                       className="mt-2.5 text-[12.5px] font-semibold bg-accent text-accent-ink rounded-lg px-3 py-1.5"
                     >
                       {t("Använd")}

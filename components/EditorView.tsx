@@ -1130,6 +1130,47 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       setSavingPick(false);
     }
   };
+  // Mallgalleriet byter layout direkt, utan Millie och utan att räknas som
+  // en ändring: den markerade sektionen om den är av rätt typ, annars den
+  // första sektionen av typen på sidan som visas, annars på någon annan sida.
+  const applyGalleryLayout = async (pick: { type: string; layout: string; noun: string }) => {
+    if (!content) return;
+    const say = (text: string) => setMessages((m) => [...m, { from: "bot", text }]);
+    const markedPage = selection ? content.pages.find((p) => p.path === selection.pagePath) : undefined;
+    const marked = markedPage?.sections.find((sec) => sec.id === selection?.sectionId);
+    let target: { pagePath: string; sectionId: string } | null = null;
+    if (marked && marked.type === pick.type) target = { pagePath: markedPage!.path, sectionId: marked.id };
+    if (!target) {
+      const order = [content.pages.find((p) => p.path === activePath), ...content.pages].filter((p): p is NonNullable<typeof p> => !!p);
+      for (const p of order) {
+        const sec = p.sections.find((x) => x.type === pick.type);
+        if (sec) { target = { pagePath: p.path, sectionId: sec.id }; break; }
+      }
+    }
+    if (!target) {
+      say(t("Sajten har ingen {section}-sektion att byta layout på än. Be Millie lägga till en först.", { section: pick.noun }));
+      return;
+    }
+    setSavingPick(true);
+    try {
+      const res = await fetch("/api/sites/edit-layout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site?.id, ...target, layout: pick.layout }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setSelection(null);
+      if (target.pagePath !== activePath) setActivePath(target.pagePath);
+      say(t("Klart! Sektionen har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { layout: pick.layout }));
+    } catch (e: any) {
+      say(t("Ändringen kunde inte sparas: {message}", { message: e.message }));
+    } finally {
+      setSavingPick(false);
+    }
+  };
   const saveButtonStyle = (style: string | null) =>
     savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex, header: isHeaderBtn }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
   const saveButtonColor = (color: string | null) =>
@@ -3009,7 +3050,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
             {galleryOpen && (
               <SectionGalleryModal
                 onClose={() => setGalleryOpen(false)}
-                onUse={(text) => { setDraft(text); setGalleryOpen(false); }}
+                onUse={(pick) => { setGalleryOpen(false); applyGalleryLayout(pick); }}
               />
             )}
             {layoutPickerOpen && canPickLayout && (

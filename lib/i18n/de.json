@@ -2988,5 +2988,7 @@
   "Fortsätt som vanligt: be Millie ändra det du vill i redigeraren. Du ser hur många ändringar du har kvar där.": "Mach einfach weiter wie bisher: Bitte Millie im Editor, zu ändern, was du möchtest. Dort siehst du, wie viele Änderungen du noch hast.",
   "Dina extra språk är aktiverade": "Deine zusätzlichen Sprachen sind aktiviert",
   "Vi har aktiverat ditt extra språk på din sajt.": "Wir haben deine zusätzliche Sprache auf deiner Website aktiviert.",
-  "Öppna Inställningar i redigeraren för att välja och hantera språken på din sajt.": "Öffne die Einstellungen im Editor, um die Sprachen deiner Website auszuwählen und zu verwalten."
+  "Öppna Inställningar i redigeraren för att välja och hantera språken på din sajt.": "Öffne die Einstellungen im Editor, um die Sprachen deiner Website auszuwählen und zu verwalten.",
+  "Sajten har ingen {section}-sektion att byta layout på än. Be Millie lägga till en först.": "Die Website hat noch keinen {section}-Abschnitt, dessen Layout geändert werden könnte. Bitte Millie, zuerst einen hinzuzufügen.",
+  "Klart! Sektionen har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Fertig! Der Abschnitt hat jetzt das Layout {layout}. Du kannst es mit dem Button rückgängig machen, falls du es dir anders überlegst."
 }
