@@ -16,6 +16,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
+
+  const handleReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    const supabase = createClient();
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/aterstall-losenord`,
+    });
+    setLoading(false);
+    // Samma svar oavsett om adressen finns, så ingen kan se vilka som har konto.
+    if (resetError && /rate|seconds|limit/i.test(resetError.message)) {
+      setError(t("För många försök på kort tid. Vänta en stund och försök igen."));
+      return;
+    }
+    setResetSent(true);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,6 +88,57 @@ export default function LoginPage() {
             {t("Logga in för att fortsätta jobba på era sajter.")}
           </p>
 
+          {resetMode ? (
+            resetSent ? (
+              <div className="flex flex-col gap-4">
+                <p className="text-[14.5px] leading-relaxed">
+                  {t("Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.")}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => { setResetMode(false); setResetSent(false); }}
+                  className="text-[13.5px] font-medium text-left"
+                >
+                  {t("Tillbaka till inloggning")}
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleReset} className="flex flex-col gap-4">
+                <p className="text-[14px] text-ink-dim -mt-3">
+                  {t("Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.")}
+                </p>
+                <div>
+                  <label htmlFor="reset-email" className="block text-[13.5px] font-semibold mb-1.5">
+                    {t("E-post")}
+                  </label>
+                  <input
+                    id="reset-email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder={t("du@företag.se")}
+                    className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
+                  />
+                </div>
+                {error && <div className="text-[13.5px] text-warm font-medium -mt-1">{error}</div>}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="block text-center bg-accent text-accent-ink font-semibold text-[15.5px] py-3.5 rounded-[10px] disabled:opacity-60"
+                >
+                  {loading ? t("Skickar …") : t("Skicka återställningslänk")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setResetMode(false); setError(null); }}
+                  className="text-[13.5px] font-medium text-left"
+                >
+                  {t("Tillbaka till inloggning")}
+                </button>
+              </form>
+            )
+          ) : (
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div>
               <label htmlFor="email" className="block text-[13.5px] font-semibold mb-1.5">
@@ -99,9 +169,9 @@ export default function LoginPage() {
               />
             </div>
             <div className="text-right -mt-1">
-              <a href="#" className="text-[13.5px] font-medium">
+              <button type="button" onClick={() => { setResetMode(true); setError(null); }} className="text-[13.5px] font-medium">
                 {t("Glömt lösenord?")}
-              </a>
+              </button>
             </div>
 
             {error && (
@@ -116,6 +186,7 @@ export default function LoginPage() {
               {loading ? t("Loggar in …") : t("Logga in")}
             </button>
           </form>
+          )}
 
           <div className="flex items-center gap-3 my-7">
             <div className="flex-1 h-px bg-line" />

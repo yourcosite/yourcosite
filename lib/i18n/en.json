@@ -2794,5 +2794,10 @@
   "Kunden har rätt att begära tillgång till, rättelse av, eller radering av sina personuppgifter, samt rätt till dataportabilitet och att invända mot viss behandling. Kontakta <mail>hej@cskb.se</mail> (mejladressen till CS Kommunikationsbyrå AB). Kunden har också rätt att klaga hos en tillsynsmyndighet, i Sverige Integritetsskyddsmyndigheten (IMY).": "The Customer has the right to request access to, rectification of, or erasure of their personal data, as well as the right to data portability and to object to certain processing. Contact <mail>hej@cskb.se</mail> (the email address of CS Kommunikationsbyrå AB). The Customer also has the right to lodge a complaint with a supervisory authority; in Sweden this is the Swedish Authority for Privacy Protection (IMY).",
   "Det är mejladressen till CS Kommunikationsbyrå AB, som äger och driver YourCoSite.": "This is the email address of CS Kommunikationsbyrå AB, which owns and runs YourCoSite.",
   "Fyll i namn, e-post och meddelande.": "Please fill in name, email and message.",
-  "Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.": "Sending failed just now. Feel free to email us directly at hej@cskb.se."
+  "Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.": "Sending failed just now. Feel free to email us directly at hej@cskb.se.",
+  "För många försök på kort tid. Vänta en stund och försök igen.": "Too many attempts in a short time. Wait a moment and try again.",
+  "Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.": "If an account exists for that address, we have sent a link to choose a new password. Check your spam folder too.",
+  "Tillbaka till inloggning": "Back to log in",
+  "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Enter your email address and we will send a link to choose a new password.",
+  "Skicka återställningslänk": "Send reset link"
 }

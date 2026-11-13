@@ -2794,5 +2794,10 @@
   "Kunden har rätt att begära tillgång till, rättelse av, eller radering av sina personuppgifter, samt rätt till dataportabilitet och att invända mot viss behandling. Kontakta <mail>hej@cskb.se</mail> (mejladressen till CS Kommunikationsbyrå AB). Kunden har också rätt att klaga hos en tillsynsmyndighet, i Sverige Integritetsskyddsmyndigheten (IMY).": "Le Client a le droit de demander l’accès à ses données personnelles, leur rectification ou leur effacement, ainsi que le droit à la portabilité des données et le droit de s’opposer à certains traitements. Contactez <mail>hej@cskb.se</mail> (l'adresse e-mail de CS Kommunikationsbyrå AB). Le Client a également le droit d’introduire une réclamation auprès d’une autorité de contrôle, en Suède l’Integritetsskyddsmyndigheten (IMY).",
   "Det är mejladressen till CS Kommunikationsbyrå AB, som äger och driver YourCoSite.": "Il s'agit de l'adresse e-mail de CS Kommunikationsbyrå AB, qui possède et exploite YourCoSite.",
   "Fyll i namn, e-post och meddelande.": "Veuillez renseigner le nom, l'e-mail et le message.",
-  "Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.": "L'envoi a échoué. Écrivez-nous directement à hej@cskb.se."
+  "Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.": "L'envoi a échoué. Écrivez-nous directement à hej@cskb.se.",
+  "För många försök på kort tid. Vänta en stund och försök igen.": "Trop de tentatives en peu de temps. Patientez un instant et réessayez.",
+  "Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.": "S'il existe un compte avec cette adresse, nous avons envoyé un lien pour choisir un nouveau mot de passe. Vérifiez aussi vos spams.",
+  "Tillbaka till inloggning": "Retour à la connexion",
+  "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Saisissez votre adresse e-mail et nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+  "Skicka återställningslänk": "Envoyer le lien de réinitialisation"
 }

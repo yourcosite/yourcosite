@@ -2794,5 +2794,10 @@
   "Kunden har rätt att begära tillgång till, rättelse av, eller radering av sina personuppgifter, samt rätt till dataportabilitet och att invända mot viss behandling. Kontakta <mail>hej@cskb.se</mail> (mejladressen till CS Kommunikationsbyrå AB). Kunden har också rätt att klaga hos en tillsynsmyndighet, i Sverige Integritetsskyddsmyndigheten (IMY).": "Der Kunde hat das Recht, Auskunft über seine personenbezogenen Daten sowie deren Berichtigung oder Löschung zu verlangen, außerdem das Recht auf Datenübertragbarkeit und das Recht, bestimmten Verarbeitungen zu widersprechen. Kontaktiere <mail>hej@cskb.se</mail> (die E-Mail-Adresse der CS Kommunikationsbyrå AB). Der Kunde hat außerdem das Recht, sich bei einer Aufsichtsbehörde zu beschweren, in Schweden bei der Integritetsskyddsmyndigheten (IMY).",
   "Det är mejladressen till CS Kommunikationsbyrå AB, som äger och driver YourCoSite.": "Das ist die E-Mail-Adresse der CS Kommunikationsbyrå AB, die YourCoSite besitzt und betreibt.",
   "Fyll i namn, e-post och meddelande.": "Bitte Name, E-Mail und Nachricht ausfüllen.",
-  "Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.": "Das Senden hat gerade nicht geklappt. Schreib uns gern direkt an hej@cskb.se."
+  "Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.": "Das Senden hat gerade nicht geklappt. Schreib uns gern direkt an hej@cskb.se.",
+  "För många försök på kort tid. Vänta en stund och försök igen.": "Zu viele Versuche in kurzer Zeit. Warte einen Moment und versuche es erneut.",
+  "Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.": "Falls es ein Konto mit dieser Adresse gibt, haben wir einen Link zum Festlegen eines neuen Passworts gesendet. Prüfe auch den Spam-Ordner.",
+  "Tillbaka till inloggning": "Zurück zur Anmeldung",
+  "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Gib deine E-Mail-Adresse ein, dann senden wir dir einen Link zum Festlegen eines neuen Passworts.",
+  "Skicka återställningslänk": "Link zum Zurücksetzen senden"
 }
