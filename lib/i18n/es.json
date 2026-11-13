@@ -3037,5 +3037,7 @@
   "Lägg till en ny {section}-sektion": "Añadir una nueva sección {section}",
   "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "Esta página no tiene sección {section}. ¿Qué quieres hacer?",
   "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "¡Listo! Se ha añadido una nueva sección {section} con el diseño {layout}. Puedes deshacerlo con el botón si cambias de opinión.",
-  "Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.": "Todos los cambios que hagas a partir de ahora se ven al instante en tu sitio publicado. No necesitas volver a publicar."
+  "Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.": "Todos los cambios que hagas a partir de ahora se ven al instante en tu sitio publicado. No necesitas volver a publicar.",
+  "Ser du inte sidan på din domän än?": "¿Todavía no ves tu sitio en tu dominio?",
+  "Det kan ta en stund, ibland några timmar, innan den nya adressen syns överallt. Din dator eller ditt nätverk kan fortfarande minnas den gamla adressen. Testa gärna på mobilen med mobildata (stäng av wifi) eller i ett privat webbläsarfönster. Din sajt fungerar hela tiden på adressen ovan.": "Puede tardar un rato, a veces unas horas, hasta que la nueva dirección se vea en todas partes. Tu ordenador o tu red puede seguir recordando la dirección anterior. Prueba en el móvil con datos móviles (desactiva el wifi) o en una ventana de navegación privada. Tu sitio funciona todo el tiempo en la dirección de arriba."
 }

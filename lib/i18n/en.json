@@ -3037,5 +3037,7 @@
   "Lägg till en ny {section}-sektion": "Add a new {section} section",
   "Den här sidan har ingen {section}-sektion. Vad vill du göra?": "This page has no {section} section. What would you like to do?",
   "Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.": "Done! A new {section} section has been added with the {layout} layout. You can undo with the button if you change your mind.",
-  "Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.": "Any changes you make from now on show up immediately on your published site. You do not need to publish again."
+  "Alla ändringar du gör från och med nu syns direkt på din publicerade sajt. Du behöver inte publicera igen.": "Any changes you make from now on show up immediately on your published site. You do not need to publish again.",
+  "Ser du inte sidan på din domän än?": "Can't see your site on your domain yet?",
+  "Det kan ta en stund, ibland några timmar, innan den nya adressen syns överallt. Din dator eller ditt nätverk kan fortfarande minnas den gamla adressen. Testa gärna på mobilen med mobildata (stäng av wifi) eller i ett privat webbläsarfönster. Din sajt fungerar hela tiden på adressen ovan.": "It can take a while, sometimes a few hours, before the new address shows up everywhere. Your computer or network may still remember the old address. Try it on your phone using mobile data (turn off wifi) or in a private browser window. Your site works the whole time at the address above."
 }

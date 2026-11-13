@@ -205,6 +205,10 @@ export default function PublishModal({
                       <p className="text-[13px] font-semibold mb-3">{t("När du lagt in posterna: klicka på Kontrollera igen. Vi kollar också automatiskt var 15:e sekund medan det här fönstret är öppet.")}</p>
                     </>
                   )}
+                  <div className="rounded-lg bg-bg border border-line px-3.5 py-3 mb-3 text-[12.5px] text-ink-dim leading-relaxed">
+                    <div className="font-semibold text-ink mb-1">{t("Ser du inte sidan på din domän än?")}</div>
+                    {t("Det kan ta en stund, ibland några timmar, innan den nya adressen syns överallt. Din dator eller ditt nätverk kan fortfarande minnas den gamla adressen. Testa gärna på mobilen med mobildata (stäng av wifi) eller i ett privat webbläsarfönster. Din sajt fungerar hela tiden på adressen ovan.")}
+                  </div>
                   <div className="flex flex-wrap items-center gap-3">
                     {info.status !== "active" && (
                       <button type="button" onClick={load} disabled={busy === "check"} className="text-[13px] font-semibold border border-line rounded-lg px-3.5 py-1.5 disabled:opacity-60">
