@@ -3,6 +3,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getSiteNewsArticles } from "@/lib/newsArticles";
 import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import SitePreview from "@/components/SitePreview";
+import { faviconFor, shareImageFor } from "@/lib/siteMeta";
 
 // Publika sajter: vem som helst kan titta, bara sajter med status "live" visas.
 // Två adresser går hit: www.yourcosite.com/s/<slug> och kundens egen domän
@@ -41,7 +42,9 @@ export function publicMetadata(site: PublicSite, requestedPath: string, canonica
     description,
     robots: index ? { index: true, follow: true } : { index: false, follow: false },
     alternates: canonical ? { canonical } : undefined,
-    openGraph: { title, description, siteName: site.name, type: "website" },
+    icons: { icon: faviconFor(site), shortcut: faviconFor(site), apple: faviconFor(site) },
+    openGraph: { title, description, siteName: site.name, type: "website", images: [{ url: shareImageFor(site) }] },
+    twitter: { card: "summary_large_image", title, description, images: [shareImageFor(site)] },
   };
 }
 

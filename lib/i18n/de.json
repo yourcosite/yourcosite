@@ -2996,5 +2996,13 @@
   "Klart! Avståndet i sektionen är ändrat. Du kan ångra med knappen om du ändrar dig.": "Fertig! Der Abstand im Abschnitt wurde geändert. Du kannst es mit dem Button rückgängig machen, falls du es dir anders überlegst.",
   "Mer luft": "Mehr Luft",
   "Mindre luft": "Weniger Luft",
-  "Ruta över helbild": "Karte über Vollbild"
+  "Ruta över helbild": "Karte über Vollbild",
+  "Det gick inte att avgöra vad som ska sparas.": "Es konnte nicht festgestellt werden, was gespeichert werden soll.",
+  "Välj en bild i formatet PNG, JPG eller WebP.": "Wähle ein Bild im Format PNG, JPG oder WebP.",
+  "Bilden är för stor.": "Das Bild ist zu groß.",
+  "Delning och ikon": "Teilen und Symbol",
+  "Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.": "Das Bild, das angezeigt wird, wenn jemand deine Website auf Facebook, LinkedIn oder in einer Nachricht teilt, und das Symbol im Browser-Tab. Lädst du nichts hoch, werden beide automatisch aus deinem Titelbild, deinem Namen und deinen Farben erstellt.",
+  "Delningsbild (helst 1200 x 630)": "Vorschaubild zum Teilen (am besten 1200 x 630)",
+  "Ikon i webbläsarfliken (kvadratisk)": "Symbol im Browser-Tab (quadratisch)",
+  "Automatisk": "Automatisch"
 }

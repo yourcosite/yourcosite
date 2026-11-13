@@ -2080,6 +2080,9 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   siteId={site?.id}
                   gaMeasurementId={content.gaMeasurementId}
                   metaPixelId={content.metaPixelId}
+                  shareImageUrl={content.shareImageUrl}
+                  faviconUrl={content.faviconUrl}
+                  onMetaSaved={(values) => setContent((c) => (c ? { ...c, shareImageUrl: values.shareImageUrl, faviconUrl: values.faviconUrl } : c))}
                   onSaved={(values) => setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))}
                   onClose={() => setPanel(null)}
                 >

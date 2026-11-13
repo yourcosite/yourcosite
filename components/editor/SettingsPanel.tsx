@@ -10,14 +10,20 @@ export default function SettingsPanel({
   siteId,
   gaMeasurementId,
   metaPixelId,
+  shareImageUrl,
+  faviconUrl,
   onSaved,
+  onMetaSaved,
   onClose,
   children,
 }: {
   siteId?: string;
   gaMeasurementId?: string;
   metaPixelId?: string;
+  shareImageUrl?: string;
+  faviconUrl?: string;
   onSaved: (values: { gaMeasurementId?: string; metaPixelId?: string }) => void;
+  onMetaSaved: (values: { shareImageUrl?: string; faviconUrl?: string }) => void;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
@@ -27,6 +33,28 @@ export default function SettingsPanel({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  const [metaBusy, setMetaBusy] = useState<"share" | "favicon" | null>(null);
+  const [metaError, setMetaError] = useState("");
+  const sendMeta = async (kind: "share" | "favicon", file: File | null) => {
+    setMetaBusy(kind);
+    setMetaError("");
+    try {
+      const fd = new FormData();
+      fd.append("kind", kind);
+      if (siteId) fd.append("siteId", siteId);
+      if (file) fd.append("file", file);
+      else fd.append("remove", "1");
+      const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
+      onMetaSaved({ shareImageUrl: data.content?.shareImageUrl, faviconUrl: data.content?.faviconUrl });
+    } catch (e: any) {
+      setMetaError(e.message);
+    } finally {
+      setMetaBusy(null);
+    }
+  };
 
   const save = async () => {
     setSaving(true);
@@ -60,6 +88,40 @@ export default function SettingsPanel({
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-6 flex flex-col gap-6">
         {children}
+
+        <div className="flex flex-col gap-3">
+          <div className="text-[11px] font-bold tracking-[0.06em] uppercase text-ink-dim">{t("Delning och ikon")}</div>
+          <p className="text-[12px] text-ink-dim leading-relaxed">
+            {t("Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.")}
+          </p>
+          {([
+            { kind: "share" as const, label: t("Delningsbild (helst 1200 x 630)"), url: shareImageUrl, wide: true },
+            { kind: "favicon" as const, label: t("Ikon i webbläsarfliken (kvadratisk)"), url: faviconUrl, wide: false },
+          ]).map((row) => (
+            <div key={row.kind} className="flex items-center gap-3">
+              {row.url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={row.url} alt="" className={`${row.wide ? "w-24 h-14" : "w-10 h-10"} object-cover rounded-md border border-line bg-white`} />
+              ) : (
+                <div className={`${row.wide ? "w-24 h-14" : "w-10 h-10"} rounded-md border border-dashed border-line flex items-center justify-center text-[10px] text-ink-dim text-center`}>{t("Automatisk")}</div>
+              )}
+              <div className="flex-1 min-w-0">
+                <div className="text-[12.5px] font-semibold">{row.label}</div>
+                <div className="flex gap-3 mt-1">
+                  <label className="text-[12.5px] font-semibold underline cursor-pointer">
+                    {metaBusy === row.kind ? t("Sparar …") : t("Ladda upp")}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={metaBusy !== null}
+                      onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) sendMeta(row.kind, f); }} />
+                  </label>
+                  {row.url && (
+                    <button type="button" disabled={metaBusy !== null} onClick={() => sendMeta(row.kind, null)} className="text-[12.5px] text-ink-dim underline">{t("Ta bort")}</button>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+          {metaError && <p className="text-[12.5px] text-red-600">{metaError}</p>}
+        </div>
 
         <div className="flex flex-col gap-3">
           <div className="text-[11px] font-bold tracking-[0.06em] uppercase text-ink-dim">{t("Analys och marknadsföring")}</div>

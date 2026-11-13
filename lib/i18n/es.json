@@ -2996,5 +2996,13 @@
   "Klart! Avståndet i sektionen är ändrat. Du kan ångra med knappen om du ändrar dig.": "¡Listo! Se ha cambiado el espaciado de la sección. Puedes deshacerlo con el botón si cambias de opinión.",
   "Mer luft": "Más espacio",
   "Mindre luft": "Menos espacio",
-  "Ruta över helbild": "Tarjeta sobre imagen completa"
+  "Ruta över helbild": "Tarjeta sobre imagen completa",
+  "Det gick inte att avgöra vad som ska sparas.": "No se pudo determinar qué hay que guardar.",
+  "Välj en bild i formatet PNG, JPG eller WebP.": "Elige una imagen en formato PNG, JPG o WebP.",
+  "Bilden är för stor.": "La imagen es demasiado grande.",
+  "Delning och ikon": "Compartir e icono",
+  "Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.": "La imagen que se muestra cuando alguien comparte tu sitio en Facebook, LinkedIn o en un mensaje, y el icono de la pestaña del navegador. Si no subes nada, ambos se crean automáticamente a partir de tu imagen principal, tu nombre y tus colores.",
+  "Delningsbild (helst 1200 x 630)": "Imagen para compartir (preferiblemente 1200 x 630)",
+  "Ikon i webbläsarfliken (kvadratisk)": "Icono de la pestaña del navegador (cuadrado)",
+  "Automatisk": "Automático"
 }

@@ -2996,5 +2996,13 @@
   "Klart! Avståndet i sektionen är ändrat. Du kan ångra med knappen om du ändrar dig.": "Valmis! Osion väliä on muutettu. Voit kumota muutoksen painikkeella, jos muutat mielesi.",
   "Mer luft": "Enemmän tilaa",
   "Mindre luft": "Vähemmän tilaa",
-  "Ruta över helbild": "Ruutu koko kuvan päällä"
+  "Ruta över helbild": "Ruutu koko kuvan päällä",
+  "Det gick inte att avgöra vad som ska sparas.": "Ei voitu selvittää, mitä pitäisi tallentaa.",
+  "Välj en bild i formatet PNG, JPG eller WebP.": "Valitse kuva PNG-, JPG- tai WebP-muodossa.",
+  "Bilden är för stor.": "Kuva on liian suuri.",
+  "Delning och ikon": "Jakaminen ja kuvake",
+  "Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.": "Kuva, joka näkyy, kun joku jakaa sivustosi Facebookissa, LinkedInissä tai viestissä, sekä selainvälilehden kuvake. Jos et lataa mitään, molemmat luodaan automaattisesti yläkuvastasi, nimestäsi ja väreistäsi.",
+  "Delningsbild (helst 1200 x 630)": "Jakokuva (mieluiten 1200 x 630)",
+  "Ikon i webbläsarfliken (kvadratisk)": "Selainvälilehden kuvake (neliö)",
+  "Automatisk": "Automaattinen"
 }

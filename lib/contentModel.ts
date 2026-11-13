@@ -714,6 +714,10 @@ export interface SiteContent {
   // Namnet som står i sidfoten, t.ex. "CS Kommunikationsbyrå AB". Saknas det
   // används sajtens namn. Satt av Millie.
   footerName?: string;
+  // Egen delningsbild (visas när sajten delas på Facebook, LinkedIn m.fl.) och
+  // egen favicon. Saknas de genereras de automatiskt, se lib/siteMeta.ts.
+  shareImageUrl?: string;
+  faviconUrl?: string;
 }
 
 // Räknar hur många av sajtens bildbärande platser (hero + grid-items) som
