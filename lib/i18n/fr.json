@@ -2786,5 +2786,8 @@
   "Tack! Vi lägger till ändringarna och fakturerar tillägget. Du hör av oss inom ett dygn.": "Merci ! Nous ajoutons les modifications et facturons l'option. Vous aurez de nos nouvelles sous 24 heures.",
   "Tillägget faktureras tillsammans med din ordinarie faktura. Alla priser exkl. moms.": "L'option est facturée avec votre facture habituelle. Tous les prix hors TVA.",
   "Beställ 50 extra": "Commander 50 de plus",
-  "Lägg till fler ändringar →": "Ajouter des modifications →"
+  "Lägg till fler ändringar →": "Ajouter des modifications →",
+  "En ändring är något Millie gör åt er. Ändrar ni en text själva i redigeraren räknas det inte.": "Une modification est ce que Millie fait pour vous. Modifier un texte vous-même dans l'éditeur ne compte pas.",
+  "Egna textändringar räknas inte": "Vos propres modifications de texte ne comptent pas",
+  "En ändring är något Millie gör åt dig. Ändrar du en text själv i redigeraren räknas det inte.": "Une modification est ce que Millie fait pour vous. Modifier un texte vous-même dans l'éditeur ne compte pas."
 }

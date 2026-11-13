@@ -2786,5 +2786,8 @@
   "Tack! Vi lägger till ändringarna och fakturerar tillägget. Du hör av oss inom ett dygn.": "Tak! Vi tilføjer ændringerne og fakturerer tilvalget. Du hører fra os inden for et døgn.",
   "Tillägget faktureras tillsammans med din ordinarie faktura. Alla priser exkl. moms.": "Tilvalget faktureres sammen med din ordinære faktura. Alle priser ekskl. moms.",
   "Beställ 50 extra": "Bestil 50 ekstra",
-  "Lägg till fler ändringar →": "Tilføj flere ændringer →"
+  "Lägg till fler ändringar →": "Tilføj flere ændringer →",
+  "En ändring är något Millie gör åt er. Ändrar ni en text själva i redigeraren räknas det inte.": "En ændring er noget, Millie gør for jer. Retter I en tekst selv i redigeringen, tæller det ikke.",
+  "Egna textändringar räknas inte": "Egne tekstrettelser tæller ikke",
+  "En ändring är något Millie gör åt dig. Ändrar du en text själv i redigeraren räknas det inte.": "En ændring er noget, Millie gør for dig. Retter du en tekst selv i redigeringen, tæller det ikke."
 }

@@ -86,6 +86,9 @@ export default function PricingPage() {
               >
                 {t("Kom igång →")}
               </Link>
+              <p className="text-[12.5px] text-ink-dim leading-relaxed mb-5">
+                {t("En ändring är något Millie gör åt er. Ändrar ni en text själva i redigeraren räknas det inte.")}
+              </p>
               <div className="flex flex-col gap-3 text-[13.5px]">
                 {packageFeatures.map((f, idx) => (
                   <div key={idx} className="flex gap-2.5">

@@ -2786,5 +2786,8 @@
   "Tack! Vi lägger till ändringarna och fakturerar tillägget. Du hör av oss inom ett dygn.": "Kiitos! Lisäämme muutokset ja laskutamme lisän. Kuulet meistä vuorokauden sisällä.",
   "Tillägget faktureras tillsammans med din ordinarie faktura. Alla priser exkl. moms.": "Lisä laskutetaan tavallisen laskusi yhteydessä. Kaikki hinnat ilman alv:tä.",
   "Beställ 50 extra": "Tilaa 50 lisää",
-  "Lägg till fler ändringar →": "Lisää muutoksia →"
+  "Lägg till fler ändringar →": "Lisää muutoksia →",
+  "En ändring är något Millie gör åt er. Ändrar ni en text själva i redigeraren räknas det inte.": "Muutos on jotain, minkä Millie tekee puolestanne. Jos muokkaatte tekstiä itse muokkaimessa, sitä ei lasketa.",
+  "Egna textändringar räknas inte": "Omat tekstimuokkaukset eivät lasketa",
+  "En ändring är något Millie gör åt dig. Ändrar du en text själv i redigeraren räknas det inte.": "Muutos on jotain, minkä Millie tekee puolestasi. Jos muokkaat tekstiä itse muokkaimessa, sitä ei lasketa."
 }

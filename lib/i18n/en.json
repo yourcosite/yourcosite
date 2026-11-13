@@ -2786,5 +2786,8 @@
   "Tack! Vi lägger till ändringarna och fakturerar tillägget. Du hör av oss inom ett dygn.": "Thanks! We will add the changes and invoice the add-on. You will hear from us within a day.",
   "Tillägget faktureras tillsammans med din ordinarie faktura. Alla priser exkl. moms.": "The add-on is invoiced together with your regular invoice. All prices exclude VAT.",
   "Beställ 50 extra": "Order 50 extra",
-  "Lägg till fler ändringar →": "Add more changes →"
+  "Lägg till fler ändringar →": "Add more changes →",
+  "En ändring är något Millie gör åt er. Ändrar ni en text själva i redigeraren räknas det inte.": "A change is something Millie does for you. Editing a text yourselves in the editor does not count.",
+  "Egna textändringar räknas inte": "Your own text edits do not count",
+  "En ändring är något Millie gör åt dig. Ändrar du en text själv i redigeraren räknas det inte.": "A change is something Millie does for you. Editing a text yourself in the editor does not count."
 }

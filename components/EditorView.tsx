@@ -2040,6 +2040,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     {t("Du har använt {used} av {limit} ändringar den här månaden. De nollställs när en ny månad börjar.", { used: usage.used, limit: usage.limit })}
                   </p>
                 )}
+                <p className="text-[12.5px] text-ink-dim mb-4">{t("En ändring är något Millie gör åt dig. Ändrar du en text själv i redigeraren räknas det inte.")}</p>
                 <div className="border border-line rounded-xl p-4 flex items-center justify-between gap-4 mb-4">
                   <div>
                     <div className="font-semibold text-[14.5px]">{t("50 extra ändringar")}</div>
