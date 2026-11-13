@@ -32,7 +32,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     .maybeSingle();
   // Extra sajter (supabase/andringar-spark.sql) hämtas för sig, så sidan
   // fungerar även innan kolumnen finns.
-  const { data: extraSitesRow } = await supabase.from("profiles").select("extra_sites").eq("id", params.id).maybeSingle();
+  const { data: extraSitesRow } = await supabase.from("profiles").select("extra_sites, billing_exempt, extra_languages").eq("id", params.id).maybeSingle();
   let supportHistory: any[] = [];
   const hist = await supabase
     .from("support_messages")

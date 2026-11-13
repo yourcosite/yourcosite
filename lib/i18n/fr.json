@@ -2809,5 +2809,14 @@
   "Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.": "Merci ! Nous ajoutons une place pour un site supplémentaire et facturons l'option. Vous aurez de nos nouvelles sous 24 heures.",
   "Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.": "Le forfait inclut un site. Un site supplémentaire coûte 150 SEK/mois HT et dispose de ses propres 30 modifications par mois.",
   "Beställ extra sajt": "Commander un site supplémentaire",
-  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Sites sur le compte : {max}. Commandez un site supplémentaire dans le tableau de bord et nous l'ajouterons."
+  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Sites sur le compte : {max}. Commandez un site supplémentaire dans le tableau de bord et nous l'ajouterons.",
+  "Ange 0, 1 eller 2 extra språk.": "Indiquez 0, 1 ou 2 langues supplémentaires.",
+  "Ditt konto är kostnadsfritt": "Votre compte est gratuit",
+  "Du faktureras inte för det här kontot.": "Ce compte n'est pas facturé.",
+  "Alla priser exkl. moms. Tillägg (extra ändringar, språk, sajter) faktureras tillsammans med paketet.": "Tous les prix sont HT. Les options (modifications, langues, sites supplémentaires) sont facturées avec le forfait.",
+  "Se priser och tillägg": "Voir les prix et options",
+  "Betalning": "Paiement",
+  "Ingen betalning behövs.": "Aucun paiement n'est nécessaire.",
+  "Faktura en gång i månaden": "Facture une fois par mois",
+  "Fakturan skickas till {email}. Behöver du ändra faktureringsadress eller e-post, hör av dig till oss.": "La facture est envoyée à {email}. Pour modifier l'adresse de facturation ou l'e-mail, contactez-nous."
 }

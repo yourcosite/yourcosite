@@ -46,3 +46,9 @@ alter table change_addons add column if not exists site_id uuid references sites
 -- Paketet innehåller en sajt. Fler sajter beställs (150 kr/mån) och läggs in
 -- av admin här: antal EXTRA sajter utöver den första.
 alter table profiles add column if not exists extra_sites integer not null default 0;
+
+-- Kostnadsfria konton (faktureras inte) och antal extra språk (0, 1 eller 2:
+-- tillägget 39 kr resp. 59 kr per månad). Sätts av admin på kundsidan och
+-- används av fakturaunderlaget (/api/admin/billing-export).
+alter table profiles add column if not exists billing_exempt boolean not null default false;
+alter table profiles add column if not exists extra_languages integer not null default 0;

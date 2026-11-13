@@ -2809,5 +2809,14 @@
   "Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.": "Thanks! We will add room for an extra site and invoice the add-on. You will hear from us within a day.",
   "Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.": "The package includes one site. An extra site costs 150 SEK/month excl. VAT and gets its own 30 changes per month.",
   "Beställ extra sajt": "Order extra site",
-  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Sites on the account: {max}. Order an extra site on the dashboard and we will add it."
+  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Sites on the account: {max}. Order an extra site on the dashboard and we will add it.",
+  "Ange 0, 1 eller 2 extra språk.": "Enter 0, 1 or 2 extra languages.",
+  "Ditt konto är kostnadsfritt": "Your account is free of charge",
+  "Du faktureras inte för det här kontot.": "You are not invoiced for this account.",
+  "Alla priser exkl. moms. Tillägg (extra ändringar, språk, sajter) faktureras tillsammans med paketet.": "All prices excl. VAT. Add-ons (extra changes, languages, sites) are invoiced together with the package.",
+  "Se priser och tillägg": "See prices and add-ons",
+  "Betalning": "Payment",
+  "Ingen betalning behövs.": "No payment is needed.",
+  "Faktura en gång i månaden": "Invoice once a month",
+  "Fakturan skickas till {email}. Behöver du ändra faktureringsadress eller e-post, hör av dig till oss.": "The invoice is sent to {email}. If you need to change the billing address or email, contact us."
 }

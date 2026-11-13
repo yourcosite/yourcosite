@@ -56,6 +56,25 @@ export default async function AdminEkonomiPage() {
         </p>
       </div>
 
+      <form action="/api/admin/billing-export" method="get" className="bg-surface border border-line rounded-2xl p-5 mb-6.5 flex flex-wrap items-end gap-3.5">
+        <div>
+          <div className="font-semibold text-[15px] mb-0.5">Fakturaunderlag</div>
+          <div className="text-[12.5px] text-ink-dim">
+            Hämta en fil (CSV) med fakturaraderna för en månad: paket, extra sajter, extra ändringar och språk. Kostnadsfria konton tas inte med.
+          </div>
+        </div>
+        <input
+          type="month"
+          name="month"
+          required
+          defaultValue={new Date().toISOString().slice(0, 7)}
+          className="border border-line rounded-lg px-3 py-2 text-[13.5px] bg-surface"
+        />
+        <button type="submit" className="bg-accent text-accent-ink font-semibold text-[13.5px] px-4 py-2.5 rounded-lg">
+          Ladda ner fakturaunderlag
+        </button>
+      </form>
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4.5 mb-6.5">
         <StatCard label="MRR" value={money(mrrSek, mrrEur)} />
         <StatCard label="ARR" value={money(mrrSek * 12, mrrEur * 12)} />

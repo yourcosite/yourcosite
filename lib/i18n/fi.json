@@ -2809,5 +2809,14 @@
   "Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.": "Kiitos! Lisäämme tilan ylimääräiselle sivustolle ja laskutamme lisäosan. Kuulet meistä vuorokauden sisällä.",
   "Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.": "Paketti sisältää yhden sivuston. Lisäsivusto maksaa 150 kr/kk ilman alv:ta, ja sillä on omat 30 muutosta kuukaudessa.",
   "Beställ extra sajt": "Tilaa lisäsivusto",
-  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Tilillä olevat sivustot: {max}. Tilaa lisäsivusto hallintapaneelissa, niin lisäämme sen."
+  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Tilillä olevat sivustot: {max}. Tilaa lisäsivusto hallintapaneelissa, niin lisäämme sen.",
+  "Ange 0, 1 eller 2 extra språk.": "Anna 0, 1 tai 2 lisäkieltä.",
+  "Ditt konto är kostnadsfritt": "Tilisi on maksuton",
+  "Du faktureras inte för det här kontot.": "Tilistä ei laskuteta.",
+  "Alla priser exkl. moms. Tillägg (extra ändringar, språk, sajter) faktureras tillsammans med paketet.": "Kaikki hinnat ilman alv:ta. Lisäosat (lisämuutokset, kielet, sivustot) laskutetaan paketin mukana.",
+  "Se priser och tillägg": "Katso hinnat ja lisäosat",
+  "Betalning": "Maksu",
+  "Ingen betalning behövs.": "Maksua ei tarvita.",
+  "Faktura en gång i månaden": "Lasku kerran kuukaudessa",
+  "Fakturan skickas till {email}. Behöver du ändra faktureringsadress eller e-post, hör av dig till oss.": "Lasku lähetetään osoitteeseen {email}. Jos haluat muuttaa laskutusosoitetta tai sähköpostia, ota yhteyttä."
 }

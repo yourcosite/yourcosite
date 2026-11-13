@@ -92,6 +92,25 @@ export default function CustomerDetailClient({
   const [changeUsage, setChangeUsage] = useState<{ enabled: boolean; used: number; limit: number } | null>(null);
   const [extraSites, setExtraSites] = useState<number>(Number((customer as any).extra_sites) || 0);
   const [savingSites, setSavingSites] = useState(false);
+  const [billingExempt, setBillingExempt] = useState<boolean>(!!(customer as any).billing_exempt);
+  const [extraLanguages, setExtraLanguages] = useState<number>(Number((customer as any).extra_languages) || 0);
+  const [savingBilling, setSavingBilling] = useState(false);
+  const saveBilling = async (patch: { billingExempt?: boolean; extraLanguages?: number }) => {
+    setSavingBilling(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${customer.id}/billing-settings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) { alert(d.error || "Det gick inte att spara."); return; }
+      if (patch.billingExempt !== undefined) setBillingExempt(patch.billingExempt);
+      if (patch.extraLanguages !== undefined) setExtraLanguages(patch.extraLanguages);
+    } finally {
+      setSavingBilling(false);
+    }
+  };
   const saveExtraSites = async (n: number) => {
     setSavingSites(true);
     try {
@@ -401,6 +420,31 @@ export default function CustomerDetailClient({
                       >
                         {savingPlan ? "Sparar …" : "Spara plan"}
                       </button>
+                    </div>
+                    <div className="mt-4 pt-3.5 border-t border-line">
+                      <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Fakturering</div>
+                      <label className="flex items-center gap-2.5 text-[13.5px] mb-2.5">
+                        <input
+                          type="checkbox"
+                          checked={billingExempt}
+                          disabled={savingBilling}
+                          onChange={(e) => saveBilling({ billingExempt: e.target.checked })}
+                        />
+                        Kostnadsfritt konto (faktureras inte)
+                      </label>
+                      <label className="flex items-center gap-2.5 text-[13.5px]">
+                        Extra språk
+                        <select
+                          value={extraLanguages}
+                          disabled={savingBilling}
+                          onChange={(e) => saveBilling({ extraLanguages: Number(e.target.value) })}
+                          className="border border-line rounded-lg px-2.5 py-1.5 text-[13px] bg-surface"
+                        >
+                          <option value={0}>Inga</option>
+                          <option value={1}>1 språk (39 kr/mån)</option>
+                          <option value={2}>2 språk (59 kr/mån)</option>
+                        </select>
+                      </label>
                     </div>
                     <div className="mt-4 pt-3.5 border-t border-line">
                       <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Extra sajter (utöver den som ingår)</div>
