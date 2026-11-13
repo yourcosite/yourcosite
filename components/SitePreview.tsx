@@ -1003,7 +1003,7 @@ function Header({
     overlay ? (active ? "#FFFFFF" : "rgba(255,255,255,0.8)") : active ? palette.text : palette.textDim;
   const hamburgerColor = overlay ? "#FFFFFF" : palette.text;
 
-  const logoEl = logoUrl ? (
+  const logoInner = logoUrl ? (
     // Loggan är kundens egen bild — ska vara ett tydligt kännetecken i
     // headern, inte en liten ikon. ~3x tidigare storlek (h-8 → h-24).
     // Ovanpå en foto-hero får den en ljus platta bakom sig så den
@@ -1023,6 +1023,19 @@ function Header({
     <span className={`font-heading italic text-[19px] ${overlay ? "text-white" : ""}`}>
       {siteName || t("Ditt företag")}
     </span>
+  );
+  // Loggan (eller sajtnamnet) länkar alltid till startsidan: knapp i
+  // redigeraren, riktig länk på en publicerad sida, annars bara bilden.
+  const logoEl = onNavigate ? (
+    <button type="button" onClick={() => onNavigate("/")} className="block text-left" aria-label={siteName || t("Startsida")}>
+      {logoInner}
+    </button>
+  ) : basePath ? (
+    <a href={homeHref("/")} className="block" aria-label={siteName || t("Startsida")}>
+      {logoInner}
+    </a>
+  ) : (
+    logoInner
   );
 
   // Tak på antal länkar i toppmenyn — höjt från 5 till 8 (matchar
@@ -1371,10 +1384,21 @@ function Footer({
       {/* Loggan större och centrerad under menyn (kundönskemål). */}
       {logoUrl && (
         <div className="flex justify-center px-8 @3xl:px-12 pb-6 pt-1">
-          <div className={logoBg ? "rounded-lg px-3 py-1.5" : ""} style={logoBg ? { background: logoBg } : undefined}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={logoUrl} alt={siteName || t("Logga")} className="h-14 @3xl:h-16 max-w-[220px] @3xl:max-w-[280px] object-contain" />
-          </div>
+          {(() => {
+            const inner = (
+              <div className={logoBg ? "rounded-lg px-3 py-1.5" : ""} style={logoBg ? { background: logoBg } : undefined}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={logoUrl} alt={siteName || t("Logga")} className="h-14 @3xl:h-16 max-w-[220px] @3xl:max-w-[280px] object-contain" />
+              </div>
+            );
+            return onNavigate ? (
+              <button type="button" onClick={() => onNavigate("/")} aria-label={siteName || t("Startsida")}>{inner}</button>
+            ) : basePath ? (
+              <a href={homeHref("/")} aria-label={siteName || t("Startsida")}>{inner}</a>
+            ) : (
+              inner
+            );
+          })()}
         </div>
       )}
 
@@ -1385,7 +1409,12 @@ function Footer({
         style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
       >
         <span className="flex items-center gap-x-4 gap-y-3 flex-wrap justify-center">
-          <span>{siteName || t("Ditt företag")} · {t("Byggd med YourCoSite")}</span>
+          <span>
+            {siteName || t("Ditt företag")} ·{" "}
+            <a href="https://www.yourcosite.com" target="_blank" rel="noopener noreferrer" className="underline decoration-dotted underline-offset-2">
+              {t("Byggd med YourCoSite")}
+            </a>
+          </span>
           {policyHref && (
             <a
               href={policyHref}
