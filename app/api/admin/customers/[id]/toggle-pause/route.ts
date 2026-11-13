@@ -7,20 +7,21 @@ import { withErrorLog } from "@/lib/errorLog";
 
 // Växlar en kunds primära sajt mellan "live" och "pausad". Rör inte
 // sajter som fortfarande är i utkastläge (de har inget att pausa).
-async function POST_handler(_request: Request, { params }: { params: { id: string } }) {
+async function POST_handler(request: Request, { params }: { params: { id: string } }) {
   const t = getT();
   const check = await requireRole(["admin", "superadmin"]);
   if (check.error) return check.error;
 
   const admin = createAdminClient();
 
-  const { data: site, error: siteError } = await admin
+  const body = await request.json().catch(() => ({}));
+  let siteQuery = admin
     .from("sites")
     .select("id, name, status")
     .eq("owner_id", params.id)
-    .in("status", ["live", "pausad"])
-    .limit(1)
-    .single();
+    .in("status", ["live", "pausad"]);
+  if (typeof body?.siteId === "string" && body.siteId) siteQuery = siteQuery.eq("id", body.siteId);
+  const { data: site, error: siteError } = await siteQuery.order("created_at", { ascending: true }).limit(1).single();
 
   if (siteError || !site) {
     return NextResponse.json(

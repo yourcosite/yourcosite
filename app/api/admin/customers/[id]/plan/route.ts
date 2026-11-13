@@ -21,12 +21,9 @@ async function POST_handler(request: Request, { params }: { params: { id: string
 
   const admin = createAdminClient();
 
-  const { data: site, error: siteError } = await admin
-    .from("sites")
-    .select("id")
-    .eq("owner_id", params.id)
-    .limit(1)
-    .single();
+  let siteQuery = admin.from("sites").select("id").eq("owner_id", params.id);
+  if (typeof body.siteId === "string" && body.siteId) siteQuery = siteQuery.eq("id", body.siteId);
+  const { data: site, error: siteError } = await siteQuery.order("created_at", { ascending: true }).limit(1).single();
 
   if (siteError || !site) {
     return NextResponse.json(

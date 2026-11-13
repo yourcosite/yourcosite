@@ -76,7 +76,10 @@ export default function CustomerDetailClient({
   isSuperadmin: boolean;
 }) {
   const router = useRouter();
-  const site = customer.sites?.[0];
+  // Kunden kan ha flera sajter: visa alla och låt admin välja vilken som visas.
+  const sites = [...(customer.sites ?? [])].sort((a, b) => String(a.created_at).localeCompare(String(b.created_at)));
+  const [selectedSiteId, setSelectedSiteId] = useState<string | undefined>(sites[0]?.id);
+  const site = sites.find((s) => s.id === selectedSiteId) ?? sites[0];
 
   const [notes, setNotes] = useState(initialNotes);
   const cur = billingCurrencyFor(customer.country);
@@ -87,8 +90,10 @@ export default function CustomerDetailClient({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [siteStatus, setSiteStatus] = useState(site?.status);
+  const [statusOverride, setStatusOverride] = useState<Record<string, string>>({});
+  const siteStatus = site ? statusOverride[site.id] ?? site.status : undefined;
   const [planValue, setPlanValue] = useState(site?.plan ?? "bas");
+  useEffect(() => { if (site?.plan) setPlanValue(site.plan); }, [site?.id]);
   const [changeUsage, setChangeUsage] = useState<{ enabled: boolean; used: number; limit: number } | null>(null);
   const [extraSites, setExtraSites] = useState<number>(Number((customer as any).extra_sites) || 0);
   const [savingSites, setSavingSites] = useState(false);
@@ -128,7 +133,7 @@ export default function CustomerDetailClient({
   };
   const [addingChanges, setAddingChanges] = useState(false);
   // Varje sajt har egna ändringar: välj sajt när kunden har flera.
-  const [usageSiteId, setUsageSiteId] = useState<string | undefined>(site?.id);
+  const usageSiteId = site?.id;
   useEffect(() => {
     fetch(`/api/admin/customers/${customer.id}/addons${usageSiteId ? `?siteId=${usageSiteId}` : ""}`)
       .then((r) => r.json())
@@ -205,11 +210,15 @@ export default function CustomerDetailClient({
     setBusy("pause");
     setError(null);
     setMessage(null);
-    const res = await fetch(`/api/admin/customers/${customer.id}/toggle-pause`, { method: "POST" });
+    const res = await fetch(`/api/admin/customers/${customer.id}/toggle-pause`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ siteId: site?.id }),
+    });
     const data = await res.json();
     setBusy(null);
     if (res.ok) {
-      setSiteStatus(data.status);
+      if (site) setStatusOverride((o) => ({ ...o, [site.id]: data.status }));
       setMessage(data.status === "pausad" ? "Kontot är pausat." : "Kontot är återaktiverat.");
     } else {
       setError(data.error ?? "Kunde inte ändra status.");
@@ -252,7 +261,7 @@ export default function CustomerDetailClient({
     const res = await fetch(`/api/admin/customers/${customer.id}/plan`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ plan: planValue }),
+      body: JSON.stringify({ plan: planValue, siteId: site?.id }),
     });
     const data = await res.json();
     setSavingPlan(false);
@@ -415,8 +424,45 @@ export default function CustomerDetailClient({
             </dl>
           </div>
 
+          {sites.length > 0 && (
+            <div className="bg-surface border border-line rounded-2xl p-5.5">
+              <div className="font-semibold text-[15.5px] mb-3.5">Sajter ({sites.length})</div>
+              <div className="flex flex-col gap-2">
+                {sites.map((s) => {
+                  const selected = s.id === site?.id;
+                  const st = statusOverride[s.id] ?? s.status;
+                  const badge =
+                    st === "live"
+                      ? "bg-[#DCFCE7] text-[#166534]"
+                      : st === "pausad"
+                      ? "bg-[#FEE2E2] text-[#991B1B]"
+                      : "bg-[#FDE68A] text-[#7C4A03]";
+                  const label = st === "live" ? "LIVE" : st === "pausad" ? "PAUSAD" : "UTKAST";
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setSelectedSiteId(s.id)}
+                      className={`text-left flex items-center justify-between gap-3 border rounded-xl px-3.5 py-2.5 text-[13.5px] ${
+                        selected ? "border-ink bg-bg" : "border-line"
+                      }`}
+                    >
+                      <span className="min-w-0">
+                        <span className="font-semibold block truncate">{s.name || "Namnlös sajt"}</span>
+                        <span className="text-[12px] text-ink-dim block truncate">
+                          {s.domain || "Ingen domän"} · skapad {formatDate(s.created_at)}
+                        </span>
+                      </span>
+                      <span className={`text-[10.5px] font-bold px-2 py-0.5 rounded-full flex-shrink-0 ${badge}`}>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           <div className="bg-surface border border-line rounded-2xl p-5.5">
-            <div className="font-semibold text-[15.5px] mb-3.5">Aktuell sajt</div>
+            <div className="font-semibold text-[15.5px] mb-3.5">{sites.length > 1 ? "Vald sajt" : "Aktuell sajt"}</div>
             {site ? (
               <>
                 <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[13.5px] mb-4">
@@ -482,16 +528,8 @@ export default function CustomerDetailClient({
                     </div>
                     <div className="mt-4 pt-3.5 border-t border-line">
                       <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Ändringar denna månad (per sajt)</div>
-                      {(customer.sites?.length ?? 0) > 1 && (
-                        <select
-                          value={usageSiteId}
-                          onChange={(e) => setUsageSiteId(e.target.value)}
-                          className="mb-2 border border-line rounded-lg px-2.5 py-1.5 text-[13px] bg-surface"
-                        >
-                          {customer.sites!.map((s: { id: string; name: string }) => (
-                            <option key={s.id} value={s.id}>{s.name}</option>
-                          ))}
-                        </select>
+                      {sites.length > 1 && site && (
+                        <div className="text-[12.5px] text-ink-dim mb-2">Gäller sajten {site.name}</div>
                       )}
                       <div className="flex items-center gap-2.5 text-[13.5px]">
                         <span>
