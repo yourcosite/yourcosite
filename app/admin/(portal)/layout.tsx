@@ -13,6 +13,7 @@ export default async function AdminPortalLayout({
   let fullName = "";
   let role: "support" | "admin" | "superadmin" | undefined;
   let newMessageCount = 0;
+  let newOrderCount = 0;
   if (user) {
     const { data: profile } = await supabase
       .from("profiles")
@@ -27,6 +28,12 @@ export default async function AdminPortalLayout({
       .select("id", { count: "exact", head: true })
       .eq("status", "ny");
     newMessageCount = count ?? 0;
+
+    const { count: orders } = await supabase
+      .from("addon_orders")
+      .select("id", { count: "exact", head: true })
+      .is("handled_at", null);
+    newOrderCount = orders ?? 0;
   }
 
   return (
@@ -36,6 +43,7 @@ export default async function AdminPortalLayout({
         adminEmail={user?.email ?? ""}
         role={role}
         newMessageCount={newMessageCount}
+        newOrderCount={newOrderCount}
       />
       <div className="flex-1 min-w-0 flex flex-col">
         <div className="px-4 md:px-11 pt-5 flex-shrink-0">

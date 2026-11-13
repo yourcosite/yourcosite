@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { rateLimited } from "@/lib/rateLimit";
 import { sendEmail, escapeHtml } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { withErrorLog } from "@/lib/errorLog";
 
 // Kunden beställer ett tillägg (t.ex. fler ändringar). Tills betalning är
@@ -37,6 +38,13 @@ async function POST_handler(request: Request) {
     `Sajt-id: ${site?.id || "okänd"}`,
     `Kund-id: ${user.id}`,
   ];
+  // Sparas också så att admin ser en notis i portalen (tabellen skapas av
+  // supabase/andringar-spark.sql; saknas den går mejlet ändå iväg).
+  try {
+    await createAdminClient().from("addon_orders").insert({ user_id: user.id, site_id: site?.id ?? null, kind, label: ADDONS[kind] });
+  } catch (e) {
+    console.error("[order-addon] kunde inte spara beställningen", e);
+  }
   const res = await sendEmail({
     to: process.env.ALERT_EMAIL || "hej@cskb.se",
     subject: `Beställning: ${ADDONS[kind]}`,

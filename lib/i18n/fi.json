@@ -2976,5 +2976,17 @@
   "Egen domän (valfritt)": "Oma verkkotunnus (valinnainen)",
   "Vill du ha din egen domän kan du koppla den direkt i samma fönster, med guider för de vanligaste webbhotellen.": "Jos haluat oman verkkotunnuksen, voit yhdistää sen samassa ikkunassa, ja yleisimmille verkkopalveluntarjoajille on omat oppaat.",
   "Kör du fast?": "Jäitkö jumiin?",
-  "Kontakta supporten, så hjälper vi dig.": "Ota yhteyttä tukeen, niin autamme."
+  "Kontakta supporten, så hjälper vi dig.": "Ota yhteyttä tukeen, niin autamme.",
+  "Du får det här mejlet för att du har beställt ett tillägg hos YourCoSite. Det går inte att svara på mejlet.": "Saat tämän viestin, koska olet tilannut lisäosan YourCoSitelta. Tähän viestiin ei voi vastata.",
+  "Öppna din översikt": "Avaa yleisnäkymäsi",
+  "Din extra sajt är tillagd": "Lisäsivustosi on lisätty",
+  "Vi har lagt till plats för en extra sajt på ditt konto. Du kan börja bygga den direkt.": "Olemme lisänneet tilillesi tilaa lisäsivustolle. Voit aloittaa sen rakentamisen heti.",
+  "Så här gör du": "Näin toimit",
+  "Gå till din översikt och klicka på Skapa ny sajt. Den nya sajten får egna 30 ändringar per månad.": "Siirry yleisnäkymääsi ja napsauta Luo uusi sivusto. Uusi sivusto saa omat 30 muutostaan kuukaudessa.",
+  "Dina extra ändringar är aktiverade": "Lisämuutoksesi on aktivoitu",
+  "Vi har lagt till 50 extra ändringar på din sajt. Du kan använda dem direkt.": "Olemme lisänneet sivustollesi 50 lisämuutosta. Voit käyttää niitä heti.",
+  "Fortsätt som vanligt: be Millie ändra det du vill i redigeraren. Du ser hur många ändringar du har kvar där.": "Jatka kuten tavallisesti: pyydä Millietä muuttamaan haluamasi editorissa. Näet siellä, kuinka monta muutosta sinulla on jäljellä.",
+  "Dina extra språk är aktiverade": "Lisäkielesi on aktivoitu",
+  "Vi har aktiverat ditt extra språk på din sajt.": "Olemme aktivoineet lisäkielesi sivustollasi.",
+  "Öppna Inställningar i redigeraren för att välja och hantera språken på din sajt.": "Avaa Asetukset editorissa valitaksesi ja hallitaksesi sivustosi kieliä."
 }

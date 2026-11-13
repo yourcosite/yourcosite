@@ -129,3 +129,24 @@ create table if not exists lifecycle_emails (
   primary key (user_id, kind)
 );
 alter table lifecycle_emails enable row level security;
+
+-- ============================================================
+-- BESTÄLLNINGAR AV TILLÄGG (extra sajt, fler ändringar, språk)
+-- Skrivs av servern när en kund beställer. Admin ser antalet obehandlade i
+-- sidomenyn och på översikten, och markerar som hanterad när tillägget är
+-- inlagt på kunden.
+-- ============================================================
+create table if not exists addon_orders (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles (id) on delete cascade,
+  site_id uuid references sites (id) on delete set null,
+  kind text not null,
+  label text not null,
+  created_at timestamptz not null default now(),
+  handled_at timestamptz,
+  handled_by uuid references profiles (id) on delete set null
+);
+create index if not exists addon_orders_open_idx on addon_orders (created_at desc) where handled_at is null;
+alter table addon_orders enable row level security;
+drop policy if exists "Staff kan läsa beställningar" on addon_orders;
+create policy "Staff kan läsa beställningar" on addon_orders for select using (public.is_staff());

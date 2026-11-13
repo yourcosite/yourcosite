@@ -62,6 +62,15 @@ export default async function AdminOverviewPage() {
   const siteName = new Map(allSites.map((s) => [s.id, s.domain || s.name]));
   const topSites = [...perSite.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
 
+  // Obehandlade beställningar av tillägg (kräver tabellen addon_orders).
+  const { data: openOrders } = await supabase
+    .from("addon_orders")
+    .select("id, label, created_at, customer:profiles!addon_orders_user_id_fkey(full_name, email)")
+    .is("handled_at", null)
+    .order("created_at", { ascending: false })
+    .limit(5);
+  const orderList = (openOrders ?? []) as unknown as { id: string; label: string; customer: { full_name: string | null; email: string } | null }[];
+
   const recent = list.slice(0, 6);
   const waitingToBuild = list.filter((c) => (c.sites ?? []).length === 0).slice(0, 4);
 
@@ -79,6 +88,17 @@ export default async function AdminOverviewPage() {
           Visa alla kunder →
         </Link>
       </div>
+
+      {orderList.length > 0 && (
+        <Link href="/admin/bestallningar" className="block bg-accent-soft border-2 border-accent rounded-2xl px-5 py-4 mb-6.5">
+          <div className="font-semibold text-[15px]">
+            {orderList.length === 1 ? "1 ny beställning väntar på dig" : `${orderList.length} nya beställningar väntar på dig`}
+          </div>
+          <div className="text-[13px] text-ink-dim mt-1">
+            {orderList.map((o) => `${o.label} (${o.customer?.full_name || o.customer?.email || "okänd"})`).join(", ")}
+          </div>
+        </Link>
+      )}
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4.5 mb-6.5">
         <StatCard label="Aktiva kunder" value={String(list.length)} />

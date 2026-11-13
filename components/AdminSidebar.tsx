@@ -51,6 +51,18 @@ const NAV_ITEMS: { href: string; label: string; roles: StaffRole[]; icon: (c: st
     ),
   },
   {
+    href: "/admin/bestallningar",
+    label: "Beställningar",
+    roles: ["admin", "superadmin"],
+    icon: (c: string) => (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+        <path d="M3 6h18" />
+        <path d="M16 10a4 4 0 0 1-8 0" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/ekonomi",
     label: "Ekonomi",
     roles: ["admin", "superadmin"],
@@ -121,11 +133,13 @@ export default function AdminSidebar({
   adminEmail,
   role,
   newMessageCount = 0,
+  newOrderCount = 0,
 }: {
   adminName?: string;
   adminEmail?: string;
   role?: StaffRole;
   newMessageCount?: number;
+  newOrderCount?: number;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -172,6 +186,11 @@ export default function AdminSidebar({
             >
               {item.icon(color)}
               {item.label}
+              {item.href === "/admin/bestallningar" && newOrderCount > 0 && (
+                <span className="ml-auto bg-accent text-accent-ink text-[10.5px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
+                  {newOrderCount}
+                </span>
+              )}
               {item.href === "/admin/meddelanden" && newMessageCount > 0 && (
                 <span className="ml-auto bg-accent text-accent-ink text-[10.5px] font-bold min-w-[18px] h-[18px] rounded-full flex items-center justify-center px-1">
                   {newMessageCount}
