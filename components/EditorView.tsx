@@ -1171,6 +1171,17 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       setSavingPick(false);
     }
   };
+  // Luftigare/tätare på den markerade sektionen (hero har inget avstånd att ändra).
+  const canSpacing = !!selection && selection.sectionId !== "__header__" && !!pickedSection && pickedSection.type !== "hero";
+  const saveSpacing = (dir: "more" | "less") => {
+    const cur: string = pickedSection?.spacing ?? "normal";
+    const next = dir === "more" ? (cur === "compact" ? "normal" : "airy") : cur === "airy" ? "normal" : "compact";
+    if (next === cur) {
+      setMessages((m) => [...m, { from: "bot", text: dir === "more" ? t("Sektionen har redan så mycket luft det går.") : t("Sektionen är redan så tät det går.") }]);
+      return;
+    }
+    return savePick("/api/sites/edit-section-style", { spacing: next }, t("Klart! Avståndet i sektionen är ändrat. Du kan ångra med knappen om du ändrar dig."));
+  };
   const saveButtonStyle = (style: string | null) =>
     savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex, header: isHeaderBtn }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
   const saveButtonColor = (color: string | null) =>
@@ -2411,6 +2422,16 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   >
                     <YIcon name="button" size={15} />{t("Byt knappstil")}
                   </button>
+                )}
+{canSpacing && (
+                  <>
+                    <button type="button" onClick={() => saveSpacing("more")} disabled={sending || savingPick} className={dockBtn}>
+                      <YIcon name="layout" size={15} />{t("Mer luft")}
+                    </button>
+                    <button type="button" onClick={() => saveSpacing("less")} disabled={sending || savingPick} className={dockBtn}>
+                      <YIcon name="layout" size={15} />{t("Mindre luft")}
+                    </button>
+                  </>
                 )}
 {canPickLayout && (
                   <button
