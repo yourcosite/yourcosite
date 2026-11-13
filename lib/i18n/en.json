@@ -3018,5 +3018,10 @@
   "Tre bilder på rad": "Three images in a row",
   "Fyra bilder på rad": "Four images in a row",
   "Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.": "That section type can't be created from another section. Ask Millie to add it.",
-  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "This page has no {section} section. Select a section in the preview and choose the layout again, and it will change type."
+  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "This page has no {section} section. Select a section in the preview and choose the layout again, and it will change type.",
+  "Dölj": "Hide",
+  "Utfällbara rutor": "Expandable boxes",
+  "Rader med linjer": "Rows with lines",
+  "Rutor": "Boxes",
+  "Rubrik bredvid rutorna": "Heading beside the boxes"
 }

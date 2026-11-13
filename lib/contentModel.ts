@@ -114,6 +114,7 @@ export type FaqLayout = "stacked" | "two-column";
 export type BookingLayout = "standard" | "compact" | "image-left" | "image-right" | "image-background";
 export type MapLayout = "inline" | "full-bleed";
 export type VideoLayout = "inline" | "full-bleed";
+export type ToggleLayout = "list" | "cards" | "side-by-side";
 export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both" | "tall" | "tall-fade-both" | "row-3" | "row-4";
 
 export interface HeroSection {
@@ -410,6 +411,28 @@ export interface FaqSection {
   bgColor?: string;
 }
 
+// Utfällbara rutor med fri rubrik och innehåll (text, bild och knapp), inte
+// bara frågor och svar som "faq". Flera rutor kan vara utfällda samtidigt.
+export interface ToggleItem {
+  title: string;
+  body: string;
+  // Satt i kod (kundens egna foton), visas ovanför texten när rutan är utfälld.
+  imageUrl?: string;
+  ctaLabel?: string;
+  ctaLink?: string;
+}
+export interface ToggleSection {
+  id: string;
+  type: "toggle";
+  layout?: ToggleLayout;
+  heading: string;
+  // Kort text under rubriken (i "side-by-side" i vänsterkolumnen).
+  intro?: string;
+  items: ToggleItem[];
+  // Se HeroSection.bgColor — samma princip.
+  bgColor?: string;
+}
+
 // Inbäddad Google Maps-karta utifrån en adress — ingen API-nyckel behövs
 // för den enkla inbäddningen (se MapSection-renderingen i
 // components/SitePreview.tsx).
@@ -646,6 +669,7 @@ export type Section = (
   | GallerySection
   | TeamSection
   | FaqSection
+  | ToggleSection
   | MapSection
   | VideoSection
   | ImageSection
@@ -771,6 +795,7 @@ const VALID_SECTION_TYPES = [
   "gallery",
   "team",
   "faq",
+  "toggle",
   "map",
   "video",
   "image",

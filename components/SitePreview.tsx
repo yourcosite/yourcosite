@@ -3093,7 +3093,7 @@ function sectionLabel(section: Section, te: ReturnType<typeof useT>): string {
       return h ? te("menysektionen “{h}”", { h }) : te("menysektionen");
     case "embed":
       return h ? te("inbäddningen “{h}”", { h }) : te("inbäddningen");
-    case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "team": case "faq": case "contactForm":
+    case "about": case "grid": case "testimonials": case "cta": case "contact": case "gallery": case "team": case "faq": case "toggle": case "contactForm":
       return te("sektionen “{h}”", { h });
     default:
       return te("den här sektionen");
@@ -3257,6 +3257,8 @@ function SectionBlockInner({
   // Ligger ovillkorat här (inte i case "faq") eftersom React Hooks måste
   // anropas i samma ordning varje render, oavsett sektionstyp.
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
+  // Bara använd av "toggle" nedan — vilka rutor som är utfällda (flera samtidigt).
+  const [toggleOpen, setToggleOpen] = useState<Record<number, boolean>>({ 0: true });
   // Bara använd av "newsList" nedan — vilken kategori besökaren filtrerat
   // till (null = alla). Samma skäl som ovan till att den ligger ovillkorat.
   const [newsCategoryFilter, setNewsCategoryFilter] = useState<string | null>(null);
@@ -6399,6 +6401,117 @@ function SectionBlockInner({
             );
           }}
         </GalleryView>
+      );
+    }
+
+    case "toggle": {
+      const layout = section.layout || "list";
+      const renderItem = (item: (typeof section.items)[number], i: number) => {
+        const open = !!toggleOpen[i];
+        const itemSel = gridItemSelection(i, item.title);
+        const boxed = layout !== "list";
+        return (
+          <div
+            key={i}
+            className={boxed ? "rounded-xl border overflow-hidden" : "border-b"}
+            style={boxed ? { borderColor: palette.cardBorder, background: palette.cardBg } : { borderColor: palette.cardBorder }}
+          >
+            <div className={`flex items-center justify-between gap-3 ${boxed ? "px-5 py-4" : "py-4"}`}>
+              <Field
+                editable={editable}
+                as="div"
+                className="font-semibold text-[15px] flex-1"
+                selected={selectedFieldKey === fieldSel("title", item.title, "rubriken i rutan", i)?.key}
+                onSelect={() => { const s = fieldSel("title", item.title, "rubriken i rutan", i); s && onSelectField?.(s); }}
+              >
+                {item.title}
+              </Field>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setToggleOpen((o) => ({ ...o, [i]: !open })); }}
+                aria-label={open ? t("Dölj") : t("Visa")}
+                aria-expanded={open}
+                className="flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-[15px] font-bold"
+                style={{ background: palette.bgAlt, color: palette.textDim }}
+              >
+                {open ? "–" : "+"}
+              </button>
+            </div>
+            {open && (
+              <div className={boxed ? "px-5 pb-5" : "pb-5"}>
+                {(item.imageUrl || (editable && itemSel && item.imageUrl !== undefined)) && (
+                  <div className="relative h-[180px] @3xl:h-[240px] rounded-lg overflow-hidden mb-4">
+                    <ImageOrArt
+                      imageUrl={item.imageUrl}
+                      art={art}
+                      fill
+                      selectable={!!itemSel}
+                      selected={!!itemSel && selectedImageKey === itemSel.key}
+                      onSelect={() => itemSel && onSelectImage?.(itemSel)}
+                    />
+                  </div>
+                )}
+                <Field
+                  editable={editable}
+                  as="p"
+                  className="text-[14px] leading-relaxed whitespace-pre-line"
+                  style={{ color: palette.textDim }}
+                  selected={selectedFieldKey === fieldSel("body", item.body, "texten i rutan", i)?.key}
+                  onSelect={() => { const s = fieldSel("body", item.body, "texten i rutan", i); s && onSelectField?.(s); }}
+                >
+                  {item.body}
+                </Field>
+                {item.ctaLabel && (
+                  <div className="mt-4">
+                    <CtaPill accent={accent} link={item.ctaLink} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} textColor={palette.text}>
+                      {item.ctaLabel}
+                    </CtaPill>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        );
+      };
+      const heading = (
+        <Field
+          editable={editable}
+          as="h2"
+          className={`font-heading text-[length:calc(27px*var(--ycs-ts,1))] ${layout === "side-by-side" ? "mb-3" : "mb-3 text-center"}`}
+          selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+          onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+        >
+          {section.heading}
+        </Field>
+      );
+      const intro = section.intro ? (
+        <Field
+          editable={editable}
+          as="p"
+          className={`text-[14.5px] leading-relaxed ${layout === "side-by-side" ? "" : "text-center mb-6"}`}
+          style={{ color: palette.textDim }}
+          selected={selectedFieldKey === fieldSel("intro", section.intro, "introtexten")?.key}
+          onSelect={() => { const s = fieldSel("intro", section.intro as string, "introtexten"); s && onSelectField?.(s); }}
+        >
+          {section.intro}
+        </Field>
+      ) : null;
+      if (layout === "side-by-side") {
+        return (
+          <div className="grid @3xl:grid-cols-[0.8fr_1.2fr] gap-8 @3xl:gap-14 px-8 @3xl:px-14 py-14 @3xl:py-20 max-w-[1040px] mx-auto" style={{ background: sectionBg }}>
+            <div>{heading}{intro}</div>
+            <div className="flex flex-col gap-2.5">{section.items.map(renderItem)}</div>
+          </div>
+        );
+      }
+      return (
+        <div className="px-8 @3xl:px-10 py-14 @3xl:py-16 mx-auto max-w-[720px]" style={{ background: sectionBg }}>
+          {heading}
+          {intro}
+          <div className={layout === "cards" ? "flex flex-col gap-2.5" : "flex flex-col border-t"} style={layout === "list" ? { borderColor: palette.cardBorder } : undefined}>
+            {section.items.map(renderItem)}
+          </div>
+        </div>
       );
     }
 

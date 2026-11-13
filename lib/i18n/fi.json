@@ -3018,5 +3018,10 @@
   "Tre bilder på rad": "Kolme kuvaa rivissä",
   "Fyra bilder på rad": "Neljä kuvaa rivissä",
   "Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.": "Tätä osiotyyppiä ei voi luoda toisesta osiosta. Pyydä Millietä lisäämään se.",
-  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Tällä sivulla ei ole {section}-osiota. Valitse osio esikatselusta ja valitse ulkoasu uudelleen, niin sen tyyppi vaihtuu."
+  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Tällä sivulla ei ole {section}-osiota. Valitse osio esikatselusta ja valitse ulkoasu uudelleen, niin sen tyyppi vaihtuu.",
+  "Dölj": "Piilota",
+  "Utfällbara rutor": "Laajennettavat laatikot",
+  "Rader med linjer": "Rivit viivoilla",
+  "Rutor": "Laatikot",
+  "Rubrik bredvid rutorna": "Otsikko laatikoiden vieressä"
 }

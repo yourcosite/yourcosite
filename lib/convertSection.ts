@@ -5,7 +5,7 @@
 
 type Sec = Record<string, any>;
 
-export const CONVERTIBLE_TYPES = ["hero", "about", "grid", "testimonials", "cta", "faq", "gallery", "image"];
+export const CONVERTIBLE_TYPES = ["hero", "about", "grid", "testimonials", "cta", "faq", "toggle", "gallery", "image"];
 
 const KEEP = ["bgColor", "spacing", "textAlign", "fadeTop", "fadeBottom", "ctaStyle", "ctaColor"];
 
@@ -42,8 +42,15 @@ export function convertSection(old: Sec, type: string, layout: string): Sec | nu
       return { ...base, heading: title || "Vad kunderna säger", items: src.length ? src.map((i: Sec) => ({ quote: i.quote, author: i.author || "Namn" })) : [{ quote: body || "Skriv ett omdöme här.", author: "Namn" }] };
     }
     case "faq": {
-      const src: Sec[] = Array.isArray(old.items) ? old.items.filter((i: Sec) => i?.question) : [];
-      return { ...base, heading: title || "Vanliga frågor", items: src.length ? src.map((i: Sec) => ({ question: i.question, answer: i.answer || "" })) : [{ question: title || "Fråga", answer: body || "Skriv svaret här." }] };
+      const src: Sec[] = Array.isArray(old.items) ? old.items.filter((i: Sec) => i?.question || i?.title) : [];
+      return { ...base, heading: title || "Vanliga frågor", items: src.length ? src.map((i: Sec) => ({ question: i.question || i.title, answer: i.answer || i.body || "" })) : [{ question: title || "Fråga", answer: body || "Skriv svaret här." }] };
+    }
+    case "toggle": {
+      const src: Sec[] = Array.isArray(old.items) ? old.items.filter((i: Sec) => i && (i.title || i.question || i.name)) : [];
+      const items = src.length
+        ? src.map((i: Sec) => ({ title: i.title || i.question || i.name, body: i.body || i.answer || "Skriv texten här.", ...(i.imageUrl ? { imageUrl: i.imageUrl } : {}) }))
+        : [1, 2, 3].map(() => ({ title: title || "Rubrik", body: body || "Skriv texten här." }));
+      return { ...base, heading: title || "Läs mer", ...(old.intro ? { intro: old.intro } : {}), items };
     }
     case "gallery": {
       const src: Sec[] = Array.isArray(old.items) ? old.items.filter((i: Sec) => i?.imageUrl) : [];

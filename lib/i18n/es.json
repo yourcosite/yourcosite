@@ -3018,5 +3018,10 @@
   "Tre bilder på rad": "Tres imágenes en una fila",
   "Fyra bilder på rad": "Cuatro imágenes en una fila",
   "Den sektionstypen går inte att skapa av en annan sektion. Be Millie lägga till den.": "Ese tipo de sección no se puede crear a partir de otra sección. Pídele a Millie que la añada.",
-  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Esta página no tiene una sección {section}. Selecciona una sección en la vista previa y elige de nuevo el diseño, y cambiará de tipo."
+  "Den här sidan har ingen {section}-sektion. Markera en sektion i förhandsvisningen och välj layouten igen, så byter den typ.": "Esta página no tiene una sección {section}. Selecciona una sección en la vista previa y elige de nuevo el diseño, y cambiará de tipo.",
+  "Dölj": "Ocultar",
+  "Utfällbara rutor": "Cajas desplegables",
+  "Rader med linjer": "Filas con líneas",
+  "Rutor": "Cajas",
+  "Rubrik bredvid rutorna": "Título junto a las cajas"
 }

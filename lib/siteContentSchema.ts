@@ -339,6 +339,36 @@ const RAW_SECTION_SCHEMA = {
       type: "object",
       properties: {
         id: { type: "string" },
+        type: { const: "toggle" },
+        layout: {
+          type: "string",
+          enum: ["list", "cards", "side-by-side"],
+          description:
+            "Utfällbara rutor med egen rubrik och innehåll (text, valfri bild och knapp). \"list\" = rader med linjer, \"cards\" = rutor, \"side-by-side\" = rubrik och text till vänster och rutorna till höger. Använd när kunden vill ha en toggle/utfällbara delar som INTE är frågor och svar (t.ex. tjänster, villkor, steg, personer, fördelar). Frågor och svar ligger i \"faq\".",
+        },
+        heading: { type: "string" },
+        intro: { type: "string", description: "Valfri kort text under rubriken." },
+        items: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              body: { type: "string", description: "Texten som visas när rutan fälls ut." },
+              ctaLabel: { type: "string", description: "Valfri knapptext inne i rutan." },
+              ctaLink: { type: "string", description: "Vart knappen leder (en av sajtens sidor, t.ex. \"/kontakt\", eller en https-adress)." },
+            },
+            required: ["title", "body"],
+          },
+        },
+        bgColor: BG_COLOR_SCHEMA,
+      },
+      required: ["id", "type", "layout", "heading", "items"],
+    },
+    {
+      type: "object",
+      properties: {
+        id: { type: "string" },
         type: { const: "image" },
         layout: {
           type: "string",
