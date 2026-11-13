@@ -29,7 +29,7 @@ function build(kind: Kind, p: Profile) {
   const first = (p.full_name || "").trim().split(/\s+/)[0] || "";
   const hello = first ? t("Hej {name}!", { name: first }) : t("Hej!");
   const footer =
-    t("Du får det här mejlet för att du har skapat ett konto hos YourCoSite. Svara gärna på mejlet om du undrar något.") +
+    t("Du får det här mejlet för att du har skapat ett konto hos YourCoSite. Det går inte att svara på mejlet. Behöver du hjälp når du supporten här: {url}", { url: `${BASE}/support` }) +
     "\n" +
     t("Vill du inte ha fler tipsmejl? Avanmäl dig här: {url}", { url: unsubscribeUrl(p.id) });
   const common = { footer, poweredBy: "YourCoSite", lang: locale, button: { label: t("Fortsätt bygga din sajt"), url: `${BASE}/dashboard` } };
@@ -61,7 +61,7 @@ function build(kind: Kind, p: Profile) {
     intro: `${hello}\n${t("Det har gått en vecka sedan du skapade ditt konto, och din sajt är inte publicerad än. Det går fort att komma i mål.")}`,
     extra: {
       heading: t("Det här återstår"),
-      text: t("1. Gå igenom sidorna och be Millie ändra det som inte känns rätt.\n2. Klicka på Publicera i redigeraren, så får sajten en egen adress.\n3. Vill du ha din egen domän kan du koppla den direkt i samma fönster.\nKör du fast? Svara på det här mejlet, så hjälper vi dig."),
+      text: t("1. Gå igenom sidorna och be Millie ändra det som inte känns rätt.\n2. Klicka på Publicera i redigeraren, så får sajten en egen adress.\n3. Vill du ha din egen domän kan du koppla den direkt i samma fönster.\nKör du fast? Kontakta supporten i tjänsten, så hjälper vi dig."),
     },
     ...common,
   };
@@ -119,7 +119,6 @@ async function GET_handler(request: Request) {
       subject: m.subject,
       html,
       text,
-      replyTo: process.env.ALERT_EMAIL || "hej@cskb.se",
       headers: { "List-Unsubscribe": `<${unsubscribeUrl(p.id)}>` },
     });
     if (res.sent) sent++;
