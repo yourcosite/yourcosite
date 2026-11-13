@@ -697,6 +697,21 @@ export const EDIT_PATCH_PROPERTIES = {
   },
   gaMeasurementId: GA_MEASUREMENT_ID_SCHEMA,
   metaPixelId: META_PIXEL_ID_SCHEMA,
+  socialLinks: {
+    type: "array",
+    maxItems: 8,
+    description:
+      "Sajtens länkar till sociala medier (visas som ikoner i sidfoten och på kontaktsidan). Skicka HELA den önskade listan: behåll alla nuvarande länkar som kunden inte bett ta bort och lägg till/ändra/ta bort de hen nämner. Använd bara adressen kunden själv angett, hitta aldrig på en. Tom lista tar bort alla. Utelämna fältet när kunden inte nämner sociala medier.",
+    items: {
+      type: "object",
+      additionalProperties: false,
+      required: ["platform", "url"],
+      properties: {
+        platform: { type: "string", enum: ["facebook", "instagram", "linkedin", "tiktok", "youtube", "x", "pinterest"] },
+        url: { type: "string", description: "Hela adressen, börjar med https://" },
+      },
+    },
+  },
   seoKeyword: {
     type: "string",
     description:
