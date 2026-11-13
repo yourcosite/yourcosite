@@ -3258,7 +3258,7 @@ function SectionBlockInner({
   // anropas i samma ordning varje render, oavsett sektionstyp.
   const [faqOpenIndex, setFaqOpenIndex] = useState<number | null>(0);
   // Bara använd av "toggle" nedan — vilka rutor som är utfällda (flera samtidigt).
-  const [toggleOpen, setToggleOpen] = useState<Record<number, boolean>>({ 0: true });
+  const [toggleOpen, setToggleOpen] = useState<Record<number, boolean>>({});
   // Bara använd av "newsList" nedan — vilken kategori besökaren filtrerat
   // till (null = alla). Samma skäl som ovan till att den ligger ovillkorat.
   const [newsCategoryFilter, setNewsCategoryFilter] = useState<string | null>(null);
@@ -6407,7 +6407,8 @@ function SectionBlockInner({
     case "toggle": {
       const layout = section.layout || "list";
       const renderItem = (item: (typeof section.items)[number], i: number) => {
-        const open = !!toggleOpen[i];
+        const openState = section.openState || "first";
+        const open = toggleOpen[i] ?? (openState === "all" || (openState === "first" && i === 0));
         const itemSel = gridItemSelection(i, item.title);
         const boxed = layout !== "list";
         return (

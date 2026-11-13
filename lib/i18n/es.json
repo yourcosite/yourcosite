@@ -3025,5 +3025,12 @@
   "Rutor": "Cajas",
   "Rubrik bredvid rutorna": "Título junto a las cajas",
   "Bilden är större än 15 MB.": "La imagen supera los 15 MB.",
-  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, máx. 15 MB por imagen, hasta {MAX_IMAGES}. Totalmente opcional."
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, máx. 15 MB por imagen, hasta {MAX_IMAGES}. Totalmente opcional.",
+  "Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.": "¡Listo! Ahora {state} al cargar la página. Puedes deshacerlo con el botón si cambias de opinión.",
+  "alla rutor utfällda": "todas las cajas están desplegadas",
+  "alla rutor hopfällda": "todas las cajas están plegadas",
+  "första rutan utfälld": "la primera caja está desplegada",
+  "Utfällt: alla": "Desplegadas: todas",
+  "Utfällt: ingen": "Desplegadas: ninguna",
+  "Utfällt: första": "Desplegadas: la primera"
 }

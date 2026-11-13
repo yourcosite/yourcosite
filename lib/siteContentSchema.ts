@@ -340,6 +340,7 @@ const RAW_SECTION_SCHEMA = {
       properties: {
         id: { type: "string" },
         type: { const: "toggle" },
+        openState: { enum: ["first", "none", "all"], description: "Vilka rutor som är utfällda från start: first (standard), all eller none." },
         layout: {
           type: "string",
           enum: ["list", "cards", "side-by-side"],

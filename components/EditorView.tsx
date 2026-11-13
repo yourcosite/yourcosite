@@ -1185,6 +1185,13 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     }
     return savePick("/api/sites/edit-section-style", { spacing: next }, t("Klart! Avståndet i sektionen är ändrat. Du kan ångra med knappen om du ändrar dig."));
   };
+  // Utfällbara rutor: välj vilka som är öppna från start (första, alla, ingen).
+  const canToggleOpen = !!selection && pickedSection?.type === "toggle";
+  const cycleToggleOpen = () => {
+    const cur: string = pickedSection?.openState ?? "first";
+    const next = cur === "first" ? "all" : cur === "all" ? "none" : "first";
+    return savePick("/api/sites/edit-section-style", { openState: next }, t("Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.", { state: next === "all" ? t("alla rutor utfällda") : next === "none" ? t("alla rutor hopfällda") : t("första rutan utfälld") }));
+  };
   const saveButtonStyle = (style: string | null) =>
     savePick("/api/sites/edit-button-style", { style, itemIndex: buttonItemIndex, header: isHeaderBtn }, t("Klart! Knappstilen är bytt. Du kan ångra med knappen om du ändrar dig."));
   const saveButtonColor = (color: string | null) =>
@@ -2427,6 +2434,12 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     className={dockBtn}
                   >
                     <YIcon name="button" size={15} />{t("Byt knappstil")}
+                  </button>
+                )}
+{canToggleOpen && (
+                  <button type="button" onClick={cycleToggleOpen} disabled={sending || savingPick} className={dockBtn}>
+                    <YIcon name="layout" size={15} />
+                    {(pickedSection?.openState ?? "first") === "all" ? t("Utfällt: alla") : (pickedSection?.openState ?? "first") === "none" ? t("Utfällt: ingen") : t("Utfällt: första")}
                   </button>
                 )}
 {canSpacing && (

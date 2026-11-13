@@ -3025,5 +3025,12 @@
   "Rutor": "Bokse",
   "Rubrik bredvid rutorna": "Overskrift ved siden af boksene",
   "Bilden är större än 15 MB.": "Billedet er større end 15 MB.",
-  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, maks. 15 MB pr. billede, op til {MAX_IMAGES} stk. Helt valgfrit."
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, maks. 15 MB pr. billede, op til {MAX_IMAGES} stk. Helt valgfrit.",
+  "Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.": "Færdig! Nu er {state}, når siden indlæses. Du kan fortryde med knappen, hvis du ombestemmer dig.",
+  "alla rutor utfällda": "alle bokse udfoldet",
+  "alla rutor hopfällda": "alle bokse foldet sammen",
+  "första rutan utfälld": "den første boks udfoldet",
+  "Utfällt: alla": "Udfoldet: alle",
+  "Utfällt: ingen": "Udfoldet: ingen",
+  "Utfällt: första": "Udfoldet: første"
 }

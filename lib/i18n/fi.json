@@ -3025,5 +3025,12 @@
   "Rutor": "Laatikot",
   "Rubrik bredvid rutorna": "Otsikko laatikoiden vieressä",
   "Bilden är större än 15 MB.": "Kuva on suurempi kuin 15 Mt.",
-  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, enintään 15 Mt per kuva, enintään {MAX_IMAGES} kpl. Täysin vapaaehtoinen."
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, enintään 15 Mt per kuva, enintään {MAX_IMAGES} kpl. Täysin vapaaehtoinen.",
+  "Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.": "Valmis! Nyt {state}, kun sivu latautuu. Voit kumota painikkeella, jos muutat mielesi.",
+  "alla rutor utfällda": "kaikki laatikot avattuina",
+  "alla rutor hopfällda": "kaikki laatikot suljettuina",
+  "första rutan utfälld": "ensimmäinen laatikko avattuna",
+  "Utfällt: alla": "Avattu: kaikki",
+  "Utfällt: ingen": "Avattu: ei yhtään",
+  "Utfällt: första": "Avattu: ensimmäinen"
 }

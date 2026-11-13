@@ -3025,5 +3025,12 @@
   "Rutor": "Boxen",
   "Rubrik bredvid rutorna": "Überschrift neben den Boxen",
   "Bilden är större än 15 MB.": "Das Bild ist größer als 15 MB.",
-  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, max. 15 MB pro Bild, bis zu {MAX_IMAGES} Stück. Völlig optional."
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, max. 15 MB pro Bild, bis zu {MAX_IMAGES} Stück. Völlig optional.",
+  "Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.": "Fertig! Jetzt ist {state}, wenn die Seite geladen wird. Du kannst es mit der Schaltfläche rückgängig machen.",
+  "alla rutor utfällda": "alle Boxen aufgeklappt",
+  "alla rutor hopfällda": "alle Boxen zugeklappt",
+  "första rutan utfälld": "die erste Box aufgeklappt",
+  "Utfällt: alla": "Aufgeklappt: alle",
+  "Utfällt: ingen": "Aufgeklappt: keine",
+  "Utfällt: första": "Aufgeklappt: erste"
 }

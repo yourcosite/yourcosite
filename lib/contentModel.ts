@@ -425,6 +425,8 @@ export interface ToggleSection {
   id: string;
   type: "toggle";
   layout?: ToggleLayout;
+  // Vilka rutor som är utfällda när sidan laddas. Saknas = "first".
+  openState?: "first" | "none" | "all";
   heading: string;
   // Kort text under rubriken (i "side-by-side" i vänsterkolumnen).
   intro?: string;

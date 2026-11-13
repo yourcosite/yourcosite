@@ -16,7 +16,8 @@ async function POST_handler(request: Request) {
   if (!user) return NextResponse.json({ error: t("Inte inloggad.") }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  if (typeof body.pagePath !== "string" || typeof body.sectionId !== "string" || !["compact", "airy", "normal"].includes(body.spacing)) {
+  const isToggleOpen = ["first", "none", "all"].includes(body.openState);
+  if (typeof body.pagePath !== "string" || typeof body.sectionId !== "string" || (!isToggleOpen && !["compact", "airy", "normal"].includes(body.spacing))) {
     return NextResponse.json({ error: t("Det gick inte att avgöra vilken layout som ska användas.") }, { status: 400 });
   }
 
@@ -30,7 +31,11 @@ async function POST_handler(request: Request) {
   if (!section || section.type === "hero") {
     return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
   }
-  if (body.spacing === "normal") delete section.spacing;
+  if (isToggleOpen) {
+    if (section.type !== "toggle") return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
+    if (body.openState === "first") delete section.openState;
+    else section.openState = body.openState;
+  } else if (body.spacing === "normal") delete section.spacing;
   else section.spacing = body.spacing;
   if (!isValidSiteContent(content)) return NextResponse.json({ error: t("Ändringen blev ogiltig.") }, { status: 400 });
 

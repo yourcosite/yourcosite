@@ -3025,5 +3025,12 @@
   "Rutor": "Boxes",
   "Rubrik bredvid rutorna": "Heading beside the boxes",
   "Bilden är större än 15 MB.": "The image is larger than 15 MB.",
-  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, max 15 MB per image, up to {MAX_IMAGES}. Entirely optional."
+  "PNG/JPG/WEBP, max 15 MB per bild, upp till {MAX_IMAGES} st. Helt valfritt.": "PNG/JPG/WEBP, max 15 MB per image, up to {MAX_IMAGES}. Entirely optional.",
+  "Klart! Nu är {state} när sidan laddas. Du kan ångra med knappen om du ändrar dig.": "Done! Now {state} when the page loads. You can undo with the button if you change your mind.",
+  "alla rutor utfällda": "all boxes expanded",
+  "alla rutor hopfällda": "all boxes collapsed",
+  "första rutan utfälld": "the first box expanded",
+  "Utfällt: alla": "Expanded: all",
+  "Utfällt: ingen": "Expanded: none",
+  "Utfällt: första": "Expanded: first"
 }
