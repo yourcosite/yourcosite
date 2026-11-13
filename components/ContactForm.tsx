@@ -6,6 +6,37 @@ import { useState } from "react";
 export default function ContactForm() {
   const t = useT();
   const [sent, setSent] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function submit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (busy) return;
+    const f = new FormData(e.currentTarget);
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/public/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: f.get("name"),
+          email: f.get("email"),
+          message: f.get("message"),
+          website: f.get("website"),
+        }),
+      });
+      if (res.ok) {
+        setSent(true);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || t("Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se."));
+      }
+    } catch {
+      setError(t("Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se."));
+    }
+    setBusy(false);
+  }
 
   if (sent) {
     return (
@@ -20,10 +51,7 @@ export default function ContactForm() {
 
   return (
     <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        setSent(true);
-      }}
+      onSubmit={submit}
       className="bg-surface border border-line rounded-2xl p-6"
     >
       <div className="font-semibold text-[15px] mb-4">
@@ -34,6 +62,7 @@ export default function ContactForm() {
       </label>
       <input
         id="nm"
+        name="name"
         type="text"
         required
         placeholder={t("Ditt namn")}
@@ -44,6 +73,7 @@ export default function ContactForm() {
       </label>
       <input
         id="em"
+        name="email"
         type="email"
         required
         placeholder={t("du@företag.se")}
@@ -54,14 +84,18 @@ export default function ContactForm() {
       </label>
       <textarea
         id="msg"
+        name="message"
         rows={3}
         required
         placeholder={t("Hur kan vi hjälpa till?")}
         className="w-full box-border px-3 py-2.5 border border-line rounded-lg text-[13.5px] mb-4 resize-none"
       />
+      <input type="text" name="website" tabIndex={-1} autoComplete="off" aria-hidden="true" className="hidden" />
+      {error && <p className="text-[13px] text-red-600 mb-3">{error}</p>}
       <button
         type="submit"
-        className="w-full bg-ink text-white font-semibold text-[13.5px] py-2.5 rounded-lg"
+        disabled={busy}
+        className="w-full bg-ink text-white font-semibold text-[13.5px] py-2.5 rounded-lg disabled:opacity-60"
       >
         {t("Skicka meddelande")}
       </button>
