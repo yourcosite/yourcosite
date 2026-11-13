@@ -2803,5 +2803,11 @@
   "Dina ändringar är slut för den här månaden": "Dine ændringer er brugt op for denne måned",
   "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Din seneste anmodning blev ikke udført. Tilføj flere ændringer for at fortsætte med det samme, ellers nulstilles tælleren, når en ny måned begynder.",
   "30 ändringar/månad per sajt (50 första månaden)": "30 ændringer/måned pr. side (50 den første måned)",
-  "En sajt till på samma konto, med egna 30 ändringar per månad": "En side mere på samme konto, med egne 30 ændringer pr. måned"
+  "En sajt till på samma konto, med egna 30 ändringar per månad": "En side mere på samme konto, med egne 30 ændringer pr. måned",
+  "Ange ett antal mellan 0 och 4.": "Angiv et antal mellem 0 og 4.",
+  "Vill du ha en sajt till?": "Vil du have en side mere?",
+  "Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.": "Tak! Vi tilføjer plads til en ekstra side og fakturerer tillægget. Du hører fra os inden for et døgn.",
+  "Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.": "Pakken indeholder én side. En ekstra side koster 150 kr/måned ekskl. moms og får egne 30 ændringer pr. måned.",
+  "Beställ extra sajt": "Bestil ekstra side",
+  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Antal sider på kontoen: {max}. Bestil en ekstra side på dashboardet, så tilføjer vi den."
 }

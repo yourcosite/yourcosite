@@ -2803,5 +2803,11 @@
   "Dina ändringar är slut för den här månaden": "Muutoksesi on käytetty tältä kuulta",
   "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Viimeisintä pyyntöäsi ei toteutettu. Lisää muutoksia jatkaaksesi heti, muuten laskuri nollautuu uuden kuukauden alkaessa.",
   "30 ändringar/månad per sajt (50 första månaden)": "30 muutosta/kk sivustoa kohden (50 ensimmäisenä kuukautena)",
-  "En sajt till på samma konto, med egna 30 ändringar per månad": "Yksi sivusto lisää samalle tilille, omat 30 muutosta kuukaudessa"
+  "En sajt till på samma konto, med egna 30 ändringar per månad": "Yksi sivusto lisää samalle tilille, omat 30 muutosta kuukaudessa",
+  "Ange ett antal mellan 0 och 4.": "Anna luku väliltä 0–4.",
+  "Vill du ha en sajt till?": "Haluatko toisen sivuston?",
+  "Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.": "Kiitos! Lisäämme tilan ylimääräiselle sivustolle ja laskutamme lisäosan. Kuulet meistä vuorokauden sisällä.",
+  "Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.": "Paketti sisältää yhden sivuston. Lisäsivusto maksaa 150 kr/kk ilman alv:ta, ja sillä on omat 30 muutosta kuukaudessa.",
+  "Beställ extra sajt": "Tilaa lisäsivusto",
+  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Tilillä olevat sivustot: {max}. Tilaa lisäsivusto hallintapaneelissa, niin lisäämme sen."
 }

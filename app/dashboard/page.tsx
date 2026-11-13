@@ -3,6 +3,7 @@ import AccountHeader from "@/components/AccountHeader";
 import DashboardClient, { type SiteRow } from "./DashboardClient";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
+import { getAllowedSites, MAX_SITES_PER_ACCOUNT } from "@/lib/supabase/onboardingSite";
 
 export default async function DashboardPage() {
   const t = getT();
@@ -12,6 +13,7 @@ export default async function DashboardPage() {
   let userName = t("Ditt konto");
   let userEmail = "";
   let sites: SiteRow[] = [];
+  let allowedSites = MAX_SITES_PER_ACCOUNT;
 
   if (user) {
     userEmail = user.email ?? "";
@@ -21,6 +23,7 @@ export default async function DashboardPage() {
       .eq("id", user.id)
       .single();
     userName = profile?.full_name || userEmail;
+    allowedSites = await getAllowedSites(supabase, user.id);
 
     const { data: siteRows } = await supabase
       .from("sites")
@@ -56,7 +59,7 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col">
       <AccountHeader active="/dashboard" userName={userName} userEmail={userEmail} />
-      <DashboardClient sites={sites} />
+      <DashboardClient sites={sites} allowedSites={allowedSites} />
     </div>
   );
 }

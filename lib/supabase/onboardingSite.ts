@@ -22,10 +22,25 @@ const DRAFT_COOKIE = "yc_draft_id";
 // frigöra en plats.
 export const MAX_SITES_PER_ACCOUNT = 5;
 
+// Paketet innehåller en sajt. Fler beställs som tillägg (150 kr/mån) och läggs
+// in av admin som profiles.extra_sites (supabase/andringar-spark.sql). Saknas
+// kolumnen gäller den äldre gränsen MAX_SITES_PER_ACCOUNT, så inget går sönder
+// innan SQL:en körts. Befintliga sajter påverkas aldrig, bara nya.
+export async function getAllowedSites(supabase: SupabaseClient, ownerId: string): Promise<number> {
+  try {
+    const { data, error } = await supabase.from("profiles").select("extra_sites").eq("id", ownerId).maybeSingle();
+    if (error) return MAX_SITES_PER_ACCOUNT;
+    const extra = Math.max(0, Number((data as { extra_sites?: number } | null)?.extra_sites) || 0);
+    return Math.min(MAX_SITES_PER_ACCOUNT, 1 + extra);
+  } catch {
+    return MAX_SITES_PER_ACCOUNT;
+  }
+}
+
 export class DraftLimitError extends Error {
-  constructor() {
+  constructor(allowed: number = MAX_SITES_PER_ACCOUNT) {
     super(
-      getT()("Du har redan {max} sajter på kontot. Ta bort en på dashboarden innan du skapar en ny.", { max: MAX_SITES_PER_ACCOUNT })
+      getT()("Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.", { max: allowed })
     );
     this.name = "DraftLimitError";
   }
@@ -81,8 +96,9 @@ export async function getOrCreateDraftSite(supabase: SupabaseClient, ownerId: st
     .select("id", { count: "exact", head: true })
     .eq("owner_id", ownerId);
 
-  if ((count ?? 0) >= MAX_SITES_PER_ACCOUNT) {
-    throw new DraftLimitError();
+  const allowed = await getAllowedSites(supabase, ownerId);
+  if ((count ?? 0) >= allowed) {
+    throw new DraftLimitError(allowed);
   }
 
   // Nya sajter ärver ägarens språk och land (sajtens språk och valuta kan

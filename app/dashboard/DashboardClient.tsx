@@ -34,8 +34,31 @@ const gradients = [
   "linear-gradient(135deg, #2F5D50, #1B3A31)",
 ];
 
-export default function DashboardClient({ sites: initialSites }: { sites: SiteRow[] }) {
+export default function DashboardClient({ sites: initialSites, allowedSites }: { sites: SiteRow[]; allowedSites: number }) {
   const t = useT();
+  const [siteOrder, setSiteOrder] = useState<"idle" | "busy" | "done">("idle");
+  const [siteOrderError, setSiteOrderError] = useState("");
+  const orderSite = async () => {
+    setSiteOrder("busy");
+    setSiteOrderError("");
+    try {
+      const res = await fetch("/api/sites/order-addon", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: "site" }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setSiteOrderError(d.error || t("Det gick inte att skicka beställningen just nu. Försök igen om en stund."));
+        setSiteOrder("idle");
+        return;
+      }
+      setSiteOrder("done");
+    } catch {
+      setSiteOrderError(t("Det gick inte att skicka beställningen just nu. Försök igen om en stund."));
+      setSiteOrder("idle");
+    }
+  };
   const [sites, setSites] = useState(initialSites);
   const [tab, setTab] = useState("alla");
   const [search, setSearch] = useState("");
@@ -206,6 +229,27 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
           </div>
         ))}
 
+        {sites.length >= allowedSites ? (
+          <div className="flex flex-col items-center justify-center gap-2.5 bg-surface border-[1.5px] border-dashed border-line rounded-2xl min-h-[248px] text-ink-dim p-6 text-center">
+            <span className="text-[14.5px] font-semibold text-ink">{t("Vill du ha en sajt till?")}</span>
+            {siteOrder === "done" ? (
+              <p className="text-[13px] text-ink">{t("Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.")}</p>
+            ) : (
+              <>
+                <p className="text-[13px]">{t("Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.")}</p>
+                {siteOrderError && <p className="text-[12.5px] text-red-700">{siteOrderError}</p>}
+                <button
+                  type="button"
+                  onClick={orderSite}
+                  disabled={siteOrder === "busy"}
+                  className="bg-accent text-accent-ink font-semibold text-[13.5px] px-4 py-2 rounded-lg disabled:opacity-60"
+                >
+                  {siteOrder === "busy" ? t("Skickar …") : t("Beställ extra sajt")}
+                </button>
+              </>
+            )}
+          </div>
+        ) : (
         <Link
           href="/onboarding/1"
           className="flex flex-col items-center justify-center gap-2.5 bg-surface border-[1.5px] border-dashed border-line rounded-2xl min-h-[248px] text-ink-dim"
@@ -218,6 +262,7 @@ export default function DashboardClient({ sites: initialSites }: { sites: SiteRo
           </div>
           <span className="text-[14.5px] font-semibold text-ink">{t("Skapa ny sajt")}</span>
         </Link>
+        )}
       </div>
 
       {sites.length === 0 && (

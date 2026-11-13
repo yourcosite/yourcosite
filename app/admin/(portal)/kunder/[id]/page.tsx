@@ -30,6 +30,9 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
     .select("country, language, vat_number, legal_form, company_register, company_capital, company_representative")
     .eq("id", params.id)
     .maybeSingle();
+  // Extra sajter (supabase/andringar-spark.sql) hämtas för sig, så sidan
+  // fungerar även innan kolumnen finns.
+  const { data: extraSitesRow } = await supabase.from("profiles").select("extra_sites").eq("id", params.id).maybeSingle();
   let supportHistory: any[] = [];
   const hist = await supabase
     .from("support_messages")
@@ -68,7 +71,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   return (
     <CustomerDetailClient
-      customer={{ ...(customer as any), ...(extra ?? {}) }}
+      customer={{ ...(customer as any), ...(extra ?? {}), ...(extraSitesRow ?? {}) }}
       supportHistory={supportHistory}
       initialNotes={notes ?? []}
       activity={activity}

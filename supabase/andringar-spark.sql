@@ -42,3 +42,7 @@ create policy "Ägaren ser sina tillägg"
 -- Tillägget gäller en sajt (varje sajt har egna 30 ändringar). Kör även för
 -- redan skapad tabell. Rader utan site_id gäller kontots alla sajter.
 alter table change_addons add column if not exists site_id uuid references sites (id) on delete cascade;
+
+-- Paketet innehåller en sajt. Fler sajter beställs (150 kr/mån) och läggs in
+-- av admin här: antal EXTRA sajter utöver den första.
+alter table profiles add column if not exists extra_sites integer not null default 0;

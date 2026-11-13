@@ -2803,5 +2803,11 @@
   "Dina ändringar är slut för den här månaden": "Vos modifications de ce mois sont épuisées",
   "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Votre dernière demande n'a pas été exécutée. Ajoutez des modifications pour continuer tout de suite, sinon le compteur est remis à zéro au début du mois suivant.",
   "30 ändringar/månad per sajt (50 första månaden)": "30 modifications/mois par site (50 le premier mois)",
-  "En sajt till på samma konto, med egna 30 ändringar per månad": "Un site de plus sur le même compte, avec ses propres 30 modifications par mois"
+  "En sajt till på samma konto, med egna 30 ändringar per månad": "Un site de plus sur le même compte, avec ses propres 30 modifications par mois",
+  "Ange ett antal mellan 0 och 4.": "Saisissez un nombre entre 0 et 4.",
+  "Vill du ha en sajt till?": "Vous voulez un autre site ?",
+  "Tack! Vi lägger till plats för en extra sajt och fakturerar tillägget. Du hör av oss inom ett dygn.": "Merci ! Nous ajoutons une place pour un site supplémentaire et facturons l'option. Vous aurez de nos nouvelles sous 24 heures.",
+  "Paketet innehåller en sajt. En extra sajt kostar 150 kr/mån exkl. moms och får egna 30 ändringar per månad.": "Le forfait inclut un site. Un site supplémentaire coûte 150 SEK/mois HT et dispose de ses propres 30 modifications par mois.",
+  "Beställ extra sajt": "Commander un site supplémentaire",
+  "Antal sajter på kontot: {max}. Beställ en extra sajt på dashboarden så lägger vi till den.": "Sites sur le compte : {max}. Commandez un site supplémentaire dans le tableau de bord et nous l'ajouterons."
 }

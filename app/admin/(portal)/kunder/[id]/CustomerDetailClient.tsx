@@ -90,6 +90,23 @@ export default function CustomerDetailClient({
   const [siteStatus, setSiteStatus] = useState(site?.status);
   const [planValue, setPlanValue] = useState(site?.plan ?? "bas");
   const [changeUsage, setChangeUsage] = useState<{ enabled: boolean; used: number; limit: number } | null>(null);
+  const [extraSites, setExtraSites] = useState<number>(Number((customer as any).extra_sites) || 0);
+  const [savingSites, setSavingSites] = useState(false);
+  const saveExtraSites = async (n: number) => {
+    setSavingSites(true);
+    try {
+      const res = await fetch(`/api/admin/customers/${customer.id}/extra-sites`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ extraSites: n }),
+      });
+      const d = await res.json().catch(() => ({}));
+      if (res.ok) setExtraSites(n);
+      else alert(d.error || "Det gick inte att spara.");
+    } finally {
+      setSavingSites(false);
+    }
+  };
   const [addingChanges, setAddingChanges] = useState(false);
   // Varje sajt har egna ändringar: välj sajt när kunden har flera.
   const [usageSiteId, setUsageSiteId] = useState<string | undefined>(site?.id);
@@ -384,6 +401,14 @@ export default function CustomerDetailClient({
                       >
                         {savingPlan ? "Sparar …" : "Spara plan"}
                       </button>
+                    </div>
+                    <div className="mt-4 pt-3.5 border-t border-line">
+                      <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Extra sajter (utöver den som ingår)</div>
+                      <div className="flex items-center gap-2.5 text-[13.5px]">
+                        <button onClick={() => saveExtraSites(Math.max(0, extraSites - 1))} disabled={savingSites || extraSites <= 0} className="border border-line font-semibold px-3 py-1 rounded-lg disabled:opacity-40">−</button>
+                        <span>{extraSites} extra (totalt {1 + extraSites} sajter)</span>
+                        <button onClick={() => saveExtraSites(Math.min(4, extraSites + 1))} disabled={savingSites || extraSites >= 4} className="border border-line font-semibold px-3 py-1 rounded-lg disabled:opacity-40">+</button>
+                      </div>
                     </div>
                     <div className="mt-4 pt-3.5 border-t border-line">
                       <div className="text-[11.5px] text-ink-dim uppercase tracking-wide mb-1.5">Ändringar denna månad (per sajt)</div>
