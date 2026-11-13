@@ -2,9 +2,8 @@ import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import BookingClient from "./BookingClient";
-import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
-import DefaultSiteButton, { BOOKING_SITE_COOKIE } from "./DefaultSiteButton";
+import DefaultSiteButton from "./DefaultSiteButton";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 
 export const dynamic = "force-dynamic";
@@ -29,7 +28,9 @@ export default async function BokningarPage({ searchParams }: { searchParams?: {
     const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
     userName = profile?.full_name || userEmail;
     // Utan ?site= visas sajten kunden valt att se först (annars den senaste).
-    preferredId = cookies().get(BOOKING_SITE_COOKIE)?.value || null;
+    // Sparas i kontot (profiles.default_booking_site); saknas kolumnen ännu används senaste sajten.
+    const { data: pref } = await supabase.from("profiles").select("default_booking_site").eq("id", user.id).maybeSingle();
+    preferredId = (pref as any)?.default_booking_site ?? null;
     site = await getCurrentPublishedSite(supabase, user.id, searchParams?.site || preferredId);
     const { data: rows } = await supabase
       .from("sites")

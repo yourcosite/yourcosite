@@ -3071,5 +3071,6 @@
   "Ny bokning": "Uusi varaus",
   "Tillbaka": "Takaisin",
   "Visas först när du klickar på Bokningar": "Näytetään ensin, kun napsautat Varaukset",
-  "Visa den här först": "Näytä tämä ensin"
+  "Visa den här först": "Näytä tämä ensin",
+  "Kunde inte spara valet.": "Valintaa ei voitu tallentaa."
 }
