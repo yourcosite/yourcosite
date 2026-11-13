@@ -84,6 +84,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const locale = getLocale();
+  const m = META[locale] || META.sv;
+  const jsonLd = [
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      name: "YourCoSite",
+      legalName: "CS Kommunikationsbyrå AB",
+      url: "https://www.yourcosite.com",
+      logo: "https://www.yourcosite.com/icon",
+    },
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: "YourCoSite",
+      url: "https://www.yourcosite.com",
+      inLanguage: locale,
+      description: m.description,
+    },
+  ];
   return (
     <html lang={locale}>
       <head>
@@ -93,6 +112,7 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
         <I18nProvider locale={locale} dict={DICTIONARIES[locale]}>
           {children}
           <ImpersonationBanner />

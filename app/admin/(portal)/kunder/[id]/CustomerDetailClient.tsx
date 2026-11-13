@@ -182,6 +182,25 @@ export default function CustomerDetailClient({
     }
   };
 
+  const handleSetPassword = async () => {
+    const password = window.prompt("Skriv ett nytt lösenord åt kunden (minst 10 tecken). Berätta det för kunden på ett säkert sätt och be dem byta det.");
+    if (!password) return;
+    setBusy("setpw");
+    setError(null);
+    setMessage(null);
+    const res = await fetch(`/api/admin/customers/${customer.id}/set-password`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    setBusy(null);
+    if (res.ok) setMessage("Nytt lösenord är satt.");
+    else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Kunde inte sätta lösenordet.");
+    }
+  };
+
   const handleTogglePause = async () => {
     setBusy("pause");
     setError(null);
@@ -323,6 +342,13 @@ export default function CustomerDetailClient({
             className="bg-surface border border-line text-ink font-semibold text-[13px] px-4 py-2.5 rounded-lg disabled:opacity-60"
           >
             {busy === "reset" ? "Skickar …" : "Återställ lösenord"}
+          </button>
+          <button
+            onClick={handleSetPassword}
+            disabled={busy === "setpw"}
+            className="bg-surface border border-line text-ink font-semibold text-[13px] px-4 py-2.5 rounded-lg disabled:opacity-60"
+          >
+            {busy === "setpw" ? "Sparar …" : "Sätt lösenord direkt"}
           </button>
           {site && (siteStatus === "live" || siteStatus === "pausad") && (
             <button
