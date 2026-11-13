@@ -31,7 +31,8 @@ async function POST_handler(request: Request) {
     replyTo: email,
   });
   if (!res.sent) {
-    return NextResponse.json({ error: t("Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.") }, { status: 502 });
+    // Orsaken visas tillfälligt för felsökning av mejlkopplingen.
+    return NextResponse.json({ error: `${t("Det gick inte att skicka just nu. Mejla oss gärna direkt på hej@cskb.se.")} (${res.reason || "okänt fel"})` }, { status: 502 });
   }
   return NextResponse.json({ ok: true });
 }

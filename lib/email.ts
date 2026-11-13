@@ -41,7 +41,7 @@ export async function sendEmail(opts: {
     if (!res.ok) {
       const detail = await res.text().catch(() => "");
       console.error("[email] Resend svarade", res.status, detail.slice(0, 300));
-      return { sent: false, reason: `Mejltjänsten svarade ${res.status}.` };
+      return { sent: false, reason: `Mejltjänsten svarade ${res.status}: ${detail.slice(0, 160)}` };
     }
     return { sent: true };
   } catch (e) {
