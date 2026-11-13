@@ -4569,18 +4569,12 @@ function SectionBlockInner({
                 </div>
               );
               return (
+                // I mobilen kommer alltid bilden först och sedan texten (annars
+                // hamnar två bilder och två texter efter varandra). Bredvid
+                // varandra på bred skärm växlar sidorna fortfarande.
                 <div key={i} className="grid @3xl:grid-cols-2">
-                  {imageFirst ? (
-                    <>
-                      {imageCol}
-                      {textCol}
-                    </>
-                  ) : (
-                    <>
-                      {textCol}
-                      {imageCol}
-                    </>
-                  )}
+                  <div className={imageFirst ? "" : "@3xl:order-2"}>{imageCol}</div>
+                  <div className={imageFirst ? "" : "@3xl:order-1"}>{textCol}</div>
                 </div>
               );
             })}
