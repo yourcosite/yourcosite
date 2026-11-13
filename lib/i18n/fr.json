@@ -2799,5 +2799,7 @@
   "Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.": "S'il existe un compte avec cette adresse, nous avons envoyé un lien pour choisir un nouveau mot de passe. Vérifiez aussi vos spams.",
   "Tillbaka till inloggning": "Retour à la connexion",
   "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Saisissez votre adresse e-mail et nous vous enverrons un lien pour choisir un nouveau mot de passe.",
-  "Skicka återställningslänk": "Envoyer le lien de réinitialisation"
+  "Skicka återställningslänk": "Envoyer le lien de réinitialisation",
+  "Dina ändringar är slut för den här månaden": "Vos modifications de ce mois sont épuisées",
+  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Votre dernière demande n'a pas été exécutée. Ajoutez des modifications pour continuer tout de suite, sinon le compteur est remis à zéro au début du mois suivant."
 }

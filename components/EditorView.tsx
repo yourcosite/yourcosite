@@ -496,6 +496,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   // Månadens ändringar (30 ingår, 50 första 30 dagarna) och köp av fler.
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
   const [addonOpen, setAddonOpen] = useState(false);
+  const [addonLimitHit, setAddonLimitHit] = useState(false);
   const [addonBusy, setAddonBusy] = useState(false);
   const [addonDone, setAddonDone] = useState(false);
   const [addonError, setAddonError] = useState("");
@@ -1603,6 +1604,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       if (res.status === 402 && data.limitReached) {
         setUsage({ used: data.used, limit: data.limit });
         setMessages((m) => [...m, { from: "bot", text: data.error, buyMore: true }]);
+        setAddonLimitHit(true);
+        setAddonOpen(true);
         return;
       }
       if (!res.ok) throw new Error(data.error || t("Något gick fel."));
@@ -2032,9 +2035,12 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
           )}
 
           {addonOpen && (
-            <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4" onClick={() => setAddonOpen(false)}>
+            <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4" onClick={() => { setAddonOpen(false); setAddonLimitHit(false); }}>
               <div className="bg-surface rounded-2xl p-6 w-full max-w-[420px] shadow-xl" onClick={(e) => e.stopPropagation()}>
-                <div className="font-semibold text-[18px] mb-1.5">{t("Fler ändringar")}</div>
+                <div className="font-semibold text-[18px] mb-1.5">{addonLimitHit ? t("Dina ändringar är slut för den här månaden") : t("Fler ändringar")}</div>
+                {addonLimitHit && (
+                  <p className="text-[13.5px] mb-3">{t("Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.")}</p>
+                )}
                 {usage && (
                   <p className="text-[13.5px] text-ink-dim mb-4">
                     {t("Du har använt {used} av {limit} ändringar den här månaden. De nollställs när en ny månad börjar.", { used: usage.used, limit: usage.limit })}
@@ -2057,7 +2063,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                 )}
                 {addonError && <p className="text-[13px] text-red-700 mb-3">{addonError}</p>}
                 <div className="flex gap-2.5 justify-end">
-                  <button type="button" onClick={() => setAddonOpen(false)} className="text-[13.5px] font-semibold border border-line rounded-lg px-4 py-2">{t("Stäng")}</button>
+                  <button type="button" onClick={() => { setAddonOpen(false); setAddonLimitHit(false); }} className="text-[13.5px] font-semibold border border-line rounded-lg px-4 py-2">{t("Stäng")}</button>
                   {!addonDone && (
                     <button type="button" onClick={orderAddon} disabled={addonBusy} className="text-[13.5px] font-semibold bg-accent text-accent-ink rounded-lg px-4 py-2 disabled:opacity-60">
                       {addonBusy ? t("Skickar …") : t("Beställ 50 extra")}

@@ -2799,5 +2799,7 @@
   "Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.": "Jos osoitteella on tili, olemme lähettäneet linkin uuden salasanan valitsemiseen. Tarkista myös roskaposti.",
   "Tillbaka till inloggning": "Takaisin kirjautumiseen",
   "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Kirjoita sähköpostiosoitteesi, niin lähetämme linkin uuden salasanan valitsemiseen.",
-  "Skicka återställningslänk": "Lähetä palautuslinkki"
+  "Skicka återställningslänk": "Lähetä palautuslinkki",
+  "Dina ändringar är slut för den här månaden": "Muutoksesi on käytetty tältä kuulta",
+  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Viimeisintä pyyntöäsi ei toteutettu. Lisää muutoksia jatkaaksesi heti, muuten laskuri nollautuu uuden kuukauden alkaessa."
 }

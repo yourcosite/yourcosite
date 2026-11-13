@@ -2799,5 +2799,7 @@
   "Om det finns ett konto med den adressen har vi skickat en länk för att välja nytt lösenord. Kolla även skräpposten.": "Hvis der findes en konto med den adresse, har vi sendt et link til at vælge en ny adgangskode. Tjek også spam.",
   "Tillbaka till inloggning": "Tilbage til login",
   "Skriv din e-postadress så skickar vi en länk för att välja nytt lösenord.": "Skriv din e-mailadresse, så sender vi et link til at vælge en ny adgangskode.",
-  "Skicka återställningslänk": "Send nulstillingslink"
+  "Skicka återställningslänk": "Send nulstillingslink",
+  "Dina ändringar är slut för den här månaden": "Dine ændringer er brugt op for denne måned",
+  "Din senaste begäran gjordes inte. Lägg till fler ändringar för att fortsätta direkt, annars nollställs räknaren när en ny månad börjar.": "Din seneste anmodning blev ikke udført. Tilføj flere ændringer for at fortsætte med det samme, ellers nulstilles tælleren, når en ny måned begynder."
 }
