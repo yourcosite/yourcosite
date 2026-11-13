@@ -146,9 +146,32 @@ function wantsImage(s: AnySection): boolean {
   }
 }
 
+export const IMAGE_ROW_COUNT: Record<string, number> = { "row-3": 3, "row-4": 4 };
+
+// Ser till att en bildsektion med radlayout har rätt antal bildplatser
+// (första platsen tar sektionens egen bild), och att en vanlig layout har en bild.
+export function prepareImageSection(s: AnySection): void {
+  if (s.type !== "image") return;
+  const n = IMAGE_ROW_COUNT[s.layout];
+  if (n) {
+    const items: { imageUrl?: string }[] = Array.isArray(s.items) ? s.items.slice(0, n) : [];
+    while (items.length < n) items.push({});
+    if (s.imageUrl && !items[0].imageUrl) items[0] = { ...items[0], imageUrl: s.imageUrl };
+    s.items = items;
+  } else if (!s.imageUrl && Array.isArray(s.items) && s.items[0]?.imageUrl) {
+    s.imageUrl = s.items[0].imageUrl;
+  }
+}
+
 export function pagesNeedingImages(content: SiteContent, changedPaths: Set<string>): boolean {
   return content.pages.some(
-    (p) => changedPaths.has(p.path) && (p.sections as AnySection[]).some((s) => wantsImage(s) && !s.imageUrl)
+    (p) =>
+      changedPaths.has(p.path) &&
+      (p.sections as AnySection[]).some((s) =>
+        s.type === "image" && IMAGE_ROW_COUNT[s.layout]
+          ? !Array.isArray(s.items) || s.items.length < IMAGE_ROW_COUNT[s.layout] || s.items.some((it: AnySection) => !it?.imageUrl)
+          : wantsImage(s) && !s.imageUrl
+      )
   );
 }
 
@@ -185,6 +208,11 @@ export function fillMissingImages(content: SiteContent, uploadedUrls: string[], 
   for (const page of content.pages) {
     if (!changedPaths.has(page.path)) continue;
     for (const s of page.sections as AnySection[]) {
+      if (s.type === "image" && IMAGE_ROW_COUNT[s.layout]) {
+        prepareImageSection(s);
+        for (const it of s.items as AnySection[]) if (!it.imageUrl) it.imageUrl = pick();
+        continue;
+      }
       if (!wantsImage(s) || s.imageUrl) continue;
       s.imageUrl = pick();
       if (s.type === "hero" && !(s.collageImageUrls && s.collageImageUrls.length)) {

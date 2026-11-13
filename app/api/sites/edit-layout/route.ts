@@ -6,6 +6,7 @@ import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { withErrorLog } from "@/lib/errorLog";
 import { SECTION_CATALOG } from "@/lib/sectionCatalog";
+import { prepareImageSection, fillMissingImages } from "@/lib/ensureImageSlots";
 
 // Byte av layout på en rutnätssektion via den visuella väljaren i redigeraren.
 export const dynamic = "force-dynamic";
@@ -35,6 +36,14 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("Hittade inte sektionen på sidan.") }, { status: 400 });
   }
   section.layout = body.layout;
+  // Bildsektion: radlayouterna behöver 3 eller 4 bildplatser, fyllda med sajtens egna foton.
+  if (section.type === "image") {
+    prepareImageSection(section);
+    const { data: assetRows } = await supabase.from("site_assets").select("file_url").eq("site_id", site.id).eq("kind", "image");
+    const urls = (assetRows || []).map((r: { file_url: string }) => r.file_url);
+    const own = [section.imageUrl, ...(section.items || []).map((i: any) => i?.imageUrl)].filter(Boolean) as string[];
+    fillMissingImages(content, Array.from(new Set([...own, ...urls])), new Set([page!.path]));
+  }
 
   // Startsidans valda stil (theme.gridLayout) skriver annars över layouten på
   // förstasidans första rutnät, så valet skulle aldrig synas.

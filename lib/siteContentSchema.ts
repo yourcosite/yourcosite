@@ -342,9 +342,9 @@ const RAW_SECTION_SCHEMA = {
         type: { const: "image" },
         layout: {
           type: "string",
-          enum: ["plain", "fade-top", "fade-bottom", "fade-both"],
+          enum: ["plain", "fade-top", "fade-bottom", "fade-both", "tall", "tall-fade-both", "row-3", "row-4"],
           description:
-            "Ren bild över hela sidans bredd, utan text eller knappar. \"plain\" = bara bilden, \"fade-top\" = tonar ut uppåt mot sektionen ovanför, \"fade-bottom\" = tonar ut nedåt mot sektionen under, \"fade-both\" = tonar åt båda håll. Använd när kunden vill ha en bildremsa/ren bild utan text. Bilden sätts i kod från kundens egna foton, skriv aldrig någon bildadress.",
+            "Ren bild över hela sidans bredd, utan text eller knappar. \"plain\" = bara bilden, \"fade-top\" = tonar ut uppåt mot sektionen ovanför, \"fade-bottom\" = tonar ut nedåt mot sektionen under, \"fade-both\" = tonar åt båda håll, \"tall\" = extra hög bild, \"tall-fade-both\" = extra hög som tonar åt båda håll, \"row-3\"/\"row-4\" = 3 eller 4 bilder på en rad med mosaikkänsla (bilderna sätts i kod). Använd när kunden vill ha en bildremsa/ren bild utan text. Bilden sätts i kod från kundens egna foton, skriv aldrig någon bildadress.",
         },
         bgColor: BG_COLOR_SCHEMA,
       },

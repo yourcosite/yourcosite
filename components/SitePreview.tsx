@@ -6484,14 +6484,44 @@ function SectionBlockInner({
 
     case "image": {
       // Ren bild över hela bredden, utan text. Tonar uppåt, nedåt eller åt
-      // båda håll mot sidans (eller sektionens) bakgrund.
+      // båda håll mot sidans (eller sektionens) bakgrund; "tall" är extra hög,
+      // "row-3"/"row-4" är 3 eller 4 bilder på en rad med mosaikkänsla.
       const lay = section.layout || "plain";
       const fadeTo = sectionBg || palette.bg;
-      const top = lay === "fade-top" || lay === "fade-both";
-      const bottom = lay === "fade-bottom" || lay === "fade-both";
+      const top = lay === "fade-top" || lay === "fade-both" || lay === "tall-fade-both";
+      const bottom = lay === "fade-bottom" || lay === "fade-both" || lay === "tall-fade-both";
+      const rowN = lay === "row-3" ? 3 : lay === "row-4" ? 4 : 0;
+      if (rowN) {
+        const items = Array.from({ length: rowN }, (_, i) => (section.items || [])[i] || {});
+        const grow = rowN === 3 ? [1.5, 1, 1.2] : [1.3, 1, 1.5, 1];
+        const hs = rowN === 3 ? ["100%", "74%", "88%"] : ["100%", "72%", "88%", "66%"];
+        return (
+          <div className="px-2 @3xl:px-4 py-2" style={{ background: sectionBg }}>
+            <div className="flex items-center gap-2 @3xl:gap-3 h-[200px] @3xl:h-[420px]">
+              {items.map((it: { imageUrl?: string }, i: number) => {
+                const sel = galleryItemSelection(i);
+                return (
+                  <div key={i} className="relative rounded-lg overflow-hidden min-w-0" style={{ flex: `${grow[i]} 1 0`, height: hs[i] }}>
+                    <ImageOrArt
+                      imageUrl={it.imageUrl}
+                      art={art}
+                      fill
+                      dark={mode === "dark"}
+                      selectable={!!sel}
+                      selected={!!sel && selectedImageKey === sel.key}
+                      onSelect={() => sel && onSelectImage?.(sel)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
+      const tall = lay === "tall" || lay === "tall-fade-both";
       return (
         <div className="relative" style={{ background: sectionBg }}>
-          <div className="relative h-[240px] @3xl:h-[460px]">
+          <div className={`relative ${tall ? "h-[420px] @3xl:h-[760px]" : "h-[240px] @3xl:h-[460px]"}`}>
             <ImageOrArt
               imageUrl={section.imageUrl}
               art={art}

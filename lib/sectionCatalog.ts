@@ -75,7 +75,7 @@ export const SECTION_CATALOG: CatalogType[] = [
   },
   {
     type: "image", name: msg("Ren bild (utan text)"),
-    layouts: [L("plain", msg("Bara bilden")), L("fade-top", msg("Tonar uppåt")), L("fade-bottom", msg("Tonar nedåt")), L("fade-both", msg("Tonar åt båda håll"))],
+    layouts: [L("plain", msg("Bara bilden")), L("fade-top", msg("Tonar uppåt")), L("fade-bottom", msg("Tonar nedåt")), L("fade-both", msg("Tonar åt båda håll")), L("tall", msg("Extra hög")), L("tall-fade-both", msg("Extra hög, tonar åt båda håll")), L("row-3", msg("Tre bilder på rad")), L("row-4", msg("Fyra bilder på rad"))],
   },
   { type: "contact", name: msg("Kontaktuppgifter"), layouts: [L("centered", msg("Centrerad")), L("split-info", msg("Delad med uppgifter"))] },
   { type: "faq", name: msg("Vanliga frågor"), layouts: [L("stacked", msg("En lång lista")), L("two-column", msg("Två spalter"))] },
@@ -105,6 +105,10 @@ export function sampleContent(type: string, layout: string): SiteContent | null 
   let section: Section | undefined = demo.pages.flatMap((p) => p.sections).find((s) => s.type === type);
   if (!section && type === "image") {
     section = { id: "gallery-sample", type: "image", layout: "plain", imageUrl: "/images/salong-herr.jpg" } as Section;
+  }
+  if (type === "image" && section) {
+    const imgs = ["herr", "herrklipp", "sax", "verktyg"].map((n) => ({ imageUrl: `/images/salong-${n}.jpg` }));
+    section = { ...section, imageUrl: imgs[0].imageUrl, items: imgs } as Section;
   }
   if (!section && type === "fixtures") {
     source = buildFootballExample((s: string) => s);

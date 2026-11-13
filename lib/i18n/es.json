@@ -3012,5 +3012,9 @@
   "Bara bilden": "Solo la imagen",
   "Tonar uppåt": "Se desvanece hacia arriba",
   "Tonar nedåt": "Se desvanece hacia abajo",
-  "Tonar åt båda håll": "Se desvanece en ambos sentidos"
+  "Tonar åt båda håll": "Se desvanece en ambos sentidos",
+  "Extra hög": "Extra alta",
+  "Extra hög, tonar åt båda håll": "Extra alta, se desvanece en ambos sentidos",
+  "Tre bilder på rad": "Tres imágenes en una fila",
+  "Fyra bilder på rad": "Cuatro imágenes en una fila"
 }

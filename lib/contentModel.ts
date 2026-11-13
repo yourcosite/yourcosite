@@ -114,7 +114,7 @@ export type FaqLayout = "stacked" | "two-column";
 export type BookingLayout = "standard" | "compact" | "image-left" | "image-right" | "image-background";
 export type MapLayout = "inline" | "full-bleed";
 export type VideoLayout = "inline" | "full-bleed";
-export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both";
+export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both" | "tall" | "tall-fade-both" | "row-3" | "row-4";
 
 export interface HeroSection {
   id: string;
@@ -433,6 +433,8 @@ export interface ImageSection {
   layout?: ImageLayout;
   // Satt i kod (kundens egna foton), aldrig av AI:n.
   imageUrl?: string;
+  // Bara layouterna "row-3"/"row-4": 3 eller 4 bilder på en rad med mosaikkänsla.
+  items?: { imageUrl?: string }[];
   // Se HeroSection.bgColor — samma princip.
   bgColor?: string;
 }

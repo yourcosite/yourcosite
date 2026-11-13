@@ -3012,5 +3012,9 @@
   "Bara bilden": "Image seule",
   "Tonar uppåt": "Fondu vers le haut",
   "Tonar nedåt": "Fondu vers le bas",
-  "Tonar åt båda håll": "Fondu dans les deux sens"
+  "Tonar åt båda håll": "Fondu dans les deux sens",
+  "Extra hög": "Extra haute",
+  "Extra hög, tonar åt båda håll": "Extra haute, fondu dans les deux sens",
+  "Tre bilder på rad": "Trois images en ligne",
+  "Fyra bilder på rad": "Quatre images en ligne"
 }

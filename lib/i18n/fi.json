@@ -3012,5 +3012,9 @@
   "Bara bilden": "Pelkkä kuva",
   "Tonar uppåt": "Häipyy ylöspäin",
   "Tonar nedåt": "Häipyy alaspäin",
-  "Tonar åt båda håll": "Häipyy molempiin suuntiin"
+  "Tonar åt båda håll": "Häipyy molempiin suuntiin",
+  "Extra hög": "Extra korkea",
+  "Extra hög, tonar åt båda håll": "Extra korkea, häipyy molempiin suuntiin",
+  "Tre bilder på rad": "Kolme kuvaa rivissä",
+  "Fyra bilder på rad": "Neljä kuvaa rivissä"
 }

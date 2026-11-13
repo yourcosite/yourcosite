@@ -3012,5 +3012,9 @@
   "Bara bilden": "Image only",
   "Tonar uppåt": "Fades upward",
   "Tonar nedåt": "Fades downward",
-  "Tonar åt båda håll": "Fades both ways"
+  "Tonar åt båda håll": "Fades both ways",
+  "Extra hög": "Extra tall",
+  "Extra hög, tonar åt båda håll": "Extra tall, fades both ways",
+  "Tre bilder på rad": "Three images in a row",
+  "Fyra bilder på rad": "Four images in a row"
 }
