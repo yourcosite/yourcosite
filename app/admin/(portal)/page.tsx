@@ -47,6 +47,21 @@ export default async function AdminOverviewPage() {
   }
   const mrr = mrrSek;
 
+  // Besök på alla kundsajter (vår egen cookiefria räknare, site_pageviews).
+  const since = (days: number) => new Date(Date.now() - days * 86400000).toISOString();
+  const countSince = async (days: number | null) => {
+    let q = supabase.from("site_pageviews").select("id", { count: "exact", head: true });
+    if (days !== null) q = q.gte("visited_at", since(days));
+    const { count } = await q;
+    return count ?? 0;
+  };
+  const [viewsToday, views7, views30, viewsAll] = await Promise.all([countSince(1), countSince(7), countSince(30), countSince(null)]);
+  const { data: recentViews } = await supabase.from("site_pageviews").select("site_id").gte("visited_at", since(30)).limit(20000);
+  const perSite = new Map<string, number>();
+  for (const r of (recentViews ?? []) as { site_id: string }[]) perSite.set(r.site_id, (perSite.get(r.site_id) ?? 0) + 1);
+  const siteName = new Map(allSites.map((s) => [s.id, s.domain || s.name]));
+  const topSites = [...perSite.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
+
   const recent = list.slice(0, 6);
   const waitingToBuild = list.filter((c) => (c.sites ?? []).length === 0).slice(0, 4);
 
@@ -74,6 +89,13 @@ export default async function AdminOverviewPage() {
           sub={`${draftSites.length} i utkastläge`}
         />
         <StatCard label="Betalande kunder" value={String(liveSites.length)} />
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4.5 mb-6.5">
+        <StatCard label="Besök idag" value={viewsToday.toLocaleString("sv-SE")} sub="Alla kundsajter, senaste dygnet" />
+        <StatCard label="Besök 7 dagar" value={views7.toLocaleString("sv-SE")} />
+        <StatCard label="Besök 30 dagar" value={views30.toLocaleString("sv-SE")} />
+        <StatCard label="Besök totalt" value={viewsAll.toLocaleString("sv-SE")} sub={topSites.length ? `Mest besökt: ${siteName.get(topSites[0][0]) ?? "—"}` : undefined} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[1.3fr_1fr] gap-5">

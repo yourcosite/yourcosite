@@ -27,7 +27,7 @@ const prices: MenuCategory[] = [
     items: [
       { name: "Skäggtrimning", description: "Form, kontur och skäggolja", price: "290 kr" },
       { name: "Rakning med kniv", description: "Varm handduk, rakolja och rakkniv", price: "395 kr" },
-      { name: "Klippning och skägg", description: "Vår mest bokade kombination", price: "690 kr", tags: ["hot"] },
+      { name: "Klippning och skägg", description: "Vår mest bokade kombination", price: "690 kr" },
       { name: "Kontur och nacke", description: "Snabb uppfräschning mellan klippningarna", price: "150 kr" },
     ],
   },
