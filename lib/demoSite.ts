@@ -72,10 +72,15 @@ export function buildDemoContent(): SiteContent {
             ctaLabel: "Boka tid", ctaLink: "/boka", imageUrl: img("herr"),
           },
           {
-            id: "h-about", type: "about", layout: "image-right",
+            id: "h-about", type: "about", layout: "image-stats",
             heading: "Ett gammaldags rakhus med nya idéer",
             body: "Mörkvik öppnade 2016 i ett gammalt kvarnhus på Kvarngatan. Vi ville skapa ett ställe där man kan koppla av en stund, och där hantverket får ta den tid det tar.\n\nVi är fyra frisörer med olika styrkor. Alla klipper med sax och maskin, och två av oss är extra bra på skägg och rakning med kniv.",
             imageUrl: img("herrklipp"),
+            stats: [
+              { value: "2016", label: "Öppnade" },
+              { value: "4", label: "Frisörer" },
+              { value: "2", label: "Specialister på rakkniv" },
+            ],
           },
           {
             id: "h-services", type: "grid", layout: "icon-cards",
