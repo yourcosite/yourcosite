@@ -3090,5 +3090,11 @@
   "Större bilder går bra": "Suuremmat kuvat sopivat",
   "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Voit nyt ladata jopa 15 Mt:n kuvia. Pienennämme ne automaattisesti, jotta sivusto latautuu nopeasti.",
   "Snyggare adress till din sajt": "Hienompi osoite sivustollesi",
-  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Julkaistu sivustosi saa nyt oman osoitteen muodossa nimesi.yourcosite.com. Vanhat linkit toimivat edelleen ja ohjataan eteenpäin. Jos liität oman verkkotunnuksesi, se ottaa vallan, ja yhteinen osoite lakkaa näkymästä."
+  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Julkaistu sivustosi saa nyt oman osoitteen muodossa nimesi.yourcosite.com. Vanhat linkit toimivat edelleen ja ohjataan eteenpäin. Jos liität oman verkkotunnuksesi, se ottaa vallan, ja yhteinen osoite lakkaa näkymästä.",
+  "SENAST BYGGD MED YOURCOSITE": "VIIMEKSI RAKENNETTU YOURCOSITELLA",
+  "Se sajten →": "Katso sivusto →",
+  "Visa på YourCoSites startsida": "Näytä YourCoSiten etusivulla",
+  "Visa din sajt som exempel på YourCoSites startsida när den är den senast publicerade. Det är gratis reklam för dig, och du kan stänga av det när som helst.": "Näytä sivustosi esimerkkinä YourCoSiten etusivulla, kun se on viimeksi julkaistu. Se on ilmaista mainontaa sinulle, ja voit poistaa sen käytöstä milloin tahansa.",
+  "Gratis reklam på vår startsida": "Ilmaista mainontaa etusivullamme",
+  "Under Publicera kan du kryssa i att din sajt får visas på YourCoSites startsida. Den senast publicerade sajten med rutan ikryssad visas för alla våra besökare, med en länk till din sajt.": "Kohdassa Julkaise voit rastittaa, että sivustosi saa näkyä YourCoSiten etusivulla. Viimeksi julkaistu sivusto, jonka ruutu on rastitettu, näytetään kaikille kävijöillemme linkkinä sivustollesi."
 }

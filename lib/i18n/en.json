@@ -3090,5 +3090,11 @@
   "Större bilder går bra": "Larger images are fine",
   "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "You can now upload images of up to 15 MB. We shrink them automatically so the site loads quickly.",
   "Snyggare adress till din sajt": "A nicer address for your site",
-  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Your published site now gets its own address in the form yourname.yourcosite.com. Old links keep working and are forwarded. If you connect your own domain it takes over, and the shared address stops being shown."
+  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Your published site now gets its own address in the form yourname.yourcosite.com. Old links keep working and are forwarded. If you connect your own domain it takes over, and the shared address stops being shown.",
+  "SENAST BYGGD MED YOURCOSITE": "LATEST BUILT WITH YOURCOSITE",
+  "Se sajten →": "See the site →",
+  "Visa på YourCoSites startsida": "Show on the YourCoSite home page",
+  "Visa din sajt som exempel på YourCoSites startsida när den är den senast publicerade. Det är gratis reklam för dig, och du kan stänga av det när som helst.": "Show your site as an example on the YourCoSite home page when it is the most recently published. It is free advertising for you, and you can turn it off at any time.",
+  "Gratis reklam på vår startsida": "Free advertising on our home page",
+  "Under Publicera kan du kryssa i att din sajt får visas på YourCoSites startsida. Den senast publicerade sajten med rutan ikryssad visas för alla våra besökare, med en länk till din sajt.": "Under Publish you can tick that your site may be shown on the YourCoSite home page. The most recently published site with the box ticked is shown to all our visitors, with a link to your site."
 }

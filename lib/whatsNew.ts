@@ -15,6 +15,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-14-startsida",
+    date: "2026-11-14",
+    icon: "📣",
+    title: msg("Gratis reklam på vår startsida"),
+    text: msg("Under Publicera kan du kryssa i att din sajt får visas på YourCoSites startsida. Den senast publicerade sajten med rutan ikryssad visas för alla våra besökare, med en länk till din sajt."),
+  },
+  {
     id: "2026-11-14-egen-subadress",
     date: "2026-11-14",
     icon: "🌐",

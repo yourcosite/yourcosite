@@ -32,6 +32,7 @@ export default function PublishModal({
   const [info, setInfo] = useState<DomainInfo | null>(null);
   const [domainInput, setDomainInput] = useState("");
   const [copied, setCopied] = useState("");
+  const [showcase, setShowcase] = useState(false);
   const live = status === "live";
 
   const load = async () => {
@@ -42,6 +43,18 @@ export default function PublishModal({
       if (res.ok) setInfo(d);
     } catch { /* tyst */ }
     setBusy("");
+  };
+  useEffect(() => {
+    if (live) fetch(`/api/sites/showcase?siteId=${siteId}`).then((r) => r.json()).then((d) => setShowcase(!!d.show)).catch(() => {});
+  }, [live, siteId]);
+  const toggleShowcase = async (value: boolean) => {
+    setShowcase(value);
+    const res = await fetch("/api/sites/showcase", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ siteId, show: value }),
+    }).catch(() => null);
+    if (!res || !res.ok) setShowcase(!value);
   };
   useEffect(() => {
     if (live) load();
@@ -141,6 +154,14 @@ export default function PublishModal({
                 </div>
               </div>
             )}
+
+            <label className="flex items-start gap-2.5 mb-5 cursor-pointer">
+              <input type="checkbox" checked={showcase} onChange={(e) => toggleShowcase(e.target.checked)} className="mt-1" />
+              <span>
+                <span className="block font-semibold text-[14px]">{t("Visa på YourCoSites startsida")}</span>
+                <span className="block text-[12.5px] text-ink-dim">{t("Visa din sajt som exempel på YourCoSites startsida när den är den senast publicerade. Det är gratis reklam för dig, och du kan stänga av det när som helst.")}</span>
+              </span>
+            </label>
 
             <div className="border-t border-line pt-4">
               <div className="font-semibold text-[15px] mb-1">{t("Egen domän")}</div>

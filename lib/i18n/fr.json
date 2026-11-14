@@ -3090,5 +3090,11 @@
   "Större bilder går bra": "Les images plus grandes sont acceptées",
   "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Vous pouvez désormais téléverser des images jusqu'à 15 Mo. Nous les réduisons automatiquement pour que le site se charge rapidement.",
   "Snyggare adress till din sajt": "Une plus belle adresse pour votre site",
-  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Votre site publié reçoit désormais sa propre adresse sous la forme votrenom.yourcosite.com. Les anciens liens continuent de fonctionner et sont redirigés. Si vous connectez votre propre domaine, il prend le relais et l'adresse commune cesse d'être affichée."
+  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Votre site publié reçoit désormais sa propre adresse sous la forme votrenom.yourcosite.com. Les anciens liens continuent de fonctionner et sont redirigés. Si vous connectez votre propre domaine, il prend le relais et l'adresse commune cesse d'être affichée.",
+  "SENAST BYGGD MED YOURCOSITE": "DERNIÈRE CRÉATION AVEC YOURCOSITE",
+  "Se sajten →": "Voir le site →",
+  "Visa på YourCoSites startsida": "Afficher sur la page d'accueil de YourCoSite",
+  "Visa din sajt som exempel på YourCoSites startsida när den är den senast publicerade. Det är gratis reklam för dig, och du kan stänga av det när som helst.": "Affichez votre site comme exemple sur la page d'accueil de YourCoSite lorsqu'il est le dernier publié. C'est de la publicité gratuite pour vous, et vous pouvez la désactiver à tout moment.",
+  "Gratis reklam på vår startsida": "Publicité gratuite sur notre page d'accueil",
+  "Under Publicera kan du kryssa i att din sajt får visas på YourCoSites startsida. Den senast publicerade sajten med rutan ikryssad visas för alla våra besökare, med en länk till din sajt.": "Sous Publier, vous pouvez cocher que votre site peut être affiché sur la page d'accueil de YourCoSite. Le dernier site publié dont la case est cochée est montré à tous nos visiteurs, avec un lien vers votre site."
 }

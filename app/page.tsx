@@ -9,9 +9,13 @@ import IncludedAndChat from "@/components/IncludedAndChat";
 import FeatureGrid from "@/components/FeatureGrid";
 import Reveal from "@/components/Reveal";
 import { features, homeFeatureIcons } from "@/lib/marketingFeatures";
+import { getLatestShowcase } from "@/lib/homeShowcase";
 
-export default function LandingPage() {
+export const dynamic = "force-dynamic";
+
+export default async function LandingPage() {
   const t = getT();
+  const showcase = await getLatestShowcase();
   return (
     <div>
       <Header active="/" />
@@ -75,6 +79,34 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* Senast publicerade sajt (kundens eget val) */}
+      {showcase && (
+        <section className="bg-bg border-t border-line">
+          <div className="max-w-6xl mx-auto px-6 md:px-12 py-16 md:py-20">
+            <div className="text-center mb-9">
+              <div className="text-[12.5px] text-ink-dim tracking-wide font-semibold mb-3">{t("SENAST BYGGD MED YOURCOSITE")}</div>
+              <h2 className="text-[28px] md:text-[32px] font-medium">{t("Se vad andra har byggt")}</h2>
+            </div>
+            <a
+              href={showcase.url}
+              target="_blank"
+              rel="noopener"
+              className="block max-w-[760px] mx-auto rounded-2xl overflow-hidden border border-line bg-surface shadow-[0_18px_40px_rgba(0,0,0,0.08)]"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={showcase.image} alt={showcase.name} className="w-full aspect-[1200/630] object-cover bg-bg" loading="lazy" />
+              <div className="p-6 flex items-center justify-between gap-4 flex-wrap">
+                <div className="min-w-0">
+                  <div className="font-semibold text-[18px]">{showcase.name}</div>
+                  {showcase.description && <p className="text-[14px] text-ink-dim mt-1 line-clamp-2">{showcase.description}</p>}
+                </div>
+                <span className="font-semibold text-[14.5px] border-b border-ink pb-0.5 whitespace-nowrap">{t("Se sajten →")}</span>
+              </div>
+            </a>
+          </div>
+        </section>
+      )}
 
       {/* Nytt i redigeraren */}
       <section className="bg-surface border-t border-line">
