@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isValidSiteContent } from "@/lib/contentModel";
 import { shareImageFor } from "@/lib/siteMeta";
@@ -7,7 +8,7 @@ import { shareImageFor } from "@/lib/siteMeta";
 // saknas i databasen (supabase/startsida-visa.sql).
 export type Showcase = { name: string; url: string; image: string; description: string | null; needsImage: boolean };
 
-export async function getLatestShowcase(): Promise<Showcase | null> {
+async function loadLatestShowcase(): Promise<Showcase | null> {
   try {
     const admin = createAdminClient();
     const { data } = await admin
@@ -32,3 +33,6 @@ export async function getLatestShowcase(): Promise<Showcase | null> {
   }
   return null;
 }
+
+// Cachas i fem minuter. Töms direkt när kunden ändrar valet eller en ny bild skapas.
+export const getLatestShowcase = unstable_cache(loadLatestShowcase, ["home-showcase"], { revalidate: 300, tags: ["showcase"] });

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,6 +41,7 @@ async function POST_handler(request: Request) {
   if (!site) return NextResponse.json({ error: t("Hittade inte sajten.") }, { status: 404 });
   const { error } = await createAdminClient().from("sites").update({ show_on_homepage: show }).eq("id", siteId);
   if (error) return NextResponse.json({ error: t("Något gick fel.") }, { status: 500 });
+  revalidateTag("showcase");
   // Skärmdump av sajten till startsidans kort: när rutan kryssas i, och på begäran.
   let image: string | null = null;
   if (show && (refresh || body.capture !== false)) {

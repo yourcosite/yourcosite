@@ -10,6 +10,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
 export default function SignupPage() {
   const t = useT();
@@ -30,11 +31,23 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null);
   const [accepted, setAccepted] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
+  const [trap, setTrap] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    // Dolt fält som bara robotar fyller i: låtsas att det gick bra.
+    if (trap) {
+      router.push("/skapa-konto/paket");
+      return;
+    }
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError(t("Bekräfta att du inte är en robot."));
+      return;
+    }
     if (!accepted) {
       setError(t("Du behöver bekräfta att du ansvarar för innehållet på din sajt för att skapa ett konto."));
       return;
@@ -54,6 +67,7 @@ export default function SignupPage() {
       email,
       password,
       options: {
+        ...(captcha ? { captchaToken: captcha } : {}),
         // Utan den här pekar bekräftelsemejlets länk på Supabase-projektets
         // "Site URL"-inställning istället — som ofta fortfarande står kvar
         // på standardvärdet http://localhost:3000 om ingen ändrat den i
@@ -83,6 +97,7 @@ export default function SignupPage() {
       },
     });
     setLoading(false);
+    setCaptchaReset((n) => n + 1);
 
     if (signUpError) {
       setError(
@@ -295,6 +310,9 @@ export default function SignupPage() {
               />
               <span className="text-[12.5px] leading-relaxed text-ink-dim">{rich(t, "Jag förstår att texter, kundcitat, nyckeltal och annat innehåll som AI skapar åt mig är förslag och exempel som jag själv ansvarar för att granska, byta ut eller ta bort innan publicering. Jag godkänner <link>användarvillkoren</link>.", { link: (c) => <Link href="/anvandarvillkor" target="_blank" className="font-semibold underline text-ink">{c}</Link> })}</span>
             </label>
+
+            <input type="text" name="website" value={trap} onChange={(e) => setTrap(e.target.value)} tabIndex={-1} autoComplete="off" aria-hidden="true" className="absolute left-[-9999px] w-0 h-0 opacity-0" />
+            <TurnstileWidget onToken={setCaptcha} resetSignal={captchaReset} />
 
             {error && (
               <div className="text-[13.5px] text-warm font-medium -mt-1">{error}</div>

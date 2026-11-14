@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Logo from "@/components/Logo";
 import { createClient } from "@/lib/supabase/client";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -11,17 +12,25 @@ export default function AdminLoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError("Bekräfta att du inte är en robot.");
+      return;
+    }
     setLoading(true);
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      ...(captcha ? { options: { captchaToken: captcha } } : {}),
     });
+    setCaptchaReset((n) => n + 1);
 
     if (signInError) {
       setLoading(false);
@@ -77,6 +86,7 @@ export default function AdminLoginPage() {
               />
             </div>
 
+            <TurnstileWidget onToken={setCaptcha} resetSignal={captchaReset} />
             {error && <div className="text-[13.5px] text-warm font-medium">{error}</div>}
 
             <button

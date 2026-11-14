@@ -12,7 +12,7 @@ export default function Page() {
   return (
     <LegalLayout
       title={t("Integritetspolicy")}
-      updated="2026-11-13"
+      updated="2026-11-14"
       intro={
         <>
           {t("Detta är mallar baserade på svensk och EU-rättslig standardpraxis (GDPR m.fl.) — inte juridisk rådgivning. CS Kommunikationsbyrå AB granskar och uppdaterar denna policy löpande.")}
@@ -99,6 +99,14 @@ export default function Page() {
 
       <p>
         {t("På publicerade webbplatser använder vi, med besökarens samtycke, Google Tag Manager och Google Analytics (Google) för besöksstatistik samt Meta Pixel (Meta) för att mäta marknadsföring. Utan samtycke skickas inga statistik- eller marknadsföringscookies. E-post från tjänsten, till exempel kvitton och svar från kontaktformulär, skickas via en e-posttjänst som fungerar som personuppgiftsbiträde.")}
+      </p>
+
+      <p>
+        {t("Vid registrering och inloggning kan vi använda robotskyddet Cloudflare Turnstile (Cloudflare) för att skilja människor från automatiska program. Tjänsten läser av teknisk information från webbläsaren, till exempel IP-adress och webbläsartyp, enbart för det ändamålet. Cloudflare är ett bolag med säte i USA och överföringen grundas på EU-kommissionens standardavtalsklausuler (SCC) eller på att bolaget är certifierat enligt dataskyddsramverket EU–USA.")}
+      </p>
+
+      <p>
+        {t("Väljer en kund att visa sin webbplats på YourCoSites startsida visas webbplatsens namn, en skärmdump av webbplatsens startsida och en länk dit. Skärmdumpen tas automatiskt av en webbläsare på våra servrar, där besökarens cookieval sätts till bara nödvändiga, och sparas hos Supabase. Kunden kan när som helst stänga av visningen under Publicera, och då slutar webbplatsen visas.")}
       </p>
 
       <h3>{t("5. Överföring utanför EU/EES")}</h3>

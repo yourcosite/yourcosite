@@ -8,6 +8,7 @@ import Link from "next/link";
 import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
+import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
 export default function LoginPage() {
   const t = useT();
@@ -18,16 +19,24 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetSent, setResetSent] = useState(false);
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [captchaReset, setCaptchaReset] = useState(0);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError(t("Bekräfta att du inte är en robot."));
+      return;
+    }
     setLoading(true);
     const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email.trim(), {
       redirectTo: `${window.location.origin}/aterstall-losenord`,
+      ...(captcha ? { captchaToken: captcha } : {}),
     });
     setLoading(false);
+    setCaptchaReset((n) => n + 1);
     // Samma svar oavsett om adressen finns, så ingen kan se vilka som har konto.
     if (resetError && /rate|seconds|limit/i.test(resetError.message)) {
       setError(t("För många försök på kort tid. Vänta en stund och försök igen."));
@@ -39,14 +48,20 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    if (TURNSTILE_SITE_KEY && !captcha) {
+      setError(t("Bekräfta att du inte är en robot."));
+      return;
+    }
     setLoading(true);
 
     const supabase = createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
+      ...(captcha ? { options: { captchaToken: captcha } } : {}),
     });
     setLoading(false);
+    setCaptchaReset((n) => n + 1);
 
     if (signInError) {
       setError(
@@ -121,6 +136,7 @@ export default function LoginPage() {
                     className="w-full box-border px-3.5 py-3 border border-line rounded-[10px] text-[15px]"
                   />
                 </div>
+                <TurnstileWidget onToken={setCaptcha} resetSignal={captchaReset} />
                 {error && <div className="text-[13.5px] text-warm font-medium -mt-1">{error}</div>}
                 <button
                   type="submit"
@@ -174,6 +190,7 @@ export default function LoginPage() {
               </button>
             </div>
 
+            <TurnstileWidget onToken={setCaptcha} resetSignal={captchaReset} />
             {error && (
               <div className="text-[13.5px] text-warm font-medium -mt-1">{error}</div>
             )}

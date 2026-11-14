@@ -1,5 +1,6 @@
 "use client";
 
+import { imgProps } from "@/lib/imgSrc";
 import { useT } from "@/components/I18nProvider";
 import { msg } from "@/lib/i18n/config";
 import { SiteLangProvider, useSiteT, useSiteLocale } from "@/components/SiteI18n";
@@ -807,7 +808,7 @@ function NewsArticleDetail({
       {article.image_url && (
         <div className={`rounded-2xl overflow-hidden ${creditFromUrl(article.image_url) ? "mb-2" : "mb-8"}`}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={article.image_url} alt={article.title} className="w-full h-auto object-cover" />
+          <img src={article.image_url} alt={article.title} className="w-full h-auto object-cover" {...imgProps(article.image_url)} />
         </div>
       )}
       {(() => {
@@ -2046,12 +2047,12 @@ function ImageOrArt({
     >
       {imageUrl && natural && (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={imageUrl} alt={imgAlt} loading="lazy" className="block w-full h-auto" />
+        <img src={imageUrl} alt={imgAlt} loading="lazy" className="block w-full h-auto" {...imgProps(imageUrl)} />
       )}
       {imageUrl && !natural && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt={imgAlt} loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" />
+          <img src={imageUrl} alt={imgAlt} loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" {...imgProps(imageUrl)} />
           {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
         </>
       )}
@@ -2688,7 +2689,7 @@ function BookingBlock({
               >
                 {p.image_url && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.image_url} alt={p.name} className="w-full h-36 object-cover block" loading="lazy" />
+                  <img src={p.image_url} alt={p.name} className="w-full h-36 object-cover block" loading="lazy" {...imgProps(p.image_url, "480px")} />
                 )}
                 <div className={p.image_url ? "p-4" : ""}>
                 <div className="flex items-baseline justify-between gap-3">

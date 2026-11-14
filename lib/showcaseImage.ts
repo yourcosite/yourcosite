@@ -1,3 +1,4 @@
+import { revalidateTag } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { screenshotUrl } from "@/lib/siteScreenshot";
 
@@ -23,6 +24,7 @@ export async function generateShowcaseImage(siteId: string): Promise<string | nu
     const publicUrl = `${admin.storage.from("logos").getPublicUrl(path).data.publicUrl}?v=${Date.now()}`;
     const { error: upErr } = await admin.from("sites").update({ showcase_image_url: publicUrl }).eq("id", siteId);
     if (upErr) throw upErr;
+    revalidateTag("showcase");
     return publicUrl;
   } catch (e) {
     console.error("[showcase] kunde inte skapa förhandsbild", e);

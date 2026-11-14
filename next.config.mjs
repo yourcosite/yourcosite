@@ -1,6 +1,13 @@
 /** @type {import('next').NextConfig} */
+const supabaseHost = (() => { try { return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "").hostname; } catch { return ""; } })();
+
 const nextConfig = {
   reactStrictMode: true,
+  // Bildtjänsten används för kundernas bilder i vår egen Supabase-lagring (lib/imgSrc.ts).
+  images: {
+    remotePatterns: supabaseHost ? [{ protocol: "https", hostname: supabaseHost, pathname: "/storage/v1/object/public/**" }] : [],
+    minimumCacheTTL: 60 * 60 * 24 * 7,
+  },
   experimental: {
     // Webbläsaren som tar skärmdumpar av kundsajter till startsidan (lib/siteScreenshot.ts).
     serverComponentsExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
