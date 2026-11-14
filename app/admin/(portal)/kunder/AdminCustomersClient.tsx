@@ -282,7 +282,56 @@ export default function AdminCustomersClient({
         />
       </div>
 
-      <div className="bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
+      {/* Mobil: kunderna som kort (tabellen nedan är för bred för en telefon). */}
+      <div className="md:hidden flex flex-col gap-3">
+        {filtered.map((c) => {
+          const site = c.sites?.[0];
+          const statusLabel = site?.status === "live" ? "LIVE" : site ? "UTKAST" : "INGEN SAJT";
+          const badge =
+            statusLabel === "LIVE" ? "bg-[#DCFCE7] text-[#166534]" : statusLabel === "UTKAST" ? "bg-[#FDE68A] text-[#7C4A03]" : "bg-line text-ink-dim";
+          return (
+            <div key={c.id} className="bg-surface border border-line rounded-2xl p-4">
+              <div className="flex items-start justify-between gap-3">
+                <Link href={`/admin/kunder/${c.id}`} className="font-semibold text-[15px] min-w-0 break-words hover:underline">
+                  {c.full_name || "—"}
+                </Link>
+                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 ${badge}`}>{statusLabel}</span>
+              </div>
+              {c.company_name && <div className="text-[13px] text-ink-dim mt-0.5">{c.company_name}</div>}
+              <div className="text-[13px] text-ink-dim break-all mt-1">{c.email}</div>
+              <div className="text-[12.5px] text-ink-dim mt-1">
+                {(site?.domain || site?.name) ? `${site?.domain || site?.name} · ` : ""}{formatDate(c.created_at)}
+              </div>
+              {!c.billing_setup_complete && (
+                <span className="inline-block mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FDE68A] text-[#7C4A03]">BETALNING EJ KLAR</span>
+              )}
+              <div className="flex flex-wrap items-center gap-x-5 gap-y-2 mt-3 pt-3 border-t border-line">
+                <Link href={`/admin/kunder/${c.id}`} className="text-[13px] font-semibold text-ink">Öppna</Link>
+                {canEdit ? (
+                  <>
+                    {resetSentFor === c.id ? (
+                      <span className="text-[13px] font-semibold text-[#166534]">Mail skickat ✓</span>
+                    ) : (
+                      <button onClick={() => handleSendReset(c)} disabled={resetSendingFor === c.id} className="text-[13px] font-semibold text-ink-dim disabled:opacity-60">
+                        {resetSendingFor === c.id ? "Skickar …" : "Återställ lösenord"}
+                      </button>
+                    )}
+                    <button onClick={() => openEdit(c)} className="text-[13px] font-semibold text-ink">Redigera</button>
+                    <button onClick={() => setConfirmDelete(c)} className="text-[13px] font-semibold text-warm">Ta bort</button>
+                  </>
+                ) : (
+                  <span className="text-[12.5px] text-ink-dim">Visningsläge</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+        {filtered.length === 0 && (
+          <div className="py-8 text-center text-ink-dim text-[13.5px]">Inga kunder hittades.</div>
+        )}
+      </div>
+
+      <div className="hidden md:block bg-surface border border-line rounded-2xl overflow-hidden overflow-x-auto">
         <div className="overflow-x-auto"><table className="w-full border-collapse min-w-[520px]">
           <thead>
             <tr className="text-left text-[12px] text-ink-dim uppercase tracking-wide bg-bg">
