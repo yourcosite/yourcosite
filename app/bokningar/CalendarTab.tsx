@@ -270,8 +270,8 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
 
       {view !== "month" && (
       <div className="border border-line rounded-xl bg-surface overflow-x-auto">
-        <div style={{ minWidth: view === "day" ? 0 : 760 }}>
-          <div className="grid" style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}>
+        <div className={view === "day" ? "" : "md:min-w-[760px]"}>
+          <div className={`grid ${days.length === 1 ? "grid-cols-[36px_minmax(0,1fr)] md:grid-cols-[48px_minmax(0,1fr)]" : "grid-cols-[36px_repeat(7,minmax(0,1fr))] md:grid-cols-[48px_repeat(7,minmax(0,1fr))]"}`}>
             <div />
             {days.map((d) => (
               <div key={d} className={`text-center py-2 text-[12.5px] border-l border-line ${d === today ? "font-bold" : "text-ink-dim font-semibold"}`}>
@@ -280,7 +280,7 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
               </div>
             ))}
           </div>
-          <div className="grid border-t border-line" style={{ gridTemplateColumns: `48px repeat(${days.length}, 1fr)` }}>
+          <div className={`grid border-t border-line ${days.length === 1 ? "grid-cols-[36px_minmax(0,1fr)] md:grid-cols-[48px_minmax(0,1fr)]" : "grid-cols-[36px_repeat(7,minmax(0,1fr))] md:grid-cols-[48px_repeat(7,minmax(0,1fr))]"}`}>
             <div className="relative" style={{ height: gridH }}>
               {hours.map((h) => (
                 <div key={h} className="absolute right-1.5 text-[10.5px] text-ink-dim" style={{ top: (h - startH) * HOUR_PX - 6 }}>{String(h).padStart(2, "0")}:00</div>
@@ -397,7 +397,7 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
 
       {view === "month" && (
         <div className="border border-line rounded-xl bg-surface overflow-x-auto">
-          <div style={{ minWidth: 640 }}>
+          <div className="md:min-w-[640px]">
             <div className="grid grid-cols-7">
               {monthDays.slice(0, 7).map((d) => (
                 <div key={d} className="text-center py-2 text-[11px] uppercase tracking-wide font-semibold text-ink-dim border-l first:border-l-0 border-line">{fmtDay(d, { weekday: "short" })}</div>
@@ -412,18 +412,19 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
                     type="button"
                     key={d}
                     onClick={() => { setAnchor(d); changeView("day"); }}
-                    className={`text-left min-h-[92px] p-1.5 border-l first:border-l-0 border-b border-line align-top ${inMonth ? "" : "bg-[#FAFAF7] text-ink-dim/60"} ${d === today ? "bg-[#FAFAF7]" : ""}`}
+                    className={`text-left min-h-[56px] md:min-h-[92px] p-1 md:p-1.5 min-w-0 overflow-hidden border-l first:border-l-0 border-b border-line align-top ${inMonth ? "" : "bg-[#FAFAF7] text-ink-dim/60"} ${d === today ? "bg-[#FAFAF7]" : ""}`}
                   >
                     <div className="flex items-center justify-between mb-1">
                       <span className={`text-[12px] font-semibold ${d === today ? "bg-ink text-white rounded-full px-1.5" : ""}`}>{fmtDay(d, { day: "numeric" })}</span>
                       {openWeekdays.has(isoWeekday(d)) && inMonth && <span className="w-1.5 h-1.5 rounded-full bg-[#4CAF73]" title={t("Ledig tid att boka")} />}
                     </div>
+                    {list.length > 0 && <div className="md:hidden inline-block bg-accent text-accent-ink rounded-full text-[10.5px] font-bold px-1.5 leading-[16px]">{list.length}</div>}
                     {list.slice(0, 3).map((b) => (
-                      <div key={b.id} className="bg-accent text-accent-ink rounded px-1 py-0.5 mb-0.5 text-[10.5px] leading-tight truncate">
+                      <div key={b.id} className="hidden md:block bg-accent text-accent-ink rounded px-1 py-0.5 mb-0.5 text-[10.5px] leading-tight truncate">
                         {localTimeOf(new Date(b.starts_at), tz)} {b.customer_name}
                       </div>
                     ))}
-                    {list.length > 3 && <div className="text-[10.5px] text-ink-dim">{t("+{n} till", { n: list.length - 3 })}</div>}
+                    {list.length > 3 && <div className="hidden md:block text-[10.5px] text-ink-dim">{t("+{n} till", { n: list.length - 3 })}</div>}
                   </button>
                 );
               })}
