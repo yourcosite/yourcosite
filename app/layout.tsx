@@ -21,37 +21,37 @@ import "@fontsource/dm-serif-display/latin-400-italic.css";
 
 const META: Record<string, { title: string; description: string }> = {
   sv: {
-    title: "YourCoSite — din hemsida, byggd genom ett samtal",
+    title: "YourCoSite — Din hemsida, byggd genom ett samtal",
     description:
       "Beskriv verksamheten, visa oss vad ni gillar, och låt YourCoSite bygga er hemsida. Sen fortsätter ni bara att be om ändringar.",
   },
   en: {
-    title: "YourCoSite — your website, built through a conversation",
+    title: "YourCoSite — Your website, built through a conversation",
     description:
       "Describe your business, show us what you like, and let YourCoSite build your website. Then just keep asking for changes.",
   },
   da: {
-    title: "YourCoSite — din hjemmeside, bygget gennem en samtale",
+    title: "YourCoSite — Din hjemmeside, bygget gennem en samtale",
     description:
       "Beskriv virksomheden, vis os, hvad I kan lide, og lad YourCoSite bygge jeres hjemmeside. Derefter fortsætter I bare med at bede om ændringer.",
   },
   fi: {
-    title: "YourCoSite — kotisivusi, rakennettu keskustelun avulla",
+    title: "YourCoSite — Kotisivusi, rakennettu keskustelun avulla",
     description:
       "Kuvaile yritystänne, näytä meille, mistä pidätte, ja anna YourCoSiten rakentaa kotisivunne. Sen jälkeen pyydätte vain muutoksia.",
   },
   de: {
-    title: "YourCoSite — deine Website, gebaut durch ein Gespräch",
+    title: "YourCoSite — Deine Website, gebaut durch ein Gespräch",
     description:
       "Beschreibt euer Unternehmen, zeigt uns, was euch gefällt, und lasst YourCoSite eure Website bauen. Danach bittet ihr einfach um Änderungen.",
   },
   fr: {
-    title: "YourCoSite — votre site web, créé grâce à une conversation",
+    title: "YourCoSite — Votre site web, créé grâce à une conversation",
     description:
       "Décrivez votre activité, montrez-nous ce que vous aimez, et laissez YourCoSite créer votre site web. Ensuite, vous n’avez plus qu’à demander des modifications.",
   },
   es: {
-    title: "YourCoSite — tu web, creada mediante una conversación",
+    title: "YourCoSite — Tu web, creada mediante una conversación",
     description:
       "Describid vuestro negocio, mostradnos lo que os gusta y dejad que YourCoSite cree vuestra web. Después solo tenéis que pedir cambios.",
   },
