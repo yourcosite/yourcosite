@@ -74,17 +74,29 @@ export default function AccountHeader({
         >
           {t("Support")}
         </button>
+        {/* Mobil: tydlig menyknapp (hamburgare) med Sajter, Statistik, Bokningar m.m. */}
+        <button
+          onClick={() => setMenuOpen((v) => !v)}
+          aria-label={t("Meny")}
+          aria-expanded={menuOpen}
+          className="md:hidden w-10 h-10 rounded-lg border border-line bg-bg text-ink flex items-center justify-center flex-shrink-0"
+        >
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            {menuOpen ? <path d="M6 6l12 12M18 6L6 18" /> : <path d="M4 7h16M4 12h16M4 17h16" />}
+          </svg>
+        </button>
         <button
           onClick={() => setMenuOpen((v) => !v)}
           aria-label={t("Kontomeny")}
           aria-expanded={menuOpen}
-          className="w-[34px] h-[34px] rounded-full bg-accent-soft text-ink flex items-center justify-center font-bold text-[13px] flex-shrink-0"
+          className="hidden md:flex w-[34px] h-[34px] rounded-full bg-accent-soft text-ink items-center justify-center font-bold text-[13px] flex-shrink-0"
         >
           {initialsOf(userName)}
         </button>
 
+        {menuOpen && <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />}
         {menuOpen && (
-          <div className="absolute top-11 right-0 w-[220px] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.12)] p-2 z-20">
+          <div className="absolute top-12 right-0 w-[240px] max-w-[calc(100vw-2rem)] bg-surface border border-line rounded-xl shadow-[0_12px_30px_rgba(0,0,0,0.12)] p-2 z-20">
             <div className="px-3 py-2.5 border-b border-line mb-1.5">
               <div className="font-semibold text-[13.5px] text-ink">{userName}</div>
               {userEmail && (
