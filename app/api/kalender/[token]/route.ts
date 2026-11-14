@@ -21,7 +21,7 @@ async function GET_handler(_req: Request, { params }: { params: { token: string 
   const since = new Date(Date.now() - 60 * 86400000).toISOString();
   const { data: rows } = await db
     .from("bookings")
-    .select("id, package_name, starts_at, ends_at, status, customer_name, customer_email, customer_phone, message")
+    .select("id, package_name, starts_at, ends_at, status, customer_name, customer_email, customer_phone, message, buffer_min")
     .eq("site_id", site.id)
     .gte("ends_at", since)
     .order("starts_at");

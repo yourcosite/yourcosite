@@ -28,6 +28,7 @@ function fold(line: string): string {
 export type FeedBooking = {
   id: string; package_name: string; starts_at: string; ends_at: string; status: string;
   customer_name: string; customer_email: string | null; customer_phone: string | null; message: string | null;
+  buffer_min?: number | null; // paus efter bokningen, räknas som upptagen tid
 };
 export type FeedPackage = { id: string; name: string };
 
@@ -129,7 +130,7 @@ export function buildCalendarFeed(input: {
 
   const cuts: Interval[] = [
     ...input.blocks.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as Interval),
-    ...input.bookings.filter((b) => b.status !== "cancelled").map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as Interval),
+    ...input.bookings.filter((b) => b.status !== "cancelled").map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime() + Math.max(0, b.buffer_min || 0) * 60000] as Interval),
   ];
   for (const [pkg, wins] of groups) {
     const label = pkg && nameOf.get(pkg) ? `${input.openLabel}: ${nameOf.get(pkg)}` : input.openLabel;
