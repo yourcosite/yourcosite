@@ -5,14 +5,14 @@ import { shareImageFor } from "@/lib/siteMeta";
 // Den senast publicerade sajten vars ägare valt att visa den på startsidan
 // (sites.show_on_homepage). Null om ingen finns, eller om kolumnen ännu
 // saknas i databasen (supabase/startsida-visa.sql).
-export type Showcase = { name: string; url: string; image: string; description: string | null };
+export type Showcase = { name: string; url: string; image: string; description: string | null; needsImage: boolean };
 
 export async function getLatestShowcase(): Promise<Showcase | null> {
   try {
     const admin = createAdminClient();
     const { data } = await admin
       .from("sites")
-      .select("id, name, slug, content, custom_domain, custom_domain_status, published_at")
+      .select("*")
       .eq("status", "live")
       .eq("show_on_homepage", true)
       .not("content", "is", null)
@@ -24,7 +24,8 @@ export async function getLatestShowcase(): Promise<Showcase | null> {
       const url = active ? `https://${s.custom_domain}` : s.slug ? `https://${String(s.slug).toLowerCase()}.yourcosite.com` : null;
       if (!url) continue;
       const desc = s.content.pages[0]?.seoDescription?.trim() || null;
-      return { name: s.name, url, image: shareImageFor({ id: s.id, content: s.content }), description: desc };
+      const shot = typeof s.showcase_image_url === "string" && s.showcase_image_url ? s.showcase_image_url : null;
+      return { name: s.name, url, image: shot ?? shareImageFor({ id: s.id, content: s.content }), description: desc, needsImage: !shot };
     }
   } catch {
     /* tyst: startsidan fungerar utan */

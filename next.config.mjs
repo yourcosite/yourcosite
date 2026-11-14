@@ -2,6 +2,12 @@
 const nextConfig = {
   reactStrictMode: true,
   experimental: {
+    // Webbläsaren som tar skärmdumpar av kundsajter till startsidan (lib/siteScreenshot.ts).
+    serverComponentsExternalPackages: ["@sparticuz/chromium", "puppeteer-core"],
+    outputFileTracingIncludes: {
+      "/api/sites/showcase": ["./node_modules/@sparticuz/chromium/bin/**"],
+      "/api/showcase/ensure": ["./node_modules/@sparticuz/chromium/bin/**"],
+    },
     // Next.js cachar annars en redan besökt sidas serverrenderade innehåll
     // i webbläsaren i 30s (även för dynamiska sidor) och återanvänder den
     // cachen vid klick-navigering — exakt det som gjorde att en nybyggd

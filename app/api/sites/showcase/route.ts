@@ -3,6 +3,10 @@ import { getT } from "@/lib/i18n/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { withErrorLog } from "@/lib/errorLog";
+import { rateLimited, TOO_MANY } from "@/lib/rateLimit";
+import { generateShowcaseImage } from "@/lib/showcaseImage";
+
+export const maxDuration = 60;
 
 // Kundens val att visa sajten på YourCoSites startsida (sites.show_on_homepage).
 // Bara kundens egna sajter, och bara publicerade sajter kan visas.
@@ -31,11 +35,18 @@ async function POST_handler(request: Request) {
   const body = await request.json().catch(() => ({}));
   const siteId = typeof body.siteId === "string" ? body.siteId : "";
   const show = body.show === true;
+  const refresh = body.refresh === true;
   const site = await owned(user.id, siteId);
   if (!site) return NextResponse.json({ error: t("Hittade inte sajten.") }, { status: 404 });
   const { error } = await createAdminClient().from("sites").update({ show_on_homepage: show }).eq("id", siteId);
   if (error) return NextResponse.json({ error: t("Något gick fel.") }, { status: 500 });
-  return NextResponse.json({ show });
+  // Skärmdump av sajten till startsidans kort: när rutan kryssas i, och på begäran.
+  let image: string | null = null;
+  if (show && (refresh || body.capture !== false)) {
+    if (await rateLimited(`showcase:user:${user.id}`, 6, 3600)) return NextResponse.json({ error: t(TOO_MANY) }, { status: 429 });
+    image = await generateShowcaseImage(siteId);
+  }
+  return NextResponse.json({ show, image });
 }
 
 export const GET = withErrorLog("GET /api/sites/showcase", GET_handler);

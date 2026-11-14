@@ -10,6 +10,7 @@ import FeatureGrid from "@/components/FeatureGrid";
 import Reveal from "@/components/Reveal";
 import { features, homeFeatureIcons } from "@/lib/marketingFeatures";
 import { getLatestShowcase } from "@/lib/homeShowcase";
+import EnsureShowcaseImage from "@/components/EnsureShowcaseImage";
 
 export const dynamic = "force-dynamic";
 
@@ -104,6 +105,7 @@ export default async function LandingPage() {
                 <span className="font-semibold text-[14.5px] border-b border-ink pb-0.5 whitespace-nowrap">{t("Se sajten →")}</span>
               </div>
             </a>
+            {showcase.needsImage && <EnsureShowcaseImage />}
           </div>
         </section>
       )}

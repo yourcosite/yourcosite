@@ -33,6 +33,7 @@ export default function PublishModal({
   const [domainInput, setDomainInput] = useState("");
   const [copied, setCopied] = useState("");
   const [showcase, setShowcase] = useState(false);
+  const [shotBusy, setShotBusy] = useState(false);
   const live = status === "live";
 
   const load = async () => {
@@ -47,13 +48,15 @@ export default function PublishModal({
   useEffect(() => {
     if (live) fetch(`/api/sites/showcase?siteId=${siteId}`).then((r) => r.json()).then((d) => setShowcase(!!d.show)).catch(() => {});
   }, [live, siteId]);
-  const toggleShowcase = async (value: boolean) => {
+  const toggleShowcase = async (value: boolean, refresh = false) => {
     setShowcase(value);
+    setShotBusy(value);
     const res = await fetch("/api/sites/showcase", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ siteId, show: value }),
+      body: JSON.stringify({ siteId, show: value, refresh }),
     }).catch(() => null);
+    setShotBusy(false);
     if (!res || !res.ok) setShowcase(!value);
   };
   useEffect(() => {
@@ -160,6 +163,15 @@ export default function PublishModal({
               <span>
                 <span className="block font-semibold text-[14px]">{t("Visa på YourCoSites startsida")}</span>
                 <span className="block text-[12.5px] text-ink-dim">{t("Visa din sajt som exempel på YourCoSites startsida när den är den senast publicerade. Det är gratis reklam för dig, och du kan stänga av det när som helst.")}</span>
+                {showcase && (
+                  <span className="block mt-1.5 text-[12.5px]">
+                    {shotBusy ? (
+                      <span className="text-ink-dim">{t("Skapar förhandsbild …")}</span>
+                    ) : (
+                      <button type="button" onClick={(e) => { e.preventDefault(); toggleShowcase(true, true); }} className="font-semibold underline">{t("Uppdatera förhandsbilden")}</button>
+                    )}
+                  </span>
+                )}
               </span>
             </label>
 
