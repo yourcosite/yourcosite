@@ -52,7 +52,7 @@ export function publicMetadata(site: PublicSite, requestedPath: string, canonica
   const title = page?.seoTitle || (page && page.path !== "/" && page.label ? `${page.label} | ${site.name}` : site.name);
   const description = page?.seoDescription || undefined;
   return {
-    title,
+    title: { absolute: title },
     description,
     robots: index ? { index: true, follow: true } : { index: false, follow: false },
     alternates: canonical ? { canonical } : undefined,
