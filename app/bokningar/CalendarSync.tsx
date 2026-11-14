@@ -61,6 +61,11 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
         {t("Lägg in länken nedan i Google Kalender, Apple Kalender eller Outlook. Då syns dina bokningar som vanliga poster, och dina bokningsbara tider syns som lediga tider som inte blockerar kalendern. Nya bokningar dyker upp av sig själva, ibland med några timmars fördröjning.")}
       </p>
 
+      <div className="mt-3 rounded-lg border border-[#F0D9B5] bg-[#FFF4E5] px-3.5 py-3 text-[13px] text-[#6B4A1A] leading-relaxed">
+        <div className="font-bold">{t("Viktigt: kopplingen går bara åt ett håll")}</div>
+        {t("Din kalender läser bara av bokningarna från YourCoSite. Det du lägger in i din egen kalender syns aldrig hos oss och stoppar inga bokningar. Privata möten och andra tider du lägger in där gör alltså inte att tiden blir obokningsbar på din sajt. Vill du stänga en tid för bokning gör du det här i YourCoSite, under Tider.")}
+      </div>
+
       {error && <div className="text-[13px] text-warm mt-3">{error}</div>}
       {token && (
         <>

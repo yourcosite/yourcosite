@@ -3130,5 +3130,7 @@
   "Har länken kommit i orätta händer? Skapa en ny": "Has the link ended up in the wrong hands? Create a new one",
   "Se dina bokningar i din egen kalender": "See your bookings in your own calendar",
   "Under Bokningar och Kalender finns nu en länk du lägger in i Google Kalender, Apple Kalender eller Outlook. Då syns dina bokningar och dina bokningsbara tider i kalendern du redan använder, och nya bokningar dyker upp av sig själva. Det finns en steg-för-steg-guide för varje kalender.": "Under Bookings and Calendar there is now a link you add to Google Calendar, Apple Calendar or Outlook. Your bookings and your bookable times then show up in the calendar you already use, and new bookings appear on their own. There is a step-by-step guide for each calendar.",
-  "Koppla till din kalender": "Connect to your calendar"
+  "Koppla till din kalender": "Connect to your calendar",
+  "Viktigt: kopplingen går bara åt ett håll": "Important: the connection only goes one way",
+  "Din kalender läser bara av bokningarna från YourCoSite. Det du lägger in i din egen kalender syns aldrig hos oss och stoppar inga bokningar. Privata möten och andra tider du lägger in där gör alltså inte att tiden blir obokningsbar på din sajt. Vill du stänga en tid för bokning gör du det här i YourCoSite, under Tider.": "Your calendar only reads the bookings from YourCoSite. Anything you add to your own calendar never shows up with us and does not stop any bookings. Private meetings and other times you add there therefore do not make the time unbookable on your site. If you want to close a time for booking, do it here in YourCoSite, under Times."
 }
