@@ -75,6 +75,12 @@ function formatDate(iso: string) {
   });
 }
 
+function siteBadge(status: string | null | undefined) {
+  return status === "live"
+    ? { label: "LIVE", cls: "bg-[#DCFCE7] text-[#166534]" }
+    : { label: "UTKAST", cls: "bg-[#FDE68A] text-[#7C4A03]" };
+}
+
 export default function AdminCustomersClient({
   initialCustomers,
   canEdit,
@@ -297,13 +303,24 @@ export default function AdminCustomersClient({
                 <Link href={`/admin/kunder/${c.id}`} className="font-semibold text-[15px] min-w-0 break-words hover:underline">
                   {c.full_name || "—"}
                 </Link>
-                <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 ${badge}`}>{statusLabel}</span>
+                {allSites.length === 0 && <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 ${badge}`}>{statusLabel}</span>}
               </div>
               {c.company_name && <div className="text-[13px] text-ink-dim mt-0.5">{c.company_name}</div>}
               <div className="text-[13px] text-ink-dim break-all mt-1">{c.email}</div>
-              <div className="text-[12.5px] text-ink-dim mt-1">
-                {siteLabel ? `${siteLabel} · ` : ""}{formatDate(c.created_at)}
-              </div>
+              {allSites.length > 0 && (
+                <div className="mt-2.5 border border-line rounded-xl divide-y divide-line">
+                  {allSites.map((x) => {
+                    const b = siteBadge(x.status);
+                    return (
+                      <div key={x.id} className="flex items-center justify-between gap-3 px-3 py-2 text-[13px]">
+                        <span className="min-w-0 break-words">{x.domain || x.name || "—"}</span>
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full flex-shrink-0 ${b.cls}`}>{b.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              <div className="text-[12.5px] text-ink-dim mt-2">Skapad {formatDate(c.created_at)}</div>
               {!c.billing_setup_complete && (
                 <span className="inline-block mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FDE68A] text-[#7C4A03]">BETALNING EJ KLAR</span>
               )}
@@ -367,11 +384,22 @@ export default function AdminCustomersClient({
                   </td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.company_name || "—"}</td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.email}</td>
-                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{siteLabel || "—"}</td>
+                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">
+                    {allSites.length === 0 ? "—" : allSites.map((x) => (
+                      <div key={x.id} className="h-6 flex items-center">{x.domain || x.name || "—"}</div>
+                    ))}
+                  </td>
                   <td className="py-3.5 px-5 whitespace-nowrap">
-                    <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>
-                      {statusLabel}
-                    </span>
+                    {allSites.length === 0 ? (
+                      <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>{statusLabel}</span>
+                    ) : allSites.map((x) => {
+                      const b = siteBadge(x.status);
+                      return (
+                        <div key={x.id} className="h-6 flex items-center">
+                          <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${b.cls}`}>{b.label}</span>
+                        </div>
+                      );
+                    })}
                     {!c.billing_setup_complete && (
                       <span
                         className="ml-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FDE68A] text-[#7C4A03]"
