@@ -252,6 +252,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
         <button type="button" className="text-[13px] font-semibold border border-line rounded-lg px-3 py-1.5 bg-surface" onClick={() => setAnchor(today)}>{t("Idag")}</button>
         <button type="button" className="text-[13px] font-semibold border border-line rounded-lg px-3 py-1.5 bg-surface" onClick={() => shift(1)} aria-label={t("Nästa")}>›</button>
         <div className="text-[14px] font-semibold ml-1 capitalize">{weekLabel}</div>
+        <CalendarSync siteId={siteId} />
       </div>
 
       <div className="flex gap-4 flex-wrap text-[12px] text-ink-dim mb-3">
@@ -472,7 +473,6 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
           </div>
         </div>
       )}
-      <CalendarSync siteId={siteId} />
     </div>
   );
 }

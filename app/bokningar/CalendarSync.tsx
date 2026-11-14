@@ -14,8 +14,10 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
   const [copied, setCopied] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
+    if (!open) return;
     let alive = true;
     setToken(null);
     setError("");
@@ -25,7 +27,7 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
       .catch(() => alive && setError(t("Kunde inte hämta kalenderlänken.")));
     return () => { alive = false; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [siteId]);
+  }, [siteId, open]);
 
   const origin = typeof window !== "undefined" ? window.location.origin : "https://www.yourcosite.com";
   const url = token ? `${origin}/api/kalender/${token}` : "";
@@ -44,8 +46,17 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
   };
 
   return (
-    <div className="border border-line rounded-xl bg-surface mt-4 p-4 max-w-[640px]">
-      <div className="font-semibold text-[14.5px]">{t("Se bokningarna i din egen kalender")}</div>
+    <>
+    <button type="button" onClick={() => setOpen(true)} className="text-[13px] font-semibold border border-line rounded-lg px-3.5 py-1.5 bg-surface ml-auto inline-flex items-center gap-1.5">
+      <span aria-hidden="true">📅</span>{t("Koppla till din kalender")}
+    </button>
+    {open && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-3 py-6" role="dialog" aria-modal="true" onClick={() => setOpen(false)}>
+    <div className="bg-surface rounded-2xl p-5 w-full max-w-[560px] max-h-[90vh] overflow-y-auto shadow-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="font-semibold text-[16px]">{t("Se bokningarna i din egen kalender")}</div>
+        <button type="button" onClick={() => setOpen(false)} aria-label={t("Stäng")} className="text-ink-dim text-[20px] leading-none px-1">×</button>
+      </div>
       <p className="text-[13px] text-ink-dim mt-1 leading-relaxed">
         {t("Lägg in länken nedan i Google Kalender, Apple Kalender eller Outlook. Då syns dina bokningar som vanliga poster, och dina bokningsbara tider syns som lediga tider som inte blockerar kalendern. Nya bokningar dyker upp av sig själva, ibland med några timmars fördröjning.")}
       </p>
@@ -62,7 +73,7 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
           <p className="text-[12px] text-ink-dim mt-2">{t("Länken är hemlig och bara för dig. Dela den inte med andra.")}</p>
 
           <div className="mt-4 flex flex-col gap-2">
-            <details className="border border-line rounded-lg px-3.5 py-2.5">
+            <details open className="border border-line rounded-lg px-3.5 py-2.5">
               <summary className="cursor-pointer text-[13.5px] font-semibold">{t("Guide: Google Kalender")}</summary>
               <ol className={`${stepCls} mt-2.5`}>
                 <li>{t("Kopiera länken ovan.")}</li>
@@ -105,5 +116,8 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
         </>
       )}
     </div>
+    </div>
+    )}
+    </>
   );
 }
