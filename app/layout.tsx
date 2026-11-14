@@ -63,6 +63,7 @@ export function generateMetadata(): Metadata {
   // Publika sidor: adress per språk så att sökmotorerna hittar rätt version.
   let alternates: Metadata["alternates"];
   let pageUrl = "/";
+  const ogImage = `/api/og?lang=${locale}`;
   try {
     const route = headers().get("x-ycs-route");
     if (route) {
@@ -79,9 +80,9 @@ export function generateMetadata(): Metadata {
     title: { default: m.title, template: "%s — YourCoSite" },
     description: m.description,
     // Utan egna og-taggar kan Messenger och andra hoppa över förhandsvisningen.
-    // Delningsbilden kommer från app/opengraph-image.tsx.
-    openGraph: { type: "website", siteName: "YourCoSite", title: m.title, description: m.description, url: pageUrl },
-    twitter: { card: "summary_large_image", title: m.title, description: m.description },
+    // Delningsbilden finns per språk i app/api/og/route.tsx.
+    openGraph: { type: "website", siteName: "YourCoSite", title: m.title, description: m.description, url: pageUrl, images: [{ url: ogImage, width: 1200, height: 630, alt: m.title }] },
+    twitter: { card: "summary_large_image", title: m.title, description: m.description, images: [ogImage] },
   };
 }
 
