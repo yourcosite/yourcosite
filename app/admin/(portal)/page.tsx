@@ -137,8 +137,9 @@ export default async function AdminOverviewPage() {
             </thead>
             <tbody>
               {recent.map((c) => {
-                const site = c.sites?.[0];
-                const status = site?.status === "live" ? "LIVE" : site ? "UTKAST" : "INGEN SAJT";
+                const allSites = c.sites ?? [];
+                const siteLabel = allSites.map((x) => x.domain || x.name).filter(Boolean).join(", ");
+                const status = allSites.some((x) => x.status === "live") ? "LIVE" : allSites.length ? "UTKAST" : "INGEN SAJT";
                 const badge =
                   status === "LIVE"
                     ? "bg-[#DCFCE7] text-[#166534]"
@@ -151,7 +152,7 @@ export default async function AdminOverviewPage() {
                       {c.full_name || c.email}
                     </td>
                     <td className="py-2.5 border-b border-line text-ink-dim">
-                      {site?.domain || site?.name || "—"}
+                      {siteLabel || "—"}
                     </td>
                     <td className="py-2.5 border-b border-line">
                       <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>

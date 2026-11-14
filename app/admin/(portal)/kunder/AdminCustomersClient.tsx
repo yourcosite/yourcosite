@@ -285,8 +285,10 @@ export default function AdminCustomersClient({
       {/* Mobil: kunderna som kort (tabellen nedan är för bred för en telefon). */}
       <div className="md:hidden flex flex-col gap-3">
         {filtered.map((c) => {
-          const site = c.sites?.[0];
-          const statusLabel = site?.status === "live" ? "LIVE" : site ? "UTKAST" : "INGEN SAJT";
+          const allSites = c.sites ?? [];
+          const site = allSites.find((x) => x.status === "live") ?? allSites[0];
+          const siteLabel = allSites.map((x) => x.domain || x.name).filter(Boolean).join(", ");
+          const statusLabel = allSites.some((x) => x.status === "live") ? "LIVE" : allSites.length ? "UTKAST" : "INGEN SAJT";
           const badge =
             statusLabel === "LIVE" ? "bg-[#DCFCE7] text-[#166534]" : statusLabel === "UTKAST" ? "bg-[#FDE68A] text-[#7C4A03]" : "bg-line text-ink-dim";
           return (
@@ -300,7 +302,7 @@ export default function AdminCustomersClient({
               {c.company_name && <div className="text-[13px] text-ink-dim mt-0.5">{c.company_name}</div>}
               <div className="text-[13px] text-ink-dim break-all mt-1">{c.email}</div>
               <div className="text-[12.5px] text-ink-dim mt-1">
-                {(site?.domain || site?.name) ? `${site?.domain || site?.name} · ` : ""}{formatDate(c.created_at)}
+                {siteLabel ? `${siteLabel} · ` : ""}{formatDate(c.created_at)}
               </div>
               {!c.billing_setup_complete && (
                 <span className="inline-block mt-2 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-[#FDE68A] text-[#7C4A03]">BETALNING EJ KLAR</span>
@@ -346,8 +348,10 @@ export default function AdminCustomersClient({
           </thead>
           <tbody>
             {filtered.map((c) => {
-              const site = c.sites?.[0];
-              const statusLabel = site?.status === "live" ? "LIVE" : site ? "UTKAST" : "INGEN SAJT";
+              const allSites = c.sites ?? [];
+              const site = allSites.find((x) => x.status === "live") ?? allSites[0];
+              const siteLabel = allSites.map((x) => x.domain || x.name).filter(Boolean).join(", ");
+              const statusLabel = allSites.some((x) => x.status === "live") ? "LIVE" : allSites.length ? "UTKAST" : "INGEN SAJT";
               const badge =
                 statusLabel === "LIVE"
                   ? "bg-[#DCFCE7] text-[#166534]"
@@ -363,7 +367,7 @@ export default function AdminCustomersClient({
                   </td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.company_name || "—"}</td>
                   <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{c.email}</td>
-                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{site?.domain || site?.name || "—"}</td>
+                  <td className="py-3.5 px-5 text-ink-dim whitespace-nowrap">{siteLabel || "—"}</td>
                   <td className="py-3.5 px-5 whitespace-nowrap">
                     <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${badge}`}>
                       {statusLabel}
