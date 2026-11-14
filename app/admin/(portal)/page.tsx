@@ -25,7 +25,7 @@ export default async function AdminOverviewPage() {
 
   const { data: customers } = await supabase
     .from("profiles")
-    .select("id, full_name, email, created_at, sites(id, name, domain, status, plan)")
+    .select("id, full_name, email, created_at, sites!owner_id(id, name, domain, status, plan)")
     .eq("role", "customer")
     .order("created_at", { ascending: false });
 

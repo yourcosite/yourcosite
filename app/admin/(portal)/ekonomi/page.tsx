@@ -15,7 +15,7 @@ export default async function AdminEkonomiPage() {
 
   const { data: customers } = await supabase
     .from("profiles")
-    .select("id, full_name, email, sites(id, name, domain, status, plan)")
+    .select("id, full_name, email, sites!owner_id(id, name, domain, status, plan)")
     .eq("role", "customer");
 
   const list = (customers ?? []) as unknown as CustomerRow[];

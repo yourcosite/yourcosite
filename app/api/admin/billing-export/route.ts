@@ -31,7 +31,7 @@ async function GET_handler(request: Request) {
 
   const base = await admin
     .from("profiles")
-    .select("id, email, full_name, company_name, org_number, address_street, address_postal_code, address_city, billing_email, country, sites(id, name, status, plan)")
+    .select("id, email, full_name, company_name, org_number, address_street, address_postal_code, address_city, billing_email, country, sites!owner_id(id, name, status, plan)")
     .eq("role", "customer");
   const customers = (base.data ?? []) as any[];
 
