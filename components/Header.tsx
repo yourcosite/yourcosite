@@ -86,7 +86,7 @@ export default async function Header({ active }: { active?: string }) {
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </summary>
-            <div className="absolute left-0 right-0 top-full z-50 bg-ink border-t border-white/10 px-6 pt-3 pb-6 shadow-[0_18px_30px_rgba(0,0,0,0.35)]">
+            <div className="hidden group-open:block absolute left-0 right-0 top-full z-50 bg-ink border-t border-white/10 px-6 pt-3 pb-6 shadow-[0_18px_30px_rgba(0,0,0,0.35)]">
               <nav className="flex flex-col">
                 {navLinks.map((l) => (
                   <Link

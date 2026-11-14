@@ -1875,7 +1875,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
 
 
   return (
-    <div className="h-screen flex font-sans overflow-hidden bg-[#E5E3DD]">
+    <div className="h-screen h-dvh flex font-sans overflow-hidden overscroll-none bg-[#E5E3DD]">
       <Rail
         siteId={site?.id}
         panel={panel}

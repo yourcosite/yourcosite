@@ -50,7 +50,7 @@ export default function LegalLayout({
               [&>p]:mb-4
               [&_strong]:font-semibold
               [&_a]:underline
-              [&_table]:w-full [&_table]:border-collapse [&_table]:my-5 [&_table]:text-[13.5px]
+              [&_table]:block [&_table]:max-w-full [&_table]:overflow-x-auto [&_table]:border-collapse [&_table]:my-5 [&_table]:text-[13.5px]
               [&_th]:text-left [&_th]:bg-bg [&_th]:border [&_th]:border-line [&_th]:px-3 [&_th]:py-2 [&_th]:font-semibold
               [&_td]:border [&_td]:border-line [&_td]:px-3 [&_td]:py-2 [&_td]:align-top
               [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:mb-4 [&_ul]:space-y-1.5

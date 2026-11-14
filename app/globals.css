@@ -9,6 +9,8 @@ html {
 body {
   background: #F7F5F2;
   color: #17171A;
+  /* Animationer som glider in från sidan ska inte ge sidledsscroll på mobil. */
+  overflow-x: clip;
 }
 
 h1, h2, h3 {

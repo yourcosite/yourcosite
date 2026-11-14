@@ -98,7 +98,7 @@ export default function DesignPanel({
         </div>
         <button type="button" onClick={onClose} aria-label={t("Stäng")} className="text-ink-dim text-[18px] leading-none px-1">×</button>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-6 flex flex-col gap-5">
+      <div className="flex-1 overflow-y-auto px-5 pb-32 md:pb-6 flex flex-col gap-5">
         <Section title={t("Utseende")}>
           <div className="grid grid-cols-2 gap-2">
             {(Object.keys(SKINS) as SkinId[]).map((id) => {

@@ -25,7 +25,7 @@ export default function PanelFrame({
         </div>
         <button type="button" onClick={onClose} aria-label={t("Stäng")} className="text-ink-dim text-[18px] leading-none px-1">×</button>
       </div>
-      <div className="flex-1 overflow-y-auto px-5 pb-28">{children}</div>
+      <div className="flex-1 overflow-y-auto px-5 pb-32 md:pb-28">{children}</div>
     </div>
   );
 }
