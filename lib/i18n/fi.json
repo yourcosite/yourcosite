@@ -3088,5 +3088,7 @@
   "Be Millie ändra namnet i sidfoten eller lägga till länkar till Facebook, LinkedIn och Instagram. Loggan i toppen länkar nu till startsidan.": "Pyydä Milliea muuttamaan alatunnisteen nimeä tai lisäämään linkkejä Facebookiin, LinkedIniin ja Instagramiin. Ylhäällä oleva logo linkittää nyt etusivulle.",
   "Lägg till en länk till vår Facebooksida i sidfoten": "Lisää linkki Facebook-sivullemme alatunnisteeseen",
   "Större bilder går bra": "Suuremmat kuvat sopivat",
-  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Voit nyt ladata jopa 15 Mt:n kuvia. Pienennämme ne automaattisesti, jotta sivusto latautuu nopeasti."
+  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Voit nyt ladata jopa 15 Mt:n kuvia. Pienennämme ne automaattisesti, jotta sivusto latautuu nopeasti.",
+  "Snyggare adress till din sajt": "Hienompi osoite sivustollesi",
+  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Julkaistu sivustosi saa nyt oman osoitteen muodossa nimesi.yourcosite.com. Vanhat linkit toimivat edelleen ja ohjataan eteenpäin. Jos liität oman verkkotunnuksesi, se ottaa vallan, ja yhteinen osoite lakkaa näkymästä."
 }

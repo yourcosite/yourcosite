@@ -107,7 +107,7 @@ export default function PublishModal({
     }).catch(() => {});
   };
 
-  const publicUrl = info?.slug ? `https://www.yourcosite.com/${info.slug}` : "";
+  const publicUrl = info?.slug ? `https://${info.slug.toLowerCase()}.yourcosite.com` : "";
 
   return (
     <div className="fixed inset-0 z-[70] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>

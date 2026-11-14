@@ -3088,5 +3088,7 @@
   "Be Millie ändra namnet i sidfoten eller lägga till länkar till Facebook, LinkedIn och Instagram. Loggan i toppen länkar nu till startsidan.": "Demandez à Millie de modifier le nom dans le pied de page ou d'ajouter des liens vers Facebook, LinkedIn et Instagram. Le logo en haut renvoie désormais vers la page d'accueil.",
   "Lägg till en länk till vår Facebooksida i sidfoten": "Ajoute un lien vers notre page Facebook dans le pied de page",
   "Större bilder går bra": "Les images plus grandes sont acceptées",
-  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Vous pouvez désormais téléverser des images jusqu'à 15 Mo. Nous les réduisons automatiquement pour que le site se charge rapidement."
+  "Du kan nu ladda upp bilder på upp till 15 MB. Vi förminskar dem automatiskt så att sajten laddar snabbt.": "Vous pouvez désormais téléverser des images jusqu'à 15 Mo. Nous les réduisons automatiquement pour que le site se charge rapidement.",
+  "Snyggare adress till din sajt": "Une plus belle adresse pour votre site",
+  "Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas.": "Votre site publié reçoit désormais sa propre adresse sous la forme votrenom.yourcosite.com. Les anciens liens continuent de fonctionner et sont redirigés. Si vous connectez votre propre domaine, il prend le relais et l'adresse commune cesse d'être affichée."
 }

@@ -15,7 +15,7 @@ export const RESERVED_SLUGS = new Set<string>([
   // Ord som lätt förväxlas med oss eller används tekniskt
   "www", "app", "static", "assets", "public", "login", "logout", "signin", "signup", "register", "account",
   "settings", "help", "blog", "news", "about", "contact", "pricing", "terms", "privacy", "status", "mail",
-  "email", "ftp", "cdn", "test", "yourcosite", "yourco", "millie", "stripe", "vercel", "supabase",
+  "email", "ftp", "cdn", "send", "rsend", "resend", "smtp", "imap", "pop", "mx", "ns1", "ns2", "webmail", "autodiscover", "dmarc", "test", "yourcosite", "yourco", "millie", "stripe", "vercel", "supabase",
 ]);
 
 export function isReservedSlug(slug: string): boolean {

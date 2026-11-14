@@ -15,6 +15,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-14-egen-subadress",
+    date: "2026-11-14",
+    icon: "🌐",
+    title: msg("Snyggare adress till din sajt"),
+    text: msg("Din publicerade sajt får nu en egen adress i formen dittnamn.yourcosite.com. Gamla länkar fortsätter fungera och skickas vidare. Kopplar du en egen domän tar den över, och då slutar den gemensamma adressen att visas."),
+  },
+  {
     id: "2026-11-13-bokningskalender",
     date: "2026-11-13",
     icon: "📅",

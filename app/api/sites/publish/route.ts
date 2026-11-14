@@ -7,7 +7,7 @@ import { withErrorLog } from "@/lib/errorLog";
 import { isReservedSlug } from "@/lib/reservedSlugs";
 
 // Publicera eller avpublicera en sajt. En publicerad sajt får en publik adress
-// (www.yourcosite.com/<slug>) och visas för alla; en egen domän kopplas
+// (<slug>.yourcosite.com) och visas för alla; en egen domän kopplas
 // separat (/api/sites/domain). Admin kan pausa en sajt (status "pausad"):
 // då kan kunden inte publicera den igen själv.
 function slugify(name: string): string {
