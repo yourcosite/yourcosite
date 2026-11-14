@@ -62,9 +62,11 @@ export function generateMetadata(): Metadata {
   const m = META[locale] || META.sv;
   // Publika sidor: adress per språk så att sökmotorerna hittar rätt version.
   let alternates: Metadata["alternates"];
+  let pageUrl = "/";
   try {
     const route = headers().get("x-ycs-route");
     if (route) {
+      pageUrl = localizedPath(route, locale);
       const languages: Record<string, string> = {};
       for (const l of LOCALES) languages[l] = localizedPath(route, l);
       languages["x-default"] = localizedPath(route, "sv");
@@ -76,6 +78,10 @@ export function generateMetadata(): Metadata {
     metadataBase: new URL("https://www.yourcosite.com"),
     title: { default: m.title, template: "%s — YourCoSite" },
     description: m.description,
+    // Utan egna og-taggar kan Messenger och andra hoppa över förhandsvisningen.
+    // Delningsbilden kommer från app/opengraph-image.tsx.
+    openGraph: { type: "website", siteName: "YourCoSite", title: m.title, description: m.description, url: pageUrl },
+    twitter: { card: "summary_large_image", title: m.title, description: m.description },
   };
 }
 
