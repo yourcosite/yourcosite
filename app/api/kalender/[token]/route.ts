@@ -9,7 +9,7 @@ import { withErrorLog } from "@/lib/errorLog";
 // så ingen inloggning behövs. Bokningar och bokningsbara tider i samma flöde.
 export const dynamic = "force-dynamic";
 
-async function GET_handler(_req: Request, { params }: { params: { token: string } }) {
+async function GET_handler(req: Request, { params }: { params: { token: string } }) {
   const token = params.token.replace(/\.ics$/i, "");
   if (!/^[0-9a-f]{32,80}$/i.test(token)) return new Response("Not found", { status: 404 });
 
@@ -26,7 +26,9 @@ async function GET_handler(_req: Request, { params }: { params: { token: string 
     .gte("ends_at", since)
     .order("starts_at");
 
+  const visa = new URL(req.url).searchParams.get("visa");
   const body = buildCalendarFeed({
+    only: visa === "bokningar" || visa === "tider" ? visa : undefined,
     siteId: site.id,
     siteName: site.name || "Bokningar",
     tz: data.settings.timezone || DEFAULT_TIMEZONE,

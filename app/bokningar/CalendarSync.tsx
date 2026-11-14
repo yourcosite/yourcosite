@@ -77,6 +77,19 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
           </div>
           <p className="text-[12px] text-ink-dim mt-2">{t("Länken är hemlig och bara för dig. Dela den inte med andra.")}</p>
 
+          <details className="mt-3 border border-line rounded-lg px-3.5 py-2.5">
+            <summary className="cursor-pointer text-[13.5px] font-semibold">{t("Vill du ha olika färger?")}</summary>
+            <p className="text-[12.5px] text-ink-dim mt-2 leading-relaxed">
+              {t("Kalenderappar låter dig bara välja färg per kalender, inte per post. Vill du ha bokningar och bokningsbara tider i olika färger kan du lägga in dessa två länkar i stället för länken ovan, var och en som en egen kalender, och sedan välja färg på varje.")}
+            </p>
+            {([[t("Bara bokningar"), "bokningar"], [t("Bara bokningsbara tider"), "tider"]] as const).map(([label, v]) => (
+              <div key={v} className="mt-2.5">
+                <div className="text-[12.5px] font-semibold mb-1">{label}</div>
+                <input readOnly value={`${url}?visa=${v}`} onFocus={(e) => e.currentTarget.select()} className="w-full border border-line rounded-lg px-3 py-2 text-[12px] bg-bg" aria-label={label} />
+              </div>
+            ))}
+          </details>
+
           <div className="mt-4 flex flex-col gap-2">
             <details open className="border border-line rounded-lg px-3.5 py-2.5">
               <summary className="cursor-pointer text-[13.5px] font-semibold">{t("Guide: Google Kalender")}</summary>

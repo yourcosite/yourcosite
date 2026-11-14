@@ -3,6 +3,7 @@ import { addDays, isoWeekday, localDateOf, zonedTimeToUtc, type BookingBlock, ty
 // iCal-flöde (RFC 5545) för en sajts bokningar och bokningsbara tider.
 // Bokningar blir vanliga poster. Bokningsbara tider blir poster som är
 // markerade som lediga (TRANSPARENT), så de inte gör kalendern upptagen.
+// Bokningsbara tiden ligger under hela passet och bokningarna ovanpå.
 
 const esc = (s: string) => s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 
@@ -70,6 +71,7 @@ export function buildCalendarFeed(input: {
   slots: BookingSlot[];
   blocks: BookingBlock[];
   openLabel: string;
+  only?: "bokningar" | "tider"; // valfritt: bara ena sorten, för den som vill ha olika färger
   now?: Date;
 }): string {
   const now = input.now ?? new Date();
@@ -87,7 +89,7 @@ export function buildCalendarFeed(input: {
   const dtstamp = stamp(now);
 
   // 1. Bokningar.
-  for (const b of input.bookings) {
+  for (const b of input.only === "tider" ? [] : input.bookings) {
     const desc = [
       b.customer_name,
       b.customer_email,
@@ -104,6 +106,7 @@ export function buildCalendarFeed(input: {
       `DESCRIPTION:${esc(desc)}`,
       `STATUS:${b.status === "cancelled" ? "CANCELLED" : "CONFIRMED"}`,
       "TRANSP:OPAQUE",
+      "COLOR:orange",
       "END:VEVENT",
     );
   }
@@ -128,11 +131,9 @@ export function buildCalendarFeed(input: {
   }
   for (const s of input.slots) add(s.package_id, new Date(s.starts_at).getTime(), new Date(s.ends_at).getTime());
 
-  const cuts: Interval[] = [
-    ...input.blocks.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as Interval),
-    ...input.bookings.filter((b) => b.status !== "cancelled").map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime() + Math.max(0, b.buffer_min || 0) * 60000] as Interval),
-  ];
-  for (const [pkg, wins] of groups) {
+  // Hela passet visas som bokningsbart; bokningarna ligger ovanpå. Bara stängda tider tas bort.
+  const cuts: Interval[] = input.blocks.map((b) => [new Date(b.starts_at).getTime(), new Date(b.ends_at).getTime()] as Interval);
+  for (const [pkg, wins] of input.only === "bokningar" ? [] : groups) {
     const label = pkg && nameOf.get(pkg) ? `${input.openLabel}: ${nameOf.get(pkg)}` : input.openLabel;
     for (const [s, e] of merge(subtract(merge(wins), cuts))) {
       lines.push(
@@ -144,6 +145,7 @@ export function buildCalendarFeed(input: {
         `SUMMARY:${esc(label)}`,
         "STATUS:CONFIRMED",
         "TRANSP:TRANSPARENT",
+        "COLOR:green",
         "END:VEVENT",
       );
     }
