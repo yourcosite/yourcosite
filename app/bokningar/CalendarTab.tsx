@@ -5,6 +5,7 @@ import { useT, useLocale } from "@/components/I18nProvider";
 import { BCP47 } from "@/lib/i18n/country";
 import { addDays, formatPrice, formatWhen, isoWeekday, localDateOf, localTimeOf, zonedTimeToUtc } from "@/lib/booking";
 import type { Act, Booking, Data } from "./BookingClient";
+import CalendarSync from "./CalendarSync";
 
 // Veckokalender över sajtens bokningar: bokade tider (färgade), lediga tider
 // som besökarna kan boka (ljusa fält) och stängda tider (streckade). Allt
@@ -34,7 +35,7 @@ const isoWeek = (date: string) => {
 
 type Seg = { startMin: number; endMin: number; label?: string };
 
-export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: string; busy: boolean; act: Act }) {
+export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Data; tz: string; busy: boolean; act: Act; siteId: string }) {
   const t = useT();
   const bcp47 = BCP47[useLocale()];
   const cur = data.currency || "SEK";
@@ -471,6 +472,7 @@ export default function CalendarTab({ data, tz, busy, act }: { data: Data; tz: s
           </div>
         </div>
       )}
+      <CalendarSync siteId={siteId} />
     </div>
   );
 }

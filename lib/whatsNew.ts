@@ -15,6 +15,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-14-kalenderlank",
+    date: "2026-11-14",
+    icon: "📅",
+    title: msg("Se dina bokningar i din egen kalender"),
+    text: msg("Under Bokningar och Kalender finns nu en länk du lägger in i Google Kalender, Apple Kalender eller Outlook. Då syns dina bokningar och dina bokningsbara tider i kalendern du redan använder, och nya bokningar dyker upp av sig själva. Det finns en steg-för-steg-guide för varje kalender."),
+  },
+  {
     id: "2026-11-14-startsida",
     date: "2026-11-14",
     icon: "📣",

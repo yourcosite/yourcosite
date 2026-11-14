@@ -128,7 +128,7 @@ export default function BookingClient({ siteId }: { siteId: string }) {
       {notice && <div className="bg-accent-soft rounded-lg px-4 py-3 mb-4 text-[13px] font-semibold">{notice}</div>}
 
       {tab === "bookings" && <BookingsTab data={data} tz={tz} busy={busy} act={act} />}
-      {tab === "calendar" && <CalendarTab data={data} tz={tz} busy={busy} act={act} />}
+      {tab === "calendar" && <CalendarTab data={data} tz={tz} busy={busy} act={act} siteId={siteId} />}
       {tab === "packages" && <PackagesTab data={data} busy={busy} act={act} />}
       {tab === "times" && <TimesTab data={data} tz={tz} busy={busy} act={act} pkgName={pkgName} />}
       {tab === "settings" && <SettingsTab data={data} busy={busy} act={act} siteId={siteId} />}
