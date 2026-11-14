@@ -1,3 +1,4 @@
+import { siteAddress } from "@/lib/siteAddress";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import CustomerDetailClient from "./CustomerDetailClient";
@@ -15,7 +16,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
   const { data: customer } = await supabase
     .from("profiles")
     .select(
-      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, chosen_plan, billing_setup_complete, created_at, sites!owner_id(id, name, domain, status, plan, created_at)"
+      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, chosen_plan, billing_setup_complete, created_at, sites!owner_id(id, name, domain, slug, custom_domain, status, plan, created_at)"
     )
     .eq("id", params.id)
     .eq("role", "customer")
@@ -71,7 +72,7 @@ export default async function CustomerDetailPage({ params }: { params: { id: str
 
   return (
     <CustomerDetailClient
-      customer={{ ...(customer as any), ...(extra ?? {}), ...(extraSitesRow ?? {}) }}
+      customer={{ ...(customer as any), sites: ((customer as any).sites ?? []).map((x: any) => ({ ...x, domain: siteAddress(x) })), ...(extra ?? {}), ...(extraSitesRow ?? {}) }}
       supportHistory={supportHistory}
       initialNotes={notes ?? []}
       activity={activity}
