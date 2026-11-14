@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { siteAddress } from "@/lib/siteAddress";
 import { createClient } from "@/lib/supabase/server";
 import { PLAN_LABELS, formatKr, formatMoney, planPrice } from "@/lib/pricing";
 import { billingCurrencyFor } from "@/lib/i18n/country";
@@ -25,7 +26,7 @@ export default async function AdminOverviewPage() {
 
   const { data: customers } = await supabase
     .from("profiles")
-    .select("id, full_name, email, created_at, sites!owner_id(id, name, domain, status, plan)")
+    .select("id, full_name, email, created_at, sites!owner_id(id, name, domain, slug, custom_domain, status, plan)")
     .eq("role", "customer")
     .order("created_at", { ascending: false });
 
@@ -137,7 +138,7 @@ export default async function AdminOverviewPage() {
             </thead>
             <tbody>
               {recent.map((c) => {
-                const allSites = c.sites ?? [];
+                const allSites = (c.sites ?? []).map((x: any) => ({ ...x, domain: siteAddress(x) }));
                 const siteLabel = allSites.map((x) => x.domain || x.name).filter(Boolean).join(", ");
                 const status = allSites.some((x) => x.status === "live") ? "LIVE" : allSites.length ? "UTKAST" : "INGEN SAJT";
                 const badge =

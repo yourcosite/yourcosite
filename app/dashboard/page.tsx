@@ -27,7 +27,7 @@ export default async function DashboardPage() {
 
     const { data: siteRows } = await supabase
       .from("sites")
-      .select("id, name, domain, status, content")
+      .select("id, name, domain, status, content, slug, custom_domain")
       // Personalen (admin/support) får läsa ALLA sajter via RLS — utan det
       // här filtret listades därför andras sajter i deras egen kundzon, och
       // ett klick på dem hittade inte sajten (redigeraren hämtar bara egna).
@@ -47,7 +47,8 @@ export default async function DashboardPage() {
       upcomingBookings: upcoming[s.id] || 0,
       id: s.id,
       name: s.name,
-      domain: s.domain,
+      // Egen domän först, annars den gratis adressen (bara när sajten är live).
+      domain: (s as any).custom_domain || (s.status === "live" && (s as any).slug ? `${String((s as any).slug).toLowerCase()}.yourcosite.com` : s.domain),
       status: s.status,
       // Bara sajter som hunnit till redigeringssteget har ett genererat
       // content ifyllt — de som fortfarande går igenom onboardingen visar

@@ -1,4 +1,5 @@
 import AdminCustomersClient from "./AdminCustomersClient";
+import { siteAddress } from "@/lib/siteAddress";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function AdminCustomersPage() {
@@ -14,7 +15,7 @@ export default async function AdminCustomersPage() {
   const { data: customers, error: customersError } = await supabase
     .from("profiles")
     .select(
-      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, chosen_plan, billing_setup_complete, role, created_at, sites!owner_id(id, name, domain, status, plan)"
+      "id, email, full_name, phone, company_name, org_number, address_street, address_postal_code, address_city, billing_email, chosen_plan, billing_setup_complete, role, created_at, sites!owner_id(id, name, domain, slug, custom_domain, status, plan)"
     )
     .order("created_at", { ascending: false });
 
@@ -23,7 +24,7 @@ export default async function AdminCustomersPage() {
   return (
     <AdminCustomersClient
       initialCustomers={
-        (customers ?? []).filter((c) => !["support", "admin", "superadmin"].includes(c.role)) as any
+        (customers ?? []).filter((c) => !["support", "admin", "superadmin"].includes(c.role)).map((c: any) => ({ ...c, sites: (c.sites ?? []).map((x: any) => ({ ...x, domain: siteAddress(x) })) })) as any
       }
       canEdit={canEdit}
     />
