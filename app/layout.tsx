@@ -63,7 +63,8 @@ export function generateMetadata(): Metadata {
   // Publika sidor: adress per språk så att sökmotorerna hittar rätt version.
   let alternates: Metadata["alternates"];
   let pageUrl = "/";
-  const ogImage = `/api/og?lang=${locale}`;
+  // Svenska är huvudadressen (utan språkprefix) och delas med den engelska bilden.
+  const ogImage = `/api/og?lang=${locale === "sv" ? "en" : locale}`;
   try {
     const route = headers().get("x-ycs-route");
     if (route) {
