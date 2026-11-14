@@ -50,7 +50,7 @@ export default function SignupPage() {
 
     setLoading(true);
     const supabase = createClient();
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -91,6 +91,16 @@ export default function SignupPage() {
           : signUpError.message
       );
       return;
+    }
+
+    // Meddelar oss om den nya kunden. Får aldrig stoppa registreringen.
+    if (signUpData?.user?.id) {
+      fetch("/api/auth/notify-signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: signUpData.user.id }),
+        keepalive: true,
+      }).catch(() => {});
     }
 
     router.push("/skapa-konto/paket");
