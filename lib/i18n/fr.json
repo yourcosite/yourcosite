@@ -3148,5 +3148,8 @@
   "Millie funderar …": "Millie réfléchit …",
   "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Vous avez des modifications non enregistrées dans les Paramètres. Voulez-vous quitter sans enregistrer ?",
   "Dina ändringar är sparade ✓": "Vos modifications sont enregistrées ✓",
-  "Du har osparade ändringar.": "Vous avez des modifications non enregistrées."
+  "Du har osparade ändringar.": "Vous avez des modifications non enregistrées.",
+  "{language} är tillagt. Sajten är översatt.": "{language} a été ajouté. Le site est traduit.",
+  "{language} är uppdaterat ✓": "{language} a été mis à jour ✓",
+  "{language} är borttaget ✓": "{language} a été supprimé ✓"
 }

@@ -29,12 +29,14 @@ export default function LanguageSection({
   const t = useT();
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
+  const [done, setDone] = useState("");
   const extra = Object.keys(translations);
   const available = LOCALES.filter((l) => l !== baseLang && !extra.includes(l));
 
   const run = async (action: "add" | "update" | "remove", language: string) => {
     setBusy(language);
     setError("");
+    setDone("");
     try {
       const res = await fetch("/api/sites/languages", {
         method: "POST",
@@ -44,6 +46,12 @@ export default function LanguageSection({
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || t("Något gick fel. Försök igen."));
       onChanged(data.translations || {});
+      const name = LOCALE_NAMES[language as Locale] ?? language;
+      setDone(
+        action === "add" ? t("{language} är tillagt. Sajten är översatt.", { language: name })
+        : action === "update" ? t("{language} är uppdaterat ✓", { language: name })
+        : t("{language} är borttaget ✓", { language: name })
+      );
       if (action === "remove") onView(null);
       else onView(language);
     } catch (e: any) {
@@ -103,6 +111,7 @@ export default function LanguageSection({
         <p className="text-[11.5px] text-ink-dim">{t("Du har {n} extra språk, det är max.", { n: MAX_EXTRA_LANGUAGES })}</p>
       )}
       {error && <p className="text-[12.5px] text-red-600">{error}</p>}
+      {done && !error && !busy && <p className="text-[12.5px] text-[#166534] font-semibold" role="status">{done}</p>}
     </div>
   );
 }

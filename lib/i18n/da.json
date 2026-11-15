@@ -3148,5 +3148,8 @@
   "Millie funderar …": "Millie tænker …",
   "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Du har ugemte ændringer i Indstillinger. Vil du forlade siden uden at gemme?",
   "Dina ändringar är sparade ✓": "Dine ændringer er gemt ✓",
-  "Du har osparade ändringar.": "Du har ugemte ændringer."
+  "Du har osparade ändringar.": "Du har ugemte ændringer.",
+  "{language} är tillagt. Sajten är översatt.": "{language} er tilføjet. Siden er oversat.",
+  "{language} är uppdaterat ✓": "{language} er opdateret ✓",
+  "{language} är borttaget ✓": "{language} er fjernet ✓"
 }

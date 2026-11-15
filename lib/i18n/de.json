@@ -3148,5 +3148,8 @@
   "Millie funderar …": "Millie überlegt …",
   "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Du hast ungespeicherte Änderungen in den Einstellungen. Möchtest du ohne Speichern verlassen?",
   "Dina ändringar är sparade ✓": "Deine Änderungen sind gespeichert ✓",
-  "Du har osparade ändringar.": "Du hast ungespeicherte Änderungen."
+  "Du har osparade ändringar.": "Du hast ungespeicherte Änderungen.",
+  "{language} är tillagt. Sajten är översatt.": "{language} wurde hinzugefügt. Die Website ist übersetzt.",
+  "{language} är uppdaterat ✓": "{language} wurde aktualisiert ✓",
+  "{language} är borttaget ✓": "{language} wurde entfernt ✓"
 }

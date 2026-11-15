@@ -3148,5 +3148,8 @@
   "Millie funderar …": "Millie está pensando …",
   "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Tienes cambios sin guardar en Ajustes. ¿Quieres salir sin guardar?",
   "Dina ändringar är sparade ✓": "Tus cambios están guardados ✓",
-  "Du har osparade ändringar.": "Tienes cambios sin guardar."
+  "Du har osparade ändringar.": "Tienes cambios sin guardar.",
+  "{language} är tillagt. Sajten är översatt.": "{language} se ha añadido. El sitio está traducido.",
+  "{language} är uppdaterat ✓": "{language} se ha actualizado ✓",
+  "{language} är borttaget ✓": "{language} se ha eliminado ✓"
 }

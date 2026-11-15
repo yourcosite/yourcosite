@@ -3148,5 +3148,8 @@
   "Millie funderar …": "Millie miettii …",
   "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Asetuksissa on tallentamattomia muutoksia. Haluatko poistua tallentamatta?",
   "Dina ändringar är sparade ✓": "Muutokset on tallennettu ✓",
-  "Du har osparade ändringar.": "Sinulla on tallentamattomia muutoksia."
+  "Du har osparade ändringar.": "Sinulla on tallentamattomia muutoksia.",
+  "{language} är tillagt. Sajten är översatt.": "{language} on lisätty. Sivusto on käännetty.",
+  "{language} är uppdaterat ✓": "{language} on päivitetty ✓",
+  "{language} är borttaget ✓": "{language} on poistettu ✓"
 }
