@@ -410,10 +410,7 @@ export default function CustomerDetailClient({
               <Field label="Språk" value={customer.language} />
               <Field label="Org.nr" value={customer.org_number} />
               <Field label="Momsnummer" value={customer.vat_number ?? null} />
-              <Field label="Bolagsform" value={customer.legal_form ?? null} />
-              <Field label="Register" value={customer.company_register ?? null} />
-              <Field label="Aktiekapital" value={customer.company_capital ?? null} />
-              <Field label="Företrädare" value={customer.company_representative ?? null} />
+              <Field label="Kontaktperson" value={customer.company_representative ?? null} />
               <Field label="Adress" value={customer.address_street} />
               <Field
                 label="Postnr / ort"
