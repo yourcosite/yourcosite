@@ -2228,7 +2228,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
             />
           )}
           {/* Millie: flytande fält längst ner, konversationen viks ut över sajten */}
-          <div className={`${activeView ? "hidden " : ""}absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? (wide ? "left-1/2 md:left-[calc(50%+230px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-500px))]" : "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]") : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
+          <div className={`${activeView ? "hidden " : ""}${panel ? "max-md:hidden " : ""}absolute -translate-x-1/2 bottom-3 md:bottom-4 z-[45] flex flex-col gap-2 ${panel ? (wide ? "left-1/2 md:left-[calc(50%+230px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-500px))]" : "left-1/2 md:left-[calc(50%+180px)] w-[min(780px,calc(100%-20px))] md:w-[min(780px,calc(100%-400px))]") : "left-1/2 w-[min(780px,calc(100%-20px))]"}`}>
             {millieOpen && (
               <div className="bg-white rounded-2xl border border-line shadow-[0_12px_40px_rgba(0,0,0,0.22)] flex flex-col max-h-[48vh]">
                 <div className="flex items-center gap-2 px-4 py-2.5 border-b border-line flex-shrink-0">
