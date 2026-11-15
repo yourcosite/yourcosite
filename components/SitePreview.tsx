@@ -540,6 +540,8 @@ function SitePreviewInner({
       style={{
         background: palette.bg,
         color: palette.text,
+        // Enterslag i kundens texter blir radbrytningar (annars flyter allt ihop).
+        whiteSpace: "pre-line",
         ...(skin
           ? ({
               "--ycs-hf": skin.headingFont,
