@@ -3136,5 +3136,12 @@
   "Vill du ha olika färger?": "Vous voulez des couleurs différentes ?",
   "Kalenderappar låter dig bara välja färg per kalender, inte per post. Vill du ha bokningar och bokningsbara tider i olika färger kan du lägga in dessa två länkar i stället för länken ovan, var och en som en egen kalender, och sedan välja färg på varje.": "Les applications de calendrier ne permettent de choisir la couleur que par calendrier, pas par événement. Si vous voulez des couleurs différentes pour les réservations et les créneaux réservables, ajoutez ces deux liens à la place du lien ci-dessus, chacun comme son propre calendrier, puis choisissez une couleur pour chacun.",
   "Bara bokningar": "Réservations uniquement",
-  "Bara bokningsbara tider": "Créneaux réservables uniquement"
+  "Bara bokningsbara tider": "Créneaux réservables uniquement",
+  "Texten är för lång.": "Le texte est trop long.",
+  "Rubrik vid delning": "Titre lors du partage",
+  "Till exempel namnet på din verksamhet": "Par exemple le nom de votre entreprise",
+  "Text vid delning": "Texte lors du partage",
+  "En kort mening som beskriver din sajt": "Une courte phrase qui décrit votre site",
+  "Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.": "S'applique à la page d'accueil et s'affiche aussi comme titre et description dans Google. Si vous laissez les champs vides, le nom de votre site est utilisé. Facebook et d'autres peuvent conserver un ancien aperçu pendant quelques jours après une modification.",
+  "Sparat ✓": "Enregistré ✓"
 }

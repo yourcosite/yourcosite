@@ -13,6 +13,9 @@ export default function SettingsPanel({
   metaPixelId,
   shareImageUrl,
   faviconUrl,
+  shareTitle,
+  shareDescription,
+  onTextSaved,
   onSaved,
   onMetaSaved,
   onClose,
@@ -23,6 +26,9 @@ export default function SettingsPanel({
   metaPixelId?: string;
   shareImageUrl?: string;
   faviconUrl?: string;
+  shareTitle?: string;
+  shareDescription?: string;
+  onTextSaved: (values: { title?: string; description?: string }) => void;
   onSaved: (values: { gaMeasurementId?: string; metaPixelId?: string }) => void;
   onMetaSaved: (values: { shareImageUrl?: string; faviconUrl?: string }) => void;
   onClose: () => void;
@@ -34,6 +40,33 @@ export default function SettingsPanel({
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+
+  const [shTitle, setShTitle] = useState(shareTitle || "");
+  const [shDesc, setShDesc] = useState(shareDescription || "");
+  const [shBusy, setShBusy] = useState(false);
+  const [shSaved, setShSaved] = useState(false);
+  const saveShareText = async () => {
+    setShBusy(true);
+    setShSaved(false);
+    setMetaError("");
+    try {
+      const fd = new FormData();
+      fd.append("kind", "text");
+      if (siteId) fd.append("siteId", siteId);
+      fd.append("title", shTitle);
+      fd.append("description", shDesc);
+      const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
+      const home = (data.content?.pages || []).find((p: any) => p.path === "/") || data.content?.pages?.[0];
+      onTextSaved({ title: home?.seoTitle, description: home?.seoDescription });
+      setShSaved(true);
+    } catch (e: any) {
+      setMetaError(e.message);
+    } finally {
+      setShBusy(false);
+    }
+  };
 
   const [metaBusy, setMetaBusy] = useState<"share" | "favicon" | null>(null);
   const [metaError, setMetaError] = useState("");
@@ -121,6 +154,21 @@ export default function SettingsPanel({
               </div>
             </div>
           ))}
+          <div className="flex flex-col gap-2.5 pt-1">
+            <label className="block">
+              <span className="block text-[12.5px] font-semibold mb-1">{t("Rubrik vid delning")}</span>
+              <input value={shTitle} maxLength={90} onChange={(e) => { setShTitle(e.target.value); setShSaved(false); }} placeholder={t("Till exempel namnet på din verksamhet")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
+            </label>
+            <label className="block">
+              <span className="block text-[12.5px] font-semibold mb-1">{t("Text vid delning")}</span>
+              <textarea value={shDesc} maxLength={220} rows={3} onChange={(e) => { setShDesc(e.target.value); setShSaved(false); }} placeholder={t("En kort mening som beskriver din sajt")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
+            </label>
+            <p className="text-[12px] text-ink-dim leading-relaxed">{t("Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.")}</p>
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={saveShareText} disabled={shBusy} className="text-[13px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60">{shBusy ? t("Sparar …") : t("Spara")}</button>
+              {shSaved && <span className="text-[12.5px] text-[#166534] font-semibold">{t("Sparat ✓")}</span>}
+            </div>
+          </div>
           {metaError && <p className="text-[12.5px] text-red-600">{metaError}</p>}
         </div>
 

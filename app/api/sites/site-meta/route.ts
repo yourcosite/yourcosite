@@ -23,7 +23,7 @@ async function POST_handler(request: Request) {
 
   const form = await request.formData().catch(() => null);
   const kind = form?.get("kind");
-  if (!form || (kind !== "share" && kind !== "favicon")) {
+  if (!form || (kind !== "share" && kind !== "favicon" && kind !== "text")) {
     return NextResponse.json({ error: t("Det gick inte att avgöra vad som ska sparas.") }, { status: 400 });
   }
   const siteIdRaw = form.get("siteId");
@@ -32,6 +32,24 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("Hittade ingen sajt att uppdatera.") }, { status: 400 });
   }
   const content: SiteContent = { ...site.content };
+
+  // Rubrik och text vid delning (och i Google): startsidans seoTitle och seoDescription.
+  if (kind === "text") {
+    const title = String(form.get("title") ?? "").replace(/\s+/g, " ").trim();
+    const description = String(form.get("description") ?? "").replace(/\s+/g, " ").trim();
+    if (title.length > 90 || description.length > 220) {
+      return NextResponse.json({ error: t("Texten är för lång.") }, { status: 400 });
+    }
+    const idx = Math.max(0, content.pages.findIndex((p) => p.path === "/"));
+    const page = { ...content.pages[idx] };
+    if (title) page.seoTitle = title; else delete page.seoTitle;
+    if (description) page.seoDescription = description; else delete page.seoDescription;
+    content.pages = content.pages.map((p, i) => (i === idx ? page : p));
+    if (!isValidSiteContent(content)) return NextResponse.json({ error: t("Ändringen blev ogiltig.") }, { status: 400 });
+    const { error: textErr } = await supabase.from("sites").update({ content }).eq("id", site.id);
+    if (textErr) return NextResponse.json({ error: textErr.message }, { status: 500 });
+    return NextResponse.json({ content });
+  }
   const field = kind === "share" ? "shareImageUrl" : "faviconUrl";
 
   if (form.get("remove")) {

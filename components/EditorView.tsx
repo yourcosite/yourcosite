@@ -2142,6 +2142,13 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   metaPixelId={content.metaPixelId}
                   shareImageUrl={content.shareImageUrl}
                   faviconUrl={content.faviconUrl}
+                  shareTitle={(content.pages.find((p) => p.path === "/") ?? content.pages[0])?.seoTitle}
+                  shareDescription={(content.pages.find((p) => p.path === "/") ?? content.pages[0])?.seoDescription}
+                  onTextSaved={(v) => setContent((c) => {
+                    if (!c) return c;
+                    const idx = Math.max(0, c.pages.findIndex((p) => p.path === "/"));
+                    return { ...c, pages: c.pages.map((p, i) => (i === idx ? { ...p, seoTitle: v.title, seoDescription: v.description } : p)) };
+                  })}
                   onMetaSaved={(values) => setContent((c) => (c ? { ...c, shareImageUrl: values.shareImageUrl, faviconUrl: values.faviconUrl } : c))}
                   onSaved={(values) => setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))}
                   onClose={() => setPanel(null)}
