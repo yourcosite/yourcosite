@@ -10,6 +10,7 @@ const KIND_LABELS: Record<string, string> = {
   edit: "Ändring via Millie",
   news: "Nyhetshjälp",
   terms: "Villkorshjälp",
+  share: "Förslag på delningstext",
   translate: "Översättning av support",
 };
 
