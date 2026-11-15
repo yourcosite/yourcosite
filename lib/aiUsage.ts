@@ -27,7 +27,7 @@ export function costUsd(model: string, u: Usage): number {
 
 // Sväljer alla fel — loggningen får aldrig stoppa ett riktigt anrop.
 export async function logAiUsage(opts: {
-  kind: "generate" | "edit" | "news" | "terms" | "translate";
+  kind: "generate" | "edit" | "news" | "terms" | "translate" | "share";
   model: string;
   usage: Usage | null | undefined;
   userId?: string | null;

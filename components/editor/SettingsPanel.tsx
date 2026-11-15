@@ -45,6 +45,23 @@ export default function SettingsPanel({
   const [shDesc, setShDesc] = useState(shareDescription || "");
   const [shBusy, setShBusy] = useState(false);
   const [shSaved, setShSaved] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
+  const suggestShareText = async () => {
+    setSuggesting(true);
+    setMetaError("");
+    try {
+      const res = await fetch("/api/sites/share-text-assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ siteId }) });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t("Kunde inte hämta ett förslag just nu."));
+      setShTitle(data.title || "");
+      setShDesc(data.description || "");
+      setShSaved(false);
+    } catch (e: any) {
+      setMetaError(e.message);
+    } finally {
+      setSuggesting(false);
+    }
+  };
   const saveShareText = async () => {
     setShBusy(true);
     setShSaved(false);
@@ -164,8 +181,9 @@ export default function SettingsPanel({
               <textarea value={shDesc} maxLength={220} rows={3} onChange={(e) => { setShDesc(e.target.value); setShSaved(false); }} placeholder={t("En kort mening som beskriver din sajt")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
             </label>
             <p className="text-[12px] text-ink-dim leading-relaxed">{t("Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.")}</p>
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={saveShareText} disabled={shBusy} className="text-[13px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60">{shBusy ? t("Sparar …") : t("Spara")}</button>
+            <div className="flex items-center gap-3 flex-wrap">
+              <button type="button" onClick={suggestShareText} disabled={suggesting || shBusy} className="text-[13px] font-semibold border border-line px-4 py-2 rounded-lg bg-white disabled:opacity-60">{suggesting ? t("Millie funderar …") : t("Få förslag från Millie")}</button>
+              <button type="button" onClick={saveShareText} disabled={shBusy || suggesting} className="text-[13px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60">{shBusy ? t("Sparar …") : t("Spara")}</button>
               {shSaved && <span className="text-[12.5px] text-[#166534] font-semibold">{t("Sparat ✓")}</span>}
             </div>
           </div>
