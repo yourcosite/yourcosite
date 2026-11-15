@@ -3145,5 +3145,8 @@
   "Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.": "Koskee etusivua ja näkyy myös otsikkona ja kuvauksena Googlessa. Jos jätät kentät tyhjiksi, käytetään sivustosi nimeä. Facebook ja muut voivat säilyttää vanhan esikatselun muutaman päivän muutoksen jälkeen.",
   "Sparat ✓": "Tallennettu ✓",
   "Få förslag från Millie": "Pyydä ehdotus Milliéltä",
-  "Millie funderar …": "Millie miettii …"
+  "Millie funderar …": "Millie miettii …",
+  "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Asetuksissa on tallentamattomia muutoksia. Haluatko poistua tallentamatta?",
+  "Dina ändringar är sparade ✓": "Muutokset on tallennettu ✓",
+  "Du har osparade ändringar.": "Sinulla on tallentamattomia muutoksia."
 }

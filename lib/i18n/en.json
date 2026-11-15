@@ -3145,5 +3145,8 @@
   "Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.": "Applies to the start page and is also shown as the title and description in Google. If you leave the fields empty, your site name is used. Facebook and others may keep an old preview for a few days after you change it.",
   "Sparat ✓": "Saved ✓",
   "Få förslag från Millie": "Get a suggestion from Millie",
-  "Millie funderar …": "Millie is thinking …"
+  "Millie funderar …": "Millie is thinking …",
+  "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "You have unsaved changes in Settings. Do you want to leave without saving?",
+  "Dina ändringar är sparade ✓": "Your changes are saved ✓",
+  "Du har osparade ändringar.": "You have unsaved changes."
 }

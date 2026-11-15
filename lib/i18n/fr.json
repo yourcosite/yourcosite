@@ -3145,5 +3145,8 @@
   "Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.": "S'applique à la page d'accueil et s'affiche aussi comme titre et description dans Google. Si vous laissez les champs vides, le nom de votre site est utilisé. Facebook et d'autres peuvent conserver un ancien aperçu pendant quelques jours après une modification.",
   "Sparat ✓": "Enregistré ✓",
   "Få förslag från Millie": "Obtenir une suggestion de Millie",
-  "Millie funderar …": "Millie réfléchit …"
+  "Millie funderar …": "Millie réfléchit …",
+  "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Vous avez des modifications non enregistrées dans les Paramètres. Voulez-vous quitter sans enregistrer ?",
+  "Dina ändringar är sparade ✓": "Vos modifications sont enregistrées ✓",
+  "Du har osparade ändringar.": "Vous avez des modifications non enregistrées."
 }

@@ -505,7 +505,16 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   // ett annat språk visas som skrivskyddad översättning.
   const [viewLang, setViewLangRaw] = useState<string | null>(null);
   const setViewLang = useCallback((l: string | null) => { setSelection(null); setViewLangRaw(l); }, []);
-  const [panel, setPanel] = useState<EditorPanel>(null);
+  const [panel, setPanelState] = useState<EditorPanel>(null);
+  // Inställningarna rapporterar osparade ändringar hit, så att byte av panel kan varna.
+  const settingsDirtyRef = useRef(false);
+  const setPanel = (next: EditorPanel) => {
+    if (settingsDirtyRef.current && next !== "settings") {
+      if (!window.confirm(t("Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?"))) return;
+      settingsDirtyRef.current = false;
+    }
+    setPanelState(next);
+  };
   // Månadens ändringar (30 ingår, 50 första 30 dagarna) och köp av fler.
   const [usage, setUsage] = useState<{ used: number; limit: number } | null>(null);
   const [addonOpen, setAddonOpen] = useState(false);
@@ -2151,6 +2160,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   })}
                   onMetaSaved={(values) => setContent((c) => (c ? { ...c, shareImageUrl: values.shareImageUrl, faviconUrl: values.faviconUrl } : c))}
                   onSaved={(values) => setContent((c) => (c ? { ...c, gaMeasurementId: values.gaMeasurementId, metaPixelId: values.metaPixelId } : c))}
+                  onDirtyChange={(d) => { settingsDirtyRef.current = d; }}
                   onClose={() => setPanel(null)}
                 >
                   <LanguageSection

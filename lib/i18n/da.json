@@ -3145,5 +3145,8 @@
   "Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.": "Gælder forsiden og vises også som overskrift og beskrivelse i Google. Lader du felterne stå tomme, bruges dit sidenavn. Facebook og andre kan gemme en gammel forhåndsvisning i nogle dage, efter du har ændret.",
   "Sparat ✓": "Gemt ✓",
   "Få förslag från Millie": "Få et forslag fra Millie",
-  "Millie funderar …": "Millie tænker …"
+  "Millie funderar …": "Millie tænker …",
+  "Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?": "Du har ugemte ændringer i Indstillinger. Vil du forlade siden uden at gemme?",
+  "Dina ändringar är sparade ✓": "Dine ændringer er gemt ✓",
+  "Du har osparade ändringar.": "Du har ugemte ændringer."
 }

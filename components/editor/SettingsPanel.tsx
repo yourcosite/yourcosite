@@ -1,7 +1,7 @@
 "use client";
 
 import { prepareImage } from "@/lib/imageUpload";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useT } from "@/components/I18nProvider";
 
 // Inställningar i redigeraren: spårning (Google Analytics, Meta Pixel) och,
@@ -16,6 +16,7 @@ export default function SettingsPanel({
   shareTitle,
   shareDescription,
   onTextSaved,
+  onDirtyChange,
   onSaved,
   onMetaSaved,
   onClose,
@@ -31,95 +32,115 @@ export default function SettingsPanel({
   onTextSaved: (values: { title?: string; description?: string }) => void;
   onSaved: (values: { gaMeasurementId?: string; metaPixelId?: string }) => void;
   onMetaSaved: (values: { shareImageUrl?: string; faviconUrl?: string }) => void;
+  onDirtyChange?: (dirty: boolean) => void;
   onClose: () => void;
   children?: React.ReactNode;
 }) {
   const t = useT();
   const [ga, setGa] = useState(gaMeasurementId || "");
   const [pixel, setPixel] = useState(metaPixelId || "");
+  const [shTitle, setShTitle] = useState(shareTitle || "");
+  const [shDesc, setShDesc] = useState(shareDescription || "");
+  // Bilder väljs här men laddas upp först när man trycker på Spara.
+  const [pendingImg, setPendingImg] = useState<{ share?: File | "remove"; favicon?: File | "remove" }>({});
+  const [previews, setPreviews] = useState<{ share?: string; favicon?: string }>({});
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
-
-  const [shTitle, setShTitle] = useState(shareTitle || "");
-  const [shDesc, setShDesc] = useState(shareDescription || "");
-  const [shBusy, setShBusy] = useState(false);
-  const [shSaved, setShSaved] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+
+  const pickImage = (kind: "share" | "favicon", f: File | "remove") => {
+    setPendingImg((p) => ({ ...p, [kind]: f }));
+    setPreviews((p) => ({ ...p, [kind]: f === "remove" ? undefined : URL.createObjectURL(f) }));
+    setSaved(false);
+  };
+
+  const dirty =
+    Object.keys(pendingImg).length > 0 ||
+    shTitle !== (shareTitle || "") ||
+    shDesc !== (shareDescription || "") ||
+    ga !== (gaMeasurementId || "") ||
+    pixel !== (metaPixelId || "");
+
+  useEffect(() => { onDirtyChange?.(dirty); }, [dirty, onDirtyChange]);
+  useEffect(() => () => onDirtyChange?.(false), [onDirtyChange]);
+  useEffect(() => {
+    if (!dirty) return;
+    const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = ""; };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [dirty]);
+
+  const close = () => {
+    if (dirty && !window.confirm(t("Du har osparade ändringar i Inställningar. Vill du lämna utan att spara?"))) return;
+    onDirtyChange?.(false);
+    onClose();
+  };
+
   const suggestShareText = async () => {
     setSuggesting(true);
-    setMetaError("");
+    setError("");
     try {
       const res = await fetch("/api/sites/share-text-assist", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ siteId }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || t("Kunde inte hämta ett förslag just nu."));
       setShTitle(data.title || "");
       setShDesc(data.description || "");
-      setShSaved(false);
+      setSaved(false);
     } catch (e: any) {
-      setMetaError(e.message);
+      setError(e.message);
     } finally {
       setSuggesting(false);
     }
   };
-  const saveShareText = async () => {
-    setShBusy(true);
-    setShSaved(false);
-    setMetaError("");
-    try {
-      const fd = new FormData();
-      fd.append("kind", "text");
-      if (siteId) fd.append("siteId", siteId);
-      fd.append("title", shTitle);
-      fd.append("description", shDesc);
-      const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
-      const home = (data.content?.pages || []).find((p: any) => p.path === "/") || data.content?.pages?.[0];
-      onTextSaved({ title: home?.seoTitle, description: home?.seoDescription });
-      setShSaved(true);
-    } catch (e: any) {
-      setMetaError(e.message);
-    } finally {
-      setShBusy(false);
-    }
-  };
 
-  const [metaBusy, setMetaBusy] = useState<"share" | "favicon" | null>(null);
-  const [metaError, setMetaError] = useState("");
-  const sendMeta = async (kind: "share" | "favicon", file: File | null) => {
-    setMetaBusy(kind);
-    setMetaError("");
-    try {
-      const fd = new FormData();
-      fd.append("kind", kind);
-      if (siteId) fd.append("siteId", siteId);
-      if (file) fd.append("file", await prepareImage(file, { maxDim: kind === "favicon" ? 512 : 1600 }));
-      else fd.append("remove", "1");
-      const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
-      onMetaSaved({ shareImageUrl: data.content?.shareImageUrl, faviconUrl: data.content?.faviconUrl });
-    } catch (e: any) {
-      setMetaError(e.message);
-    } finally {
-      setMetaBusy(null);
-    }
-  };
-
-  const save = async () => {
+  // En enda Spara: bilder, delningstext och spårning sparas efter varandra.
+  const saveAll = async () => {
     setSaving(true);
-    setError("");
     setSaved(false);
+    setError("");
     try {
-      const res = await fetch("/api/sites/tracking", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ gaMeasurementId: ga, metaPixelId: pixel, siteId }),
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
-      onSaved({ gaMeasurementId: data.content?.gaMeasurementId, metaPixelId: data.content?.metaPixelId });
+      for (const kind of ["share", "favicon"] as const) {
+        const f = pendingImg[kind];
+        if (!f) continue;
+        const fd = new FormData();
+        fd.append("kind", kind);
+        if (siteId) fd.append("siteId", siteId);
+        if (f === "remove") fd.append("remove", "1");
+        else fd.append("file", await prepareImage(f, { maxDim: kind === "favicon" ? 512 : 1600 }));
+        const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
+        onMetaSaved({ shareImageUrl: data.content?.shareImageUrl, faviconUrl: data.content?.faviconUrl });
+        setPendingImg((p) => { const n = { ...p }; delete n[kind]; return n; });
+        setPreviews((p) => ({ ...p, [kind]: undefined }));
+      }
+      if (shTitle !== (shareTitle || "") || shDesc !== (shareDescription || "")) {
+        const fd = new FormData();
+        fd.append("kind", "text");
+        if (siteId) fd.append("siteId", siteId);
+        fd.append("title", shTitle);
+        fd.append("description", shDesc);
+        const res = await fetch("/api/sites/site-meta", { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
+        const home = (data.content?.pages || []).find((p: any) => p.path === "/") || data.content?.pages?.[0];
+        onTextSaved({ title: home?.seoTitle, description: home?.seoDescription });
+        setShTitle(home?.seoTitle || "");
+        setShDesc(home?.seoDescription || "");
+      }
+      if (ga !== (gaMeasurementId || "") || pixel !== (metaPixelId || "")) {
+        const res = await fetch("/api/sites/tracking", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ gaMeasurementId: ga, metaPixelId: pixel, siteId }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || t("Kunde inte spara."));
+        onSaved({ gaMeasurementId: data.content?.gaMeasurementId, metaPixelId: data.content?.metaPixelId });
+        setGa(data.content?.gaMeasurementId || "");
+        setPixel(data.content?.metaPixelId || "");
+      }
       setSaved(true);
     } catch (e: any) {
       setError(e.message);
@@ -135,7 +156,7 @@ export default function SettingsPanel({
           <div className="text-[17px] font-bold">{t("Inställningar")}</div>
           <div className="text-[12px] text-ink-dim mt-0.5">{t("Språk, statistik och annonsering för hela sajten.")}</div>
         </div>
-        <button type="button" onClick={onClose} aria-label={t("Stäng")} className="text-ink-dim text-[18px] leading-none px-1">×</button>
+        <button type="button" onClick={close} aria-label={t("Stäng")} className="text-ink-dim text-[18px] leading-none px-1">×</button>
       </div>
       <div className="flex-1 overflow-y-auto px-5 pb-10 md:pb-6 flex flex-col gap-6">
         {children}
@@ -146,8 +167,8 @@ export default function SettingsPanel({
             {t("Bilden som visas när någon delar din sajt på Facebook, LinkedIn eller i ett meddelande, och ikonen i webbläsarfliken. Laddar du inte upp något skapas båda automatiskt av din toppbild, ditt namn och dina färger.")}
           </p>
           {([
-            { kind: "share" as const, label: t("Delningsbild (helst 1200 x 630)"), url: shareImageUrl, wide: true },
-            { kind: "favicon" as const, label: t("Ikon i webbläsarfliken (kvadratisk)"), url: faviconUrl, wide: false },
+            { kind: "share" as const, label: t("Delningsbild (helst 1200 x 630)"), url: pendingImg.share === "remove" ? undefined : previews.share || shareImageUrl, wide: true },
+            { kind: "favicon" as const, label: t("Ikon i webbläsarfliken (kvadratisk)"), url: pendingImg.favicon === "remove" ? undefined : previews.favicon || faviconUrl, wide: false },
           ]).map((row) => (
             <div key={row.kind} className="flex items-center gap-3">
               {row.url ? (
@@ -160,12 +181,12 @@ export default function SettingsPanel({
                 <div className="text-[12.5px] font-semibold">{row.label}</div>
                 <div className="flex gap-3 mt-1">
                   <label className="text-[12.5px] font-semibold underline cursor-pointer">
-                    {metaBusy === row.kind ? t("Sparar …") : t("Ladda upp")}
-                    <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={metaBusy !== null}
-                      onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) sendMeta(row.kind, f); }} />
+                    {t("Ladda upp")}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" className="hidden" disabled={saving}
+                      onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) pickImage(row.kind, f); }} />
                   </label>
                   {row.url && (
-                    <button type="button" disabled={metaBusy !== null} onClick={() => sendMeta(row.kind, null)} className="text-[12.5px] text-ink-dim underline">{t("Ta bort")}</button>
+                    <button type="button" disabled={saving} onClick={() => pickImage(row.kind, "remove")} className="text-[12.5px] text-ink-dim underline">{t("Ta bort")}</button>
                   )}
                 </div>
               </div>
@@ -174,20 +195,17 @@ export default function SettingsPanel({
           <div className="flex flex-col gap-2.5 pt-1">
             <label className="block">
               <span className="block text-[12.5px] font-semibold mb-1">{t("Rubrik vid delning")}</span>
-              <input value={shTitle} maxLength={90} onChange={(e) => { setShTitle(e.target.value); setShSaved(false); }} placeholder={t("Till exempel namnet på din verksamhet")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
+              <input value={shTitle} maxLength={90} onChange={(e) => { setShTitle(e.target.value); setSaved(false); }} placeholder={t("Till exempel namnet på din verksamhet")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
             </label>
             <label className="block">
               <span className="block text-[12.5px] font-semibold mb-1">{t("Text vid delning")}</span>
-              <textarea value={shDesc} maxLength={220} rows={3} onChange={(e) => { setShDesc(e.target.value); setShSaved(false); }} placeholder={t("En kort mening som beskriver din sajt")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
+              <textarea value={shDesc} maxLength={220} rows={3} onChange={(e) => { setShDesc(e.target.value); setSaved(false); }} placeholder={t("En kort mening som beskriver din sajt")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
             </label>
             <p className="text-[12px] text-ink-dim leading-relaxed">{t("Gäller startsidan och visas också som rubrik och beskrivning i Google. Lämnar du fälten tomma används ditt sajtnamn. Facebook och andra kan spara en gammal förhandsvisning i några dagar efter att du ändrat.")}</p>
             <div className="flex items-center gap-3 flex-wrap">
-              <button type="button" onClick={suggestShareText} disabled={suggesting || shBusy} className="text-[13px] font-semibold border border-line px-4 py-2 rounded-lg bg-white disabled:opacity-60">{suggesting ? t("Millie funderar …") : t("Få förslag från Millie")}</button>
-              <button type="button" onClick={saveShareText} disabled={shBusy || suggesting} className="text-[13px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg disabled:opacity-60">{shBusy ? t("Sparar …") : t("Spara")}</button>
-              {shSaved && <span className="text-[12.5px] text-[#166534] font-semibold">{t("Sparat ✓")}</span>}
+              <button type="button" onClick={suggestShareText} disabled={suggesting || saving} className="text-[13px] font-semibold border border-line px-4 py-2 rounded-lg bg-white disabled:opacity-60">{suggesting ? t("Millie funderar …") : t("Få förslag från Millie")}</button>
             </div>
           </div>
-          {metaError && <p className="text-[12.5px] text-red-600">{metaError}</p>}
         </div>
 
         <div className="flex flex-col gap-3">
@@ -197,18 +215,21 @@ export default function SettingsPanel({
           </p>
           <label className="block">
             <span className="block text-[12.5px] font-semibold mb-1.5">{t("Google Analytics-ID")}</span>
-            <input value={ga} onChange={(e) => setGa(e.target.value)} placeholder={t("G-XXXXXXXXXX")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
+            <input value={ga} onChange={(e) => { setGa(e.target.value); setSaved(false); }} placeholder={t("G-XXXXXXXXXX")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
           </label>
           <label className="block">
             <span className="block text-[12.5px] font-semibold mb-1.5">{t("Meta Pixel-ID")}</span>
-            <input value={pixel} onChange={(e) => setPixel(e.target.value)} placeholder={t("Bara siffror")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
+            <input value={pixel} onChange={(e) => { setPixel(e.target.value); setSaved(false); }} placeholder={t("Bara siffror")} className="w-full box-border px-3.5 py-2.5 border border-line rounded-lg text-[14px] bg-white" />
           </label>
-          {error && <p className="text-[12.5px] text-red-600">{error}</p>}
-          {saved && !error && <p className="text-[12.5px] text-ink-dim">{t("Sparat.")}</p>}
-          <button onClick={save} disabled={saving} className="bg-ink text-white font-semibold text-[13.5px] py-2.5 rounded-lg disabled:opacity-60">
-            {saving ? t("Sparar …") : t("Spara")}
-          </button>
         </div>
+      </div>
+      <div className="border-t border-line bg-[#F7F5F2] px-5 py-3 flex items-center gap-3 flex-wrap">
+        <button type="button" onClick={saveAll} disabled={saving || !dirty} className="bg-ink text-white font-semibold text-[13.5px] px-6 py-2.5 rounded-lg disabled:opacity-50">
+          {saving ? t("Sparar …") : t("Spara")}
+        </button>
+        {error && <span className="text-[12.5px] text-red-600">{error}</span>}
+        {!error && saved && !dirty && <span className="text-[12.5px] text-[#166534] font-semibold">{t("Dina ändringar är sparade ✓")}</span>}
+        {!error && dirty && !saving && <span className="text-[12.5px] text-ink-dim">{t("Du har osparade ändringar.")}</span>}
       </div>
     </div>
   );
