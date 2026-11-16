@@ -1,6 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
+import Footer from "@/components/Footer";
 import BookingClient from "./BookingClient";
 import { createClient } from "@/lib/supabase/server";
 import DefaultSiteButton from "./DefaultSiteButton";
@@ -81,6 +82,7 @@ export default async function BokningarPage({ searchParams }: { searchParams?: {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

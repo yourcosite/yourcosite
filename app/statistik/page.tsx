@@ -3,6 +3,7 @@ import { getT, getLocale } from "@/lib/i18n/server";
 import { BCP47 } from "@/lib/i18n/country";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
+import Footer from "@/components/Footer";
 import StatistikClient from "./StatistikClient";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
@@ -119,6 +120,7 @@ export default async function StatistikPage() {
           </>
         )}
       </div>
+      <Footer />
     </div>
   );
 }

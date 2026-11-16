@@ -1,6 +1,7 @@
 import { getT, getLocale } from "@/lib/i18n/server";
 import { BCP47 } from "@/lib/i18n/country";
 import AccountHeader from "@/components/AccountHeader";
+import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 
@@ -66,6 +67,7 @@ export default async function SupportHistoryPage() {
           ))}
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

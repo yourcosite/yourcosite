@@ -1,4 +1,5 @@
 import AccountHeader from "@/components/AccountHeader";
+import Footer from "@/components/Footer";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import SettingsTabs from "./SettingsTabs";
 import { createClient } from "@/lib/supabase/server";
@@ -94,6 +95,7 @@ export default async function SettingsPage() {
           extras={extras}
         />
       </div>
+      <Footer />
     </div>
   );
 }

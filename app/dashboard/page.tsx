@@ -1,5 +1,6 @@
 import { getT } from "@/lib/i18n/server";
 import AccountHeader from "@/components/AccountHeader";
+import Footer from "@/components/Footer";
 import DashboardClient, { type SiteRow } from "./DashboardClient";
 import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
@@ -66,6 +67,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: {
         </div>
       )}
       <DashboardClient sites={sites} allowedSites={allowedSites} />
+      <Footer />
     </div>
   );
 }

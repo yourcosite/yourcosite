@@ -3,6 +3,7 @@ import { formatMoney, planPrice } from "@/lib/pricing";
 import { billingCurrencyFor } from "@/lib/i18n/country";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
+import Footer from "@/components/Footer";
 import { createClient } from "@/lib/supabase/server";
 import { getStripe, stripeEnabledFor } from "@/lib/stripe";
 import BillingActions from "./BillingActions";
@@ -166,6 +167,7 @@ export default async function BillingPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
