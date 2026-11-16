@@ -59,4 +59,14 @@ async function POST_handler(request: Request) {
   return NextResponse.json({ url: session.url });
 }
 
-export const POST = withErrorLog("POST /api/billing/checkout", POST_handler);
+async function safe(request: Request) {
+  try {
+    return await POST_handler(request);
+  } catch (e: any) {
+    // Visa Stripes eget felmeddelande så att felsökningen under test går fort.
+    console.error("checkout error", e);
+    return NextResponse.json({ error: e?.message || "Okänt fel hos Stripe." }, { status: 500 });
+  }
+}
+
+export const POST = withErrorLog("POST /api/billing/checkout", safe);
