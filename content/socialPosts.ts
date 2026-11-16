@@ -45,4 +45,39 @@ export const SOCIAL_DRAFTS: SocialDraft[] = [
     imageUrl: "https://www.yourcosite.com/social/005-emms-massage.jpg",
     suggestedAt: "2026-11-25T17:30:00Z",
   },
+  {
+    inboxId: "006-look",
+    caption:
+      "Change the whole look in one click.\n\nPick a style, an accent color and a font, and your entire site follows. Not happy? Undo is always one tap away.\n\nThis is the editor in YourCoSite, shown with a made up barbershop.\n\nTry it at yourcosite.com\n\n#website #smallbusiness #webdesign #branding #nocode",
+    imageUrl: "https://www.yourcosite.com/social/006-look.jpg",
+    suggestedAt: "2026-11-17T17:30:00Z",
+  },
+  {
+    inboxId: "007-phones",
+    caption:
+      "One site, every screen.\n\nEvery YourCoSite site works on phones from day one. You can switch between desktop and mobile view while you edit, so you see what your customers see.\n\nThese are made up example sites, built through a conversation.\n\nyourcosite.com\n\n#website #mobiledesign #smallbusiness #webdesign",
+    imageUrl: "https://www.yourcosite.com/social/007-phones.jpg",
+    suggestedAt: "2026-11-19T17:30:00Z",
+  },
+  {
+    inboxId: "008-layouts",
+    caption:
+      "Not sure how a section should look? Pick a layout.\n\nHero, gallery, menu, booking, map, reviews. Each comes in several layouts, and one click puts it on your page. Or just ask Millie.\n\nTry it at yourcosite.com\n\n#websitetips #smallbusiness #webdesign #nocode",
+    imageUrl: "https://www.yourcosite.com/social/008-layouts.jpg",
+    suggestedAt: "2026-11-21T17:30:00Z",
+  },
+  {
+    inboxId: "009-sites",
+    caption:
+      "Different businesses, different looks, same conversation.\n\nA carpenter, an interior shop, an interior designer and a hair salon. Four made up example sites, all built with YourCoSite.\n\nSee more at yourcosite.com\n\n#builtwithyourcosite #website #smallbusiness #webdesign",
+    imageUrl: "https://www.yourcosite.com/social/009-sites.jpg",
+    suggestedAt: "2026-11-22T17:30:00Z",
+  },
+  {
+    inboxId: "010-pages",
+    caption:
+      "Your pages and menu, in one place.\n\nAdd a page, rename it, move it in the menu. Or tell Millie what the new page should say and she writes it for you.\n\nTry it at yourcosite.com\n\n#websitetips #smallbusiness #AI #webdesign",
+    imageUrl: "https://www.yourcosite.com/social/010-pages.jpg",
+    suggestedAt: "2026-11-24T17:30:00Z",
+  },
 ];
