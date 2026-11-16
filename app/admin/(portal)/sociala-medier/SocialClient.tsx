@@ -121,7 +121,7 @@ export default function SocialClient({ initial, missingTable, metaReady }: { ini
                 onChange={(ev) => setEdit(p, { first_comment: ev.target.value })}
                 className="w-full mt-1 border border-line rounded-lg p-2.5 text-[14px] bg-white"
               />
-              <label className="text-[12.5px] text-ink-dim uppercase tracking-wide mt-3 block">Publiceras</label>
+              <label className="text-[12.5px] text-ink-dim uppercase tracking-wide mt-3 block">Publiceras <span className="normal-case tracking-normal">(helst mellan 18:15 och 19:30)</span></label>
               <input
                 type="datetime-local"
                 value={e.at}
