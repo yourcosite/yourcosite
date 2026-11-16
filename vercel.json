@@ -1,4 +1,15 @@
 {
-  "regions": ["dub1"],
-  "crons": [{ "path": "/api/cron/lifecycle-emails", "schedule": "0 * * * *" }]
+  "regions": [
+    "dub1"
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/lifecycle-emails",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/social-publish",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }

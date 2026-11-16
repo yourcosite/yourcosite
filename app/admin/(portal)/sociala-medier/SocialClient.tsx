@@ -25,7 +25,7 @@ const when = (iso: string | null) =>
 
 const SQL_HINT = "Tabellen saknas. Kör supabase/sociala-medier.sql i Supabase SQL Editor.";
 
-export default function SocialClient({ initial, missingTable }: { initial: Post[]; missingTable: boolean }) {
+export default function SocialClient({ initial, missingTable, metaReady }: { initial: Post[]; missingTable: boolean; metaReady: boolean }) {
   const [posts, setPosts] = useState<Post[]>(initial);
   const [busy, setBusy] = useState("");
   const [notice, setNotice] = useState(missingTable ? SQL_HINT : "");
@@ -70,7 +70,7 @@ export default function SocialClient({ initial, missingTable }: { initial: Post[
         const { [p.id]: _drop, ...rest } = s;
         return rest;
       });
-      if (action === "approve") setNotice("Godkänt. Inlägget publiceras automatiskt vid vald tid, förutsatt att publiceringssystemet är igång.");
+      if (action === "approve") setNotice(metaReady ? "Godkänt. Inlägget publiceras automatiskt vid vald tid (kontrolleras var femte minut)." : "Godkänt, men Meta-uppgifterna saknas i Vercel, så inget publiceras än.");
       if (action === "save") setNotice("Sparat.");
     }
     setBusy("");
@@ -89,7 +89,7 @@ export default function SocialClient({ initial, missingTable }: { initial: Post[
 
   const groups: { title: string; hint?: string; items: Post[] }[] = [
     { title: "Att godkänna", items: posts.filter((p) => p.status === "draft") },
-    { title: "Godkända, väntar på publicering", hint: "Publiceras automatiskt vid vald tid.", items: posts.filter((p) => p.status === "approved") },
+    { title: "Godkända, väntar på publicering", hint: "Publiceras automatiskt vid vald tid, kontrolleras var femte minut.", items: posts.filter((p) => p.status === "approved") },
     { title: "Fel vid publicering", items: posts.filter((p) => p.status === "error") },
     { title: "Publicerade", items: posts.filter((p) => p.status === "published") },
     { title: "Avslagna", items: posts.filter((p) => p.status === "rejected") },
@@ -158,6 +158,7 @@ export default function SocialClient({ initial, missingTable }: { initial: Post[
               <p className="text-[13px] text-ink-dim mt-3">
                 {p.status === "published" ? `Publicerat ${when(p.published_at)}` : `Publiceras ${when(p.scheduled_at)}`}
               </p>
+              {p.status === "published" && p.error && <p className="text-[13px] text-warm mt-2">Delvis fel: {p.error}</p>}
               {p.status === "approved" && (
                 <button type="button" disabled={!!busy} onClick={() => act(p, "unapprove")} className="mt-3 border border-line text-[13.5px] font-semibold px-4 py-2.5 rounded-lg">
                   Ta tillbaka godkännandet
@@ -183,6 +184,11 @@ export default function SocialClient({ initial, missingTable }: { initial: Post[
           {busy === "import" ? "Hämtar …" : "Hämta nya förslag"}
         </button>
       </div>
+      {!metaReady && (
+        <div className="mt-3 text-[13.5px] bg-[#FFF3E0] border border-[#F0D9AE] text-[#8A5A00] rounded-lg px-4 py-3">
+          Meta-uppgifterna saknas i Vercel (META_PAGE_ID, META_PAGE_TOKEN och META_IG_ID). Du kan förbereda och godkänna inlägg, men inget publiceras förrän de finns.
+        </div>
+      )}
       {notice && <div className="mt-3 mb-2 text-[13.5px] bg-accent-soft border border-line rounded-lg px-4 py-3">{notice}</div>}
 
       {groups.map((g) =>
