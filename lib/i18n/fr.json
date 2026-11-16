@@ -1128,7 +1128,7 @@
   "Bolagsregister": "Registre du commerce",
   "Aktiekapital": "Capital social",
   "Momsregistreringsnummer": "Numéro de TVA",
-  "Betald": "Payé",
+  "Betald": "Payée",
   "Bokningsbekräftelse: {tjänst}, {tid}": "Confirmation de réservation : {tjänst}, {tid}",
   "Hej {namn}! Tack för din bokning hos {sajt}. Här är uppgifterna.": "Bonjour {namn} ! Merci pour votre réservation chez {sajt}. Voici les détails.",
   "Hej {namn}! Din bokning hos {sajt} är nu avbokad.": "Bonjour {namn} ! Votre réservation chez {sajt} est maintenant annulée.",
@@ -3165,5 +3165,9 @@
   "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Votre abonnement est prélevé automatiquement sur votre carte. Vous pouvez changer de carte et consulter vos reçus.",
   "Tack! Din betalning är klar och prenumerationen är igång.": "Merci ! Votre paiement est effectué et l'abonnement est en cours.",
   "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "Vous êtes redirigé vers notre partenaire de paiement Stripe pour saisir votre carte. Les données de carte sont conservées par Stripe, jamais par nous. Vous pouvez résilier ou changer de carte à tout moment sous Facturation.",
-  "Fortsätt till betalning →": "Continuer vers le paiement →"
+  "Fortsätt till betalning →": "Continuer vers le paiement →",
+  "Senaste betalningar": "Derniers paiements",
+  "Obetald": "Impayée",
+  "Annan": "Autre",
+  "Kvitto": "Reçu"
 }

@@ -4,7 +4,7 @@ import { billingCurrencyFor } from "@/lib/i18n/country";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import { createClient } from "@/lib/supabase/server";
-import { stripeEnabledFor } from "@/lib/stripe";
+import { getStripe, stripeEnabledFor } from "@/lib/stripe";
 import BillingActions from "./BillingActions";
 
 export default async function BillingPage() {
@@ -18,6 +18,8 @@ export default async function BillingPage() {
   let exempt = false;
   let stripeCustomer = false;
   let billingStatus: string | null = null;
+  let customerId: string | null = null;
+  let invoices: { id: string; date: string; amount: string; status: string; url: string | null }[] = [];
   const userEmail = user?.email ?? "";
   if (user) {
     const { data: profile } = await supabase
@@ -38,6 +40,28 @@ export default async function BillingPage() {
     const { data: st } = await supabase.from("profiles").select("stripe_customer_id, stripe_subscription_id, billing_status").eq("id", user.id).maybeSingle();
     stripeCustomer = !!st?.stripe_customer_id && !!st?.stripe_subscription_id;
     billingStatus = st?.billing_status ?? null;
+    customerId = st?.stripe_customer_id ?? null;
+  }
+
+  // Senaste betalningarna hämtas live från Stripe (bara för kunder med kortbetalning).
+  if (stripeCustomer && customerId) {
+    try {
+      const stripe = getStripe();
+      if (stripe) {
+        const list = await stripe.invoices.list({ customer: customerId, limit: 5 });
+        invoices = list.data
+          .filter((inv) => inv.status !== "draft")
+          .map((inv) => ({
+            id: inv.id as string,
+            date: new Date(inv.created * 1000).toLocaleDateString(locale),
+            amount: formatMoney(inv.total / 100, inv.currency.toUpperCase() as any, locale),
+            status: inv.status === "paid" ? "paid" : inv.status === "open" ? "open" : "other",
+            url: inv.hosted_invoice_url ?? null,
+          }));
+      }
+    } catch (e) {
+      console.error("invoices list", e);
+    }
   }
 
   const currency = billingCurrencyFor(country);
@@ -107,6 +131,25 @@ export default async function BillingPage() {
                     : t("Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.")}
                 </p>
                 <BillingActions mode="portal" />
+                {invoices.length > 0 && (
+                  <div className="mt-5 pt-4 border-t border-line">
+                    <div className="text-[12.5px] text-ink-dim uppercase tracking-wide mb-2">{t("Senaste betalningar")}</div>
+                    <ul className="divide-y divide-line">
+                      {invoices.map((inv) => (
+                        <li key={inv.id} className="flex items-center justify-between gap-3 py-2 text-[13.5px]">
+                          <span className="text-ink-dim">{inv.date}</span>
+                          <span className="font-semibold">{inv.amount}</span>
+                          <span className={inv.status === "paid" ? "text-[#1E6B34]" : "text-warm"}>
+                            {inv.status === "paid" ? t("Betald") : inv.status === "open" ? t("Obetald") : t("Annan")}
+                          </span>
+                          {inv.url ? (
+                            <a href={inv.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-ink underline">{t("Kvitto")}</a>
+                          ) : <span />}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </>
             ) : (
               <>

@@ -3165,5 +3165,9 @@
   "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Tilauksesi veloitetaan automaattisesti kortiltasi. Voit vaihtaa korttia ja nähdä kuittisi.",
   "Tack! Din betalning är klar och prenumerationen är igång.": "Kiitos! Maksusi on valmis ja tilaus on käynnissä.",
   "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "Sinut ohjataan maksukumppanimme Stripen sivulle kortin lisäämistä varten. Korttitiedot tallennetaan Stripeen, ei koskaan meille. Voit irtisanoa tai vaihtaa korttia milloin tahansa kohdassa Laskutus.",
-  "Fortsätt till betalning →": "Jatka maksuun →"
+  "Fortsätt till betalning →": "Jatka maksuun →",
+  "Senaste betalningar": "Viimeisimmät maksut",
+  "Obetald": "Maksamatta",
+  "Annan": "Muu",
+  "Kvitto": "Kuitti"
 }

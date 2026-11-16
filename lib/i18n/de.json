@@ -3165,5 +3165,9 @@
   "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Dein Abonnement wird automatisch von deiner Karte abgebucht. Du kannst die Karte wechseln und deine Belege ansehen.",
   "Tack! Din betalning är klar och prenumerationen är igång.": "Danke! Deine Zahlung ist abgeschlossen und das Abonnement läuft.",
   "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "Du wirst zu unserem Zahlungspartner Stripe weitergeleitet, um deine Karte einzugeben. Die Kartendaten werden bei Stripe gespeichert, nie bei uns. Du kannst jederzeit unter Abrechnung kündigen oder die Karte wechseln.",
-  "Fortsätt till betalning →": "Weiter zur Zahlung →"
+  "Fortsätt till betalning →": "Weiter zur Zahlung →",
+  "Senaste betalningar": "Letzte Zahlungen",
+  "Obetald": "Unbezahlt",
+  "Annan": "Andere",
+  "Kvitto": "Beleg"
 }

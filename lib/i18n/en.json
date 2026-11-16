@@ -3165,5 +3165,9 @@
   "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Your subscription is charged automatically to your card. You can change card and see your receipts.",
   "Tack! Din betalning är klar och prenumerationen är igång.": "Thank you! Your payment is complete and the subscription is running.",
   "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "You will be sent to our payment partner Stripe to enter your card. The card details are stored by Stripe, never by us. You can cancel or change card at any time under Billing.",
-  "Fortsätt till betalning →": "Continue to payment →"
+  "Fortsätt till betalning →": "Continue to payment →",
+  "Senaste betalningar": "Latest payments",
+  "Obetald": "Unpaid",
+  "Annan": "Other",
+  "Kvitto": "Receipt"
 }
