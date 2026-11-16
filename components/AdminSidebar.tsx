@@ -63,6 +63,16 @@ const NAV_ITEMS: { href: string; label: string; roles: StaffRole[]; icon: (c: st
     ),
   },
   {
+    href: "/admin/sociala-medier",
+    label: "Sociala medier",
+    roles: ["admin", "superadmin"],
+    icon: (c: string) => (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke={c} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 8.5 8.5 0 0 1-3.8-.9L3 21l2-5.2a8.4 8.4 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.4-9 8.4 8.4 0 0 1 8.5 8.5z" />
+      </svg>
+    ),
+  },
+  {
     href: "/admin/ekonomi",
     label: "Ekonomi",
     roles: ["admin", "superadmin"],
