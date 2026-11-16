@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isValidSiteContent } from "@/lib/contentModel";
 import { getAllowedSites, MAX_SITES_PER_ACCOUNT } from "@/lib/supabase/onboardingSite";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({ searchParams }: { searchParams?: { betalning?: string } }) {
   const t = getT();
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -60,6 +60,11 @@ export default async function DashboardPage() {
   return (
     <div className="min-h-screen bg-bg font-sans flex flex-col">
       <AccountHeader active="/dashboard" userName={userName} userEmail={userEmail} />
+      {searchParams?.betalning === "klar" && (
+        <div className="mx-6 md:mx-12 mt-6 rounded-xl border border-[#BFE3C8] bg-[#E4F5E8] text-[#1E6B34] px-4 py-3 text-[14px] font-semibold">
+          {t("Tack! Din betalning är klar och prenumerationen är igång.")}
+        </div>
+      )}
       <DashboardClient sites={sites} allowedSites={allowedSites} />
     </div>
   );

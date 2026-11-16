@@ -3151,5 +3151,19 @@
   "Du har osparade ändringar.": "Sinulla on tallentamattomia muutoksia.",
   "{language} är tillagt. Sajten är översatt.": "{language} on lisätty. Sivusto on käännetty.",
   "{language} är uppdaterat ✓": "{language} on päivitetty ✓",
-  "{language} är borttaget ✓": "{language} on poistettu ✓"
+  "{language} är borttaget ✓": "{language} on poistettu ✓",
+  "Kortbetalning är inte öppen än.": "Korttimaksu ei ole vielä avoinna.",
+  "Hittade ingen profil.": "Profiilia ei löytynyt.",
+  "Ditt konto är kostnadsfritt.": "Tilisi on maksuton.",
+  "Du har redan en aktiv prenumeration.": "Sinulla on jo aktiivinen tilaus.",
+  "Du har ingen kortbetalning kopplad.": "Sinulla ei ole korttimaksua liitettynä.",
+  "Öppnar …": "Avataan …",
+  "Betala med kort": "Maksa kortilla",
+  "Hantera kort och kvitton": "Hallitse korttia ja kuitteja",
+  "Kortbetalning varje månad": "Korttimaksu joka kuukausi",
+  "Senaste betalningen gick inte igenom. Uppdatera ditt kort så försöker vi igen.": "Viimeisin maksu ei mennyt läpi. Päivitä korttisi, niin yritämme uudelleen.",
+  "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Tilauksesi veloitetaan automaattisesti kortiltasi. Voit vaihtaa korttia ja nähdä kuittisi.",
+  "Tack! Din betalning är klar och prenumerationen är igång.": "Kiitos! Maksusi on valmis ja tilaus on käynnissä.",
+  "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "Sinut ohjataan maksukumppanimme Stripen sivulle kortin lisäämistä varten. Korttitiedot tallennetaan Stripeen, ei koskaan meille. Voit irtisanoa tai vaihtaa korttia milloin tahansa kohdassa Laskutus.",
+  "Fortsätt till betalning →": "Jatka maksuun →"
 }

@@ -35,8 +35,11 @@ export default function SignupPlanPage() {
   const [plan, setPlan] = useState<PlanId | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [stripeOn, setStripeOn] = useState(false);
 
   useEffect(() => {
+    // Kortbetalning visas bara för konton som fått den öppnad (under test).
+    fetch("/api/billing/status").then((r) => r.json()).then((d) => setStripeOn(!!d.enabled)).catch(() => {});
     const supabase = createClient();
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) {
@@ -54,7 +57,7 @@ export default function SignupPlanPage() {
     });
   }, [router]);
 
-  const finish = async (chosenPlan: PlanId | null) => {
+  const finish = async (chosenPlan: PlanId | null, pay = false) => {
     setSaving(true);
     setError("");
     try {
@@ -70,6 +73,13 @@ export default function SignupPlanPage() {
         .eq("id", user.id);
       if (updateError) throw new Error(updateError.message);
 
+      if (pay) {
+        const res = await fetch("/api/billing/checkout", { method: "POST" });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || !data.url) throw new Error(data.error || t("Något gick fel. Försök igen."));
+        window.location.href = data.url;
+        return;
+      }
       router.push("/dashboard");
       router.refresh();
     } catch (e: any) {
@@ -118,6 +128,14 @@ export default function SignupPlanPage() {
           ))}
         </div>
 
+        {stripeOn ? (
+          <div className="bg-surface border border-line rounded-2xl p-6 mb-7">
+            <div className="font-semibold text-[15px] mb-2">{t("Betala med kort")}</div>
+            <p className="text-[12.5px] text-ink-dim leading-relaxed">
+              {t("Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.")}
+            </p>
+          </div>
+        ) : (
         <div className="bg-surface border border-line rounded-2xl p-6 mb-7 opacity-70">
           <div className="flex items-center justify-between mb-4">
             <div className="font-semibold text-[15px]">{t("Betalkort")}</div>
@@ -145,6 +163,7 @@ export default function SignupPlanPage() {
             </div>
           </div>
         </div>
+        )}
 
         {error && <div className="text-[13.5px] text-warm font-medium mb-4">{error}</div>}
 
@@ -152,10 +171,10 @@ export default function SignupPlanPage() {
           <button
             type="button"
             disabled={saving || !plan}
-            onClick={() => finish(plan)}
+            onClick={() => finish(plan, stripeOn)}
             className="bg-accent text-accent-ink font-semibold text-[15px] px-6 py-3.5 rounded-[10px] disabled:opacity-60"
           >
-            {saving ? t("Sparar …") : t("Spara och fortsätt →")}
+            {saving ? t("Sparar …") : stripeOn ? t("Fortsätt till betalning →") : t("Spara och fortsätt →")}
           </button>
           <button
             type="button"

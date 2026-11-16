@@ -3151,5 +3151,19 @@
   "Du har osparade ändringar.": "Tienes cambios sin guardar.",
   "{language} är tillagt. Sajten är översatt.": "{language} se ha añadido. El sitio está traducido.",
   "{language} är uppdaterat ✓": "{language} se ha actualizado ✓",
-  "{language} är borttaget ✓": "{language} se ha eliminado ✓"
+  "{language} är borttaget ✓": "{language} se ha eliminado ✓",
+  "Kortbetalning är inte öppen än.": "El pago con tarjeta aún no está abierto.",
+  "Hittade ingen profil.": "No se encontró ningún perfil.",
+  "Ditt konto är kostnadsfritt.": "Tu cuenta es gratuita.",
+  "Du har redan en aktiv prenumeration.": "Ya tienes una suscripción activa.",
+  "Du har ingen kortbetalning kopplad.": "No tienes ningún pago con tarjeta conectado.",
+  "Öppnar …": "Abriendo …",
+  "Betala med kort": "Pagar con tarjeta",
+  "Hantera kort och kvitton": "Gestionar tarjeta y recibos",
+  "Kortbetalning varje månad": "Pago con tarjeta cada mes",
+  "Senaste betalningen gick inte igenom. Uppdatera ditt kort så försöker vi igen.": "El último pago no se realizó. Actualiza tu tarjeta y lo intentaremos de nuevo.",
+  "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Tu suscripción se cobra automáticamente de tu tarjeta. Puedes cambiar de tarjeta y ver tus recibos.",
+  "Tack! Din betalning är klar och prenumerationen är igång.": "¡Gracias! Tu pago está completo y la suscripción está en marcha.",
+  "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "Se te enviará a nuestro socio de pagos Stripe para introducir tu tarjeta. Los datos de la tarjeta los guarda Stripe, nunca nosotros. Puedes cancelar o cambiar de tarjeta en cualquier momento en Facturación.",
+  "Fortsätt till betalning →": "Continuar al pago →"
 }

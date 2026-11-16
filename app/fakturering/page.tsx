@@ -4,6 +4,8 @@ import { billingCurrencyFor } from "@/lib/i18n/country";
 import Link from "next/link";
 import AccountHeader from "@/components/AccountHeader";
 import { createClient } from "@/lib/supabase/server";
+import { stripeEnabledFor } from "@/lib/stripe";
+import BillingActions from "./BillingActions";
 
 export default async function BillingPage() {
   const t = getT();
@@ -14,6 +16,8 @@ export default async function BillingPage() {
   let country: string | null = null;
   let billingEmail = "";
   let exempt = false;
+  let stripeCustomer = false;
+  let billingStatus: string | null = null;
   const userEmail = user?.email ?? "";
   if (user) {
     const { data: profile } = await supabase
@@ -30,6 +34,10 @@ export default async function BillingPage() {
     // Ny kolumn (supabase/andringar-spark.sql): hämtas separat så sidan funkar även utan den.
     const { data: ex } = await supabase.from("profiles").select("billing_exempt").eq("id", user.id).maybeSingle();
     exempt = !!ex?.billing_exempt;
+    // Nya kolumner (supabase/stripe.sql): hämtas separat så sidan funkar även utan dem.
+    const { data: st } = await supabase.from("profiles").select("stripe_customer_id, billing_status").eq("id", user.id).maybeSingle();
+    stripeCustomer = !!st?.stripe_customer_id;
+    billingStatus = st?.billing_status ?? null;
   }
 
   const currency = billingCurrencyFor(country);
@@ -90,12 +98,23 @@ export default async function BillingPage() {
             </div>
             {exempt ? (
               <p className="text-[13.5px]">{t("Ingen betalning behövs.")}</p>
+            ) : stripeCustomer ? (
+              <>
+                <div className="font-semibold text-[14px] mb-1">{t("Kortbetalning varje månad")}</div>
+                <p className="text-[12.5px] text-ink-dim">
+                  {billingStatus === "past_due"
+                    ? t("Senaste betalningen gick inte igenom. Uppdatera ditt kort så försöker vi igen.")
+                    : t("Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.")}
+                </p>
+                <BillingActions mode="portal" />
+              </>
             ) : (
               <>
                 <div className="font-semibold text-[14px] mb-1">{t("Faktura en gång i månaden")}</div>
                 <p className="text-[12.5px] text-ink-dim">
                   {t("Fakturan skickas till {email}. Behöver du ändra faktureringsadress eller e-post, hör av dig till oss.", { email: billingEmail })}
                 </p>
+                {stripeEnabledFor(userEmail) && <BillingActions mode="pay" />}
                 <Link href="/kontakt" className="inline-block mt-3 text-[13.5px] font-semibold text-ink">
                   {t("Kontakta oss")}
                 </Link>

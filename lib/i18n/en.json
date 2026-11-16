@@ -3151,5 +3151,19 @@
   "Du har osparade ändringar.": "You have unsaved changes.",
   "{language} är tillagt. Sajten är översatt.": "{language} has been added. The site is translated.",
   "{language} är uppdaterat ✓": "{language} has been updated ✓",
-  "{language} är borttaget ✓": "{language} has been removed ✓"
+  "{language} är borttaget ✓": "{language} has been removed ✓",
+  "Kortbetalning är inte öppen än.": "Card payment is not open yet.",
+  "Hittade ingen profil.": "Could not find a profile.",
+  "Ditt konto är kostnadsfritt.": "Your account is free of charge.",
+  "Du har redan en aktiv prenumeration.": "You already have an active subscription.",
+  "Du har ingen kortbetalning kopplad.": "You have no card payment connected.",
+  "Öppnar …": "Opening …",
+  "Betala med kort": "Pay by card",
+  "Hantera kort och kvitton": "Manage card and receipts",
+  "Kortbetalning varje månad": "Card payment every month",
+  "Senaste betalningen gick inte igenom. Uppdatera ditt kort så försöker vi igen.": "The latest payment did not go through. Update your card and we will try again.",
+  "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Your subscription is charged automatically to your card. You can change card and see your receipts.",
+  "Tack! Din betalning är klar och prenumerationen är igång.": "Thank you! Your payment is complete and the subscription is running.",
+  "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "You will be sent to our payment partner Stripe to enter your card. The card details are stored by Stripe, never by us. You can cancel or change card at any time under Billing.",
+  "Fortsätt till betalning →": "Continue to payment →"
 }

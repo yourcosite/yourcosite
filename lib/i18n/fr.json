@@ -3151,5 +3151,19 @@
   "Du har osparade ändringar.": "Vous avez des modifications non enregistrées.",
   "{language} är tillagt. Sajten är översatt.": "{language} a été ajouté. Le site est traduit.",
   "{language} är uppdaterat ✓": "{language} a été mis à jour ✓",
-  "{language} är borttaget ✓": "{language} a été supprimé ✓"
+  "{language} är borttaget ✓": "{language} a été supprimé ✓",
+  "Kortbetalning är inte öppen än.": "Le paiement par carte n'est pas encore ouvert.",
+  "Hittade ingen profil.": "Aucun profil trouvé.",
+  "Ditt konto är kostnadsfritt.": "Votre compte est gratuit.",
+  "Du har redan en aktiv prenumeration.": "Vous avez déjà un abonnement actif.",
+  "Du har ingen kortbetalning kopplad.": "Vous n'avez aucun paiement par carte associé.",
+  "Öppnar …": "Ouverture …",
+  "Betala med kort": "Payer par carte",
+  "Hantera kort och kvitton": "Gérer la carte et les reçus",
+  "Kortbetalning varje månad": "Paiement par carte chaque mois",
+  "Senaste betalningen gick inte igenom. Uppdatera ditt kort så försöker vi igen.": "Le dernier paiement n'a pas abouti. Mettez à jour votre carte et nous réessaierons.",
+  "Din prenumeration dras automatiskt från ditt kort. Du kan byta kort och se dina kvitton.": "Votre abonnement est prélevé automatiquement sur votre carte. Vous pouvez changer de carte et consulter vos reçus.",
+  "Tack! Din betalning är klar och prenumerationen är igång.": "Merci ! Votre paiement est effectué et l'abonnement est en cours.",
+  "Du skickas till vår betalpartner Stripe för att lägga in ditt kort. Kortuppgifterna sparas hos Stripe, aldrig hos oss. Du kan säga upp eller byta kort när som helst under Fakturering.": "Vous êtes redirigé vers notre partenaire de paiement Stripe pour saisir votre carte. Les données de carte sont conservées par Stripe, jamais par nous. Vous pouvez résilier ou changer de carte à tout moment sous Facturation.",
+  "Fortsätt till betalning →": "Continuer vers le paiement →"
 }
