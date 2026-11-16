@@ -35,8 +35,8 @@ export default async function BillingPage() {
     const { data: ex } = await supabase.from("profiles").select("billing_exempt").eq("id", user.id).maybeSingle();
     exempt = !!ex?.billing_exempt;
     // Nya kolumner (supabase/stripe.sql): hämtas separat så sidan funkar även utan dem.
-    const { data: st } = await supabase.from("profiles").select("stripe_customer_id, billing_status").eq("id", user.id).maybeSingle();
-    stripeCustomer = !!st?.stripe_customer_id;
+    const { data: st } = await supabase.from("profiles").select("stripe_customer_id, stripe_subscription_id, billing_status").eq("id", user.id).maybeSingle();
+    stripeCustomer = !!st?.stripe_customer_id && !!st?.stripe_subscription_id;
     billingStatus = st?.billing_status ?? null;
   }
 
