@@ -10,10 +10,6 @@
     {
       "path": "/api/cron/social-publish",
       "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/weekly-report",
-      "schedule": "30 6 * * 1"
     }
   ]
 }
