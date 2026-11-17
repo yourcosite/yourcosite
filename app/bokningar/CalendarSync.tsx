@@ -11,7 +11,7 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
   const t = useT();
   const [token, setToken] = useState<string | null>(null);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
@@ -33,8 +33,8 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
   const url = token ? `${origin}/api/kalender/${token}` : "";
   const webcal = url.replace(/^https?:/, "webcal:");
 
-  const copy = async () => {
-    try { await navigator.clipboard.writeText(url); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* markera texten själv */ }
+  const copy = async (key: string, text: string) => {
+    try { await navigator.clipboard.writeText(text); setCopied(key); setTimeout(() => setCopied((c) => (c === key ? null : c)), 2000); } catch { /* markera texten själv */ }
   };
   const renew = async () => {
     setBusy(true);
@@ -71,8 +71,8 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
         <>
           <div className="flex items-center gap-2 mt-3">
             <input readOnly value={url} onFocus={(e) => e.currentTarget.select()} className="flex-1 min-w-0 border border-line rounded-lg px-3 py-2 text-[12.5px] bg-bg" aria-label={t("Kalenderlänk")} />
-            <button type="button" onClick={copy} className="text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg flex-shrink-0">
-              {copied ? t("Kopierad ✓") : t("Kopiera")}
+            <button type="button" onClick={() => copy("alla", url)} className="text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg flex-shrink-0">
+              {copied === "alla" ? t("Kopierad ✓") : t("Kopiera")}
             </button>
           </div>
           <p className="text-[12px] text-ink-dim mt-2">{t("Länken är hemlig och bara för dig. Dela den inte med andra.")}</p>
@@ -85,7 +85,12 @@ export default function CalendarSync({ siteId }: { siteId: string }) {
             {([[t("Bara bokningar"), "bokningar"], [t("Bara bokningsbara tider"), "tider"]] as const).map(([label, v]) => (
               <div key={v} className="mt-2.5">
                 <div className="text-[12.5px] font-semibold mb-1">{label}</div>
-                <input readOnly value={`${url}?visa=${v}`} onFocus={(e) => e.currentTarget.select()} className="w-full border border-line rounded-lg px-3 py-2 text-[12px] bg-bg" aria-label={label} />
+                <div className="flex items-center gap-2">
+                  <input readOnly value={`${url}?visa=${v}`} onFocus={(e) => e.currentTarget.select()} className="flex-1 min-w-0 border border-line rounded-lg px-3 py-2 text-[12px] bg-bg" aria-label={label} />
+                  <button type="button" onClick={() => copy(v, `${url}?visa=${v}`)} className="text-[12.5px] font-bold text-accent-ink bg-accent px-4 py-2 rounded-lg flex-shrink-0">
+                    {copied === v ? t("Kopierad ✓") : t("Kopiera")}
+                  </button>
+                </div>
               </div>
             ))}
           </details>
