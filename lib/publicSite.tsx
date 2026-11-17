@@ -62,7 +62,7 @@ export function publicMetadata(site: PublicSite, requestedPath: string, canonica
   };
 }
 
-export async function renderPublicSite(site: PublicSite, requestedPath: string, basePath: string) {
+export async function renderPublicSite(site: PublicSite, requestedPath: string, basePath: string, cancelToken?: string) {
   const admin = createAdminClient();
   const newsArticles = await getSiteNewsArticles(admin, site.id);
   return (
@@ -73,6 +73,7 @@ export async function renderPublicSite(site: PublicSite, requestedPath: string, 
       lang={site.language as any}
       currency={site.currency as any}
       activePath={requestedPath}
+      cancelToken={cancelToken}
       basePath={basePath}
       privacyPolicyMode={site.privacy_policy_mode}
       privacyPolicyFileUrl={site.privacy_policy_file_url}

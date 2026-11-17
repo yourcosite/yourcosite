@@ -1,72 +1,27 @@
-"use client";
+import type { Metadata } from "next";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { findPublicSite, renderPublicSite } from "@/lib/publicSite";
+import CancelGeneric from "./CancelGeneric";
 
-import { useT, useLocale } from "@/components/I18nProvider";
-import { BCP47 } from "@/lib/i18n/country";
-import { useEffect, useState } from "react";
-import { formatWhen } from "@/lib/booking";
+// Kundens avbokningssida (länken i bokningsmejlet). Hör bokningen till en
+// publicerad sajt visas sidan i sajtens egen design (meny, färger, typsnitt,
+// sidfot). Annars visas den enkla standardsidan. Fungerar på både
+// yourcosite.com och kundens egen domän.
+export const dynamic = "force-dynamic";
+export const metadata: Metadata = { robots: { index: false, follow: false } };
 
-// Kundens egen avbokningssida (länken i bekräftelsemejlet).
-export default function CancelBookingPage({ params }: { params: { token: string } }) {
-  const t = useT();
-  const locale = useLocale();
-  const [info, setInfo] = useState<{ packageName: string; startsAt: string; durationMin: number; status: string; siteName: string; timezone: string } | null>(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [done, setDone] = useState(false);
-
-  useEffect(() => {
-    fetch(`/api/public/booking/cancel?token=${encodeURIComponent(params.token)}`)
-      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
-      .then(({ ok, data }) => {
-        if (!ok) return setError(data.error || t("Hittade ingen bokning."));
-        setInfo({ ...data.booking, siteName: data.siteName, timezone: data.timezone });
-        if (data.booking.status === "cancelled") setDone(true);
-      })
-      .catch(() => setError(t("Kunde inte hämta bokningen.")));
-  }, [params.token]);
-
-  const cancel = async () => {
-    setBusy(true);
-    setError("");
+export default async function CancelBookingPage({ params }: { params: { token: string } }) {
+  const token = params.token;
+  if (/^[0-9a-f]{40,80}$/i.test(token)) {
     try {
-      const res = await fetch("/api/public/booking/cancel", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: params.token }),
-      });
-      const data = await res.json();
-      if (!res.ok) setError(data.error || t("Kunde inte avboka."));
-      else setDone(true);
+      const db = createAdminClient();
+      const { data: b } = await db.from("bookings").select("site_id").eq("cancel_token", token).maybeSingle();
+      const { data: s } = b ? await db.from("sites").select("slug, custom_domain").eq("id", (b as any).site_id).maybeSingle() : { data: null };
+      const found = s ? await findPublicSite((s as any).custom_domain ? { host: (s as any).custom_domain } : { slug: (s as any).slug }) : null;
+      if (found && found.state === "live") return renderPublicSite(found.site, "/avboka", "/", token);
     } catch {
-      setError(t("Kunde inte avboka just nu."));
-    } finally {
-      setBusy(false);
+      /* faller tillbaka på standardsidan */
     }
-  };
-
-  return (
-    <div className="min-h-screen bg-bg font-sans flex items-center justify-center px-5">
-      <div className="w-full max-w-[460px] bg-surface border border-line rounded-2xl p-7">
-        <h1 className="text-[22px] font-medium mb-3">{done ? t("Bokningen är avbokad") : t("Avboka din tid")}</h1>
-        {!info && !error && <p className="text-[14px] text-ink-dim">{t("Hämtar din bokning …")}</p>}
-        {info && (
-          <div className="text-[14px] mb-5">
-            <div className="font-semibold">{info.packageName}</div>
-            <div className="text-ink-dim">{formatWhen(new Date(info.startsAt), info.timezone, BCP47[locale])} · {info.durationMin} min</div>
-            {info.siteName && <div className="text-ink-dim">{info.siteName}</div>}
-          </div>
-        )}
-        {done ? (
-          <p className="text-[14px] text-ink-dim">{t("Tiden är avbokad och ett mejl är skickat. Välkommen att boka en ny tid när det passar.")}</p>
-        ) : (
-          info && (
-            <button onClick={cancel} disabled={busy} className="text-[13.5px] font-bold text-white bg-warm px-5 py-2.5 rounded-full disabled:opacity-60">
-              {busy ? t(t("Avbokar …")) : t(t("Ja, avboka tiden"))}
-            </button>
-          )
-        )}
-        {error && <p className="text-[13px] text-warm font-semibold mt-3">{error}</p>}
-      </div>
-    </div>
-  );
+  }
+  return <CancelGeneric params={params} />;
 }

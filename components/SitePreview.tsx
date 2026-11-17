@@ -10,6 +10,7 @@ import { HEADER_BUTTON_LAYOUTS } from "@/lib/contentModel";
 import type { FixtureItem, FixturesSection, MenuCategory, MenuItem, MenuSection, SiteContent, Section, SocialLink, BackgroundMode, ThemeFont, ButtonStyle, HeaderLayout, HeroLayout, AboutLayout, GridLayout, GridItem, TeamItem, CtaLayout, ContactFormSection, BookingSection, PhotoCredit, SkinId } from "@/lib/contentModel";
 import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
+import { formatWhen } from "@/lib/booking";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
 import { buildEmbedDoc } from "@/lib/embedDoc";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
@@ -203,6 +204,7 @@ function SitePreviewInner({
   ctaLayoutOverride,
   skinOverride,
   activePath,
+  cancelToken,
   basePath,
   onNavigate,
   privacyPolicyMode,
@@ -262,6 +264,8 @@ function SitePreviewInner({
   ctaLayoutOverride?: CtaLayout;
   // Vilken sida (content.pages[].path) som ska visas — default förstasidan.
   activePath?: string;
+  // Kundens avbokningssida (länken i bokningsmejlet), visad i sajtens egen design.
+  cancelToken?: string;
   // Satt när sidan ska gå att klicka runt på (se app/webbplats). Utan den
   // (t.ex. i /forslag-miniatyrerna) är menyn bara text, inte länkar, och
   // cookiebannern visas inte (se nedan).
@@ -331,7 +335,9 @@ function SitePreviewInner({
     return null;
   })();
 
-  const rawPage = isPrivacyPolicyPage
+  const rawPage = cancelToken
+    ? { path: "/avboka", label: "Avboka", sections: [] }
+    : isPrivacyPolicyPage
     ? { path: PRIVACY_POLICY_PATH, label: "Integritetspolicy", sections: [] }
     : newsDetailMatch
     ? newsDetailMatch.page
@@ -628,7 +634,9 @@ function SitePreviewInner({
           </div>
         )}
       </div>
-      {isPrivacyPolicyPage ? (
+      {cancelToken ? (
+        <CancelBookingBlock token={cancelToken} palette={palette} accent={accent} shape={buttonShape} />
+      ) : isPrivacyPolicyPage ? (
         <PrivacyPolicyBlock text={privacyPolicyText!} palette={palette} />
       ) : newsDetailMatch ? (
         <NewsArticleDetail
@@ -752,6 +760,70 @@ function SitePreviewInner({
 // Minimal "markdown-lite"-rendering av den genererade policytexten (se
 // lib/privacyPolicyTemplate.ts) — bara "## "-rubriker och
 // tomrad-separerade stycken, det är allt mallen någonsin producerar.
+// Kundens egen avbokningssida (länken i bokningsmejlet) i sajtens design:
+// menyn, färgerna, typsnitten och sidfoten är sajtens egna.
+function CancelBookingBlock({ token, palette, accent, shape = "pill" }: { token: string; palette: Palette; accent: string; shape?: ButtonStyle }) {
+  const t = useSiteT();
+  const { bcp47 } = useSiteLocale();
+  const btn = ctaShapeProps(shape, accent, { textColor: palette.text });
+  const [info, setInfo] = useState<{ packageName: string; startsAt: string; durationMin: number; status: string; siteName: string; timezone: string } | null>(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    fetch(`/api/public/booking/cancel?token=${encodeURIComponent(token)}`)
+      .then(async (r) => ({ ok: r.ok, data: await r.json() }))
+      .then(({ ok, data }) => {
+        if (!ok) return setError(data.error || t("Hittade ingen bokning."));
+        setInfo({ ...data.booking, siteName: data.siteName, timezone: data.timezone });
+        if (data.booking.status === "cancelled") setDone(true);
+      })
+      .catch(() => setError(t("Kunde inte hämta bokningen.")));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]);
+
+  const cancel = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      const res = await fetch("/api/public/booking/cancel", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token }) });
+      const data = await res.json();
+      if (!res.ok) setError(data.error || t("Kunde inte avboka."));
+      else setDone(true);
+    } catch {
+      setError(t("Kunde inte avboka just nu."));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="px-6 @3xl:px-14 py-16 @3xl:py-24 flex justify-center">
+      <div className="w-full max-w-[520px] rounded-2xl p-7 @3xl:p-9" style={{ background: palette.cardBg, border: `1px solid ${palette.cardBorder}` }}>
+        <h1 className="font-heading text-[26px] @3xl:text-[32px] mb-4">{done ? t("Bokningen är avbokad") : t("Avboka din tid")}</h1>
+        {!info && !error && <p className="text-[14.5px]" style={{ color: palette.textDim }}>{t("Hämtar din bokning …")}</p>}
+        {info && (
+          <div className="text-[15px] mb-6">
+            <div className="font-semibold">{info.packageName}</div>
+            <div style={{ color: palette.textDim }}>{formatWhen(new Date(info.startsAt), info.timezone, bcp47)} · {info.durationMin} min</div>
+          </div>
+        )}
+        {done ? (
+          <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>{t("Tiden är avbokad och ett mejl är skickat. Välkommen att boka en ny tid när det passar.")}</p>
+        ) : (
+          info && (
+            <button type="button" onClick={cancel} disabled={busy} className={`disabled:opacity-60 ${btn.className}`} style={btn.style}>
+              {busy ? t("Avbokar …") : t("Ja, avboka tiden")}
+            </button>
+          )
+        )}
+        {error && <p className="text-[13.5px] font-semibold mt-4" style={{ color: "#C0392B" }}>{error}</p>}
+      </div>
+    </div>
+  );
+}
+
 function PrivacyPolicyBlock({ text, palette }: { text: string; palette: Palette }) {
   const blocks = text.split(/\n\s*\n/).map((b) => b.trim()).filter(Boolean);
   return (
