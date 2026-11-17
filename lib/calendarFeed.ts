@@ -88,8 +88,11 @@ export function buildCalendarFeed(input: {
   ];
   const dtstamp = stamp(now);
 
-  // 1. Bokningar.
-  for (const b of input.only === "tider" ? [] : input.bookings) {
+  // 1. Bokningar. Avbokade lämnas helt utanför: Google Kalender (och flera
+  //    andra) hoppar över STATUS:CANCELLED i prenumererade flöden, så en
+  //    avbokad tid låg kvar. Saknas posten i flödet försvinner den vid nästa
+  //    uppdatering.
+  for (const b of input.only === "tider" ? [] : input.bookings.filter((x) => x.status !== "cancelled")) {
     const desc = [
       b.customer_name,
       b.customer_email,
@@ -104,7 +107,7 @@ export function buildCalendarFeed(input: {
       `DTEND:${stamp(new Date(b.ends_at))}`,
       `SUMMARY:${esc(`${b.package_name}: ${b.customer_name}`)}`,
       `DESCRIPTION:${esc(desc)}`,
-      `STATUS:${b.status === "cancelled" ? "CANCELLED" : "CONFIRMED"}`,
+      "STATUS:CONFIRMED",
       "TRANSP:OPAQUE",
       "COLOR:orange",
       "END:VEVENT",
