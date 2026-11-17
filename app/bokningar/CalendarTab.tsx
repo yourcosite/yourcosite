@@ -219,6 +219,11 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
     },
   });
   const clearSel = () => { setSel(null); setPanel(null); dragRef.current = null; };
+  const setTime = (which: "a" | "b", v: string) => {
+    if (!sel || !/^\d{2}:\d{2}$/.test(v)) return;
+    setSel({ ...sel, [which]: mins(v) });
+  };
+  const selValid = !!sel && sel.b > sel.a;
   const selLabel = sel ? `${fmtDay(sel.date, { weekday: "short", day: "numeric", month: "short" })} ${hhmm(sel.a)}–${hhmm(sel.b)}` : "";
   const doOpenSlot = async () => {
     if (!sel) return;
@@ -333,7 +338,18 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
 
       {view !== "month" && sel && panel && (
         <div className="sticky bottom-3 z-20 mt-3 border border-line rounded-xl bg-surface shadow-lg p-4 max-w-[640px]">
-          <div className="text-[14px] font-semibold mb-3">{t("Vald tid")}: {selLabel}</div>
+          <div className="text-[14px] font-semibold mb-2">{t("Vald tid")}: {selLabel}</div>
+          <div className="flex items-end gap-3 flex-wrap mb-3">
+            <label className="block">
+              <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Från")}</span>
+              <input type="time" step={300} className={input} value={hhmm(sel.a)} onChange={(e) => setTime("a", e.target.value)} />
+            </label>
+            <label className="block">
+              <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Till")}</span>
+              <input type="time" step={300} className={input} value={hhmm(sel.b)} onChange={(e) => setTime("b", e.target.value)} />
+            </label>
+            {!selValid && <span className="text-[12px] text-warm pb-2">{t("Sluttiden måste vara efter starttiden.")}</span>}
+          </div>
           {panel === "choose" ? (
             <>
               <label className="block mb-3 max-w-[320px]">
@@ -344,9 +360,9 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
                 </select>
               </label>
               <div className="flex gap-2 flex-wrap">
-                <button type="button" className={btnPrimary} disabled={busy} onClick={doOpenSlot}>{t("Öppna tiden")}</button>
-                <button type="button" className={btnPrimary} disabled={busy} onClick={() => setPanel("booking")}>{t("Ny bokning")}</button>
-                <button type="button" className={btnGhost} disabled={busy} onClick={doBlock}>{t("Stäng tiden")}</button>
+                <button type="button" className={btnPrimary} disabled={busy || !selValid} onClick={doOpenSlot}>{t("Öppna tiden")}</button>
+                <button type="button" className={btnPrimary} disabled={busy || !selValid} onClick={() => setPanel("booking")}>{t("Ny bokning")}</button>
+                <button type="button" className={btnGhost} disabled={busy || !selValid} onClick={doBlock}>{t("Stäng tiden")}</button>
                 <button type="button" className={btnGhost} onClick={clearSel}>{t("Avbryt")}</button>
               </div>
             </>
@@ -388,7 +404,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
                 </label>
               </div>
               <div className="flex gap-2">
-                <button type="button" className={btnPrimary} disabled={busy} onClick={doBooking}>{t("Spara bokningen")}</button>
+                <button type="button" className={btnPrimary} disabled={busy || !selValid} onClick={doBooking}>{t("Spara bokningen")}</button>
                 <button type="button" className={btnGhost} onClick={() => setPanel("choose")}>{t("Tillbaka")}</button>
                 <button type="button" className={btnGhost} onClick={clearSel}>{t("Avbryt")}</button>
               </div>
