@@ -38,6 +38,10 @@ function customerHostResponse(request: NextRequest): NextResponse | null {
   if (!host || APP_HOST.test(host)) return null;
   const path = request.nextUrl.pathname;
   if (CUSTOMER_HOST_ALLOWED_API.some((p) => path.startsWith(p))) return NextResponse.next();
+  // Avbokningslänken i bokningsmejlet (/avboka/<kod>) pekar på kundens egen
+  // domän. Sidan finns i själva appen, så den släpps igenom i stället för att
+  // skrivas om till kundens sajt (där den skulle landa på startsidan).
+  if (path.startsWith("/avboka/")) return NextResponse.next();
   if (path.startsWith("/api/") || path.startsWith("/publik/")) return new NextResponse("Not found", { status: 404 });
   const url = request.nextUrl.clone();
   url.pathname = `/publik/${encodeURIComponent(host)}${path === "/" ? "" : path}`;
