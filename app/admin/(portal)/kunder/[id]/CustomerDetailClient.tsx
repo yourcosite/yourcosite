@@ -187,6 +187,20 @@ export default function CustomerDetailClient({
     }
   };
 
+  const handleReset2fa = async () => {
+    if (!window.confirm("Nollställa tvåstegsverifieringen för den här användaren? Användaren loggar sedan in med bara lösenord och sätter upp den på nytt.")) return;
+    setBusy("reset2fa");
+    setError(null);
+    setMessage(null);
+    const res = await fetch(`/api/admin/customers/${customer.id}/reset-2fa`, { method: "POST" });
+    setBusy(null);
+    if (res.ok) setMessage("Tvåstegsverifieringen är nollställd.");
+    else {
+      const data = await res.json().catch(() => ({}));
+      setError(data.error ?? "Kunde inte nollställa.");
+    }
+  };
+
   const handleSetPassword = async () => {
     const password = window.prompt("Skriv ett nytt lösenord åt kunden (minst 10 tecken). Berätta det för kunden på ett säkert sätt och be dem byta det.");
     if (!password) return;
@@ -358,6 +372,13 @@ export default function CustomerDetailClient({
             className="bg-surface border border-line text-ink font-semibold text-[13px] px-4 py-2.5 rounded-lg disabled:opacity-60"
           >
             {busy === "setpw" ? "Sparar …" : "Sätt lösenord direkt"}
+          </button>
+          <button
+            onClick={handleReset2fa}
+            disabled={busy === "reset2fa"}
+            className="bg-surface border border-line text-ink font-semibold text-[13px] px-4 py-2.5 rounded-lg disabled:opacity-60"
+          >
+            {busy === "reset2fa" ? "Nollställer …" : "Nollställ tvåfaktor"}
           </button>
           {site && (siteStatus === "live" || siteStatus === "pausad") && (
             <button

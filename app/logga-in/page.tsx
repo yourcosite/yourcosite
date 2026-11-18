@@ -2,12 +2,13 @@
 
 import { rich } from "@/lib/i18n/rich";
 import { useT } from "@/components/I18nProvider";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 import { createClient } from "@/lib/supabase/client";
+import MfaChallenge from "@/components/MfaChallenge";
 import TurnstileWidget, { TURNSTILE_SITE_KEY } from "@/components/TurnstileWidget";
 
 export default function LoginPage() {
@@ -21,6 +22,15 @@ export default function LoginPage() {
   const [resetSent, setResetSent] = useState(false);
   const [captcha, setCaptcha] = useState<string | null>(null);
   const [captchaReset, setCaptchaReset] = useState(0);
+  const [mfa, setMfa] = useState(false);
+
+  // Inloggad med lösenord men kodsteget återstår (till exempel efter omdirigering).
+  useEffect(() => {
+    createClient().auth.mfa.getAuthenticatorAssuranceLevel().then(({ data }) => {
+      if (data?.currentLevel === "aal1" && data?.nextLevel === "aal2") setMfa(true);
+    });
+  }, []);
+  const finish = () => { router.push("/dashboard"); router.refresh(); };
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -72,8 +82,9 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/dashboard");
-    router.refresh();
+    const { data: lvl } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+    if (lvl?.currentLevel === "aal1" && lvl?.nextLevel === "aal2") { setMfa(true); return; }
+    finish();
   };
 
   return (
@@ -103,7 +114,25 @@ export default function LoginPage() {
             {t("Logga in för att fortsätta jobba på era sajter.")}
           </p>
 
-          {resetMode ? (
+          {mfa ? (
+            <MfaChallenge
+              onDone={finish}
+              onSignOut={async () => { await createClient().auth.signOut(); setMfa(false); router.refresh(); }}
+              texts={{
+                title: t("Bekräfta med din kod"),
+                hint: t("Skriv in den sexsiffriga koden från din autentiseringsapp."),
+                code: t("Kod"),
+                verify: t("Logga in"),
+                verifying: t("Kontrollerar …"),
+                wrong: t("Fel kod. Försök igen."),
+                useBackup: t("Använd en reservkod"),
+                useApp: t("Använd appen i stället"),
+                backupLabel: t("Reservkod"),
+                backupHint: t("Skriv in en av dina reservkoder. Tvåstegsverifieringen stängs då av, och du kan sätta upp den på nytt under Inställningar."),
+                signOut: t("Logga ut"),
+              }}
+            />
+          ) : resetMode ? (
             resetSent ? (
               <div className="flex flex-col gap-4">
                 <p className="text-[14.5px] leading-relaxed">

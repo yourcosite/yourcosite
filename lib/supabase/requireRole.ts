@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { aalOfToken } from "@/lib/supabase/aal";
 
 export type StaffRole = "support" | "admin" | "superadmin";
 
@@ -34,6 +35,14 @@ export async function requireRole(allowed: StaffRole[]) {
         { error: "Du har inte behörighet för det här." },
         { status: 403 }
       ),
+    };
+  }
+
+  // Personal måste ha bekräftat tvåstegsverifiering i den här sessionen.
+  const { data: { session } } = await supabase.auth.getSession();
+  if (aalOfToken(session?.access_token) !== "aal2") {
+    return {
+      error: NextResponse.json({ error: "Tvåstegsverifiering krävs. Logga in igen." }, { status: 403 }),
     };
   }
 

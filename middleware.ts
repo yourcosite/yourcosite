@@ -1,5 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { impersonatingCustomer } from "@/lib/impersonationEdge";
+import { aalOfToken, hasVerifiedFactor } from "@/lib/supabase/aal";
 import { DEFAULT_LOCALE, LOCALE_COOKIE, LOCALE_HEADER, isLocale, isLocalizedPath, localizedPath, matchLocale, splitLocalePrefix } from "@/lib/i18n/config";
 
 // Sidor som kräver att man är inloggad som kund.
@@ -26,6 +28,7 @@ const ADMIN_PREFIXES = ["/admin"];
 const hasPrefix = (path: string, p: string) => path === p || path.startsWith(p + "/");
 
 const ADMIN_LOGIN_PATH = "/admin/logga-in";
+const ADMIN_2FA_PATH = "/admin/tvafaktor";
 
 // Värdnamn som tillhör själva tjänsten. Allt annat är en kunds egen domän och
 // visar kundens publicerade sajt (app/publik). Kundens sajt behöver bara de
@@ -121,6 +124,21 @@ export async function middleware(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   const path = effectivePath;
 
+  // Tvåstegsverifiering: har kontot en aktiv tvåfaktor måste sessionen vara
+  // bekräftad med kod (aal2) innan något skyddat öppnas.
+  let aal: "aal1" | "aal2" | null = null;
+  if (user) {
+    const { data: { session } } = await supabase.auth.getSession();
+    aal = aalOfToken(session?.access_token);
+  }
+  // Personal som "loggat in som kund" (signerad kaka) behöver inte kundens kod.
+  const impersonated = !!user && hasVerifiedFactor(user) && aal !== "aal2" && (await impersonatingCustomer(request.cookies.get("ycs_imp")?.value, user.id));
+  const mfaPending = !!user && hasVerifiedFactor(user) && aal !== "aal2" && !impersonated;
+  const MFA_OPEN_API = ["/api/public/", "/api/analytics/", "/api/auth/", "/api/log-error", "/api/cron/", "/api/kalender/"];
+  if (mfaPending && path.startsWith("/api/") && !MFA_OPEN_API.some((p) => path.startsWith(p))) {
+    return NextResponse.json({ error: "Verifiera med din tvåstegskod först." }, { status: 401 });
+  }
+
   const isAdminPath =
     ADMIN_PREFIXES.some((p) => hasPrefix(path, p)) && path !== ADMIN_LOGIN_PATH;
   const isProtectedPath = PROTECTED_PREFIXES.some((p) => hasPrefix(path, p));
@@ -144,6 +162,12 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/";
       return NextResponse.redirect(url);
     }
+    // Personal måste ha tvåstegsverifiering påslagen och bekräftad.
+    if (aal !== "aal2" && path !== ADMIN_2FA_PATH) {
+      const url = request.nextUrl.clone();
+      url.pathname = ADMIN_2FA_PATH;
+      return NextResponse.redirect(url);
+    }
     if (path.startsWith("/admin/team") && role !== "superadmin") {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";
@@ -157,7 +181,7 @@ export async function middleware(request: NextRequest) {
       url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
-  } else if (isProtectedPath && !user) {
+  } else if (isProtectedPath && (!user || mfaPending)) {
     const url = request.nextUrl.clone();
     url.pathname = "/logga-in";
     return NextResponse.redirect(url);

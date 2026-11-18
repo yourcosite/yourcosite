@@ -7,14 +7,16 @@ import AccountTab from "./AccountTab";
 import NotificationsTab from "./NotificationsTab";
 import LanguageTab from "./LanguageTab";
 import PasswordTab from "./PasswordTab";
+import TwoFactorTab from "./TwoFactorTab";
 import DeleteAccountTab from "./DeleteAccountTab";
 
-type Tab = "konto" | "sprak" | "losenord" | "notiser" | "radera";
+type Tab = "konto" | "sprak" | "losenord" | "tvafaktor" | "notiser" | "radera";
 
 const TABS: { id: Tab; label: string; danger?: boolean }[] = [
   { id: "konto", label: msg("Konto") },
   { id: "sprak", label: msg("Språk") },
   { id: "losenord", label: msg("Lösenord") },
+  { id: "tvafaktor", label: msg("Tvåstegsverifiering") },
   { id: "notiser", label: msg("Notiser") },
   { id: "radera", label: msg("Ta bort konto"), danger: true },
 ];
@@ -101,6 +103,7 @@ export default function SettingsTabs({
       )}
       {active === "sprak" && <LanguageTab />}
       {active === "losenord" && <PasswordTab />}
+      {active === "tvafaktor" && <TwoFactorTab />}
       {active === "notiser" && (
         <NotificationsTab
           notifyChangesPublished={notifyChangesPublished}
