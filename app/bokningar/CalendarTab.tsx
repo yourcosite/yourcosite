@@ -33,7 +33,7 @@ const isoWeek = (date: string) => {
   return Math.ceil(((dt.getTime() - y0.getTime()) / 86400000 + 1) / 7);
 };
 
-type Seg = { startMin: number; endMin: number; label?: string };
+type Seg = { startMin: number; endMin: number; label?: string; slotId?: string; pkgId?: string | null };
 
 export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Data; tz: string; busy: boolean; act: Act; siteId: string }) {
   const t = useT();
@@ -61,10 +61,11 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
 
   // Markera en tid genom att dra i kalendern (som i Google Kalender).
   const [sel, setSel] = useState<{ date: string; a: number; b: number } | null>(null);
-  const [panel, setPanel] = useState<null | "choose" | "booking">(null);
+  const [panel, setPanel] = useState<null | "choose" | "booking" | "edit">(null);
   const dragRef = useRef<{ date: string; r0: number; top: number } | null>(null);
   const skipClick = useRef(false);
   const [slotPkg, setSlotPkg] = useState("");
+  const [editSlotId, setEditSlotId] = useState<string | null>(null);
   const [bk, setBk] = useState({ package_id: "", package_name: "", name: "", phone: "", email: "", message: "", sendMail: false });
   const activePk = data.packages.filter((p) => p.active);
 
@@ -106,7 +107,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
       }
       for (const s of data.slots) {
         const seg = clampDay(date, new Date(s.starts_at), new Date(s.ends_at));
-        if (seg) open.push({ ...seg, label: s.package_id ? data.packages.find((p) => p.id === s.package_id)?.name : undefined });
+        if (seg) open.push({ ...seg, label: s.package_id ? data.packages.find((p) => p.id === s.package_id)?.name : undefined, slotId: s.id, pkgId: s.package_id });
       }
       const blocks: Seg[] = [];
       for (const b of data.blocks) {
@@ -218,7 +219,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
       openPanel(date, lo, Math.min(lo + 60, 1439));
     },
   });
-  const clearSel = () => { setSel(null); setPanel(null); dragRef.current = null; };
+  const clearSel = () => { setSel(null); setPanel(null); setEditSlotId(null); dragRef.current = null; };
   const setTime = (which: "a" | "b", v: string) => {
     if (!sel || !/^\d{2}:\d{2}$/.test(v)) return;
     setSel({ ...sel, [which]: mins(v) });
@@ -228,6 +229,14 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
   const doOpenSlot = async () => {
     if (!sel) return;
     if (await act({ action: "addSlot", date: sel.date, start: hhmm(sel.a), end: hhmm(sel.b), package_id: slotPkg || null }, t("Tiden är tillagd."))) clearSel();
+  };
+  const doUpdateSlot = async () => {
+    if (!sel || !editSlotId) return;
+    if (await act({ action: "updateSlot", id: editSlotId, date: sel.date, start: hhmm(sel.a), end: hhmm(sel.b), package_id: slotPkg || null }, t("Tiden är ändrad."))) clearSel();
+  };
+  const doDeleteSlot = async () => {
+    if (!editSlotId) return;
+    if (await act({ action: "deleteSlot", id: editSlotId }, t("Tiden är borttagen."))) clearSel();
   };
   const doBlock = async () => {
     if (!sel) return;
@@ -298,7 +307,26 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
                 {hours.map((h) => (
                   <div key={h} className="absolute left-0 right-0 border-t border-line/60" style={{ top: (h - startH) * HOUR_PX }} />
                 ))}
-                {d.open.map((s, i) => (
+                {d.open.map((s, i) => s.slotId ? (
+                  <button
+                    type="button"
+                    key={`o${i}`}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setPicked(null);
+                      setSel({ date: d.date, a: s.startMin, b: s.endMin });
+                      setSlotPkg(s.pkgId || "");
+                      setEditSlotId(s.slotId!);
+                      setPanel("edit");
+                    }}
+                    className={`absolute left-0.5 right-0.5 rounded bg-[#E8F5EC] border border-[#CFE9D6] overflow-hidden px-1 text-left text-[10.5px] text-[#2F6B44] cursor-pointer ${editSlotId === s.slotId ? "ring-2 ring-ink" : ""}`}
+                    style={{ top: top(s.startMin), height: height(s.startMin, s.endMin) }}
+                    title={t("Klicka för att ändra eller ta bort tiden")}
+                  >
+                    {s.label || ""}
+                  </button>
+                ) : (
                   <div key={`o${i}`} className="absolute left-0.5 right-0.5 rounded bg-[#E8F5EC] border border-[#CFE9D6] overflow-hidden px-1 text-[10.5px] text-[#2F6B44]" style={{ top: top(s.startMin), height: height(s.startMin, s.endMin) }} title={s.label || t("Alla paket")}>
                     {s.label || ""}
                   </div>
@@ -338,7 +366,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
 
       {view !== "month" && sel && panel && (
         <div className="sticky bottom-3 z-20 mt-3 border border-line rounded-xl bg-surface shadow-lg p-4 max-w-[640px]">
-          <div className="text-[14px] font-semibold mb-2">{t("Vald tid")}: {selLabel}</div>
+          <div className="text-[14px] font-semibold mb-2">{panel === "edit" ? t("Ändra öppen tid") : t("Vald tid")}: {selLabel}</div>
           <div className="flex items-end gap-3 flex-wrap mb-3">
             <label className="block">
               <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Från")}</span>
@@ -350,7 +378,22 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
             </label>
             {!selValid && <span className="text-[12px] text-warm pb-2">{t("Sluttiden måste vara efter starttiden.")}</span>}
           </div>
-          {panel === "choose" ? (
+          {panel === "edit" ? (
+            <>
+              <label className="block mb-3 max-w-[320px]">
+                <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Öppna för")}</span>
+                <select className={`${input} w-full`} value={slotPkg} onChange={(e) => setSlotPkg(e.target.value)}>
+                  <option value="">{t("Alla paket")}</option>
+                  {activePk.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </label>
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" className={btnPrimary} disabled={busy || !selValid} onClick={doUpdateSlot}>{t("Spara ändring")}</button>
+                <button type="button" className={btnGhost} disabled={busy} onClick={doDeleteSlot}>{t("Ta bort tiden")}</button>
+                <button type="button" className={btnGhost} onClick={clearSel}>{t("Avbryt")}</button>
+              </div>
+            </>
+          ) : panel === "choose" ? (
             <>
               <label className="block mb-3 max-w-[320px]">
                 <span className="block text-[11.5px] font-semibold text-ink-dim mb-1">{t("Öppna för")}</span>

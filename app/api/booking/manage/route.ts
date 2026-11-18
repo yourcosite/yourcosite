@@ -174,6 +174,17 @@ async function POST_handler(request: Request) {
       if (error) return fail(t("Kunde inte lägga till tiden."), 500);
       return NextResponse.json({ ok: true });
     }
+    case "updateSlot": {
+      if (!isUuid(body.id) || !DATE.test(body.date) || !TIME.test(body.start) || !TIME.test(body.end)) return fail(t("Fyll i datum, start och slut."));
+      if (timeToMinutes(body.end) <= timeToMinutes(body.start)) return fail(t("Sluttiden måste vara efter starttiden."));
+      const { error } = await supabase.from("booking_slots").update({
+        package_id: isUuid(body.package_id) ? body.package_id : null,
+        starts_at: zonedTimeToUtc(body.date, body.start, tz).toISOString(),
+        ends_at: zonedTimeToUtc(body.date, body.end, tz).toISOString(),
+      }).eq("id", body.id).eq("site_id", site.id);
+      if (error) return fail(t("Kunde inte ändra tiden."), 500);
+      return NextResponse.json({ ok: true });
+    }
     case "deleteSlot":
     case "deleteBlock": {
       if (!isUuid(body.id)) return fail(t("Saknar rad."));

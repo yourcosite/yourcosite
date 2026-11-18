@@ -95,9 +95,13 @@ export function computeAvailability(input: {
   const forPkg = <T extends { package_id: string | null }>(x: T) => x.package_id === null || x.package_id === pkg.id;
 
   const starts = new Set<number>();
-  const addWindow = (winS: number, winE: number) => {
-    for (let t = winS; t + durMs <= winE; t += stepMs) starts.add(t);
-  };
+  // Alla öppna pass för behandlingen samlas först och slås ihop när de ligger
+  // intill eller överlappar varandra, så att flera öppnade tider i rad inte
+  // blockerar längre behandlingar. Starttider ligger på hel och halv timme
+  // (plus passets egen starttid, om ägaren öppnat en tid som börjar annorlunda).
+  const GRID = 30 * 60000;
+  const wins: [number, number][] = [];
+  const addWindow = (winS: number, winE: number) => { if (winE > winS) wins.push([winS, winE]); };
 
   // Veckoschema, dag för dag i sajtens tidszon.
   const today = localDateOf(now, tz);
@@ -115,6 +119,17 @@ export function computeAvailability(input: {
   for (const s of slots) {
     if (!forPkg(s)) continue;
     addWindow(new Date(s.starts_at).getTime(), new Date(s.ends_at).getTime());
+  }
+  wins.sort((a, b) => a[0] - b[0]);
+  const merged: [number, number][] = [];
+  for (const w of wins) {
+    const last = merged[merged.length - 1];
+    if (last && w[0] <= last[1]) last[1] = Math.max(last[1], w[1]);
+    else merged.push([w[0], w[1]]);
+  }
+  for (const [winS, winE] of merged) {
+    if (winS + durMs <= winE) starts.add(winS);
+    for (let t = Math.ceil(winS / GRID) * GRID; t + durMs <= winE; t += GRID) starts.add(t);
   }
 
   // Stängda tider gäller själva behandlingen; bokningar räknas inklusive sin
