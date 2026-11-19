@@ -13,6 +13,7 @@ const IGNORED = [
   /Error invoking postMessage/i,
   /window\.webkit\.messageHandlers/i,
   /ResizeObserver/i,
+  /\["@context"\]\.toLowerCase/i, // JSON-LD-läsare i appars webbläsare och tillägg
 ];
 
 export function reportClientError(message: string, stack?: string | null, context?: string) {

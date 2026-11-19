@@ -42,6 +42,9 @@ function fingerprintOf(i: ErrorInput): string {
 export async function logError(input: ErrorInput): Promise<void> {
   try {
     if (inDemo()) return; // demon loggar inget
+    // Next.js försöker förrendera API-rutter vid bygget och loggar då "Dynamic
+    // server usage". Det är ofarligt (rutten körs dynamiskt) och inget riktigt fel.
+    if (/Dynamic server usage|DYNAMIC_SERVER_USAGE/i.test(input.message)) return;
     const db = createAdminClient();
     const fingerprint = fingerprintOf(input);
     const now = Date.now();
