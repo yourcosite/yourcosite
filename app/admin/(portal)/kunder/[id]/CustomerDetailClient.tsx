@@ -541,7 +541,7 @@ export default function CustomerDetailClient({
                       <div className="flex items-center gap-2.5 text-[13.5px]">
                         <button onClick={() => saveExtraSites(Math.max(0, extraSites - 1))} disabled={savingSites || extraSites <= 0} className="border border-line font-semibold px-3 py-1 rounded-lg disabled:opacity-40">−</button>
                         <span>{extraSites} extra (totalt {1 + extraSites} sajter)</span>
-                        <button onClick={() => saveExtraSites(Math.min(4, extraSites + 1))} disabled={savingSites || extraSites >= 4} className="border border-line font-semibold px-3 py-1 rounded-lg disabled:opacity-40">+</button>
+                        <button onClick={() => saveExtraSites(Math.min(9, extraSites + 1))} disabled={savingSites || extraSites >= 9} className="border border-line font-semibold px-3 py-1 rounded-lg disabled:opacity-40">+</button>
                       </div>
                     </div>
                     <div className="mt-4 pt-3.5 border-t border-line">

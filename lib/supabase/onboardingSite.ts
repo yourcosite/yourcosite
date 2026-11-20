@@ -20,7 +20,7 @@ const DRAFT_COOKIE = "yc_draft_id";
 // misstag (eller med flit) ska kunna skapa obegränsat många. Kunden ser
 // felmeddelandet och kan ta bort en gammal sajt på /dashboard för att
 // frigöra en plats.
-export const MAX_SITES_PER_ACCOUNT = 5;
+export const MAX_SITES_PER_ACCOUNT = 10;
 
 // Paketet innehåller en sajt. Fler beställs som tillägg (150 kr/mån) och läggs
 // in av admin som profiles.extra_sites (supabase/andringar-spark.sql). Saknas

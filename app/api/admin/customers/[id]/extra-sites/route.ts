@@ -14,8 +14,8 @@ async function POST_handler(request: Request, { params }: { params: { id: string
 
   const body = await request.json().catch(() => ({}));
   const extraSites = Number(body.extraSites);
-  if (!Number.isInteger(extraSites) || extraSites < 0 || extraSites > 4) {
-    return NextResponse.json({ error: t("Ange ett antal mellan 0 och 4.") }, { status: 400 });
+  if (!Number.isInteger(extraSites) || extraSites < 0 || extraSites > 9) {
+    return NextResponse.json({ error: t("Ange ett antal mellan 0 och 9.") }, { status: 400 });
   }
 
   const admin = createAdminClient();
