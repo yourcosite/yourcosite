@@ -2,7 +2,7 @@ import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
-import { withErrorLog } from "@/lib/errorLog";
+import { logError, withErrorLog } from "@/lib/errorLog";
 
 // Chatthistoriken med Millie (de senaste 20 ändringarna = 40 meddelanden)
 // sparas på sajten (kolumnen sites.chat_history) så den följer med mellan
@@ -62,7 +62,13 @@ async function PUT_handler(request: Request) {
   if (!("chat_history" in site)) return NextResponse.json({ unavailable: true });
   const messages = sanitize(body.messages);
   const { error } = await supabase.from("sites").update({ chat_history: messages }).eq("id", site.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) {
+    // Chatthistoriken är inget som ska stoppa kunden: logga den riktiga orsaken
+    // (förut syntes bara "Svar 500") och låt redigeraren falla tillbaka på
+    // webbläsarens lagring.
+    await logError({ source: "server", message: `Kunde inte spara chatthistoriken: ${error.message}`, userId: user.id, context: `PUT /api/sites/chat site=${site.id}` });
+    return NextResponse.json({ unavailable: true });
+  }
   return NextResponse.json({ ok: true });
 }
 
