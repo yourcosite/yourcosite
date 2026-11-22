@@ -80,4 +80,39 @@ export const SOCIAL_DRAFTS: SocialDraft[] = [
     imageUrl: "https://www.yourcosite.com/social/010-pages.jpg",
     suggestedAt: "2026-11-24T17:30:00Z",
   },
+  {
+    inboxId: "011-booking",
+    caption:
+      "Make booking the easiest thing to do.\n\n1. Put one clear button, like Book a table, in the top corner and in the first screen.\n2. Use words that say what happens next. Book a table beats Submit.\n3. Keep the same button on every page, so nobody has to go looking.\n\nA customer who is ready to book should never have to hunt for how.\n\nYour site, built through a conversation: yourcosite.com\n\n#websitetips #smallbusiness #restaurant #webdesign",
+    imageUrl: "https://www.yourcosite.com/social/011-booking.jpg",
+    suggestedAt: "2026-11-30T17:30:00Z",
+  },
+  {
+    inboxId: "012-news",
+    caption:
+      "Share news, offers and events on your site.\n\nIn YourCoSite you write an update, add a photo, and publish it to your news list. Save a draft for later, or take a post down again with one click. Or just tell Millie what you want to announce.\n\nThis is the editor, shown with a made up barbershop.\n\nTry it at yourcosite.com\n\n#website #smallbusiness #AI #nocode",
+    imageUrl: "https://www.yourcosite.com/social/012-news.jpg",
+    suggestedAt: "2026-12-02T17:30:00Z",
+  },
+  {
+    inboxId: "013-mobile-check",
+    caption:
+      "Look at your site on a phone before you share it.\n\n1. Open your site on your own phone, not just on a computer.\n2. Check that the main button is easy to tap with a thumb.\n3. Read the first screen. Can you tell what you offer within a few seconds?\n\nMost people will meet your site on a small screen, so that is the one to get right.\n\nYour site, built through a conversation: yourcosite.com\n\n#websitetips #mobiledesign #smallbusiness #webdesign",
+    imageUrl: "https://www.yourcosite.com/social/013-mobile-check.jpg",
+    suggestedAt: "2026-12-03T17:30:00Z",
+  },
+  {
+    inboxId: "014-improve",
+    caption:
+      "Get tips on how to be found on Google.\n\nThe Improve tab in YourCoSite looks at your site and shows what could be better, like a missing page description or photos without alt text. Many things are fixed for you automatically. For the rest, one click on Fix with Millie.\n\nShown with a made up barbershop.\n\nTry it at yourcosite.com\n\n#websitetips #smallbusiness #seo #nocode",
+    imageUrl: "https://www.yourcosite.com/social/014-improve.jpg",
+    suggestedAt: "2026-12-04T17:30:00Z",
+  },
+  {
+    inboxId: "015-prices",
+    caption:
+      "Show your prices.\n\n1. Give prices their own page, and link to it from the menu.\n2. List what is included, so the price does not need explaining.\n3. If a price varies, say what it depends on.\n\nPeople who can see what it costs feel safer getting in touch, and you answer fewer of the same questions.\n\nYour site, built through a conversation: yourcosite.com\n\n#websitetips #smallbusiness #pricing #webdesign",
+    imageUrl: "https://www.yourcosite.com/social/015-prices.jpg",
+    suggestedAt: "2026-12-06T17:30:00Z",
+  },
 ];
