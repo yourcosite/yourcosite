@@ -4811,7 +4811,7 @@ function SectionBlockInner({
               </Field>
             )}
             <div className="grid @3xl:grid-cols-4 gap-7 @3xl:gap-6">
-              {section.items.slice(0, 4).map((item, i) => {
+              {section.items.map((item, i) => {
                 const ip = itemPalette(item.bgColor, palette);
                 return (
                   <div key={i} className="text-center @3xl:text-left" style={gridItemCardStyle(item.bgColor, palette)}>
