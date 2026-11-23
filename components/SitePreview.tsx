@@ -4889,14 +4889,17 @@ function SectionBlockInner({
             </Field>
             <div className="grid @3xl:grid-cols-3">
               {section.items.map((item, i) => {
-                const isFirst = i === 0;
-                const isLast = i === section.items.length - 1;
+                // Tre kolumner; fler än tre punkter bryts till nya rader. Kolumnen
+                // avgör kantlinje och marginaler, så alla rader hamnar rakt under varandra.
+                const col = i % 3;
+                const isFirst = col === 0;
+                const isLast = col === 2 || i === section.items.length - 1;
                 const ip = itemPalette(item.bgColor, palette);
                 const cardStyle = gridItemCardStyle(item.bgColor, palette);
                 return (
                   <div
                     key={i}
-                    className={`@3xl:px-10 ${isFirst ? "@3xl:pl-0" : ""} ${isLast ? "@3xl:pr-0" : ""} ${i > 0 && !cardStyle ? "@3xl:border-l pt-8 @3xl:pt-0" : "pt-8 @3xl:pt-0"}`}
+                    className={`@3xl:px-10 ${isFirst ? "@3xl:pl-0" : ""} ${isLast ? "@3xl:pr-0" : ""} ${col > 0 && !cardStyle ? "@3xl:border-l" : ""} pt-8 ${i >= 3 ? "@3xl:pt-14" : "@3xl:pt-0"}`}
                     style={cardStyle || { borderColor: palette.cardBorder }}
                   >
                     <div className="mb-5" style={{ color: accent }}>
