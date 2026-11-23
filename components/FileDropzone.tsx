@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import { withCredit } from "@/lib/stockPhotos";
+import { PASTED_TEXT_NAME } from "@/lib/pastedText";
 
 type Asset = {
   id: string;
@@ -56,7 +57,7 @@ export default function FileDropzone({
   useEffect(() => {
     fetch("/api/onboarding/assets")
       .then((r) => r.json())
-      .then((data) => setAssets(data.assets || []))
+      .then((data) => setAssets((data.assets || []).filter((a: Asset) => a.file_name !== PASTED_TEXT_NAME)))
       .catch(() => {});
   }, []);
 

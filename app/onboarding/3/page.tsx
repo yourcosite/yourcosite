@@ -3,13 +3,14 @@
 import { rich } from "@/lib/i18n/rich";
 import { msg } from "@/lib/i18n/config";
 import { useT } from "@/components/I18nProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import OnboardingShell from "@/components/OnboardingShell";
 import LogoUpload from "@/components/LogoUpload";
 import HeroImageUpload from "@/components/HeroImageUpload";
 import FileDropzone from "@/components/FileDropzone";
+import PastedTextBox from "@/components/PastedTextBox";
 import SocialLinksFields, { type SocialLinksValue } from "@/components/SocialLinksFields";
 
 type Page = {
@@ -58,6 +59,7 @@ export default function OnboardingStep3() {
   const [allowAiTextFill, setAllowAiTextFill] = useState(true);
   const [socialLinks, setSocialLinks] = useState<SocialLinksValue>({});
   const [photosUploading, setPhotosUploading] = useState(false);
+  const flushPasted = useRef<(() => Promise<void>) | null>(null);
   const [heroUploading, setHeroUploading] = useState(false);
   const anyUploading = photosUploading || heroUploading;
 
@@ -145,6 +147,8 @@ export default function OnboardingStep3() {
     setSaving(true);
     setError("");
     try {
+      // Inklistrad text sparas först, så att den alltid är med när sajten byggs.
+      try { await flushPasted.current?.(); } catch { throw new Error(t("Kunde inte spara den inklistrade texten. Försök igen.")); }
       const body = {
         pages: included.map((p) => {
           // Undersidan får huvudsidans sökväg som prefix. Är huvudsidan
@@ -339,6 +343,8 @@ export default function OnboardingStep3() {
             onUploadingChange={setHeroUploading}
           />
         </div>
+
+        <PastedTextBox registerFlush={(fn) => { flushPasted.current = fn; }} />
 
         <FileDropzone onUploadingChange={setPhotosUploading} />
 
