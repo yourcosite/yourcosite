@@ -1093,14 +1093,17 @@ function Header({
     // Ovanpå en foto-hero får den en ljus platta bakom sig så den
     // alltid syns oavsett hur ljus/mörk loggan själv är.
     <div
-      className={logoBg ? "rounded-lg px-3 py-1.5" : overlay && !glass ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}
+      className={`min-w-0 ${logoBg ? "rounded-lg px-3 py-1.5" : overlay && !glass ? "bg-white/90 rounded-lg px-3 py-1.5" : ""}`}
       style={logoBg ? { background: logoBg } : undefined}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={logoUrl}
         alt={siteName || t("Logga")}
-        className={overlay && !glass ? "h-12 @3xl:h-16 max-w-[220px] object-contain" : "h-16 @3xl:h-24 max-w-[320px] object-contain"}
+        className={overlay && !glass ? "h-12 @3xl:h-16 object-contain" : "h-16 @3xl:h-24 object-contain"}
+        // Aldrig bredare än platsen: en bred logga fick annars knuffa ut
+        // hamburgarmenyn ur bild på mobil.
+        style={{ maxWidth: overlay && !glass ? "min(220px, 100%)" : "min(320px, 100%)" }}
       />
     </div>
   ) : (
@@ -1111,11 +1114,11 @@ function Header({
   // Loggan (eller sajtnamnet) länkar alltid till startsidan: knapp i
   // redigeraren, riktig länk på en publicerad sida, annars bara bilden.
   const logoEl = onNavigate ? (
-    <button type="button" onClick={() => onNavigate("/")} className="block text-left" aria-label={siteName || t("Startsida")}>
+    <button type="button" onClick={() => onNavigate("/")} className="block text-left min-w-0 max-w-full" aria-label={siteName || t("Startsida")}>
       {logoInner}
     </button>
   ) : basePath ? (
-    <a href={homeHref("/")} className="block" aria-label={siteName || t("Startsida")}>
+    <a href={homeHref("/")} className="block min-w-0 max-w-full" aria-label={siteName || t("Startsida")}>
       {logoInner}
     </a>
   ) : (
