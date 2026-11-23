@@ -75,6 +75,15 @@ function hexToRgb(hex: string): [number, number, number] {
   return [(num >> 16) & 255, (num >> 8) & 255, num & 255];
 }
 
+// Färg i växlande ordning (accent, extrafärg 1, extrafärg 2) för punkter och
+// ikoner. Är extrafärgen nästan lika ljus som bakgrunden syns inte punkten,
+// så då används accentfärgen i stället.
+function cycleHue(colors: (string | undefined)[], i: number, accent: string, bg: string): string {
+  const c = colors[i % 3] || accent;
+  const lum = (hex: string) => { const [r, g, b] = hexToRgb(hex); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+  return Math.abs(lum(c) - lum(bg)) < 0.25 ? accent : c;
+}
+
 function rgbToHex(rgb: [number, number, number]): string {
   return (
     "#" +
@@ -4637,7 +4646,7 @@ function SectionBlockInner({
               {section.heading}
             </Field>
             {section.items.map((item, i) => {
-              const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+              const hue = cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
               const imageFirst = i % 2 === 0;
               const itemSel = gridItemSelection(i, item.title);
               // Fri hex-färg på bara DEN HÄR rutan (GridItem.bgColor) — se
@@ -4713,7 +4722,7 @@ function SectionBlockInner({
                   <div key={i} className="flex gap-4 items-start" style={gridItemCardStyle(item.bgColor, palette)}>
                     <div
                       className="w-2 h-2 rounded-full mt-2 flex-shrink-0"
-                      style={{ background: [accent, secondary[0], secondary[1]][i % 3] || accent }}
+                      style={{ background: cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg) }}
                     />
                     <div>
                       <Field
@@ -4802,7 +4811,7 @@ function SectionBlockInner({
         // används accentfärgen i stället.
         const lumOf = (hex: string) => { const [r, g, b] = hexToRgb(hex); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
         const rowColor = (i: number) => {
-          const c = [accent, secondary[0], secondary[1]][i % 3] || accent;
+          const c = cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
           return Math.abs(lumOf(c) - lumOf(palette.bg)) < 0.25 ? accent : c;
         };
         return (
@@ -5206,7 +5215,7 @@ function SectionBlockInner({
             </Field>
             <div className={`grid ${cols === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-2"} gap-4 @3xl:auto-rows-[180px]`}>
               {section.items.map((item, i) => {
-                const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+                const hue = cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
                 const itemSel = gridItemSelection(i, item.title);
                 const big = useBigTile && i === 0;
                 // "bento"-rutorna är fyllda av en bild — en egen bgColor
@@ -5285,7 +5294,7 @@ function SectionBlockInner({
             )}
             <div className={`grid grid-cols-1 ${colCls} gap-6`}>
               {section.items.map((item, i) => {
-                const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+                const hue = cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
                 const itemSel = gridItemSelection(i, item.title);
                 const ip = itemPalette(item.bgColor, palette);
                 return (
@@ -5355,7 +5364,7 @@ function SectionBlockInner({
           </Field>
           <div className={`grid ${cardCols === 3 ? "@3xl:grid-cols-3" : "@3xl:grid-cols-2"} gap-7`}>
             {section.items.map((item, i) => {
-              const hue = [accent, secondary[0], secondary[1]][i % 3] || accent;
+              const hue = cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
               const itemSel = gridItemSelection(i, item.title);
               const ip = itemPalette(item.bgColor, palette);
               const cardStyle = gridItemCardStyle(item.bgColor, palette);
@@ -6186,7 +6195,7 @@ function SectionBlockInner({
 
     case "team": {
       const layout = section.layout || "cards";
-      const hueOf = (i: number) => [accent, secondary[0], secondary[1]][i % 3] || accent;
+      const hueOf = (i: number) => cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
       const initials = (name: string) =>
         name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase()).join("");
       const headingEl = (
@@ -6376,7 +6385,7 @@ function SectionBlockInner({
 
     case "gallery": {
       const layout = section.layout || "grid";
-      const hueOf = (i: number) => [accent, secondary[0], secondary[1]][i % 3] || accent;
+      const hueOf = (i: number) => cycleHue([accent, secondary[0], secondary[1]], i, accent, palette.bg);
       const headingEl = (cls: string) => (
         <Field
           editable={editable}
