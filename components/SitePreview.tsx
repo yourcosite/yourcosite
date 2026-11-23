@@ -4797,6 +4797,14 @@ function SectionBlockInner({
         // "numbered" ovan) eller foton. Tänkt som en kort "i korthet"-rad
         // direkt under en hero, inte som sidans huvudinnehåll — se
         // Norden-referensen som inspirerade layouten.
+        // Är en av extrafärgerna nästan samma som bakgrunden (till exempel en
+        // mörk färg på en mörk sajt) syns varken ikonen eller cirkeln. Då
+        // används accentfärgen i stället.
+        const lumOf = (hex: string) => { const [r, g, b] = hexToRgb(hex); return (0.299 * r + 0.587 * g + 0.114 * b) / 255; };
+        const rowColor = (i: number) => {
+          const c = [accent, secondary[0], secondary[1]][i % 3] || accent;
+          return Math.abs(lumOf(c) - lumOf(palette.bg)) < 0.25 ? accent : c;
+        };
         return (
           <div className="px-10 py-12 max-w-[1040px] mx-auto" style={{ background: sectionBg }}>
             {section.heading && (
@@ -4817,9 +4825,9 @@ function SectionBlockInner({
                   <div key={i} className="text-center @3xl:text-left" style={gridItemCardStyle(item.bgColor, palette)}>
                     <div
                       className="w-10 h-10 rounded-full mb-3 mx-auto @3xl:mx-0 flex items-center justify-center"
-                      style={{ background: `${[accent, secondary[0], secondary[1]][i % 3] || accent}22` }}
+                      style={{ background: `${rowColor(i)}22` }}
                     >
-                      {iconEl(i, 20, [accent, secondary[0], secondary[1]][i % 3] || accent)}
+                      {iconEl(i, 20, rowColor(i))}
                     </div>
                     <Field
                       editable={editable}
