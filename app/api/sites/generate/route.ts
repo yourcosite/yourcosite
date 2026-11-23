@@ -494,12 +494,25 @@ async function generateSite(emit: (p: Progress) => void) {
       } finally {
         clearInterval(heartbeat);
       }
+      // Ibland blir svaret avkapat (stop_reason max_tokens) eller får fel form.
+      // Då försöker vi igen i stället för att visa ett fel för kunden.
+      const got = message.content.find((b: any) => b.type === "tool_use") as any;
+      if (!got || !isValidSiteContent(got.input)) {
+        console.error("generate attempt", attempt, "ogiltigt innehåll, stop_reason:", message.stop_reason);
+        await logAiUsage({ kind: "generate", model: CLAUDE_MODEL, usage: message.usage, userId: user.id, siteId: site.id });
+        const reason = message.stop_reason;
+        message = undefined;
+        throw new Error(`FORMAT stop_reason=${reason}`);
+      }
     } catch (e: any) {
       lastError = e;
       console.error("generate attempt", attempt, e?.message);
       // Bara ogiltig JSON är värd ett nytt försök; andra fel (nyckel, gräns) upprepas inte.
-      if (!/JSON|Unexpected|position/i.test(String(e?.message))) break;
+      if (!/JSON|Unexpected|position|FORMAT/i.test(String(e?.message))) break;
     }
+  }
+  if (!message && /^FORMAT/.test(String(lastError?.message))) {
+    return NextResponse.json({ error: t("AI-svaret hade fel format.") }, { status: 502 });
   }
   if (!message) {
     return NextResponse.json(

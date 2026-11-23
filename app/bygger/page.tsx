@@ -248,14 +248,6 @@ export default function GeneratingPage() {
         </div>
       )}
 
-      {error && (
-        <button
-          onClick={() => window.location.reload()}
-          className="mt-4 bg-accent text-accent-ink font-semibold text-[15px] px-7.5 py-3.5 rounded-[10px]"
-        >
-          {t("Försök igen")}
-        </button>
-      )}
     </div>
   );
 }
