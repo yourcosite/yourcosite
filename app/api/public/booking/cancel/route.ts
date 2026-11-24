@@ -1,7 +1,7 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { loadSiteBookingData, sendBookingEmails, sendCancellationEmails } from "@/lib/bookingServer";
+import { loadSiteBookingData, sendRescheduleEmails, sendCancellationEmails } from "@/lib/bookingServer";
 import { computeAvailability, isStartAvailable } from "@/lib/booking";
 import { siteLocale } from "@/lib/i18n/site-server";
 import { clientIp, rateLimited, TOO_MANY } from "@/lib/rateLimit";
@@ -99,7 +99,7 @@ async function POST_handler(request: Request) {
       return NextResponse.json({ error: tt("Kunde inte boka om just nu.") }, { status: 500 });
     }
     const { data: site } = await db.from("sites").select("name").eq("id", (b as any).site_id).maybeSingle();
-    await sendBookingEmails({ db, siteId: (b as any).site_id, siteName: (site as any)?.name || "sajten", booking: row as any, settings: settingsData.settings, origin: new URL(request.url).origin }).catch(() => {});
+    await sendRescheduleEmails({ db, siteId: (b as any).site_id, siteName: (site as any)?.name || "sajten", booking: row as any, oldStartsAt: (b as any).starts_at, settings: settingsData.settings, origin: new URL(request.url).origin }).catch(() => {});
     return NextResponse.json({ ok: true, startsAt: (row as any).starts_at, timezone: settingsData.settings.timezone });
   }
 

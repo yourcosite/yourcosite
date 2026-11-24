@@ -293,3 +293,70 @@ export async function sendReminderEmail(opts: {
   });
   return { sent: r.sent };
 }
+
+// Kunden har själv bokat om: mejl till kunden och ägaren med gammal och ny tid.
+export async function sendRescheduleEmails(opts: {
+  db: SupabaseClient;
+  siteId: string;
+  siteName: string;
+  booking: BookingRow;
+  oldStartsAt: string;
+  settings: BookingSettings & { notify_email: string | null } & MailTexts;
+  origin: string;
+}) {
+  const { db, siteId, siteName, booking: b, oldStartsAt, settings, origin } = opts;
+  const L = await siteLocale(db, siteId);
+  const { t, ownerT } = L;
+  const oldWhen = formatWhen(new Date(oldStartsAt), settings.timezone, L.bcp47);
+  const newWhen = formatWhen(new Date(b.starts_at), settings.timezone, L.bcp47);
+  const ownerOld = formatWhen(new Date(oldStartsAt), settings.timezone, BCP47[L.ownerLang]);
+  const ownerNew = formatWhen(new Date(b.starts_at), settings.timezone, BCP47[L.ownerLang]);
+  const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
+  const brand = await brandFor(db, siteId, siteName);
+  const cancelUrl = `${origin}/avboka/${b.cancel_token}`;
+  const tasks: Promise<unknown>[] = [];
+  if (b.customer_email) {
+    const rows: [string, string][] = [
+      [t("Tjänst"), b.package_name],
+      [t("Tidigare tid"), oldWhen],
+      [t("Ny tid"), newWhen],
+      [t("Längd"), t("{n} minuter", { n: b.duration_min })],
+    ];
+    const intro = t("Hej {namn}! Din tid hos {sajt} är nu ombokad.", { namn: b.customer_name, sajt: siteName });
+    tasks.push(sendEmail({
+      to: b.customer_email,
+      subject: t("Ombokad: {tjänst}, {tid}", { tjänst: b.package_name, tid: newWhen }).replace(/\s+/g, " ").slice(0, 200),
+      html: emailLayout({
+        brand, lang: L.lang, poweredBy: t("Bokat via YourCoSite"),
+        title: t("Din tid är ombokad"), intro, rows,
+        button: { label: t("Avboka eller välj ny tid"), url: cancelUrl },
+      }),
+      text: `${intro}\n\n${rows.map(([k, v]) => `${k}: ${v}`).join("\n")}\n\n${cancelUrl}`,
+      replyTo: ownerTo || undefined,
+    }));
+  }
+  if (ownerTo) {
+    const rows: [string, string][] = [
+      [ownerT("Namn"), b.customer_name],
+      [ownerT("Tjänst"), b.package_name],
+      [ownerT("Tidigare tid"), ownerOld],
+      [ownerT("Ny tid"), ownerNew],
+      [ownerT("E-post"), b.customer_email || ""],
+      [ownerT("Telefon"), b.customer_phone || ""],
+    ];
+    tasks.push(sendEmail({
+      to: ownerTo,
+      subject: ownerT("Ombokning: {namn}, {tid}", { namn: b.customer_name, tid: ownerNew }),
+      html: emailLayout({
+        brand, lang: L.ownerLang, poweredBy: ownerT("Bokat via YourCoSite"),
+        title: ownerT("En kund har bokat om"),
+        intro: ownerT("{namn} har själv flyttat sin tid. Den gamla tiden är ledig igen.", { namn: b.customer_name }),
+        rows,
+        button: { label: ownerT("Öppna bokningarna"), url: `${origin}/bokningar?site=${siteId}` },
+      }),
+      text: `${ownerT("{namn} har bokat om.", { namn: b.customer_name })}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
+      replyTo: b.customer_email || undefined,
+    }));
+  }
+  await Promise.all(tasks);
+}
