@@ -23,6 +23,9 @@ import { BCP47 } from "@/lib/i18n/country";
 // Serverhjälp för bokning. Tar emot en klient (admin-klienten i de publika
 // rutterna) och läser allt som behövs för att räkna ut lediga tider.
 
+// Ägarens länkar går alltid till själva tjänsten, aldrig till kundens egen domän.
+const APP_ORIGIN = "https://www.yourcosite.com";
+
 export const DEFAULT_SETTINGS: BookingSettings = {
   min_notice_hours: 12,
   max_days_ahead: 60,
@@ -187,7 +190,7 @@ export async function sendBookingEmails(opts: {
             [ownerT("Telefon"), b.customer_phone || ""],
             [ownerT("Meddelande"), b.message || ""],
           ],
-          button: { label: ownerT("Öppna bokningarna"), url: `${origin}/bokningar?site=${siteId}` },
+          button: { label: ownerT("Öppna bokningarna"), url: `${APP_ORIGIN}/bokningar?site=${siteId}` },
         }),
         text: `${ownerT("Ny bokning på {sajt}", { sajt: siteName })}\n\n${[...ownerRows, [ownerT("Namn"), b.customer_name], [ownerT("E-post"), b.customer_email || ""], [ownerT("Telefon"), b.customer_phone || ""], [ownerT("Meddelande"), b.message || ""]].filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
         replyTo: b.customer_email || undefined,
@@ -362,7 +365,7 @@ export async function sendRescheduleEmails(opts: {
         title: ownerT("En kund har bokat om"),
         intro: ownerT("{namn} har själv flyttat sin tid. Den gamla tiden är ledig igen.", { namn: b.customer_name }),
         rows,
-        button: { label: ownerT("Öppna bokningarna"), url: `${origin}/bokningar?site=${siteId}` },
+        button: { label: ownerT("Öppna bokningarna"), url: `${APP_ORIGIN}/bokningar?site=${siteId}` },
       }),
       text: `${ownerT("{namn} har bokat om.", { namn: b.customer_name })}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}`,
       replyTo: b.customer_email || undefined,
