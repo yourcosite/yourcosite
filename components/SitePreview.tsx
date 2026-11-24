@@ -1100,7 +1100,7 @@ function Header({
       <img
         src={logoUrl}
         alt={siteName || t("Logga")}
-        className={overlay && !glass ? "h-12 @3xl:h-16 object-contain" : "h-16 @3xl:h-24 object-contain"}
+        className={overlay && !glass ? "h-12 @3xl:h-16 object-contain" : "h-20 @3xl:h-24 object-contain"}
         // Aldrig bredare än platsen: en bred logga fick annars knuffa ut
         // hamburgarmenyn ur bild på mobil.
         style={{ maxWidth: overlay && !glass ? "min(220px, 100%)" : "min(320px, 100%)" }}
@@ -1284,7 +1284,7 @@ function Header({
 
   if (layout === "left-button") {
     return (
-      <div className={`${outerBase} flex items-center justify-between gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className={`${outerBase} flex items-center justify-between gap-6 px-5 @3xl:px-12 py-4`} style={outerStyle}>
         <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         <div className="flex items-center gap-7 flex-shrink-0">
           <nav className={`${showNav} items-center justify-end flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold min-w-0`}>{navLinksEl}</nav>
@@ -1297,7 +1297,7 @@ function Header({
 
   if (layout === "split-button") {
     return (
-      <div className={`${outerBase} flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr] @3xl:gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className={`${outerBase} flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr] @3xl:gap-6 px-5 @3xl:px-12 py-4`} style={outerStyle}>
         <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold justify-self-center`}>{navLinksEl}</nav>
         <div className="@3xl:col-start-3 flex-shrink-0">{ctaAndBurger}</div>
@@ -1308,7 +1308,7 @@ function Header({
 
   if (layout === "centered-button") {
     return (
-      <div className={`${outerBase} px-8 @3xl:px-12 py-5`} style={outerStyle}>
+      <div className={`${outerBase} px-5 @3xl:px-12 py-5`} style={outerStyle}>
         <div className="flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr]">
           <div className="hidden @3xl:block" />
           <div className="@3xl:justify-self-center min-w-0">{logoEl}</div>
@@ -1322,7 +1322,7 @@ function Header({
 
   if (layout === "pill-bar") {
     return (
-      <div className={`${outerBase} flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr] @3xl:gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className={`${outerBase} flex items-center justify-between gap-3 @3xl:grid @3xl:grid-cols-[1fr_auto_1fr] @3xl:gap-6 px-5 @3xl:px-12 py-4`} style={outerStyle}>
         <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         <nav className={`${showNav} items-center justify-center flex-wrap gap-1 text-[13px] font-semibold justify-self-center rounded-full p-1.5`} style={pillBoxStyle}>
           {navLinksEl}
@@ -1335,7 +1335,7 @@ function Header({
 
   if (layout === "minimal") {
     return (
-      <div className={`${outerBase} flex items-center justify-between gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className={`${outerBase} flex items-center justify-between gap-6 px-5 @3xl:px-12 py-4`} style={outerStyle}>
         <div className="flex items-center gap-2.5 min-w-0">{logoEl}</div>
         {ctaAndBurger}
         {mobileMenuEl}
@@ -1348,7 +1348,7 @@ function Header({
     // grid med symmetriska yttre kolumner (1fr/auto/1fr) håller loggan
     // visuellt centrerad oavsett om hamburgarknappen syns eller ej.
     return (
-      <div className={`${outerBase} px-8 @3xl:px-12 py-5`} style={outerStyle}>
+      <div className={`${outerBase} px-5 @3xl:px-12 py-5`} style={outerStyle}>
         <div className="grid grid-cols-[1fr_auto_1fr] items-center">
           <div />
           <div className="justify-self-center">{logoEl}</div>
@@ -1367,7 +1367,7 @@ function Header({
     // "left") — samma symmetriska 1fr/auto/1fr-grid som ovan, fast på en
     // enda rad.
     return (
-      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+      <div className={`${outerBase} grid grid-cols-[1fr_auto_1fr] items-center gap-6 px-5 @3xl:px-12 py-4`} style={outerStyle}>
         <div className="flex items-center gap-2.5">{logoEl}</div>
         <nav className={`${showNav} items-center justify-center flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold justify-self-center`}>
           {navLinksEl}
@@ -1381,7 +1381,7 @@ function Header({
   // "left" (standard) — logga vänster, meny höger, som innan den här
   // stilaxeln fanns.
   return (
-    <div className={`${outerBase} flex items-center justify-between gap-10 px-8 @3xl:px-12 py-4`} style={outerStyle}>
+    <div className={`${outerBase} flex items-center justify-between gap-10 px-5 @3xl:px-12 py-4`} style={outerStyle}>
       <div className="flex items-center gap-2.5 flex-shrink-0">{logoEl}</div>
       <nav className={`${showNav} items-center justify-end flex-wrap ${navGap} gap-y-1 text-[13px] font-semibold min-w-0`}>{navLinksEl}</nav>
       {hamburgerBtn}
@@ -1439,7 +1439,7 @@ function Footer({
       {/* Sidfotsmenyn — samma sidor, samma tre-vägs länklogik som
           huvudmenyn (onNavigate i chattredigeraren, riktig <a href> på en
           publicerad sida, annars bara text i /forslag-miniatyrerna). */}
-      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-8 @3xl:px-12 py-5 text-[12.5px]">
+      <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 px-5 @3xl:px-12 py-5 text-[12.5px]">
         {topLevelPages(pages).map((p) =>
           onNavigate ? (
             <button
@@ -1470,7 +1470,7 @@ function Footer({
 
       {/* Loggan större och centrerad under menyn (kundönskemål). */}
       {logoUrl && (
-        <div className="flex justify-center px-8 @3xl:px-12 pb-6 pt-1">
+        <div className="flex justify-center px-5 @3xl:px-12 pb-6 pt-1">
           {(() => {
             const inner = (
               <div className={logoBg ? "rounded-lg px-3 py-1.5" : ""} style={logoBg ? { background: logoBg } : undefined}>
@@ -1492,7 +1492,7 @@ function Footer({
       <div
         // pb lite större än pt — den nedersta raden låg annars väldigt nära
         // sajtens absoluta nederkant (ingenting kommer efter den).
-        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-8 @3xl:px-12 pt-6 pb-8 text-[12px]"
+        className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 @3xl:px-12 pt-6 pb-8 text-[12px]"
         style={{ borderTop: `1px solid ${palette.cardBorder}`, color: palette.textDim }}
       >
         <span className="flex items-center gap-x-4 gap-y-3 flex-wrap justify-center">

@@ -41,6 +41,9 @@ async function POST_handler(request: Request) {
     await admin.from("profiles").update({ stripe_customer_id: customerId }).eq("id", user.id);
   }
 
+  // Från registreringen går kunden vidare till valet "designa nu eller kundzonen".
+  const body = await request.json().catch(() => ({}));
+  const successPath = body?.welcome === true ? "/skapa-konto/valkommen?betalning=klar" : "/dashboard?betalning=klar";
   const origin = siteOrigin(request);
   const taxRate = process.env.STRIPE_TAX_RATE_ID;
   const session = await stripe.checkout.sessions.create({
@@ -53,7 +56,7 @@ async function POST_handler(request: Request) {
     customer_update: { name: "auto", address: "auto" },
     locale: "auto",
     subscription_data: { metadata: { user_id: user.id } },
-    success_url: `${origin}/dashboard?betalning=klar`,
+    success_url: `${origin}${successPath}`,
     cancel_url: `${origin}/skapa-konto/paket?betalning=avbruten`,
   });
   return NextResponse.json({ url: session.url });

@@ -74,13 +74,13 @@ export default function SignupPlanPage() {
       if (updateError) throw new Error(updateError.message);
 
       if (pay) {
-        const res = await fetch("/api/billing/checkout", { method: "POST" });
+        const res = await fetch("/api/billing/checkout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ welcome: true }) });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.url) throw new Error(data.error || t("Något gick fel. Försök igen."));
         window.location.href = data.url;
         return;
       }
-      router.push("/dashboard");
+      router.push("/skapa-konto/valkommen");
       router.refresh();
     } catch (e: any) {
       setError(e.message);
