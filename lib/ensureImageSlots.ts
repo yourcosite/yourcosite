@@ -1,4 +1,4 @@
-import type { SiteContent, HeroSection, GallerySection, TestimonialsSection, CtaSection } from "./contentModel";
+import { ABOUT_IMAGE_LAYOUTS, type SiteContent, HeroSection, GallerySection, TestimonialsSection, CtaSection } from "./contentModel";
 
 // Bara "hero"- och "grid"-sektioner har en bildplats (se contentModel.ts).
 // Väljer AI:n en sida med bara t.ex. "about" + "contact" blir den sidan
@@ -134,7 +134,7 @@ function wantsImage(s: AnySection): boolean {
     case "image":
       return true;
     case "about":
-      return ["image-full", "image-stats", "image-left", "image-right"].includes(s.layout);
+      return ABOUT_IMAGE_LAYOUTS.includes(s.layout);
     case "cta":
       return s.layout === "image-bleed" || s.layout === "dark-split" || s.layout === "fade-bottom" || s.layout === "fade-both";
     case "testimonials":
@@ -146,7 +146,7 @@ function wantsImage(s: AnySection): boolean {
   }
 }
 
-export const IMAGE_ROW_COUNT: Record<string, number> = { "row-3": 3, "row-4": 4 };
+export const IMAGE_ROW_COUNT: Record<string, number> = { "row-3": 3, "row-4": 4, "landscape-2": 2, "portrait-2": 2, "portrait-3": 3, "portrait-4": 4 };
 
 // Ser till att en bildsektion med radlayout har rätt antal bildplatser
 // (första platsen tar sektionens egen bild), och att en vanlig layout har en bild.

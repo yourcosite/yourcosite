@@ -46,6 +46,8 @@ export const SECTION_CATALOG: CatalogType[] = [
       L("image-stats", msg("Helbild och nyckeltal")),
       L("image-left", msg("Bild till vänster")),
       L("image-right", msg("Bild till höger")),
+      L("portrait-left", msg("Stående bild till vänster")), L("portrait-right", msg("Stående bild till höger")),
+      L("landscape-top", msg("Liggande bild ovanför")), L("landscape-bottom", msg("Liggande bild under")),
     ],
   },
   {
@@ -75,7 +77,7 @@ export const SECTION_CATALOG: CatalogType[] = [
   },
   {
     type: "image", name: msg("Ren bild (utan text)"),
-    layouts: [L("plain", msg("Bara bilden")), L("fade-top", msg("Tonar uppåt")), L("fade-bottom", msg("Tonar nedåt")), L("fade-both", msg("Tonar åt båda håll")), L("tall", msg("Extra hög")), L("tall-fade-both", msg("Extra hög, tonar åt båda håll")), L("row-3", msg("Tre bilder på rad")), L("row-4", msg("Fyra bilder på rad"))],
+    layouts: [L("plain", msg("Bara bilden")), L("fade-top", msg("Tonar uppåt")), L("fade-bottom", msg("Tonar nedåt")), L("fade-both", msg("Tonar åt båda håll")), L("tall", msg("Extra hög")), L("tall-fade-both", msg("Extra hög, tonar åt båda håll")), L("row-3", msg("Tre bilder på rad")), L("row-4", msg("Fyra bilder på rad")), L("framed", msg("Liggande, inramad")), L("landscape-2", msg("Två liggande bilder")), L("portrait-1", msg("En stående bild")), L("portrait-2", msg("Två stående bilder")), L("portrait-3", msg("Tre stående bilder")), L("portrait-4", msg("Fyra stående bilder"))],
   },
   { type: "contact", name: msg("Kontaktuppgifter"), layouts: [L("centered", msg("Centrerad")), L("split-info", msg("Delad med uppgifter"))] },
   { type: "toggle", name: msg("Utfällbara rutor"), layouts: [L("list", msg("Rader med linjer")), L("cards", msg("Rutor")), L("side-by-side", msg("Rubrik bredvid rutorna"))] },

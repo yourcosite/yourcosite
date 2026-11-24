@@ -9,7 +9,7 @@ import { getChangeUsage, recordChange } from "@/lib/changeLimit";
 import type Anthropic from "@anthropic-ai/sdk";
 import { createClient } from "@/lib/supabase/server";
 import { getAnthropicClient, CLAUDE_MODEL } from "@/lib/anthropic";
-import { HEADER_BUTTON_LAYOUTS, HEADER_LAYOUTS, isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
+import { ABOUT_IMAGE_LAYOUTS, HEADER_BUTTON_LAYOUTS, HEADER_LAYOUTS, isValidSiteContent, isValidSitePage, type SiteContent, type SitePageContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { EDIT_PATCH_PROPERTIES, EDIT_PATCH_REQUIRED } from "@/lib/siteContentSchema";
 import { reparentPage } from "@/lib/pageTree";
@@ -714,7 +714,7 @@ function applyPatch(content: SiteContent, patch: EditPatch, moveErrors: string[]
           sec.type === "about" &&
           sec.imageUrl &&
           sec.imageUrl !== old?.imageUrl &&
-          !["image-full", "image-stats", "image-left", "image-right"].includes(sec.layout)
+          !ABOUT_IMAGE_LAYOUTS.includes(sec.layout)
         ) {
           sec.layout = "image-right";
         }

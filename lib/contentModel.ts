@@ -101,7 +101,9 @@ export interface SiteTheme {
 }
 
 export type HeroLayout = "centered" | "split-left" | "split-right" | "overlay-bottom" | "fade-bottom" | "fade-both" | "card-over" | "collage" | "quad" | "editorial" | "beam";
-export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right";
+export type AboutLayout = "text-left" | "centered" | "stats-split" | "image-full" | "image-stats" | "image-left" | "image-right" | "portrait-left" | "portrait-right" | "landscape-top" | "landscape-bottom";
+// Om oss-layouter som visar en bild (imageUrl) tillsammans med texten.
+export const ABOUT_IMAGE_LAYOUTS: string[] = ["image-full", "image-stats", "image-left", "image-right", "portrait-left", "portrait-right", "landscape-top", "landscape-bottom"];
 export const GRID_LAYOUTS: GridLayout[] = [
   "cards", "alternating-rows", "list", "numbered", "bento", "icon-row", "divided-columns", "intro-divided",
   "icon-cards", "icon-circles", "icon-list", "icon-top-rule", "image-cta-cards",
@@ -115,7 +117,9 @@ export type BookingLayout = "standard" | "compact" | "image-left" | "image-right
 export type MapLayout = "inline" | "full-bleed";
 export type VideoLayout = "inline" | "full-bleed";
 export type ToggleLayout = "list" | "cards" | "side-by-side";
-export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both" | "tall" | "tall-fade-both" | "row-3" | "row-4";
+// Liggande mallar: "framed" (en inramad bild), "landscape-2" (två bilder sida vid sida).
+// Stående mallar: "portrait-1" till "portrait-4" (en till fyra stående bilder på rad).
+export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both" | "tall" | "tall-fade-both" | "row-3" | "row-4" | "framed" | "landscape-2" | "portrait-1" | "portrait-2" | "portrait-3" | "portrait-4";
 
 export interface HeroSection {
   id: string;
@@ -458,7 +462,7 @@ export interface ImageSection {
   layout?: ImageLayout;
   // Satt i kod (kundens egna foton), aldrig av AI:n.
   imageUrl?: string;
-  // Bara layouterna "row-3"/"row-4": 3 eller 4 bilder på en rad med mosaikkänsla.
+  // Layouter med flera bilder: "row-3"/"row-4" (mosaik), "landscape-2", "portrait-2" till "portrait-4".
   items?: { imageUrl?: string }[];
   // Se HeroSection.bgColor — samma princip.
   bgColor?: string;

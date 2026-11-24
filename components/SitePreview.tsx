@@ -4432,6 +4432,69 @@ function SectionBlockInner({
         );
       }
 
+      if (layout === "portrait-left" || layout === "portrait-right" || layout === "landscape-top" || layout === "landscape-bottom") {
+        // Bild + text: stående bild bredvid texten, eller liggande bild
+        // ovanför/under en centrerad text. Bilden (imageUrl) går att byta
+        // precis som i image-left/image-right.
+        const portrait = layout.startsWith("portrait");
+        const imageSel: (ImageSelection & { key: string }) | undefined =
+          editable && pagePath
+            ? { key: heroKey, pagePath, sectionId: section.id, kind: "hero", label: `bilden i "${snippet(section.heading, 30)}"` }
+            : undefined;
+        const image = (
+          <div className={portrait ? "relative aspect-[3/4] w-full max-w-[400px] mx-auto rounded-xl overflow-hidden" : "relative aspect-[16/9] w-full rounded-xl overflow-hidden"}>
+            <ImageOrArt
+              imageUrl={section.imageUrl}
+              art={art}
+              fill
+              selectable={!!imageSel}
+              selected={!!imageSel && selectedImageKey === imageSel.key}
+              onSelect={() => imageSel && onSelectImage?.(imageSel)}
+            />
+          </div>
+        );
+        const text = (
+          <div className={portrait ? "" : "text-center max-w-[620px] mx-auto"}>
+            <Field
+              editable={editable}
+              as="h2"
+              className="font-heading text-[length:calc(27px*var(--ycs-ts,1))] @3xl:text-[length:calc(34px*var(--ycs-ts,1))] leading-[1.1] mb-4"
+              selected={selectedFieldKey === fieldSel("heading", section.heading, "rubriken")?.key}
+              onSelect={() => { const s = fieldSel("heading", section.heading, "rubriken"); s && onSelectField?.(s); }}
+            >
+              {section.heading}
+            </Field>
+            <Field
+              editable={editable}
+              as="p"
+              className="text-[15px] leading-relaxed"
+              style={{ color: palette.textDim }}
+              selected={selectedFieldKey === fieldSel("body", section.body, "brödtexten")?.key}
+              onSelect={() => { const s = fieldSel("body", section.body, "brödtexten"); s && onSelectField?.(s); }}
+            >
+              {section.body}
+            </Field>
+          </div>
+        );
+        if (portrait) {
+          return (
+            <div style={{ background: sectionBg }}>
+              <div className="grid @3xl:grid-cols-[0.8fr_1fr] gap-10 @3xl:gap-16 items-center px-8 @3xl:px-14 py-14 @3xl:py-20 max-w-[1040px] mx-auto">
+                <div className={layout === "portrait-right" ? "@3xl:order-2" : ""}>{image}</div>
+                {text}
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div style={{ background: sectionBg }}>
+            <div className="flex flex-col gap-8 @3xl:gap-10 px-8 @3xl:px-14 py-14 @3xl:py-20 max-w-[960px] mx-auto">
+              {layout === "landscape-top" ? <>{image}{text}</> : <>{text}{image}</>}
+            </div>
+          </div>
+        );
+      }
+
       if (layout === "stats-split") {
         // Kundens "Atelier"-referenskod hade en "results"-sektion: två
         // foton i OLIKA höjd sida vid sida (ett kort, ett högt) till
@@ -6767,6 +6830,38 @@ function SectionBlockInner({
       const top = lay === "fade-top" || lay === "fade-both" || lay === "tall-fade-both";
       const bottom = lay === "fade-bottom" || lay === "fade-both" || lay === "tall-fade-both";
       const rowN = lay === "row-3" ? 3 : lay === "row-4" ? 4 : 0;
+      // Nya mallar: liggande (inramad / två bilder) och stående (1–4 bilder).
+      if (lay === "framed" || lay === "landscape-2" || lay.startsWith("portrait-")) {
+        const n = lay === "framed" || lay === "portrait-1" ? 1 : lay === "landscape-2" || lay === "portrait-2" ? 2 : lay === "portrait-3" ? 3 : 4;
+        const portrait = lay.startsWith("portrait-");
+        const list: { imageUrl?: string }[] = n === 1 ? [{ imageUrl: section.imageUrl }] : Array.from({ length: n }, (_, i) => (section.items || [])[i] || {});
+        const maxW = lay === "portrait-1" ? "max-w-[440px]" : lay === "portrait-2" ? "max-w-[820px]" : lay === "framed" ? "max-w-[1100px]" : "max-w-[1180px]";
+        const cols = n === 1 ? "grid-cols-1" : n === 4 ? "grid-cols-2 @3xl:grid-cols-4" : n === 3 && portrait ? "grid-cols-3" : "grid-cols-1 @xl:grid-cols-2";
+        return (
+          <div className="px-5 @3xl:px-10 py-6 @3xl:py-12" style={{ background: sectionBg }}>
+            <div className={`grid ${cols} gap-3 @3xl:gap-5 ${maxW} mx-auto`}>
+              {list.map((it, i) => {
+                const sel = n === 1 ? heroSelection : galleryItemSelection(i);
+                // Stående bilder får en svag förskjutning så raden känns redaktionell.
+                const offset = portrait && n > 1 && i % 2 === 1 ? "@3xl:mt-10" : "";
+                return (
+                  <div key={i} className={`relative overflow-hidden min-w-0 ${lay === "framed" ? "rounded-2xl" : "rounded-xl"} ${portrait ? "aspect-[3/4]" : lay === "framed" ? "aspect-[16/9]" : "aspect-[3/2]"} ${offset}`}>
+                    <ImageOrArt
+                      imageUrl={it.imageUrl}
+                      art={art}
+                      fill
+                      dark={mode === "dark"}
+                      selectable={!!sel && (n > 1 || editable)}
+                      selected={!!sel && selectedImageKey === sel.key}
+                      onSelect={() => sel && onSelectImage?.(sel)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      }
       if (rowN) {
         const items = Array.from({ length: rowN }, (_, i) => (section.items || [])[i] || {});
         const grow = rowN === 3 ? [1.5, 1, 1.2] : [1.3, 1, 1.5, 1];
