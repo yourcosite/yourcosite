@@ -91,8 +91,14 @@ type BookingRow = {
 
 // Sajtens logga (om kunden har laddat upp en) och namn, till mejlens topp.
 async function brandFor(db: SupabaseClient, siteId: string, siteName: string) {
-  const { data } = await db.from("sites").select("logo_url").eq("id", siteId).maybeSingle();
-  return { name: siteName, logoUrl: ((data as any)?.logo_url as string | null) ?? null };
+  const { data } = await db.from("sites").select("logo_url, content").eq("id", siteId).maybeSingle();
+  const theme = (data as any)?.content?.theme;
+  return {
+    name: siteName,
+    logoUrl: ((data as any)?.logo_url as string | null) ?? null,
+    accent: typeof theme?.accentColor === "string" ? (theme.accentColor as string) : null,
+    buttonShape: typeof theme?.buttonStyle === "string" ? (theme.buttonStyle as string) : null,
+  };
 }
 
 // Mottagare av ägarens mejl: inställd adress, annars kontots inloggningsadress.

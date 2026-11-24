@@ -53,7 +53,7 @@ export async function sendEmail(opts: {
 }
 
 // Enkel, prydlig mejlmall (tabellbaserad, fungerar i alla mejlprogram).
-export function emailLayout(opts: { title: string; intro: string; rows: [string, string][]; extra?: { heading: string; text: string }; brand?: { name: string; logoUrl?: string | null }; footer?: string; footerLinks?: { label: string; url: string }[]; button?: { label: string; url: string }; poweredBy?: string; lang?: string }): string {
+export function emailLayout(opts: { title: string; intro: string; rows: [string, string][]; extra?: { heading: string; text: string }; brand?: { name: string; logoUrl?: string | null; accent?: string | null; buttonShape?: string | null }; footer?: string; footerLinks?: { label: string; url: string }[]; button?: { label: string; url: string }; poweredBy?: string; lang?: string }): string {
   const rows = opts.rows
     .filter(([, v]) => v)
     .map(
@@ -67,12 +67,22 @@ export function emailLayout(opts: { title: string; intro: string; rows: [string,
       : `<div style="margin:0 0 20px;font-size:16px;font-weight:700;color:#1a1a18">${escapeHtml(opts.brand.name)}</div>`
     : "";
   const extra = opts.extra && opts.extra.text.trim() ? opts.extra : null;
+  // Kundens accentfärg och knappform (bara bokningsmejl, via brand).
+  const accent = opts.brand?.accent && /^#[0-9a-f]{6}$/i.test(opts.brand.accent) ? opts.brand.accent : null;
+  const shape = opts.brand?.buttonShape || "pill";
+  const radius = shape === "square" ? "0" : shape === "rounded" || shape === "soft" ? "10px" : "999px";
+  const lum = accent ? (0.299 * parseInt(accent.slice(1, 3), 16) + 0.587 * parseInt(accent.slice(3, 5), 16) + 0.114 * parseInt(accent.slice(5, 7), 16)) / 255 : 0;
+  const btnBg = accent || "#1a1a18";
+  const btnText = accent && lum > 0.62 ? "#1a1a18" : "#fff";
+  const btnStyle = shape === "outline" && accent
+    ? `background:transparent;color:${accent};border:2px solid ${accent};padding:9px 18px`
+    : `background:${btnBg};color:${btnText};padding:11px 20px`;
   const button = opts.button
-    ? `<p style="margin:24px 0 0"><a href="${escapeHtml(opts.button.url)}" style="display:inline-block;background:#1a1a18;color:#fff;text-decoration:none;font-size:14px;font-weight:600;padding:11px 20px;border-radius:999px">${escapeHtml(opts.button.label)}</a></p>`
+    ? `<p style="margin:24px 0 0"><a href="${escapeHtml(opts.button.url)}" style="display:inline-block;${btnStyle};text-decoration:none;font-size:14px;font-weight:600;border-radius:${radius}">${escapeHtml(opts.button.label)}</a></p>`
     : "";
   return `<!doctype html><html lang="${escapeHtml(opts.lang || "sv")}"><body style="margin:0;background:#f5f4f0;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif">
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:32px 16px">
-<table width="100%" style="max-width:520px;background:#fff;border-radius:14px;padding:28px 28px 24px" cellpadding="0" cellspacing="0"><tr><td>
+<table width="100%" style="max-width:520px;background:#fff;border-radius:14px;padding:28px 28px 24px;${accent ? `border-top:5px solid ${accent}` : ""}" cellpadding="0" cellspacing="0"><tr><td>
 ${brandHtml}<h1 style="margin:0 0 10px;font-size:21px;color:#1a1a18">${escapeHtml(opts.title)}</h1>
 <p style="margin:0 0 18px;font-size:14.5px;line-height:1.55;color:#3a3a37;white-space:pre-line">${escapeHtml(opts.intro)}</p>
 <table cellpadding="0" cellspacing="0">${rows}</table>
