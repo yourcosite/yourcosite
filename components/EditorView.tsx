@@ -1,6 +1,7 @@
 "use client";
 
 import { CONVERTIBLE_TYPES } from "@/lib/convertSection";
+import { checkTemplateFit } from "@/lib/templateSuggestions";
 import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
 import PublishModal from "@/components/editor/PublishModal";
 import MenuStyleThumb, { type MenuStyleId } from "@/components/MenuStyleThumb";
@@ -1185,6 +1186,21 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
         actions.push({ label: t("Lägg till en ny {section}-sektion", { section: pick.noun }), run: () => { void applyGalleryLayoutTo(pick, { pagePath: page.path, add: true }); } });
       }
       setMessages((m) => [...m, { from: "bot", text: t("Den här sidan har ingen {section}-sektion. Vad vill du göra?", { section: pick.noun }), actions }]);
+      return;
+    }
+    // Passar mallen inte innehållet (text utan textplats, flera bilder men en bildplats)
+    // föreslås mallar där allt får plats, med möjlighet att välja den ändå.
+    const targetSec = content.pages.find((p) => p.path === target!.pagePath)?.sections.find((x) => x.id === target!.sectionId);
+    const fit = targetSec ? checkTemplateFit(targetSec as any, pick) : null;
+    if (fit && fit.suggestions.length) {
+      const actions = [
+        ...fit.suggestions.map((sg) => ({ label: t(sg.label), run: () => { void applyGalleryLayoutTo({ type: sg.type, layout: sg.layout, noun: sg.noun }, target!); } })),
+        { label: t("Använd ändå"), run: () => { void applyGalleryLayoutTo(pick, target!); } },
+      ];
+      const text = fit.reason === "no-text"
+        ? t("Den valda mallen har ingen plats för sektionens rubrik och text. Vill du hellre använda någon av de här, där allt får plats?")
+        : t("Sektionen har flera bilder men den valda mallen visar bara en. Vill du hellre använda någon av de här, där alla bilder får plats?");
+      setMessages((m) => [...m, { from: "bot", text, actions }]);
       return;
     }
     await applyGalleryLayoutTo(pick, target);
