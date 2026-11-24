@@ -1207,7 +1207,14 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       setContent(data.content);
       setSelection(null);
       if (target.add) say(t("Klart! En ny {section}-sektion är tillagd med layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { section: pick.noun, layout: pick.layout }));
-      else say(t("Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { name: targetName, layout: pick.layout }));
+      else {
+        say(t("Klart! Sektionen ”{name}” har fått layouten {layout}. Du kan ångra med knappen om du ändrar dig.", { name: targetName, layout: pick.layout }));
+        // Mallar utan textplats: texten ligger kvar sparad och kommer tillbaka vid byte tillbaka.
+        const hadText = !!(targetSec?.body || targetSec?.heading || targetSec?.headline || (Array.isArray(targetSec?.items) && targetSec.items.some((i: any) => i?.title || i?.body || i?.question)));
+        if (hadText && (pick.type === "image" || pick.type === "gallery") && pick.layout !== "captioned") {
+          say(t("Den här mallen har ingen plats för text. Rubriken och texten är sparade och kommer tillbaka när du byter till en mall med text."));
+        }
+      }
     } catch (e: any) {
       say(t("Ändringen kunde inte sparas: {message}", { message: e.message }));
     } finally {

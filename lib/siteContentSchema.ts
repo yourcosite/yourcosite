@@ -373,9 +373,9 @@ const RAW_SECTION_SCHEMA = {
         type: { const: "image" },
         layout: {
           type: "string",
-          enum: ["plain", "fade-top", "fade-bottom", "fade-both", "tall", "tall-fade-both", "row-3", "row-4", "framed", "landscape-2", "portrait-1", "portrait-2", "portrait-3", "portrait-4"],
+          enum: ["plain", "fade-top", "fade-bottom", "fade-both", "tall", "tall-fade-both", "row-3", "row-4", "framed", "landscape-2", "portrait-1", "portrait-2", "portrait-3", "portrait-4", "captioned", "big-two-small", "portrait-landscape"],
           description:
-            "Ren bild över hela sidans bredd, utan text eller knappar. \"plain\" = bara bilden, \"fade-top\" = tonar ut uppåt mot sektionen ovanför, \"fade-bottom\" = tonar ut nedåt mot sektionen under, \"fade-both\" = tonar åt båda håll, \"tall\" = extra hög bild, \"tall-fade-both\" = extra hög som tonar åt båda håll, \"row-3\"/\"row-4\" = 3 eller 4 bilder på en rad med mosaikkänsla, \"framed\" = en liggande bild i ram med marginaler, \"landscape-2\" = två liggande bilder sida vid sida, \"portrait-1\" till \"portrait-4\" = en till fyra stående bilder på rad (bilderna sätts i kod). Använd när kunden vill ha en bildremsa/ren bild utan text. Bilden sätts i kod från kundens egna foton, skriv aldrig någon bildadress.",
+            "Ren bild över hela sidans bredd, utan text eller knappar. \"plain\" = bara bilden, \"fade-top\" = tonar ut uppåt mot sektionen ovanför, \"fade-bottom\" = tonar ut nedåt mot sektionen under, \"fade-both\" = tonar åt båda håll, \"tall\" = extra hög bild, \"tall-fade-both\" = extra hög som tonar åt båda håll, \"row-3\"/\"row-4\" = 3 eller 4 bilder på en rad med mosaikkänsla, \"framed\" = en liggande bild i ram med marginaler, \"landscape-2\" = två liggande bilder sida vid sida, \"portrait-1\" till \"portrait-4\" = en till fyra stående bilder på rad, \"captioned\" = en liggande bild med bildtext (fältet caption) under, \"big-two-small\" = en stor bild och två små bredvid, \"portrait-landscape\" = en stående och en liggande bild bredvid varandra (bilderna sätts i kod). Använd när kunden vill ha en bildremsa/ren bild utan text. Bilden sätts i kod från kundens egna foton, skriv aldrig någon bildadress.",
         },
         bgColor: BG_COLOR_SCHEMA,
       },

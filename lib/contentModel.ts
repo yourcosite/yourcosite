@@ -119,7 +119,7 @@ export type VideoLayout = "inline" | "full-bleed";
 export type ToggleLayout = "list" | "cards" | "side-by-side";
 // Liggande mallar: "framed" (en inramad bild), "landscape-2" (två bilder sida vid sida).
 // Stående mallar: "portrait-1" till "portrait-4" (en till fyra stående bilder på rad).
-export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both" | "tall" | "tall-fade-both" | "row-3" | "row-4" | "framed" | "landscape-2" | "portrait-1" | "portrait-2" | "portrait-3" | "portrait-4";
+export type ImageLayout = "plain" | "fade-top" | "fade-bottom" | "fade-both" | "tall" | "tall-fade-both" | "row-3" | "row-4" | "framed" | "landscape-2" | "portrait-1" | "portrait-2" | "portrait-3" | "portrait-4" | "captioned" | "big-two-small" | "portrait-landscape";
 
 export interface HeroSection {
   id: string;
@@ -464,6 +464,8 @@ export interface ImageSection {
   imageUrl?: string;
   // Layouter med flera bilder: "row-3"/"row-4" (mosaik), "landscape-2", "portrait-2" till "portrait-4".
   items?: { imageUrl?: string }[];
+  // Bildtext under bilden, bara layouten "captioned".
+  caption?: string;
   // Se HeroSection.bgColor — samma princip.
   bgColor?: string;
 }

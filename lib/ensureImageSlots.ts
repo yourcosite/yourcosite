@@ -146,7 +146,7 @@ function wantsImage(s: AnySection): boolean {
   }
 }
 
-export const IMAGE_ROW_COUNT: Record<string, number> = { "row-3": 3, "row-4": 4, "landscape-2": 2, "portrait-2": 2, "portrait-3": 3, "portrait-4": 4 };
+export const IMAGE_ROW_COUNT: Record<string, number> = { "row-3": 3, "row-4": 4, "landscape-2": 2, "portrait-2": 2, "portrait-3": 3, "portrait-4": 4, "big-two-small": 3, "portrait-landscape": 2 };
 
 // Ser till att en bildsektion med radlayout har rätt antal bildplatser
 // (första platsen tar sektionens egen bild), och att en vanlig layout har en bild.

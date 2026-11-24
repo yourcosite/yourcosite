@@ -6831,6 +6831,53 @@ function SectionBlockInner({
       const bottom = lay === "fade-bottom" || lay === "fade-both" || lay === "tall-fade-both";
       const rowN = lay === "row-3" ? 3 : lay === "row-4" ? 4 : 0;
       // Nya mallar: liggande (inramad / två bilder) och stående (1–4 bilder).
+      if (lay === "captioned") {
+        const capSel = fieldSel("caption", (section as { caption?: string }).caption, "bildtexten");
+        return (
+          <div className="px-5 @3xl:px-10 py-6 @3xl:py-12" style={{ background: sectionBg }}>
+            <figure className="max-w-[1000px] mx-auto">
+              <div className="relative aspect-[16/9] rounded-2xl overflow-hidden">
+                <ImageOrArt imageUrl={section.imageUrl} art={art} fill dark={mode === "dark"} selectable={editable} selected={!!heroSelection && selectedImageKey === heroSelection.key} onSelect={() => heroSelection && onSelectImage?.(heroSelection)} />
+              </div>
+              {(section as { caption?: string }).caption && (
+                <Field editable={editable} as="p" className="text-[13.5px] italic text-center mt-3" style={{ color: palette.textDim }} selected={!!capSel && selectedFieldKey === capSel.key} onSelect={() => capSel && onSelectField?.(capSel)}>
+                  {(section as { caption?: string }).caption}
+                </Field>
+              )}
+            </figure>
+          </div>
+        );
+      }
+      if (lay === "big-two-small" || lay === "portrait-landscape") {
+        const n = lay === "big-two-small" ? 3 : 2;
+        const list: { imageUrl?: string }[] = Array.from({ length: n }, (_, i) => (section.items || [])[i] || {});
+        const cell = (i: number, cls: string) => {
+          const sel = galleryItemSelection(i);
+          return (
+            <div key={i} className={`relative overflow-hidden rounded-xl min-w-0 ${cls}`}>
+              <ImageOrArt imageUrl={list[i].imageUrl} art={art} fill dark={mode === "dark"} selectable={!!sel} selected={!!sel && selectedImageKey === sel.key} onSelect={() => sel && onSelectImage?.(sel)} />
+            </div>
+          );
+        };
+        return (
+          <div className="px-5 @3xl:px-10 py-6 @3xl:py-12" style={{ background: sectionBg }}>
+            {lay === "big-two-small" ? (
+              <div className="flex flex-col @3xl:flex-row gap-3 @3xl:gap-5 max-w-[1180px] mx-auto">
+                {cell(0, "aspect-[3/2] @3xl:aspect-auto @3xl:flex-[2] @3xl:h-[480px]")}
+                <div className="flex flex-row @3xl:flex-col gap-3 @3xl:gap-5 @3xl:flex-1 h-[150px] @3xl:h-[480px]">
+                  {cell(1, "flex-1")}
+                  {cell(2, "flex-1")}
+                </div>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 @xl:grid-cols-[1fr_1.6fr] gap-3 @3xl:gap-5 items-end max-w-[1100px] mx-auto">
+                {cell(0, "aspect-[3/4]")}
+                {cell(1, "aspect-[3/2]")}
+              </div>
+            )}
+          </div>
+        );
+      }
       if (lay === "framed" || lay === "landscape-2" || lay.startsWith("portrait-")) {
         const n = lay === "framed" || lay === "portrait-1" ? 1 : lay === "landscape-2" || lay === "portrait-2" ? 2 : lay === "portrait-3" ? 3 : 4;
         const portrait = lay.startsWith("portrait-");
