@@ -153,6 +153,7 @@ export async function sendBookingEmails(opts: {
 
   const customer = !b.customer_email ? Promise.resolve({ sent: false }) : sendEmail({
     to: b.customer_email,
+      fromName: siteName,
     subject,
     html: emailLayout({
       brand,
@@ -222,6 +223,7 @@ export async function sendCancellationEmails(opts: {
   if (b.customer_email) tasks.push(
     sendEmail({
       to: b.customer_email,
+      fromName: siteName,
       subject: t("Avbokad: {tjänst}, {tid}", { tjänst: b.package_name, tid: when }),
       html: emailLayout({
         brand,
@@ -283,6 +285,7 @@ export async function sendReminderEmail(opts: {
   const cancelUrl = `${origin}/avboka/${b.cancel_token}`;
   const r = await sendEmail({
     to: b.customer_email,
+      fromName: siteName,
     subject: t("Påminnelse: {tjänst}, {tid}", { tjänst: b.package_name, tid: when }).replace(/\s+/g, " ").slice(0, 200),
     html: emailLayout({
       brand,
@@ -331,6 +334,7 @@ export async function sendRescheduleEmails(opts: {
     const intro = t("Hej {namn}! Din tid hos {sajt} är nu ombokad.", { namn: b.customer_name, sajt: siteName });
     tasks.push(sendEmail({
       to: b.customer_email,
+      fromName: siteName,
       subject: t("Ombokad: {tjänst}, {tid}", { tjänst: b.package_name, tid: newWhen }).replace(/\s+/g, " ").slice(0, 200),
       html: emailLayout({
         brand, lang: L.lang, poweredBy: t("Bokat via YourCoSite"),

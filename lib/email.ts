@@ -12,6 +12,12 @@ export function escapeHtml(s: string): string {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function withFromName(base: string, name: string): string {
+  const addr = (base.match(/<([^>]+)>/)?.[1] || base).trim();
+  const clean = name.replace(/[\r\n"<>\\]/g, " ").replace(/\s+/g, " ").trim().slice(0, 70);
+  return clean ? `"${clean}" <${addr}>` : base;
+}
+
 export async function sendEmail(opts: {
   to: string;
   subject: string;
@@ -19,9 +25,13 @@ export async function sendEmail(opts: {
   text: string;
   replyTo?: string;
   headers?: Record<string, string>;
+  // Visningsnamn för avsändaren (t.ex. kundens företag). Adressen är alltid
+  // den verifierade i EMAIL_FROM; bara namnet byts.
+  fromName?: string;
 }): Promise<EmailResult> {
   const key = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM;
+  const baseFrom = process.env.EMAIL_FROM;
+  const from = baseFrom && opts.fromName ? withFromName(baseFrom, opts.fromName) : baseFrom;
   if (!key || !from) {
     console.warn("[email] RESEND_API_KEY eller EMAIL_FROM saknas, mejl till", opts.to, "skickades inte.");
     return { sent: false, reason: "Mejltjänsten är inte kopplad ännu." };
