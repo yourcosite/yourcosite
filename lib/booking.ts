@@ -195,6 +195,10 @@ export type MailTexts = {
   // Vilka uppgifter besökaren måste fylla i (standard: båda).
   require_email?: boolean;
   require_phone?: boolean;
+  // Påminnelse före tiden, och hur sent kunden själv får avboka/boka om.
+  reminder_enabled?: boolean;
+  reminder_hours?: number;
+  cancel_min_hours?: number;
 };
 export const MAIL_PLACEHOLDERS = ["{namn}", "{tjänst}", "{tid}", "{längd}", "{pris}", "{sajt}"];
 export const DEFAULT_CONFIRM_SUBJECT = "Bokningsbekräftelse: {tjänst}, {tid}";

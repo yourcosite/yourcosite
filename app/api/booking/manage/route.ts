@@ -64,6 +64,9 @@ async function GET_handler(request: Request) {
       confirm_intro: s?.confirm_intro ?? "",
       confirm_extra: s?.confirm_extra ?? "",
       cancel_intro: s?.cancel_intro ?? "",
+      reminder_enabled: s?.reminder_enabled ?? true,
+      reminder_hours: s?.reminder_hours ?? 24,
+      cancel_min_hours: s?.cancel_min_hours ?? 0,
       terms_text: s?.terms_text ?? "",
       terms_ack_at: s?.terms_ack_at ?? null,
     },
@@ -220,6 +223,10 @@ async function POST_handler(request: Request) {
       const ahead = Math.round(Number(body.max_days_ahead));
       if (!(notice >= 0 && notice <= 720)) return fail(t("Förvarningen måste vara mellan 0 och 720 timmar."));
       if (!(ahead >= 1 && ahead <= 365)) return fail(t("Hur långt fram måste vara mellan 1 och 365 dagar."));
+      const remH = Math.round(Number(body.reminder_hours ?? 24));
+      const cancH = Math.round(Number(body.cancel_min_hours ?? 0));
+      if (!(remH >= 1 && remH <= 168)) return fail(t("Påminnelsen måste skickas 1 till 168 timmar före."));
+      if (!(cancH >= 0 && cancH <= 720)) return fail(t("Avbokningsgränsen måste vara mellan 0 och 720 timmar."));
       const base = {
         site_id: site.id, notify_email: email || null, min_notice_hours: notice, max_days_ahead: ahead, timezone: tz,
         confirm_subject: txt(body.confirm_subject, 150) || null,
@@ -227,9 +234,9 @@ async function POST_handler(request: Request) {
         confirm_extra: txt(body.confirm_extra, 1500) || null,
         cancel_intro: txt(body.cancel_intro, 1000) || null,
       };
-      let { error } = await supabase.from("booking_settings").upsert({ ...base, require_email: body.require_email !== false, require_phone: body.require_phone !== false });
+      let { error } = await supabase.from("booking_settings").upsert({ ...base, reminder_enabled: body.reminder_enabled !== false, reminder_hours: remH, cancel_min_hours: cancH, require_email: body.require_email !== false, require_phone: body.require_phone !== false });
       // Kolumnerna finns inte förrän supabase/bokning-obligatoriska.sql körts: spara då övrigt som vanligt.
-      if (error && /require_(email|phone)/.test(error.message)) ({ error } = await supabase.from("booking_settings").upsert(base));
+      if (error && /require_(email|phone)|reminder_|cancel_min/.test(error.message)) ({ error } = await supabase.from("booking_settings").upsert(base));
       if (error) return fail(t("Kunde inte spara inställningarna."), 500);
       return NextResponse.json({ ok: true });
     }
@@ -304,7 +311,7 @@ async function POST_handler(request: Request) {
     case "updateBooking": {
       // Ändra en befintlig bokning: kunduppgifter, tid, längd och paket.
       if (!isUuid(body.id)) return fail(t("Saknar bokning."));
-      const { data: cur } = await supabase.from("bookings").select("id, status").eq("id", body.id).eq("site_id", site.id).maybeSingle();
+      const { data: cur } = await supabase.from("bookings").select("id, status, starts_at").eq("id", body.id).eq("site_id", site.id).maybeSingle();
       if (!cur) return fail(t("Hittade ingen bokning."), 404);
       if ((cur as any).status === "cancelled") return fail(t("Bokningen är avbokad och kan inte ändras."));
       const name = txt(body.name, 120);
@@ -337,6 +344,9 @@ async function POST_handler(request: Request) {
           price_sek: pkgRow ? pkgRow.price_sek ?? null : null,
           starts_at: start.toISOString(), ends_at: end.toISOString(),
           customer_name: name, customer_email: email || null, customer_phone: txt(body.phone, 60) || null, message: txt(body.message, 1500) || null,
+          // Ny tid ger en ny påminnelse.
+          ...(new Date((cur as any).starts_at).getTime() !== start.getTime() ? { reminder_sent_at: null } : {}),
+          ...(typeof body.owner_note === "string" ? { owner_note: txt(body.owner_note, 2000) || null } : {}),
         })
         .eq("id", body.id).eq("site_id", site.id)
         .select("id, package_name, duration_min, price_sek, starts_at, customer_name, customer_email, customer_phone, message, cancel_token")

@@ -61,6 +61,9 @@ export async function loadSiteBookingData(db: SupabaseClient, siteId: string): P
       confirm_intro: s?.confirm_intro ?? null,
       confirm_extra: s?.confirm_extra ?? null,
       cancel_intro: s?.cancel_intro ?? null,
+      reminder_enabled: s?.reminder_enabled ?? true,
+      reminder_hours: s?.reminder_hours ?? 24,
+      cancel_min_hours: s?.cancel_min_hours ?? 0,
       // Villkoren gäller först när ägaren intygat dem (terms_ack_at).
       terms_text: s?.terms_ack_at && s?.terms_text?.trim() ? s.terms_text.trim() : null,
     },
@@ -245,4 +248,48 @@ export async function sendCancellationEmails(opts: {
     );
   }
   await Promise.all(tasks);
+}
+
+// Påminnelse till kunden en tid före besöket (skickas av cron).
+export async function sendReminderEmail(opts: {
+  db: SupabaseClient;
+  siteId: string;
+  siteName: string;
+  booking: BookingRow;
+  settings: BookingSettings & { notify_email: string | null } & MailTexts;
+  origin: string;
+}) {
+  const { db, siteId, siteName, booking: b, settings, origin } = opts;
+  if (!b.customer_email) return { sent: false };
+  const L = await siteLocale(db, siteId);
+  const { t } = L;
+  const when = formatWhen(new Date(b.starts_at), settings.timezone, L.bcp47);
+  const price = formatPrice(b.price_sek, L.currency, L.bcp47);
+  const rows: [string, string][] = [
+    [t("Tjänst"), b.package_name],
+    [t("Tid"), when],
+    [t("Längd"), t("{n} minuter", { n: b.duration_min })],
+    [t("Pris"), price],
+  ];
+  const ownerTo = await ownerEmailFor(db, siteId, settings.notify_email);
+  const brand = await brandFor(db, siteId, siteName);
+  const intro = t("Hej {namn}! Det här är en påminnelse om din tid hos {sajt}.", { namn: b.customer_name, sajt: siteName });
+  const cancelUrl = `${origin}/avboka/${b.cancel_token}`;
+  const r = await sendEmail({
+    to: b.customer_email,
+    subject: t("Påminnelse: {tjänst}, {tid}", { tjänst: b.package_name, tid: when }).replace(/\s+/g, " ").slice(0, 200),
+    html: emailLayout({
+      brand,
+      lang: L.lang,
+      poweredBy: t("Bokat via YourCoSite"),
+      title: t("Påminnelse om din bokning"),
+      intro,
+      rows,
+      button: { label: t("Avboka eller välj ny tid"), url: cancelUrl },
+      footer: t("Kan du inte komma? Använd knappen ovan eller svara på det här mejlet."),
+    }),
+    text: `${intro}\n\n${rows.filter(([, v]) => v).map(([k, v]) => `${k}: ${v}`).join("\n")}\n\n${cancelUrl}`,
+    replyTo: ownerTo || undefined,
+  });
+  return { sent: r.sent };
 }

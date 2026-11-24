@@ -28,13 +28,13 @@ type Block = { id: string; starts_at: string; ends_at: string; note: string | nu
 export type Booking = {
   id: string; package_name: string; duration_min: number; price_sek: number | null; starts_at: string;
   customer_name: string; customer_email: string | null; customer_phone: string | null; message: string | null; status: string;
-  package_id?: string | null; buffer_min?: number | null;
+  package_id?: string | null; buffer_min?: number | null; owner_note?: string | null;
 };
 export type Data = {
   siteName?: string;
   siteLang?: string;
   currency?: string;
-  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; require_email?: boolean; require_phone?: boolean; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string; terms_text?: string; terms_ack_at?: string | null };
+  settings: { notify_email: string; min_notice_hours: number; max_days_ahead: number; timezone: string; require_email?: boolean; require_phone?: boolean; confirm_subject: string; confirm_intro: string; confirm_extra: string; cancel_intro: string; reminder_enabled?: boolean; reminder_hours?: number; cancel_min_hours?: number; terms_text?: string; terms_ack_at?: string | null };
   packages: Pkg[]; rules: Rule[]; slots: Slot[]; blocks: Block[]; bookings: Booking[]; mailConfigured: boolean;
 };
 
@@ -196,6 +196,7 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
           {b.customer_phone ? `${b.customer_email ? " · " : ""}${b.customer_phone}` : ""}
         </div>
         {b.message && <div className="mt-1.5 text-ink-dim whitespace-pre-line">&ldquo;{b.message}&rdquo;</div>}
+        {b.owner_note && <div className="mt-1.5 text-[12.5px] rounded-md px-2 py-1 bg-warm/10 whitespace-pre-line">📝 {b.owner_note}</div>}
       </div>
       )}
     </div>
@@ -560,6 +561,9 @@ function SettingsTab({ data, busy, act, siteId }: { data: Data; busy: boolean; a
     confirm_intro: st.confirm_intro || "",
     confirm_extra: st.confirm_extra || "",
     cancel_intro: st.cancel_intro || "",
+    reminder_enabled: st.reminder_enabled !== false,
+    reminder_hours: String(st.reminder_hours ?? 24),
+    cancel_min_hours: String(st.cancel_min_hours ?? 0),
   });
   const example = { namn: t("Anna"), tjänst: data.packages[0]?.name || t("Konsultation"), tid: formatWhen(new Date(Date.UTC(2026, 10, 3, 9, 0)), data.settings.timezone, bcp47), längd: t("{n} minuter", { n: data.packages[0]?.duration_min || 60 }), pris: data.packages[0]?.price_sek != null ? formatPrice(data.packages[0].price_sek, data.currency || "SEK", bcp47) : "", sajt: data.siteName || t("din sajt") };
   const fill = (custom: string, fallback: string) => applyMailTemplate(custom.trim() || fallback, example);
@@ -581,6 +585,24 @@ function SettingsTab({ data, busy, act, siteId }: { data: Data; busy: boolean; a
           <input type="number" min={1} className={`${input} w-full`} value={s.max_days_ahead} onChange={(e) => setS({ ...s, max_days_ahead: e.target.value })} />
         </label>
         <p className="text-[12px] text-ink-dim mt-3">{t("Tider räknas i tidszonen {tz}.", { tz: data.settings.timezone })}</p>
+      </div>
+
+      <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[560px]">
+        <h2 className="text-[15px] font-semibold mb-1">{t("Påminnelse och avbokning")}</h2>
+        <p className="text-[13px] text-ink-dim mb-3">{t("Kunden får ett påminnelsemejl en tid före besöket (om hen lämnat e-post). I mejlet finns länken där hen kan avboka eller välja ny tid.")}</p>
+        <label className="flex items-center gap-2.5 text-[13.5px] mb-3">
+          <input type="checkbox" checked={s.reminder_enabled} onChange={(e) => setS({ ...s, reminder_enabled: e.target.checked })} />
+          {t("Skicka påminnelse till kunden")}
+        </label>
+        <label className={`block mb-3 ${s.reminder_enabled ? "" : "opacity-50"}`}>
+          <span className={label}>{t("Påminnelse skickas (timmar före tiden)")}</span>
+          <input type="number" min={1} max={168} disabled={!s.reminder_enabled} className={`${input} w-full`} value={s.reminder_hours} onChange={(e) => setS({ ...s, reminder_hours: e.target.value })} />
+        </label>
+        <label className="block">
+          <span className={label}>{t("Senaste avbokning/ombokning för kunden (timmar före tiden)")}</span>
+          <input type="number" min={0} max={720} className={`${input} w-full`} value={s.cancel_min_hours} onChange={(e) => setS({ ...s, cancel_min_hours: e.target.value })} />
+        </label>
+        <p className="text-[12px] text-ink-dim mt-2">{t("0 betyder att kunden alltid kan avboka. Efter gränsen får kunden be dig om hjälp i stället. Du kan alltid avboka själv.")}</p>
       </div>
 
       <div className="border border-line rounded-xl px-4 py-4 bg-surface max-w-[560px]">

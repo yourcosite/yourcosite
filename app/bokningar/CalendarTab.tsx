@@ -518,6 +518,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
               {picked.customer_phone ? `${picked.customer_email ? " · " : ""}${picked.customer_phone}` : ""}
             </div>
             {picked.message && <div className="mt-1.5 text-ink-dim whitespace-pre-line">&ldquo;{picked.message}&rdquo;</div>}
+            {picked.owner_note && <div className="mt-1.5 text-[12.5px] rounded-md px-2 py-1 bg-warm/10 whitespace-pre-line">📝 {picked.owner_note}</div>}
           </div>
           <div className="mt-3">
             {confirming ? (

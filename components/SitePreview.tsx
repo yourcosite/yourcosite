@@ -1,5 +1,6 @@
 "use client";
 
+import RescheduleBlock from "@/components/RescheduleBlock";
 import { imgProps } from "@/lib/imgSrc";
 import { useT } from "@/components/I18nProvider";
 import { msg } from "@/lib/i18n/config";
@@ -775,17 +776,18 @@ function CancelBookingBlock({ token, palette, accent, shape = "pill" }: { token:
   const t = useSiteT();
   const { bcp47 } = useSiteLocale();
   const btn = ctaShapeProps(shape, accent, { textColor: palette.text });
-  const [info, setInfo] = useState<{ packageName: string; startsAt: string; durationMin: number; status: string; siteName: string; timezone: string } | null>(null);
+  const [info, setInfo] = useState<{ packageName: string; startsAt: string; durationMin: number; status: string; siteName: string; timezone: string; locked?: boolean; minHours?: number; canReschedule?: boolean } | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [done, setDone] = useState(false);
+  const [moved, setMoved] = useState("");
 
   useEffect(() => {
     fetch(`/api/public/booking/cancel?token=${encodeURIComponent(token)}`)
       .then(async (r) => ({ ok: r.ok, data: await r.json() }))
       .then(({ ok, data }) => {
         if (!ok) return setError(data.error || t("Hittade ingen bokning."));
-        setInfo({ ...data.booking, siteName: data.siteName, timezone: data.timezone });
+        setInfo({ ...data.booking, siteName: data.siteName, timezone: data.timezone, locked: data.locked, minHours: data.minHours, canReschedule: data.canReschedule });
         if (data.booking.status === "cancelled") setDone(true);
       })
       .catch(() => setError(t("Kunde inte hämta bokningen.")));
@@ -818,13 +820,25 @@ function CancelBookingBlock({ token, palette, accent, shape = "pill" }: { token:
             <div style={{ color: palette.textDim }}>{formatWhen(new Date(info.startsAt), info.timezone, bcp47)} · {info.durationMin} min</div>
           </div>
         )}
-        {done ? (
+        {moved ? (
+          <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>{t("Tiden är ombokad till {tid}. En ny bekräftelse är skickad till din e-post.", { tid: formatWhen(new Date(moved), info?.timezone || "Europe/Stockholm", bcp47) })}</p>
+        ) : done ? (
           <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>{t("Tiden är avbokad och ett mejl är skickat. Välkommen att boka en ny tid när det passar.")}</p>
+        ) : info?.locked ? (
+          <p className="text-[14.5px] leading-relaxed" style={{ color: palette.textDim }}>{t("Det är för sent att avboka eller boka om själv (senast {n} timmar före tiden). Kontakta oss direkt så hjälper vi dig.", { n: info.minHours ?? 0 })}</p>
         ) : (
           info && (
-            <button type="button" onClick={cancel} disabled={busy} className={`disabled:opacity-60 ${btn.className}`} style={btn.style}>
-              {busy ? t("Avbokar …") : t("Ja, avboka tiden")}
-            </button>
+            <div className="flex flex-col gap-6">
+              {info.canReschedule && (
+                <RescheduleBlock token={token} timezone={info.timezone} bcp47={bcp47} t={t} btnClassName={`disabled:opacity-60 ${btn.className}`} btnStyle={btn.style} dimColor={palette.textDim} borderColor={palette.cardBorder} onDone={(s) => setMoved(s)} />
+              )}
+              <div>
+                {info.canReschedule && <p className="text-[13px] mb-2" style={{ color: palette.textDim }}>{t("Eller avboka tiden helt:")}</p>}
+                <button type="button" onClick={cancel} disabled={busy} className={`disabled:opacity-60 ${btn.className}`} style={btn.style}>
+                  {busy ? t("Avbokar …") : t("Ja, avboka tiden")}
+                </button>
+              </div>
+            </div>
           )
         )}
         {error && <p className="text-[13.5px] font-semibold mt-4" style={{ color: "#C0392B" }}>{error}</p>}

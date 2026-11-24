@@ -24,6 +24,7 @@ export default function BookingEditForm({ booking, data, tz, busy, act, onDone }
     phone: booking.customer_phone || "",
     email: booking.customer_email || "",
     message: booking.message || "",
+    owner_note: booking.owner_note || "",
     sendMail: false,
   });
   const set = (k: keyof typeof f, v: string | boolean) => setF((x) => ({ ...x, [k]: v }));
@@ -87,6 +88,10 @@ export default function BookingEditForm({ booking, data, tz, busy, act, onDone }
           <label className={label}>{t("Meddelande från kunden")}</label>
           <textarea className={`${input} resize-y`} rows={2} value={f.message} onChange={(e) => set("message", e.target.value)} />
         </div>
+      </div>
+      <div>
+        <label className={label}>{t("Intern anteckning (syns bara för dig)")}</label>
+        <textarea className={`${input} resize-y`} rows={2} maxLength={2000} value={f.owner_note} onChange={(e) => set("owner_note", e.target.value)} placeholder={t("T.ex. allergi, betalat kontant, vill ha samma behandlare")} />
       </div>
       <label className={`flex items-start gap-2 text-[13px] ${f.email.trim() ? "" : "opacity-50"}`}>
         <input type="checkbox" className="mt-0.5" disabled={!f.email.trim()} checked={f.sendMail && !!f.email.trim()} onChange={(e) => set("sendMail", e.target.checked)} />
