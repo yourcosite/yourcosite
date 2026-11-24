@@ -18,6 +18,7 @@ import {
   formatWhen,
 } from "@/lib/booking";
 import { createClient } from "@/lib/supabase/client";
+import BookingEditForm from "./BookingEditForm";
 import CalendarTab from "./CalendarTab";
 
 type Pkg = { id: string; name: string; description: string | null; duration_min: number; buffer_min?: number | null; price_sek: number | null; image_url?: string | null; active: boolean };
@@ -27,6 +28,7 @@ type Block = { id: string; starts_at: string; ends_at: string; note: string | nu
 export type Booking = {
   id: string; package_name: string; duration_min: number; price_sek: number | null; starts_at: string;
   customer_name: string; customer_email: string | null; customer_phone: string | null; message: string | null; status: string;
+  package_id?: string | null; buffer_min?: number | null;
 };
 export type Data = {
   siteName?: string;
@@ -143,6 +145,7 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
   const bcp47 = BCP47[useLocale()];
   const cur = data.currency || "SEK";
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
   const activePk = data.packages.filter((p) => p.active);
   const emptyManual = { package_id: activePk[0]?.id || "", package_name: "", duration_min: "60", date: "", time: "09:00", name: "", phone: "", email: "", message: "", sendMail: false };
   const [manual, setManual] = useState<typeof emptyManual | null>(null);
@@ -165,8 +168,9 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
             {b.status === "cancelled" ? t(" · Avbokad") : ""}
           </div>
         </div>
-        {canCancel &&
-          (confirming === b.id ? (
+        {canCancel && editing !== b.id && (<div className="flex items-center gap-2">
+        {confirming !== b.id && <button className={btnGhost} onClick={() => setEditing(b.id)}>{t("Ändra")}</button>}
+        {(confirming === b.id ? (
             <div className="flex items-center gap-2">
               <button className={btnGhost} onClick={() => setConfirming(null)}>{t("Behåll")}</button>
               <button
@@ -180,7 +184,11 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
           ) : (
             <button className={btnGhost} onClick={() => setConfirming(b.id)}>{t("Avboka")}</button>
           ))}
+        </div>)}
       </div>
+      {editing === b.id ? (
+        <BookingEditForm booking={b} data={data} tz={tz} busy={busy} act={act} onDone={() => setEditing(null)} />
+      ) : (
       <div className="mt-2 text-[13px]">
         <div className="font-semibold">{b.customer_name}</div>
         <div className="text-ink-dim">
@@ -189,6 +197,7 @@ function BookingsTab({ data, tz, busy, act }: { data: Data; tz: string; busy: bo
         </div>
         {b.message && <div className="mt-1.5 text-ink-dim whitespace-pre-line">&ldquo;{b.message}&rdquo;</div>}
       </div>
+      )}
     </div>
   );
 

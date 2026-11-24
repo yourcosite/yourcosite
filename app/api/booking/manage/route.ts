@@ -301,6 +301,59 @@ async function POST_handler(request: Request) {
       }
       return NextResponse.json({ ok: true, mailed });
     }
+    case "updateBooking": {
+      // Ändra en befintlig bokning: kunduppgifter, tid, längd och paket.
+      if (!isUuid(body.id)) return fail(t("Saknar bokning."));
+      const { data: cur } = await supabase.from("bookings").select("id, status").eq("id", body.id).eq("site_id", site.id).maybeSingle();
+      if (!cur) return fail(t("Hittade ingen bokning."), 404);
+      if ((cur as any).status === "cancelled") return fail(t("Bokningen är avbokad och kan inte ändras."));
+      const name = txt(body.name, 120);
+      if (!name) return fail(t("Skriv kundens namn."));
+      const email = txt(body.email, 200);
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return fail(t("E-postadressen ser inte rätt ut."));
+      if (!DATE.test(body.date) || !TIME.test(body.time)) return fail(t("Välj datum och tid."));
+      let pkgRow: any = null;
+      if (isUuid(body.package_id)) {
+        const { data: p } = await supabase.from("booking_packages").select("*").eq("id", body.package_id).eq("site_id", site.id).maybeSingle();
+        if (!p) return fail(t("Paketet finns inte längre."), 404);
+        pkgRow = p;
+      }
+      const pkgName = pkgRow?.name || txt(body.package_name, 80);
+      if (!pkgName) return fail(t("Välj ett paket eller skriv vad bokningen gäller."));
+      const duration = Math.round(Number(body.duration_min));
+      if (!Number.isFinite(duration) || duration < 5 || duration > 1440) return fail(t("Längden måste vara mellan 5 och 1440 minuter."));
+      const start = zonedTimeToUtc(body.date, body.time, tz);
+      const end = new Date(start.getTime() + duration * 60000);
+      const buffer = pkgRow ? pkgRow.buffer_min || 0 : 0;
+      // Krock med en annan bokning (den egna räknas inte).
+      const { data: others } = await supabase.from("bookings").select("id, starts_at, ends_at, buffer_min").eq("site_id", site.id).eq("status", "confirmed").neq("id", body.id).lt("starts_at", new Date(end.getTime() + buffer * 60000).toISOString()).gt("ends_at", new Date(start.getTime() - 24 * 3600000).toISOString());
+      if ((others ?? []).some((o: any) => new Date(o.starts_at) < new Date(end.getTime() + buffer * 60000) && start < new Date(new Date(o.ends_at).getTime() + (o.buffer_min || 0) * 60000))) {
+        return fail(t("Den tiden krockar med en annan bokning."), 409);
+      }
+      const { data: row, error } = await supabase
+        .from("bookings")
+        .update({
+          package_id: pkgRow?.id ?? null, package_name: pkgName, duration_min: duration, buffer_min: buffer,
+          price_sek: pkgRow ? pkgRow.price_sek ?? null : null,
+          starts_at: start.toISOString(), ends_at: end.toISOString(),
+          customer_name: name, customer_email: email || null, customer_phone: txt(body.phone, 60) || null, message: txt(body.message, 1500) || null,
+        })
+        .eq("id", body.id).eq("site_id", site.id)
+        .select("id, package_name, duration_min, price_sek, starts_at, customer_name, customer_email, customer_phone, message, cancel_token")
+        .single();
+      if (error || !row) {
+        if (error?.code === "23P01") return fail(t("Den tiden krockar med en annan bokning."), 409);
+        return fail(t("Kunde inte spara ändringarna just nu."), 500);
+      }
+      let mailed = false;
+      if (body.sendMail === true && email) {
+        const admin = createAdminClient();
+        const data = await loadSiteBookingData(admin, site.id);
+        const r = await sendBookingEmails({ db: admin, siteId: site.id, siteName: site.name, booking: row as any, settings: data.settings, origin: new URL(request.url).origin, notifyOwner: false }).catch(() => ({ customerSent: false }));
+        mailed = r.customerSent;
+      }
+      return NextResponse.json({ ok: true, mailed });
+    }
     case "cancelBooking": {
       if (!isUuid(body.id)) return fail(t("Saknar bokning."));
       const { data: b } = await supabase

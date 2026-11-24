@@ -6,6 +6,7 @@ import { BCP47 } from "@/lib/i18n/country";
 import { addDays, formatPrice, formatWhen, isoWeekday, localDateOf, localTimeOf, zonedTimeToUtc } from "@/lib/booking";
 import type { Act, Booking, Data } from "./BookingClient";
 import CalendarSync from "./CalendarSync";
+import BookingEditForm from "./BookingEditForm";
 
 // Veckokalender över sajtens bokningar: bokade tider (färgade), lediga tider
 // som besökarna kan boka (ljusa fält) och stängda tider (streckade). Allt
@@ -57,6 +58,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
   // Datumet kalendern utgår från (dag, veckans dagar eller månadens dagar).
   const [anchor, setAnchor] = useState(today);
   const [picked, setPicked] = useState<Booking | null>(null);
+  const [editingPicked, setEditingPicked] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   // Markera en tid genom att dra i kalendern (som i Google Kalender).
@@ -341,7 +343,7 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
                     type="button"
                     key={s.b.id}
                     onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => { e.stopPropagation(); clearSel(); setPicked(s.b); setConfirming(false); }}
+                    onClick={(e) => { e.stopPropagation(); clearSel(); setPicked(s.b); setConfirming(false); setEditingPicked(false); }}
                     className={`absolute left-1 right-1 rounded bg-accent text-accent-ink text-left overflow-hidden px-1.5 py-0.5 text-[11px] leading-tight shadow-sm ${picked?.id === s.b.id ? "ring-2 ring-ink" : ""}`}
                     style={{ top: top(s.startMin), height: height(s.startMin, s.endMin) }}
                   >
@@ -505,6 +507,10 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
             </div>
             <button type="button" className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg" onClick={() => setPicked(null)}>{t("Stäng")}</button>
           </div>
+          {editingPicked ? (
+            <BookingEditForm booking={picked} data={data} tz={tz} busy={busy} act={act} onDone={() => { setEditingPicked(false); setPicked(null); }} />
+          ) : (
+          <>
           <div className="mt-2 text-[13px]">
             <div className="font-semibold">{picked.customer_name}</div>
             <div className="text-ink-dim">
@@ -527,9 +533,14 @@ export default function CalendarTab({ data, tz, busy, act, siteId }: { data: Dat
                 </button>
               </div>
             ) : (
-              <button type="button" className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg" onClick={() => setConfirming(true)}>{t("Avboka")}</button>
+              <div className="flex gap-2 flex-wrap">
+                <button type="button" className="text-[12.5px] font-bold text-accent-ink bg-accent px-3 py-2 rounded-lg" onClick={() => setEditingPicked(true)}>{t("Ändra")}</button>
+                <button type="button" className="text-[12.5px] font-semibold text-ink-dim px-3 py-2 border border-line rounded-lg" onClick={() => setConfirming(true)}>{t("Avboka")}</button>
+              </div>
             )}
           </div>
+          </>
+          )}
         </div>
       )}
     </div>
