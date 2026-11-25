@@ -1720,15 +1720,19 @@ function GalleryView({
 // sandlådan. Skriptet läggs in i rutan så att widgeten hamnar just här.
 function TrustedScriptEmbed({ spec }: { spec: { src: string; attrs: Record<string, string> } }) {
   const ref = useRef<HTMLDivElement>(null);
+  // Nyckeln är stabil mellan renderingar. Annars laddas widgeten om vid varje
+  // liten ändring i förhandsvisningen och leverantören blockerar för många anrop (429).
+  const key = JSON.stringify([spec.src, spec.attrs]);
   useEffect(() => {
     const box = ref.current;
     if (!box) return;
+    const { attrs } = JSON.parse(key)[1] ? { attrs: JSON.parse(key)[1] as Record<string, string> } : { attrs: {} };
     box.innerHTML = "";
     const el = document.createElement("script");
-    for (const [k, v] of Object.entries(spec.attrs)) el.setAttribute(k, v);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
     box.appendChild(el);
     return () => { box.innerHTML = ""; };
-  }, [spec]);
+  }, [key]);
   return <div ref={ref} style={{ minHeight: 120 }} />;
 }
 
