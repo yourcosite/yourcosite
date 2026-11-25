@@ -30,9 +30,9 @@ export default function ImageFocusPanel({
     });
   };
   return (
-    <div className="fixed z-[90] bottom-4 right-4 w-[280px] max-w-[calc(100vw-2rem)] bg-surface border border-line rounded-2xl shadow-xl p-3.5">
+    <div className="fixed z-[90] bottom-4 right-4 w-[280px] max-w-[calc(100vw-2rem)] max-md:bottom-auto max-md:top-3 max-md:left-3 max-md:right-3 max-md:w-auto max-md:max-w-none bg-surface border border-line rounded-2xl shadow-xl p-3.5">
       <div className="text-[14px] font-semibold mb-0.5">{t("Justera beskärning")}</div>
-      <p className="text-[12px] text-ink-dim mb-2.5">{t("Klicka eller dra där det viktigaste finns. Sektionen till vänster visar hur det blir. Gäller bara den här bilden på den här ytan.")}</p>
+      <p className="text-[12px] text-ink-dim mb-2.5">{t("Klicka eller dra där det viktigaste finns. Sektionen på sidan visar hur det blir. Gäller bara den här bilden på den här ytan.")}</p>
       <div
         ref={box}
         className="relative select-none touch-none cursor-crosshair rounded-lg overflow-hidden mb-3"
@@ -40,7 +40,7 @@ export default function ImageFocusPanel({
         onPointerMove={(e) => { if (e.buttons) setFrom(e); }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={src} alt="" draggable={false} className="block w-full h-auto max-h-[200px] object-contain mx-auto" />
+        <img src={src} alt="" draggable={false} className="block w-full h-auto max-h-[200px] max-md:max-h-[130px] object-contain mx-auto" />
         <div className="absolute w-6 h-6 -ml-3 -mt-3 rounded-full border-[3px] border-white shadow-[0_0_0_2px_rgba(0,0,0,0.5)] pointer-events-none" style={{ left: `${pos.x}%`, top: `${pos.y}%`, background: "rgba(198,255,94,0.55)" }} />
       </div>
       <div className="flex items-center gap-2">
