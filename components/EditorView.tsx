@@ -970,9 +970,9 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [savingImage, setSavingImage] = useState(false);
   // Utkast på fokuspunkt medan panelen är öppen: visas live i sektionen men sparas inte förrän man trycker Spara.
-  const [focusDraft, setFocusDraft] = useState<{ sel: any; x: number; y: number } | null>(null);
+  const [focusDraft, setFocusDraft] = useState<{ sel: any; url: string; x: number; y: number } | null>(null);
   const [savingFocus, setSavingFocus] = useState(false);
-  const selKeyForFocus = selection?.target === "image" ? selection.key : null;
+  const selKeyForFocus = selection ? selection.key : null;
   useEffect(() => { setFocusDraft(null); }, [selKeyForFocus]);
   const selectedImageUrl = (() => {
     if (!content || selection?.target !== "image") return null;
@@ -980,6 +980,23 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     if (!section) return null;
     if (selection.kind === "hero") return (section.imageUrl as string | undefined) || null;
     return (section.items?.[selection.itemIndex ?? -1]?.imageUrl as string | undefined) || null;
+  })();
+  // Startar beskärningspanelen för en bild: huvudbilden i en sektion (kind hero)
+  // eller en bild i en ruta/ett galleri.
+  const startFocus = (sel: { pagePath: string; sectionId: string; kind: "hero" | "gridItem" | "galleryItem"; itemIndex?: number }) => {
+    const sec: any = content?.pages.find((pg) => pg.path === sel.pagePath)?.sections.find((sc) => sc.id === sel.sectionId);
+    if (!sec) return;
+    const holder = sel.kind === "hero" ? sec : sec.items?.[sel.itemIndex ?? -1];
+    const url = holder?.imageUrl as string | undefined;
+    if (!url) return;
+    const cur = sel.kind === "hero" ? sec.imageFocus : holder.focus;
+    setFocusDraft({ sel, url, x: cur?.x ?? 50, y: cur?.y ?? 50 });
+  };
+  // Sektionens huvudbild (hero, bakgrund, bild bredvid text), om den har en.
+  const selectedSectionImage: string | null = (() => {
+    if (!content || !selection || selection.target === "image") return null;
+    const sec: any = content.pages.find((pg) => pg.path === selection.pagePath)?.sections.find((sc) => sc.id === selection.sectionId);
+    return (sec?.imageUrl as string | undefined) || null;
   })();
   const saveFocus = async (pos: { x: number; y: number } | null) => {
     if (!focusDraft || !content) return;
@@ -2507,7 +2524,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   </button>
                 )}
 {selection.target === "image" && selectedImageUrl && (
-                  <button type="button" onClick={() => { if (selection?.target !== "image") return; const sec: any = content?.pages.find((pg) => pg.path === selection.pagePath)?.sections.find((sc) => sc.id === selection.sectionId); const cur = selection.kind === "hero" ? sec?.imageFocus : sec?.items?.[selection.itemIndex ?? -1]?.focus; setFocusDraft({ sel: selection, x: cur?.x ?? 50, y: cur?.y ?? 50 }); }} disabled={sending} className={dockBtn}>
+                  <button type="button" onClick={() => { if (selection?.target === "image") startFocus(selection); }} disabled={sending} className={dockBtn}>
                     <YIcon name="crop" size={15} />{t("Justera beskärning")}
                   </button>
                 )}
@@ -2531,7 +2548,12 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     </button>
                   </>
                 )}
-{/* Ta bort det markerade: sektion, text, knapp/länk, ruta eller bild. Går att ångra. */}
+{selectedSectionImage && (
+                  <button type="button" onClick={() => { if (selection && selection.target !== "image") startFocus({ pagePath: selection.pagePath, sectionId: selection.sectionId, kind: "hero" }); }} disabled={sending} className={dockBtn}>
+                    <YIcon name="crop" size={15} />{t("Justera beskärning")}
+                  </button>
+                )}
+                {/* Ta bort det markerade: sektion, text, knapp/länk, ruta eller bild. Går att ångra. */}
                 {(() => {
                   const del = "flex items-center gap-1.5 text-[12px] font-semibold bg-surface border border-red-300 text-red-700 rounded-full px-2.5 py-1 hover:bg-red-50 flex-shrink-0 disabled:opacity-60";
                   const busy = sending || savingPick || savingText;
@@ -3402,9 +3424,9 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
           draftInputRef.current?.focus();
         }}
       />
-      {focusDraft && selectedImageUrl && (
+      {focusDraft && (
         <ImageFocusPanel
-          src={selectedImageUrl}
+          src={focusDraft.url}
           pos={{ x: focusDraft.x, y: focusDraft.y }}
           hadSaved={(() => { const s = focusDraft.sel; const sec: any = content?.pages.find((pg) => pg.path === s.pagePath)?.sections.find((sc) => sc.id === s.sectionId); return !!(s.kind === "hero" ? sec?.imageFocus : sec?.items?.[s.itemIndex ?? -1]?.focus); })()}
           saving={savingFocus}
