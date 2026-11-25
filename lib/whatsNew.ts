@@ -15,6 +15,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-25-lugnare-ruta",
+    date: "2026-11-25",
+    icon: "🧭",
+    title: msg("Ett lugnare verktyg i Millies ruta"),
+    text: msg("Valen är nu samlade under tre knappar: Redigera (det du markerat, till exempel bilden, texten eller sektionen), Förslag (tips på vad du kan be Millie om) och Sajt (mallar och historik). Ångra ligger kvar bredvid. Ett litet grönt märke visar vad som flyttats första gången du kommer tillbaka."),
+  },
+  {
     id: "2026-11-14-kalenderlank",
     date: "2026-11-14",
     icon: "📅",

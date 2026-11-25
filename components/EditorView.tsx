@@ -1,5 +1,6 @@
 "use client";
 
+import NewPin, { useNewPin } from "@/components/NewPin";
 import { CONVERTIBLE_TYPES } from "@/lib/convertSection";
 import { checkTemplateFit } from "@/lib/templateSuggestions";
 import { prepareImage, MAX_UPLOAD_IMAGE_BYTES } from "@/lib/imageUpload";
@@ -259,6 +260,7 @@ type SiteMeta = {
   privacy_policy_mode: "uploaded" | "generated" | null;
   privacy_policy_file_url: string | null;
   privacy_policy_text: string | null;
+  created_at?: string | null;
   language?: string | null;
   currency?: string | null;
   translations?: SiteTranslations | null;
@@ -282,6 +284,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const demoNoUpload = () => new Error(t("Uppladdning av egna bilder är avstängd i demon. Be Millie om en bild från bildbanken, eller skapa din egen sajt."));
   const locale = useLocale();
   const [site, setSite] = useState<SiteMeta | null>(null);
+  const [dockMenu, setDockMenu] = useState<null | "edit" | "tips" | "site">(null);
+  const editPin = useNewPin("dock-menus-2026-11", (site as { created_at?: string | null } | null)?.created_at);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [activePath, setActivePath] = useState("/");
   const [loadError, setLoadError] = useState("");
@@ -1965,6 +1969,10 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const seoWords = (content?.seoKeyword || "").toLowerCase().split(/\s+/).filter((w) => w.length > 2);
   const googleHit =
     !!selectedFieldText && seoWords.length > 0 && seoWords.every((w) => selectedFieldText.toLowerCase().includes(w.slice(0, Math.max(4, w.length - 2))));
+  useEffect(() => {
+    setDockMenu(null);
+  }, [selection?.key]);
+  const capFirst = (x: string) => (x ? x.charAt(0).toLocaleUpperCase(locale || "sv") + x.slice(1) : x);
   const dockBtn = "flex items-center gap-1.5 text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink hover:border-ink flex-shrink-0 disabled:opacity-60";
 
 
@@ -2479,40 +2487,51 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     {barText.length > 110 && <span className="text-ink-dim font-semibold"> {barExpanded ? t("Visa mindre") : t("Visa mer")}</span>}
                   </span>
                   ) : null}
-                  <span className="flex gap-3.5 text-[12px] font-semibold flex-shrink-0">
-                    {undoStack.length > 0 && (
-                      <button type="button" onClick={undo} disabled={undoing || sending} className="text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">
-                        <YIcon name="undo" size={15} />
-                        {undoing ? t("Ångrar …") : t("Ångra senaste")}
-                      </button>
-                    )}
-                    <button type="button" onClick={() => setMillieOpen(true)} className="text-ink-dim flex items-center gap-1.5"><YIcon name="history" size={15} />{t("Historik")}</button>
-                    <button type="button" onClick={() => setGalleryOpen(true)} className="text-ink-dim flex items-center gap-1.5"><YIcon name="layout" size={15} />{t("Mallar")}</button>
-                  </span>
                 </div>
               )}
               {attachError && <p className="text-[12px] text-red-600 mb-2">{attachError}</p>}
-              <div className="flex md:flex-wrap items-center gap-1.5 mb-2 overflow-x-auto md:overflow-visible [&>*]:flex-shrink-0 [&>*]:whitespace-nowrap">
-                <button type="button" onClick={() => setGalleryOpen(true)} className="text-[12px] font-semibold rounded-full px-2.5 py-1 border border-line bg-bg text-ink flex items-center gap-1.5"><YIcon name="layout" size={14} />{t("Mallar")}</button>
+              <div className="flex items-center gap-1.5 mb-2 flex-wrap">
                 {selection && content && (
                   <>
-                    <span className="text-[12px] font-semibold rounded-full pl-2.5 pr-1.5 py-1 bg-accent-soft border border-line max-w-[260px] flex items-center gap-1.5">
+<span className="text-[12px] font-semibold rounded-full pl-2.5 pr-1.5 py-1 bg-accent-soft border border-line max-w-[260px] flex items-center gap-1.5">
                       <YIcon name={selection.target === "image" ? "image" : selection.target === "field" ? "pencil" : "section"} size={15} />
-                      <span className="truncate">{selection.label}</span>
+                      <span className="truncate">{capFirst(selection.label)}</span>
                       <button type="button" onClick={() => setSelection(null)} aria-label={t("Ta bort markeringen")} className="text-ink-dim text-[14px] font-bold leading-none px-0.5">×</button>
                     </span>
-                    {googleEligible && (
-                      <button
-                        type="button"
-                        disabled={sending}
-                        title={googleHit ? t("Texten innehåller redan sökordet") : undefined}
-                        onClick={() => send(selection.target === "section" ? t("Optimera den markerade sektionen för Google") : t("Optimera den markerade texten för Google"))}
-                        className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent text-accent-ink flex-shrink-0 disabled:opacity-60 flex items-center gap-1.5"
-                      >
-                        <YIcon name={googleHit ? "check" : "search"} size={15} accent="rgba(12,16,4,0.2)" />
-                        {googleHit ? t("Innehåller sökordet") : t("Optimera för Google")}
-                      </button>
-                    )}
+                                      </>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 mb-2" role="toolbar" aria-label={t("Verktyg")}>
+                {selection && content && (
+                  <button type="button" aria-expanded={dockMenu === "edit"} onClick={() => { setDockMenu((m) => (m === "edit" ? null : "edit")); editPin.dismiss(); }} className={`relative text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "edit" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
+                    {t("Redigera")} <span aria-hidden>▾</span>
+                    <NewPin id="dock-menus-2026-11" show={editPin.show} onDismiss={editPin.dismiss} />
+                  </button>
+                )}
+                <button type="button" aria-expanded={dockMenu === "tips"} onClick={() => setDockMenu((m) => (m === "tips" ? null : "tips"))} className={`text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "tips" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
+                  {t("Förslag")} <span aria-hidden>▾</span>
+                </button>
+                <button type="button" aria-expanded={dockMenu === "site"} onClick={() => setDockMenu((m) => (m === "site" ? null : "site"))} className={`text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "site" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
+                  {t("Sajt")} <span aria-hidden>▾</span>
+                </button>
+                {undoStack.length > 0 && (
+                  <button type="button" onClick={undo} disabled={undoing || sending} className="ml-auto text-[12px] font-semibold text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">
+                    <YIcon name="undo" size={15} />
+                    {undoing ? t("Ångrar …") : t("Ångra")}
+                  </button>
+                )}
+              </div>
+              {dockMenu && (
+                <div
+                  className="mb-2 max-h-[42vh] overflow-y-auto rounded-xl border border-line bg-surface p-2.5 grid gap-3"
+                  onClick={(e) => { if ((e.target as HTMLElement).closest("button")) setDockMenu(null); }}
+                >
+                  {dockMenu === "edit" && selection && content && (
+                    <>
+{((selection.target === "image" && (!!selectedImageUrl || selectedGalleryIndex !== null || !selectedImageUrl)) || canAddGalleryImages || !!selectedSectionImage) && (
+<div className="grid gap-1.5">
+<div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Bilden")}</div>
+<div className="flex flex-wrap gap-1.5">
 {selection.target === "image" && selectedImageUrl && (
                   <button
                     type="button"
@@ -2553,56 +2572,16 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     <YIcon name="crop" size={15} />{t("Justera beskärning")}
                   </button>
                 )}
-                {/* Ta bort det markerade: sektion, text, knapp/länk, ruta eller bild. Går att ångra. */}
-                {(() => {
-                  const del = "flex items-center gap-1.5 text-[12px] font-semibold bg-surface border border-red-300 text-red-700 rounded-full px-2.5 py-1 hover:bg-red-50 flex-shrink-0 disabled:opacity-60";
-                  const busy = sending || savingPick || savingText;
-                  const isItemField = selection.target === "field" && (/^(items|testimonials|quotes|faqs|questions)\.\d+\./.test(selection.field) || /^stats\.\d+$/.test(selection.field));
-                  const isLinkField = selection.target === "field" && !!linkFieldFor(selection.field);
-                  const run = (payload: Record<string, unknown>, ok: string, ask?: string) => {
-                    if (ask && !window.confirm(ask)) return;
-                    void savePick("/api/sites/remove", payload, ok);
-                  };
-                  if (selection.target === "section" && selection.sectionId !== "__header__") {
-                    return (
-                      <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "section" }, t("Klart! Sektionen är borttagen. Du kan ångra med knappen om du ändrar dig."), t("Ta bort hela sektionen ”{name}”? Du kan ångra direkt efteråt.", { name: selection.label }))}>
-                        <YIcon name="trash" size={15} />{t("Ta bort sektionen")}
-                      </button>
-                    );
-                  }
-                  if (selection.target === "field" && selection.sectionId !== "__header__") {
-                    return (
-                      <>
-                        <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "field", field: selection.field }, isLinkField ? t("Klart! Knappen är borttagen. Du kan ångra med knappen om du ändrar dig.") : t("Klart! Texten är borttagen. Du kan ångra med knappen om du ändrar dig."))}>
-                          <YIcon name="trash" size={15} />{isLinkField ? t("Ta bort knappen") : /^stats\.\d+$/.test(selection.field) ? t("Ta bort nyckeltalet") : t("Ta bort texten")}
-                        </button>
-                        {isItemField && !/^stats\.\d+$/.test(selection.field) && (
-                          <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "item", field: selection.field }, t("Klart! Rutan är borttagen. Du kan ångra med knappen om du ändrar dig."), t("Ta bort hela rutan?"))}>
-                            <YIcon name="trash" size={15} />{t("Ta bort hela rutan")}
-                          </button>
-                        )}
-                      </>
-                    );
-                  }
-                  if (selection.target === "image" && selectedGalleryIndex === null && selectedImageUrl) {
-                    return (
-                      <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "image", kind: selection.kind, itemIndex: selection.itemIndex }, t("Klart! Bilden är borttagen. Du kan ångra med knappen om du ändrar dig."))}>
-                        <YIcon name="trash" size={15} />{t("Ta bort bilden")}
-                      </button>
-                    );
-                  }
-                  return null;
-                })()}
-{selectedGalleryIndex !== null && (
-                  <button
-                    type="button"
-                    onClick={removeGalleryImage}
-                    disabled={sending || galleryBusy || savingPick}
-                    className={dockBtn}
-                  >
-                    <YIcon name="trash" size={15} />{t("Ta bort bilden")}
-                  </button>
-                )}
+                {selection.target === "image" && !selectedImageUrl && (
+                <span className="text-[11.5px] text-ink-dim flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
+              )}
+              </div>
+</div>
+)}
+{(canEditEmbed || canEditMenu || canEditFixtures || canEditTeam) && (
+<div className="grid gap-1.5">
+<div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Texten och rutorna")}</div>
+<div className="flex flex-wrap gap-1.5">
 {canEditEmbed && (
                   <button
                     type="button"
@@ -2643,6 +2622,13 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     <YIcon name="people" size={15} />{t("Redigera personer")}
                   </button>
                 )}
+</div>
+</div>
+)}
+{(canPickButtonStyle || canSpacing || canPickLayout || canPickIcon) && (
+<div className="grid gap-1.5">
+<div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Utseende")}</div>
+<div className="flex flex-wrap gap-1.5">
 {canPickButtonStyle && (
                   <button
                     type="button"
@@ -2683,34 +2669,132 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     <YIcon name="shapes" size={15} />{t("Byt ikon")}
                   </button>
                 )}
-              {selection.target === "image" && !selectedImageUrl && (
-                <span className="text-[11.5px] text-ink-dim flex-shrink-0">{t("Ingen bild att redigera ännu")}</span>
-              )}
-              {selection.target !== "section" && selection.sectionId !== "__header__" && (
-                <button
+              </div>
+</div>
+)}
+{(selection.target !== "section" && selection.sectionId !== "__header__") && (
+<div className="grid gap-1.5">
+<div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Sektionen")}</div>
+<div className="flex flex-wrap gap-1.5">
+<button
                   type="button"
                   onClick={() => setSelection({ target: "section", key: `${selection.pagePath}::section::${selection.sectionId}`, pagePath: selection.pagePath, sectionId: selection.sectionId, label: t("hela sektionen") })}
                   className={dockBtn}
                 >
-                  <YIcon name="sectionUp" size={15} />{t("Hela sektionen")}
+                  <YIcon name="sectionUp" size={15} />{t("Markera hela sektionen")}
                 </button>
-              )}
-                  </>
-                )}
-                {selectionChips.map((c) => (
+</div>
+</div>
+)}
+{(googleEligible) && (
+<div className="grid gap-1.5">
+<div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Sök")}</div>
+<div className="flex flex-wrap gap-1.5">
+{googleEligible && (
+                      <button
+                        type="button"
+                        disabled={sending}
+                        title={googleHit ? t("Texten innehåller redan sökordet") : undefined}
+                        onClick={() => send(selection.target === "section" ? t("Optimera den markerade sektionen för Google") : t("Optimera den markerade texten för Google"))}
+                        className="text-[12px] font-semibold rounded-full px-2.5 py-1 bg-accent text-accent-ink flex-shrink-0 disabled:opacity-60 flex items-center gap-1.5"
+                      >
+                        <YIcon name={googleHit ? "check" : "search"} size={15} accent="rgba(12,16,4,0.2)" />
+                        {googleHit ? t("Innehåller sökordet") : t("Optimera för Google")}
+                      </button>
+                    )}
+</div>
+</div>
+)}
+                      <div className="grid gap-1.5">
+                        <div className="text-[10.5px] tracking-wider uppercase font-semibold text-red-700">{t("Ta bort")}</div>
+                        <div className="flex flex-wrap gap-1.5">
+{selectedGalleryIndex !== null && (
                   <button
-                    key={c}
                     type="button"
-                    onClick={() => {
-                      setDraft(c);
-                      draftInputRef.current?.focus();
-                    }}
-                    className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink"
+                    onClick={removeGalleryImage}
+                    disabled={sending || galleryBusy || savingPick}
+                    className={dockBtn}
                   >
-                    {c}
+                    <YIcon name="trash" size={15} />{t("Ta bort bilden")}
                   </button>
-                ))}
-              </div>
+                )}
+{/* Ta bort det markerade: sektion, text, knapp/länk, ruta eller bild. Går att ångra. */}
+                {(() => {
+                  const del = "flex items-center gap-1.5 text-[12px] font-semibold bg-surface border border-red-300 text-red-700 rounded-full px-2.5 py-1 hover:bg-red-50 flex-shrink-0 disabled:opacity-60";
+                  const busy = sending || savingPick || savingText;
+                  const isItemField = selection.target === "field" && (/^(items|testimonials|quotes|faqs|questions)\.\d+\./.test(selection.field) || /^stats\.\d+$/.test(selection.field));
+                  const isLinkField = selection.target === "field" && !!linkFieldFor(selection.field);
+                  const run = (payload: Record<string, unknown>, ok: string, ask?: string) => {
+                    if (ask && !window.confirm(ask)) return;
+                    void savePick("/api/sites/remove", payload, ok);
+                  };
+                  if (selection.target === "section" && selection.sectionId !== "__header__") {
+                    return (
+                      <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "section" }, t("Klart! Sektionen är borttagen. Du kan ångra med knappen om du ändrar dig."), t("Ta bort hela sektionen ”{name}”? Du kan ångra direkt efteråt.", { name: selection.label }))}>
+                        <YIcon name="trash" size={15} />{t("Ta bort sektionen")}
+                      </button>
+                    );
+                  }
+                  if (selection.target === "field" && selection.sectionId !== "__header__") {
+                    return (
+                      <>
+                        <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "field", field: selection.field }, isLinkField ? t("Klart! Knappen är borttagen. Du kan ångra med knappen om du ändrar dig.") : t("Klart! Texten är borttagen. Du kan ångra med knappen om du ändrar dig."))}>
+                          <YIcon name="trash" size={15} />{isLinkField ? t("Ta bort knappen") : /^stats\.\d+$/.test(selection.field) ? t("Ta bort nyckeltalet") : t("Ta bort texten")}
+                        </button>
+                        {isItemField && !/^stats\.\d+$/.test(selection.field) && (
+                          <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "item", field: selection.field }, t("Klart! Rutan är borttagen. Du kan ångra med knappen om du ändrar dig."), t("Ta bort hela rutan?"))}>
+                            <YIcon name="trash" size={15} />{t("Ta bort hela rutan")}
+                          </button>
+                        )}
+                      </>
+                    );
+                  }
+                  if (selection.target === "image" && selectedGalleryIndex === null && selectedImageUrl) {
+                    return (
+                      <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "image", kind: selection.kind, itemIndex: selection.itemIndex }, t("Klart! Bilden är borttagen. Du kan ångra med knappen om du ändrar dig."))}>
+                        <YIcon name="trash" size={15} />{t("Ta bort bilden")}
+                      </button>
+                    );
+                  }
+                  return null;
+                })()}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                  {dockMenu === "tips" && (
+                    <div className="grid gap-1.5">
+                      <div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">
+                        {!selection ? t("Sajten") : selection.target === "image" ? t("Bild") : selection.target === "field" ? t("Text") : t("Layout")}
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {selectionChips.map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            onClick={() => {
+                              setDraft(c);
+                              draftInputRef.current?.focus();
+                            }}
+                            className="text-[12px] font-semibold bg-surface border border-line rounded-full px-2.5 py-1 text-ink"
+                          >
+                            {c}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {dockMenu === "site" && (
+                    <div className="grid gap-1.5">
+                      <div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Hela sajten")}</div>
+                      <div className="flex flex-wrap gap-1.5">
+                        <button type="button" onClick={() => setGalleryOpen(true)} className={dockBtn}><YIcon name="layout" size={15} />{t("Mallar")}</button>
+                        <button type="button" onClick={() => setMillieOpen(true)} className={dockBtn}><YIcon name="history" size={15} />{t("Historik")}</button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             {micError && (
               <div className="text-[12px] text-red-600 px-1 pb-1.5" role="status">
                 {micError}
