@@ -13,7 +13,7 @@ import { SKINS } from "@/lib/skins";
 import { topLevelPages, childPagesOf } from "@/lib/pageTree";
 import { formatWhen } from "@/lib/booking";
 import { creditsInUse, creditFromUrl } from "@/lib/stockPhotos";
-import { buildEmbedDoc } from "@/lib/embedDoc";
+import { buildEmbedDoc, parseTrustedScript } from "@/lib/embedDoc";
 import { socialPlatformLabel, socialPlatformColor } from "@/lib/socialPlatforms";
 import { SocialGlyph } from "@/lib/socialIcons";
 import { GridIcon, iconsForItems } from "@/lib/gridIcons";
@@ -1712,6 +1712,23 @@ function GalleryView({
       {at !== null && <GalleryLightbox images={shown.map((x) => ({ url: x.url, caption: x.caption }))} start={at} onClose={() => setAt(null)} />}
     </>
   );
+}
+
+// Betrodda bokningssystem (se TRUSTED_EMBED_HOSTS i lib/embedDoc.ts) körs direkt
+// på sidan: deras widget bygger en egen ram som blockeras inuti den isolerade
+// sandlådan. Skriptet läggs in i rutan så att widgeten hamnar just här.
+function TrustedScriptEmbed({ spec }: { spec: { src: string; attrs: Record<string, string> } }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const box = ref.current;
+    if (!box) return;
+    box.innerHTML = "";
+    const el = document.createElement("script");
+    for (const [k, v] of Object.entries(spec.attrs)) el.setAttribute(k, v);
+    box.appendChild(el);
+    return () => { box.innerHTML = ""; };
+  }, [spec]);
+  return <div ref={ref} style={{ minHeight: 120 }} />;
 }
 
 // Isolerad ram för kundens inbäddade kod (sektionen "embed"). Sandlådan har
@@ -6263,7 +6280,12 @@ function SectionBlockInner({
           )}
           {code ? (
             <div className="relative">
-              <EmbedFrame id={section.id} code={code} height={section.height} title={section.heading || "Embedded"} />
+              {(() => {
+                const trusted = parseTrustedScript(code);
+                return trusted
+                  ? <TrustedScriptEmbed spec={trusted} />
+                  : <EmbedFrame id={section.id} code={code} height={section.height} title={section.heading || "Embedded"} />;
+              })()}
               {/* I redigeraren fångar ett lager klicken så att sektionen kan väljas. */}
               {editable && <div className="absolute inset-0 cursor-pointer" aria-hidden="true" />}
             </div>
