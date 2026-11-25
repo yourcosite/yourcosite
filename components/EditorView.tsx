@@ -284,7 +284,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const demoNoUpload = () => new Error(t("Uppladdning av egna bilder är avstängd i demon. Be Millie om en bild från bildbanken, eller skapa din egen sajt."));
   const locale = useLocale();
   const [site, setSite] = useState<SiteMeta | null>(null);
-  const [dockMenu, setDockMenu] = useState<null | "edit" | "tips" | "site">(null);
+  const [dockMenu, setDockMenu] = useState<null | "edit" | "tips">(null);
   const editPin = useNewPin("dock-menus-2026-11", (site as { created_at?: string | null } | null)?.created_at);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [activePath, setActivePath] = useState("/");
@@ -2501,7 +2501,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                                       </>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 mb-2" role="toolbar" aria-label={t("Verktyg")}>
+              <div className="flex flex-wrap items-center gap-1.5 mb-2" role="toolbar" aria-label={t("Verktyg")}>
+                <button type="button" onClick={() => setGalleryOpen(true)} className="text-[12px] font-semibold rounded-full px-3 py-1 border border-line bg-accent text-accent-ink flex items-center gap-1.5"><YIcon name="layout" size={14} />{t("Mallar")}</button>
                 {selection && content && (
                   <button type="button" aria-expanded={dockMenu === "edit"} onClick={() => { setDockMenu((m) => (m === "edit" ? null : "edit")); editPin.dismiss(); }} className={`relative text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "edit" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
                     {t("Redigera")} <span aria-hidden>▾</span>
@@ -2511,9 +2512,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                 <button type="button" aria-expanded={dockMenu === "tips"} onClick={() => setDockMenu((m) => (m === "tips" ? null : "tips"))} className={`text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "tips" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
                   {t("Förslag")} <span aria-hidden>▾</span>
                 </button>
-                <button type="button" aria-expanded={dockMenu === "site"} onClick={() => setDockMenu((m) => (m === "site" ? null : "site"))} className={`text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "site" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
-                  {t("Sajt")} <span aria-hidden>▾</span>
-                </button>
+                <button type="button" onClick={() => setMillieOpen(true)} className="text-[12px] font-semibold rounded-full px-3 py-1 border border-line bg-bg text-ink flex items-center gap-1.5"><YIcon name="history" size={14} />{t("Historik")}</button>
                 {undoStack.length > 0 && (
                   <button type="button" onClick={undo} disabled={undoing || sending} className="ml-auto text-[12px] font-semibold text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">
                     <YIcon name="undo" size={15} />
@@ -2781,15 +2780,6 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                             {c}
                           </button>
                         ))}
-                      </div>
-                    </div>
-                  )}
-                  {dockMenu === "site" && (
-                    <div className="grid gap-1.5">
-                      <div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Hela sajten")}</div>
-                      <div className="flex flex-wrap gap-1.5">
-                        <button type="button" onClick={() => setGalleryOpen(true)} className={dockBtn}><YIcon name="layout" size={15} />{t("Mallar")}</button>
-                        <button type="button" onClick={() => setMillieOpen(true)} className={dockBtn}><YIcon name="history" size={15} />{t("Historik")}</button>
                       </div>
                     </div>
                   )}
