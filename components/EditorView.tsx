@@ -2531,6 +2531,46 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     </button>
                   </>
                 )}
+{/* Ta bort det markerade: sektion, text, knapp/länk, ruta eller bild. Går att ångra. */}
+                {(() => {
+                  const del = "flex items-center gap-1.5 text-[12px] font-semibold bg-surface border border-red-300 text-red-700 rounded-full px-2.5 py-1 hover:bg-red-50 flex-shrink-0 disabled:opacity-60";
+                  const busy = sending || savingPick || savingText;
+                  const isItemField = selection.target === "field" && (/^(items|testimonials|quotes|faqs|questions)\.\d+\./.test(selection.field) || /^stats\.\d+$/.test(selection.field));
+                  const isLinkField = selection.target === "field" && !!linkFieldFor(selection.field);
+                  const run = (payload: Record<string, unknown>, ok: string, ask?: string) => {
+                    if (ask && !window.confirm(ask)) return;
+                    void savePick("/api/sites/remove", payload, ok);
+                  };
+                  if (selection.target === "section" && selection.sectionId !== "__header__") {
+                    return (
+                      <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "section" }, t("Klart! Sektionen är borttagen. Du kan ångra med knappen om du ändrar dig."), t("Ta bort hela sektionen ”{name}”? Du kan ångra direkt efteråt.", { name: selection.label }))}>
+                        <YIcon name="trash" size={15} />{t("Ta bort sektionen")}
+                      </button>
+                    );
+                  }
+                  if (selection.target === "field" && selection.sectionId !== "__header__") {
+                    return (
+                      <>
+                        <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "field", field: selection.field }, isLinkField ? t("Klart! Knappen är borttagen. Du kan ångra med knappen om du ändrar dig.") : t("Klart! Texten är borttagen. Du kan ångra med knappen om du ändrar dig."))}>
+                          <YIcon name="trash" size={15} />{isLinkField ? t("Ta bort knappen") : /^stats\.\d+$/.test(selection.field) ? t("Ta bort nyckeltalet") : t("Ta bort texten")}
+                        </button>
+                        {isItemField && !/^stats\.\d+$/.test(selection.field) && (
+                          <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "item", field: selection.field }, t("Klart! Rutan är borttagen. Du kan ångra med knappen om du ändrar dig."), t("Ta bort hela rutan?"))}>
+                            <YIcon name="trash" size={15} />{t("Ta bort hela rutan")}
+                          </button>
+                        )}
+                      </>
+                    );
+                  }
+                  if (selection.target === "image" && selectedGalleryIndex === null && selectedImageUrl) {
+                    return (
+                      <button type="button" disabled={busy} className={del} onClick={() => run({ mode: "image", kind: selection.kind, itemIndex: selection.itemIndex }, t("Klart! Bilden är borttagen. Du kan ångra med knappen om du ändrar dig."))}>
+                        <YIcon name="trash" size={15} />{t("Ta bort bilden")}
+                      </button>
+                    );
+                  }
+                  return null;
+                })()}
 {selectedGalleryIndex !== null && (
                   <button
                     type="button"
