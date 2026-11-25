@@ -1,12 +1,14 @@
 import { getT } from "@/lib/i18n/server";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import { requireRole } from "@/lib/supabase/requireRole";
 import { logActivity } from "@/lib/supabase/activityLog";
 import {
   IMPERSONATION_COOKIE,
   IMPERSONATION_FLAG_COOKIE,
   IMPERSONATION_MAX_AGE,
+  IMPERSONATION_RT_COOKIE,
   makeImpersonationToken,
 } from "@/lib/impersonation";
 import { withErrorLog } from "@/lib/errorLog";
@@ -56,6 +58,13 @@ async function POST_handler(request: Request, { params }: { params: { id: string
     actionLink: `${origin}/auth/confirm?token_hash=${encodeURIComponent(hashed)}&next=${encodeURIComponent("/dashboard")}`,
   });
   const secure = process.env.NODE_ENV === "production";
+  // Adminens session sparas så att man kommer tillbaka utan ny inloggning och ny tvåfaktorskod.
+  try {
+    const { data: { session } } = await (await createClient()).auth.getSession();
+    if (session?.refresh_token) {
+      res.cookies.set(IMPERSONATION_RT_COOKIE, session.refresh_token, { httpOnly: true, sameSite: "lax", secure, path: "/", maxAge: IMPERSONATION_MAX_AGE });
+    }
+  } catch {}
   // Så att adminen kan ta sig tillbaka med en knapp (se /api/admin/impersonation).
   res.cookies.set(IMPERSONATION_COOKIE, makeImpersonationToken(check.user.id, params.id), {
     httpOnly: true,

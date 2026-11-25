@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { logActivity } from "@/lib/supabase/activityLog";
-import { IMPERSONATION_COOKIE, IMPERSONATION_FLAG_COOKIE, readImpersonationToken } from "@/lib/impersonation";
+import { IMPERSONATION_COOKIE, IMPERSONATION_FLAG_COOKIE, IMPERSONATION_RT_COOKIE, readImpersonationToken } from "@/lib/impersonation";
 import { withErrorLog } from "@/lib/errorLog";
 
 // GET: visar om den här webbläsaren just nu är inloggad "som kund" via
@@ -41,10 +41,38 @@ async function POST_handler(request: Request) {
   }
 
   const origin = new URL(request.url).origin;
+  const target = `/admin/kunder/${info.customerId}`;
+
+  // Först: återställ adminens egen session (kvar sedan innan kundinloggningen),
+  // så att man inte behöver logga in eller ange tvåfaktorskod igen.
+  const rt = cookies().get(IMPERSONATION_RT_COOKIE)?.value;
+  if (rt) {
+    try {
+      const supabase = await createClient();
+      const { data: restored } = await supabase.auth.refreshSession({ refresh_token: rt });
+      if (restored?.user?.id === info.adminId) {
+        await logActivity(admin, {
+          actorId: info.adminId,
+          actorName: adminProfile.full_name || adminProfile.email,
+          action: "gick tillbaka till adminvyn efter att ha varit inloggad som kund",
+          targetType: "customer",
+          targetId: info.customerId,
+          targetLabel: "",
+        });
+        const done = NextResponse.json({ actionLink: `${origin}${target}` });
+        done.cookies.delete(IMPERSONATION_COOKIE);
+        done.cookies.delete(IMPERSONATION_FLAG_COOKIE);
+        done.cookies.delete(IMPERSONATION_RT_COOKIE);
+        return done;
+      }
+    } catch {}
+  }
+
+  // Reservväg: ny engångslänk (kräver då tvåfaktorskod igen).
   const { data, error } = await admin.auth.admin.generateLink({
     type: "magiclink",
     email: adminProfile.email,
-    options: { redirectTo: `${origin}/admin/kunder/${info.customerId}` },
+    options: { redirectTo: `${origin}${target}` },
   });
   if (error) return NextResponse.json({ error: error.message }, { status: 400 });
 
@@ -64,6 +92,7 @@ async function POST_handler(request: Request) {
   });
   res.cookies.delete(IMPERSONATION_COOKIE);
   res.cookies.delete(IMPERSONATION_FLAG_COOKIE);
+  res.cookies.delete(IMPERSONATION_RT_COOKIE);
   return res;
 }
 

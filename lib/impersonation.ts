@@ -7,6 +7,9 @@ import { createHmac, timingSafeEqual } from "crypto";
 // rollen kontrollerats igen.
 export const IMPERSONATION_COOKIE = "ycs_imp";
 export const IMPERSONATION_FLAG_COOKIE = "ycs_imp_flag"; // läsbar i webbläsaren, bara "1"
+// Adminens egen refresh-token, i en httpOnly-kaka, så att man kan gå tillbaka med
+// SAMMA session (inklusive tvåfaktorsnivån) i stället för att logga in på nytt.
+export const IMPERSONATION_RT_COOKIE = "ycs_imp_rt";
 export const IMPERSONATION_MAX_AGE = 60 * 60 * 8; // 8 timmar
 
 function secret(): string {
