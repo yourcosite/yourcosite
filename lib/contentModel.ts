@@ -755,6 +755,9 @@ export interface SiteContent {
   // Millie. Läses av ImageOrArt i components/SitePreview.tsx så att varje
   // bild på sajten får rätt alt utan att varje sektionstyp behöver ett eget fält.
   imageAlts?: Record<string, string>;
+  // Var i bilden det viktiga ligger (procent), med bildens adress som nyckel.
+  // Används som object-position så att bilden beskärs runt rätt ställe.
+  imageFocus?: Record<string, { x: number; y: number }>;
   // Sajtens huvudsökord för Google, t.ex. "frisör i Linköping" (bransch plus
   // ort). Satt av Millie när kunden ber om Google-optimering; används sedan
   // som utgångspunkt för alla texter hon optimerar.

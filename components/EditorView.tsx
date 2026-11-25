@@ -37,6 +37,7 @@ import { analyzeSeo } from "@/lib/seoAnalysis";
 import MyImagesModal, { type MyImage } from "@/components/MyImagesModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import ImageEditorModal from "@/components/ImageEditorModal";
+import ImageFocusModal from "@/components/ImageFocusModal";
 import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
@@ -968,6 +969,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   // till kundens egen mapp och byts in på exakt den bilden — utan AI.
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [savingImage, setSavingImage] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
+  const [savingFocus, setSavingFocus] = useState(false);
   const selectedImageUrl = (() => {
     if (!content || selection?.target !== "image") return null;
     const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any;
@@ -975,6 +978,28 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     if (selection.kind === "hero") return (section.imageUrl as string | undefined) || null;
     return (section.items?.[selection.itemIndex ?? -1]?.imageUrl as string | undefined) || null;
   })();
+  const saveFocus = async (pos: { x: number; y: number } | null) => {
+    if (!selectedImageUrl || !content) return;
+    setSavingFocus(true);
+    try {
+      const res = await fetch("/api/sites/image-focus", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ siteId: site?.id, imageUrl: selectedImageUrl, x: pos?.x ?? null, y: pos?.y ?? null }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || t("Något gick fel."));
+      setUndoStack((st) => [...st.slice(-9), content]);
+      setContent(data.content);
+      setFocusOpen(false);
+      setMessages((m) => [...m, { from: "bot", text: pos ? t("Klart! Bilden beskärs nu runt den punkt du valde. Du kan ångra med knappen om du ändrar dig.") : t("Klart! Bilden beskärs mot mitten igen.") }]);
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: t("Beskärningen kunde inte sparas: {message}", { message: e.message }) }]);
+      setFocusOpen(false);
+    } finally {
+      setSavingFocus(false);
+    }
+  };
   const saveEditedImage = async (blob: Blob) => {
     if (selection?.target !== "image" || !content) return;
     const sel = selection;
@@ -2461,6 +2486,11 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                     <YIcon name="crop" size={15} />{t("Redigera bild")}
                   </button>
                 )}
+{selection.target === "image" && selectedImageUrl && (
+                  <button type="button" onClick={() => setFocusOpen(true)} disabled={sending} className={dockBtn}>
+                    <YIcon name="crop" size={15} />{t("Justera beskärning")}
+                  </button>
+                )}
 {canAddGalleryImages && (
                   <>
                     <input
@@ -3312,6 +3342,17 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
           draftInputRef.current?.focus();
         }}
       />
+      {selectedImageUrl && focusOpen && (
+        <ImageFocusModal
+          key={selectedImageUrl}
+          open
+          src={selectedImageUrl}
+          initial={content?.imageFocus?.[selectedImageUrl]}
+          saving={savingFocus}
+          onClose={() => setFocusOpen(false)}
+          onSave={saveFocus}
+        />
+      )}
       {selectedImageUrl && (
         <ImageEditorModal
           open={imageEditorOpen}

@@ -181,6 +181,7 @@ type SitePreviewProps = Parameters<typeof SitePreviewInner>[0] & {
 
 // Bildtexter (alt) per bild-url, se SiteContent.imageAlts. Läses av ImageOrArt.
 const ImageAltContext = createContext<Record<string, string> | undefined>(undefined);
+const ImageFocusContext = createContext<Record<string, { x: number; y: number }> | undefined>(undefined);
 
 // Adressen till en sida. basePath "/" betyder att sajten ligger på roten av en
 // egen domän (inget prefix); annars är den ett prefix, t.ex. /s/namn.
@@ -192,7 +193,9 @@ export default function SitePreview({ lang, currency, ...rest }: SitePreviewProp
   return (
     <SiteLangProvider lang={lang} currency={currency}>
       <ImageAltContext.Provider value={rest.content?.imageAlts}>
-        <SitePreviewInner {...rest} />
+        <ImageFocusContext.Provider value={rest.content?.imageFocus}>
+          <SitePreviewInner {...rest} />
+        </ImageFocusContext.Provider>
       </ImageAltContext.Provider>
     </SiteLangProvider>
   );
@@ -2151,6 +2154,8 @@ function ImageOrArt({
   const t = useT();
   const imageAlts = useContext(ImageAltContext);
   const imgAlt = (imageUrl && imageAlts?.[imageUrl]) || "";
+  const focus = useContext(ImageFocusContext);
+  const fp = imageUrl ? focus?.[imageUrl] : undefined;
   const openable = !selectable && !!onOpen && !!imageUrl;
   return (
     <div
@@ -2169,7 +2174,7 @@ function ImageOrArt({
       {imageUrl && !natural && (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={imageUrl} alt={imgAlt} loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" {...imgProps(imageUrl)} />
+          <img src={imageUrl} alt={imgAlt} loading={lazy ? "lazy" : undefined} className="absolute inset-0 w-full h-full object-cover" style={fp ? { objectPosition: `${fp.x}% ${fp.y}%` } : undefined} {...imgProps(imageUrl)} />
           {dark && <div className="absolute inset-0" style={{ background: "rgba(0,0,0,0.18)" }} />}
         </>
       )}
