@@ -6,6 +6,7 @@ import { getLocale } from "@/lib/i18n/server";
 import { translateText } from "@/lib/translate";
 import { rateLimited, TOO_MANY } from "@/lib/rateLimit";
 import { withErrorLog } from "@/lib/errorLog";
+import { sendEmail, escapeHtml } from "@/lib/email";
 
 // Tar emot meddelanden kunder skickar direkt till oss via kundportalen —
 // "Kontakta oss" i kontomenyn (components/AccountHeader.tsx) eller knappen
@@ -74,6 +75,40 @@ async function POST_handler(request: Request) {
   }
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  // Mejla oss direkt (ALERT_EMAIL, annars hej@cskb.se). Misslyckas mejlet är
+  // meddelandet ändå sparat och syns i /admin/meddelanden.
+  try {
+    const [{ data: p }, siteRes] = await Promise.all([
+      admin.from("profiles").select("full_name, company_name, email, phone").eq("id", user.id).maybeSingle(),
+      siteId ? admin.from("sites").select("name").eq("id", siteId).maybeSingle() : Promise.resolve({ data: null }),
+    ]);
+    const kind = source === "chattredigerare" ? "Önskemål från chattredigeraren" : "Meddelande från kontomenyn";
+    const who = (p as any)?.company_name || (p as any)?.full_name || user.email || "okänd kund";
+    const email = (p as any)?.email || user.email || "";
+    const rows: [string, string][] = [
+      ["Typ", kind],
+      ["Kund", `${(p as any)?.full_name || "-"}${(p as any)?.company_name ? `, ${(p as any).company_name}` : ""}`],
+      ["E-post", email || "-"],
+      ["Telefon", (p as any)?.phone || "-"],
+      ["Sajt", (siteRes.data as any)?.name || "-"],
+      ["Språk", language],
+    ];
+    const shown = messageSv || message;
+    const textBody = [...rows.map(([k, v]) => `${k}: ${v}`), "", shown, ...(messageSv ? ["", `Original (${language}):`, message] : []), ...(context ? ["", "Sammanhang:", context] : []), "", "https://www.yourcosite.com/admin/meddelanden"].join("\n");
+    await sendEmail({
+      to: process.env.ALERT_EMAIL || "hej@cskb.se",
+      subject: `${source === "chattredigerare" ? "Önskemål" : "Support"}: ${who}`,
+      text: textBody,
+      html:
+        rows.map(([k, v]) => `<p style="margin:0 0 4px"><strong>${escapeHtml(k)}:</strong> ${escapeHtml(v)}</p>`).join("") +
+        `<p style="margin:14px 0 4px"><strong>Meddelande</strong></p><p style="margin:0;white-space:pre-wrap">${escapeHtml(shown)}</p>` +
+        (messageSv ? `<p style="margin:12px 0 4px;color:#666"><strong>Original (${escapeHtml(language)})</strong></p><p style="margin:0;white-space:pre-wrap;color:#666">${escapeHtml(message)}</p>` : "") +
+        (context ? `<p style="margin:12px 0 4px;color:#666"><strong>Sammanhang</strong></p><p style="margin:0;white-space:pre-wrap;color:#666">${escapeHtml(context.slice(0, 1500))}</p>` : "") +
+        `<p style="margin:16px 0 0"><a href="https://www.yourcosite.com/admin/meddelanden">Öppna meddelandena</a></p>`,
+      ...(email ? { replyTo: email } : {}),
+    });
+  } catch {}
   return NextResponse.json({ ok: true });
 }
 
