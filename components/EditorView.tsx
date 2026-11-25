@@ -1365,6 +1365,27 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       if (galleryFileRef.current) galleryFileRef.current.value = "";
     }
   };
+  const replaceFileRef = useRef<HTMLInputElement>(null);
+  // "Byt bild": kunden väljer en ny bild för den markerade ytan (sektionens
+  // huvudbild eller en markerad bild). Ersätter bara just den platsen.
+  const replaceImageWithFile = async (file: File | undefined) => {
+    if (!file || !selection || !content) return;
+    if (!file.type.startsWith("image/")) {
+      setMessages((m) => [...m, { from: "bot", text: t("{name}: filtypen stöds inte — använd en bild (PNG/JPG/WEBP/GIF), PDF, Word (.docx) eller en textfil.", { name: file.name }) }]);
+      return;
+    }
+    const sel = selection.target === "image" ? { kind: selection.kind, itemIndex: selection.itemIndex } : { kind: "hero" as const };
+    setGalleryBusy(true);
+    try {
+      const { url } = await uploadOneFile(file);
+      await savePick("/api/sites/replace-image", { imageUrl: url, selection: { pagePath: selection.pagePath, sectionId: selection.sectionId, ...sel } }, t("Klart! Bilden är utbytt. Du kan ångra med knappen om du ändrar dig."));
+    } catch (e: any) {
+      setMessages((m) => [...m, { from: "bot", text: e.message }]);
+    } finally {
+      setGalleryBusy(false);
+      if (replaceFileRef.current) replaceFileRef.current.value = "";
+    }
+  };
   const removeGalleryImage = () =>
     selectedGalleryIndex !== null
       ? savePick("/api/sites/edit-gallery", { action: "remove", index: selectedGalleryIndex }, t("Klart! Bilden är borttagen från galleriet. Du kan ångra med knappen om du ändrar dig."))
@@ -2502,6 +2523,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                 )}
               </div>
               <div className="flex flex-wrap items-center gap-1.5 mb-2" role="toolbar" aria-label={t("Verktyg")}>
+                <input ref={replaceFileRef} type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" onChange={(e) => void replaceImageWithFile(e.target.files?.[0])} />
                 <button type="button" onClick={() => setGalleryOpen(true)} className="text-[12px] font-semibold rounded-full px-3 py-1 border border-line bg-accent text-accent-ink flex items-center gap-1.5"><YIcon name="layout" size={14} />{t("Mallar")}</button>
                 {selection && content && (
                   <button type="button" aria-expanded={dockMenu === "edit"} onClick={() => { setDockMenu((m) => (m === "edit" ? null : "edit")); editPin.dismiss(); }} className={`relative text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "edit" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
@@ -2512,13 +2534,11 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                 <button type="button" aria-expanded={dockMenu === "tips"} onClick={() => setDockMenu((m) => (m === "tips" ? null : "tips"))} className={`text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1 ${dockMenu === "tips" ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}>
                   {t("Förslag")} <span aria-hidden>▾</span>
                 </button>
-                <button type="button" onClick={() => setMillieOpen(true)} className="text-[12px] font-semibold rounded-full px-3 py-1 border border-line bg-bg text-ink flex items-center gap-1.5"><YIcon name="history" size={14} />{t("Historik")}</button>
-                {undoStack.length > 0 && (
-                  <button type="button" onClick={undo} disabled={undoing || sending} className="ml-auto text-[12px] font-semibold text-[#3B5300] disabled:opacity-60 flex items-center gap-1.5">
-                    <YIcon name="undo" size={15} />
-                    {undoing ? t("Ångrar …") : t("Ångra")}
-                  </button>
-                )}
+                <button type="button" aria-pressed={millieOpen} onClick={() => setMillieOpen((v) => !v)} className={`text-[12px] font-semibold rounded-full px-3 py-1 border border-line flex items-center gap-1.5 ${millieOpen ? "bg-accent text-accent-ink" : "bg-bg text-ink"}`}><YIcon name="history" size={14} />{t("Historik")}</button>
+                <button type="button" onClick={undo} disabled={undoStack.length === 0 || undoing || sending} className="ml-auto text-[12px] font-semibold text-[#3B5300] disabled:opacity-40 flex items-center gap-1.5">
+                  <YIcon name="undo" size={15} />
+                  {undoing ? t("Ångrar …") : t("Ångra")}
+                </button>
               </div>
               {dockMenu && (
                 <div
@@ -2527,10 +2547,15 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                 >
                   {dockMenu === "edit" && selection && content && (
                     <>
-{((selection.target === "image" && (!!selectedImageUrl || selectedGalleryIndex !== null || !selectedImageUrl)) || canAddGalleryImages || !!selectedSectionImage) && (
+{(selection.target === "image" || canAddGalleryImages || !!selectedSectionImage) && (
 <div className="grid gap-1.5">
 <div className="text-[10.5px] tracking-wider uppercase font-semibold text-ink-dim">{t("Bilden")}</div>
 <div className="flex flex-wrap gap-1.5">
+{(selectedSectionImage || (selection.target === "image" && !!selectedImageUrl && selectedGalleryIndex === null)) && (
+                  <button type="button" onClick={() => replaceFileRef.current?.click()} disabled={sending || galleryBusy || savingPick} className={dockBtn}>
+                    <YIcon name="image" size={15} />{t("Byt bild")}
+                  </button>
+                )}
 {selection.target === "image" && selectedImageUrl && (
                   <button
                     type="button"
