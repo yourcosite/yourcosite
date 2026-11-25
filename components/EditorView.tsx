@@ -37,7 +37,7 @@ import { analyzeSeo } from "@/lib/seoAnalysis";
 import MyImagesModal, { type MyImage } from "@/components/MyImagesModal";
 import StockPhotoModal, { type StockPhoto } from "@/components/StockPhotoModal";
 import ImageEditorModal from "@/components/ImageEditorModal";
-import ImageFocusModal from "@/components/ImageFocusModal";
+import ImageFocusPanel from "@/components/ImageFocusPanel";
 import WhatsNewModal, { WHATS_NEW_SEEN_KEY } from "@/components/WhatsNewModal";
 import { WHATS_NEW } from "@/lib/whatsNew";
 import MillieHelpModal, { MILLIE_HELP_SEEN_KEY } from "@/components/MillieHelpModal";
@@ -969,8 +969,11 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   // till kundens egen mapp och byts in på exakt den bilden — utan AI.
   const [imageEditorOpen, setImageEditorOpen] = useState(false);
   const [savingImage, setSavingImage] = useState(false);
-  const [focusOpen, setFocusOpen] = useState(false);
+  // Utkast på fokuspunkt medan panelen är öppen: visas live i sektionen men sparas inte förrän man trycker Spara.
+  const [focusDraft, setFocusDraft] = useState<{ sel: any; x: number; y: number } | null>(null);
   const [savingFocus, setSavingFocus] = useState(false);
+  const selKeyForFocus = selection?.target === "image" ? selection.key : null;
+  useEffect(() => { setFocusDraft(null); }, [selKeyForFocus]);
   const selectedImageUrl = (() => {
     if (!content || selection?.target !== "image") return null;
     const section = content.pages.find((p) => p.path === selection.pagePath)?.sections.find((sec) => sec.id === selection.sectionId) as any;
@@ -979,23 +982,24 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
     return (section.items?.[selection.itemIndex ?? -1]?.imageUrl as string | undefined) || null;
   })();
   const saveFocus = async (pos: { x: number; y: number } | null) => {
-    if (!selectedImageUrl || !content) return;
+    if (!focusDraft || !content) return;
+    const sel = focusDraft.sel;
     setSavingFocus(true);
     try {
       const res = await fetch("/api/sites/image-focus", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ siteId: site?.id, imageUrl: selectedImageUrl, x: pos?.x ?? null, y: pos?.y ?? null }),
+        body: JSON.stringify({ siteId: site?.id, selection: { pagePath: sel.pagePath, sectionId: sel.sectionId, kind: sel.kind, itemIndex: sel.itemIndex }, x: pos?.x ?? null, y: pos?.y ?? null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || t("Något gick fel."));
       setUndoStack((st) => [...st.slice(-9), content]);
       setContent(data.content);
-      setFocusOpen(false);
-      setMessages((m) => [...m, { from: "bot", text: pos ? t("Klart! Bilden beskärs nu runt den punkt du valde. Du kan ångra med knappen om du ändrar dig.") : t("Klart! Bilden beskärs mot mitten igen.") }]);
+      setFocusDraft(null);
+      setMessages((m) => [...m, { from: "bot", text: pos ? t("Klart! Bilden beskärs nu runt den punkt du valde, bara här. Du kan ångra med knappen om du ändrar dig.") : t("Klart! Bilden beskärs mot mitten igen.") }]);
     } catch (e: any) {
       setMessages((m) => [...m, { from: "bot", text: t("Beskärningen kunde inte sparas: {message}", { message: e.message }) }]);
-      setFocusOpen(false);
+      setFocusDraft(null);
     } finally {
       setSavingFocus(false);
     }
@@ -1875,10 +1879,26 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const translations: SiteTranslations = site?.translations || {};
   const extraLangs = Object.keys(translations);
   const activeView = viewLang && translations[viewLang] ? viewLang : null;
-  const viewContent = useMemo(
-    () => (content && activeView ? applyTranslations(content, translations[activeView].memo) : content),
-    [content, activeView, site?.translations],
-  );
+  const viewContent = useMemo(() => {
+    let c = content && activeView ? applyTranslations(content, translations[activeView].memo) : content;
+    // Förhandsvisa en osparad fokuspunkt direkt i sektionen.
+    if (c && focusDraft) {
+      const s = focusDraft.sel;
+      c = {
+        ...c,
+        pages: c.pages.map((pg) => pg.path !== s.pagePath ? pg : {
+          ...pg,
+          sections: pg.sections.map((sc: any) => {
+            if (sc.id !== s.sectionId) return sc;
+            const f = { x: focusDraft.x, y: focusDraft.y };
+            if (s.kind === "hero") return { ...sc, imageFocus: f };
+            return { ...sc, items: (sc.items || []).map((it: any, i: number) => (i === s.itemIndex ? { ...it, focus: f } : it)) };
+          }),
+        }),
+      } as SiteContent;
+    }
+    return c;
+  }, [content, activeView, site?.translations, focusDraft]);
   // Nyheter kan ha ändrats i Nyheter-panelen: hämta om listan när panelerna
   // Nyheter eller Förbättra stängs respektive öppnas, så betyget stämmer.
   useEffect(() => {
@@ -2487,7 +2507,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
                   </button>
                 )}
 {selection.target === "image" && selectedImageUrl && (
-                  <button type="button" onClick={() => setFocusOpen(true)} disabled={sending} className={dockBtn}>
+                  <button type="button" onClick={() => { if (selection?.target !== "image") return; const sec: any = content?.pages.find((pg) => pg.path === selection.pagePath)?.sections.find((sc) => sc.id === selection.sectionId); const cur = selection.kind === "hero" ? sec?.imageFocus : sec?.items?.[selection.itemIndex ?? -1]?.focus; setFocusDraft({ sel: selection, x: cur?.x ?? 50, y: cur?.y ?? 50 }); }} disabled={sending} className={dockBtn}>
                     <YIcon name="crop" size={15} />{t("Justera beskärning")}
                   </button>
                 )}
@@ -3342,15 +3362,16 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
           draftInputRef.current?.focus();
         }}
       />
-      {selectedImageUrl && focusOpen && (
-        <ImageFocusModal
-          key={selectedImageUrl}
-          open
+      {focusDraft && selectedImageUrl && (
+        <ImageFocusPanel
           src={selectedImageUrl}
-          initial={content?.imageFocus?.[selectedImageUrl]}
+          pos={{ x: focusDraft.x, y: focusDraft.y }}
+          hadSaved={(() => { const s = focusDraft.sel; const sec: any = content?.pages.find((pg) => pg.path === s.pagePath)?.sections.find((sc) => sc.id === s.sectionId); return !!(s.kind === "hero" ? sec?.imageFocus : sec?.items?.[s.itemIndex ?? -1]?.focus); })()}
           saving={savingFocus}
-          onClose={() => setFocusOpen(false)}
-          onSave={saveFocus}
+          onChange={(p) => setFocusDraft((d) => (d ? { ...d, ...p } : d))}
+          onCancel={() => setFocusDraft(null)}
+          onSave={() => saveFocus({ x: focusDraft.x, y: focusDraft.y })}
+          onReset={() => saveFocus(null)}
         />
       )}
       {selectedImageUrl && (

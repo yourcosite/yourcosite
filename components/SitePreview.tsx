@@ -193,9 +193,7 @@ export default function SitePreview({ lang, currency, ...rest }: SitePreviewProp
   return (
     <SiteLangProvider lang={lang} currency={currency}>
       <ImageAltContext.Provider value={rest.content?.imageAlts}>
-        <ImageFocusContext.Provider value={rest.content?.imageFocus}>
-          <SitePreviewInner {...rest} />
-        </ImageFocusContext.Provider>
+        <SitePreviewInner {...rest} />
       </ImageAltContext.Provider>
     </SiteLangProvider>
   );
@@ -7482,7 +7480,13 @@ function SectionBlock(
 ) {
   const te = useT();
   const { selectedSectionKey, onSelectSection, ...inner } = props;
-  const rendered = <SectionBlockInner {...inner} />;
+  // Fokuspunkter (var i bilden det viktiga ligger) gäller bara bilderna i den
+  // här sektionen: section.imageFocus för huvudbilden, item.focus för övriga.
+  const focusMap: Record<string, { x: number; y: number }> = {};
+  const secAny = inner.section as any;
+  if (secAny.imageUrl && secAny.imageFocus) focusMap[secAny.imageUrl] = secAny.imageFocus;
+  if (Array.isArray(secAny.items)) for (const it of secAny.items) if (it?.imageUrl && it.focus) focusMap[it.imageUrl] = it.focus;
+  const rendered = <ImageFocusContext.Provider value={focusMap}><SectionBlockInner {...inner} /></ImageFocusContext.Provider>;
 
   if (!inner.editable || !inner.pagePath) return rendered;
 

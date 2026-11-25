@@ -6,10 +6,10 @@ import { isValidSiteContent, type SiteContent } from "@/lib/contentModel";
 import { getCurrentPublishedSite } from "@/lib/supabase/currentSite";
 import { withErrorLog } from "@/lib/errorLog";
 
-// Bildens fokuspunkt (var i bilden det viktiga ligger), så att den beskärs
-// runt rätt ställe på varje yta. Sparas i content.imageFocus med bildens
-// adress som nyckel, som imageAlts. x och y är procent (0-100). Utan x/y
-// tas fokuspunkten bort och bilden beskärs mot mitten som förut.
+// Bildens fokuspunkt (var i bilden det viktiga ligger) för EN bild på EN yta:
+// sparas på sektionen (imageFocus för huvudbilden) eller på rutan/bilden
+// (focus), så att samma bild kan beskäras olika på olika ställen. x och y är
+// procent (0-100). Utan x/y tas fokuspunkten bort (mittbeskärning).
 export const dynamic = "force-dynamic";
 
 async function POST_handler(request: Request) {
@@ -20,11 +20,14 @@ async function POST_handler(request: Request) {
 
   const body = await request.json().catch(() => ({}));
   const siteId = typeof body.siteId === "string" ? body.siteId : null;
-  const imageUrl = typeof body.imageUrl === "string" ? body.imageUrl : "";
-  if (!imageUrl || imageUrl.length > 1000) return NextResponse.json({ error: t("Ogiltig bildadress.") }, { status: 400 });
+  const sel = body.selection;
+  if (!sel || typeof sel.pagePath !== "string" || typeof sel.sectionId !== "string" || !["hero", "gridItem", "galleryItem"].includes(sel.kind)) {
+    return NextResponse.json({ error: t("Det gick inte att avgöra vilken bild det gäller.") }, { status: 400 });
+  }
   const x = Number(body.x), y = Number(body.y);
   const reset = body.x == null || body.y == null;
   if (!reset && !(isFinite(x) && isFinite(y))) return NextResponse.json({ error: t("Ogiltig position.") }, { status: 400 });
+  const focus = reset ? null : { x: Math.round(Math.min(100, Math.max(0, x))), y: Math.round(Math.min(100, Math.max(0, y))) };
 
   const site = await getCurrentPublishedSite(supabase, user.id, siteId);
   if (site) await saveSiteVersion(supabase, site as any, "image-focus");
@@ -32,13 +35,13 @@ async function POST_handler(request: Request) {
     return NextResponse.json({ error: t("Hittade ingen sajt.") }, { status: 400 });
   }
   const content: SiteContent = JSON.parse(JSON.stringify(site.content));
-  const map: Record<string, { x: number; y: number }> = { ...(content.imageFocus || {}) };
-  if (reset) delete map[imageUrl];
-  else if (Object.keys(map).length < 200 || map[imageUrl]) {
-    map[imageUrl] = { x: Math.round(Math.min(100, Math.max(0, x))), y: Math.round(Math.min(100, Math.max(0, y))) };
-  }
-  if (Object.keys(map).length) content.imageFocus = map;
-  else delete content.imageFocus;
+  const section = content.pages.find((p) => p.path === sel.pagePath)?.sections.find((sec) => sec.id === sel.sectionId) as any;
+  if (!section) return NextResponse.json({ error: t("Hittade inte bilden på sidan.") }, { status: 400 });
+  const target = sel.kind === "hero" ? section : Array.isArray(section.items) ? section.items[Number(sel.itemIndex)] : undefined;
+  if (!target) return NextResponse.json({ error: t("Hittade inte bilden på sidan.") }, { status: 400 });
+  const field = sel.kind === "hero" ? "imageFocus" : "focus";
+  if (focus) target[field] = focus;
+  else delete target[field];
 
   const { error } = await supabase.from("sites").update({ content }).eq("id", site.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
