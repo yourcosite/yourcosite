@@ -15,6 +15,11 @@ export type UiPin = { id: string; date: string; text: string };
 
 export const UI_PINS: UiPin[] = [
   {
+    id: "campaigns-2026-11",
+    date: "2026-11-28",
+    text: "Nytt: Kampanjer. Schemalägg toppremsor, textband och rutor som glider in.",
+  },
+  {
     id: "dock-menus-2026-11",
     date: "2026-11-25",
     text: "Valen för det du markerat ligger nu under Redigera. Tips finns under Förslag.",

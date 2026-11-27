@@ -18,6 +18,7 @@ const REASONS: Record<string, string> = {
   "edit-gallery": msg("Före en galleriändring"),
   "edit-team": msg("Före en ändring av personer"),
   "edit-menu": msg("Före en ändring av menyn"),
+  "edit-campaigns": msg("Före en ändring av kampanjerna"),
   "edit-icon": msg("Före en ikonändring"),
   "edit-theme": msg("Före en designändring"),
   "edit-button-style": msg("Före en knappstilsändring"),

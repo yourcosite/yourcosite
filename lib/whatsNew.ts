@@ -15,6 +15,13 @@ export type WhatsNewEntry = {
 
 export const WHATS_NEW: WhatsNewEntry[] = [
   {
+    id: "2026-11-28-kampanjer",
+    date: "2026-11-28",
+    icon: "📣",
+    title: msg("Kampanjer: remsor, textband och rutor"),
+    text: msg("Nytt i sidofältet: Kampanjer. Lägg in en toppremsa, ett rullande textband, en ruta längst ner, en kampanjhero, rullande kort, ett rabattmärke, korsande band eller en ruta som glider in. Du skriver texten själv och väljer när den ska starta och sluta. De med nedräkning kan du ha med eller utan. Rutan som glider in kan visas en gång per person eller varje besök, med högsta antal visningar, och ligga kvar tills besökaren klickar bort den."),
+  },
+  {
     id: "2026-11-25-lugnare-ruta",
     date: "2026-11-25",
     icon: "🧭",

@@ -33,6 +33,7 @@ const SIMPLE: Record<string, Loader> = {
   "/api/sites/parse-fixtures": () => import("@/app/api/sites/parse-fixtures/route"),
   "/api/sites/restore": () => import("@/app/api/sites/restore/route"),
   "/api/sites/image-focus": () => import("@/app/api/sites/image-focus/route"),
+  "/api/sites/edit-campaigns": () => import("@/app/api/sites/edit-campaigns/route"),
   "/api/sites/remove": () => import("@/app/api/sites/remove/route"),
   "/api/sites/replace-image": () => import("@/app/api/sites/replace-image/route"),
   "/api/sites/versions": () => import("@/app/api/sites/versions/route"),

@@ -1,3 +1,4 @@
+import type { Campaign } from "./campaigns";
 // Innehållsmodellen för en sajt. AI:n (och senare kundens redigeringsverktyg)
 // jobbar ALDRIG med rå HTML/kod — bara med denna strukturerade JSON. Det gör
 // det säkert att låta AI:n göra ändringar (den kan bara sätta fält som finns
@@ -766,6 +767,9 @@ export interface SiteContent {
   // egen favicon. Saknas de genereras de automatiskt, se lib/siteMeta.ts.
   shareImageUrl?: string;
   faviconUrl?: string;
+  // Kampanjytor (toppremsa, textband, rutor …), schemalagda av kunden i
+  // panelen Kampanjer. Se lib/campaigns.ts.
+  campaigns?: Campaign[];
 }
 
 // Räknar hur många av sajtens bildbärande platser (hero + grid-items) som

@@ -4,9 +4,9 @@ import Link from "next/link";
 import { useT } from "@/components/I18nProvider";
 import YIcon from "@/components/ui/YIcon";
 
-export type EditorPanel = "pages" | "design" | "news" | "bookings" | "improve" | "settings" | null;
+export type EditorPanel = "pages" | "design" | "news" | "campaigns" | "bookings" | "improve" | "settings" | null;
 
-const ICON_NAME = { site: "site", pages: "pages", design: "design", news: "news", bookings: "bookings", improve: "search", settings: "sliders", undo: "undo", home: "home" } as const;
+const ICON_NAME = { site: "site", pages: "pages", design: "design", news: "news", campaigns: "bell", bookings: "bookings", improve: "search", settings: "sliders", undo: "undo", home: "home" } as const;
 
 function Icon({ name }: { name: keyof typeof ICON_NAME }) {
   return <YIcon name={ICON_NAME[name]} size={21} />;
@@ -25,6 +25,7 @@ export default function Rail({
   onUndo,
   improveCount,
   demo = false,
+  campaignsPin,
 }: {
   siteId?: string;
   panel: EditorPanel;
@@ -34,6 +35,7 @@ export default function Rail({
   onUndo: () => void;
   improveCount: number;
   demo?: boolean;
+  campaignsPin?: React.ReactNode;
 }) {
   const t = useT();
   return (
@@ -58,6 +60,11 @@ export default function Rail({
       <button type="button" onClick={() => onPanel(panel === "news" ? null : "news")} className={itemCls(panel === "news")}>
         <Icon name="news" />
         {t("Nyheter")}
+      </button>
+      <button type="button" onClick={() => onPanel(panel === "campaigns" ? null : "campaigns")} className={itemCls(panel === "campaigns")}>
+        <Icon name="campaigns" />
+        {t("Kampanjer")}
+        {campaignsPin}
       </button>
       {!demo && <button type="button" onClick={() => onPanel(panel === "bookings" ? null : "bookings")} className={itemCls(panel === "bookings")}>
         <Icon name="bookings" />

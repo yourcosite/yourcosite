@@ -1,6 +1,7 @@
 "use client";
 
 import RescheduleBlock from "@/components/RescheduleBlock";
+import CampaignSlot, { type CampaignRenderButton, type CampaignRenderLink } from "@/components/CampaignLayer";
 import { imgProps } from "@/lib/imgSrc";
 import { useT } from "@/components/I18nProvider";
 import { msg } from "@/lib/i18n/config";
@@ -539,6 +540,28 @@ function SitePreviewInner({
     return () => window.removeEventListener("yc-cookie-consent", onChange);
   }, [showCookieBanner]);
 
+  // Kampanjytor (lib/campaigns.ts): knappar och länkar följer sajtens knappstil
+  // och sidnavigering.
+  const campaignButton: CampaignRenderButton = (link, color, children) => (
+    <CtaPill accent={accent} colorOverride={color} link={link || undefined} basePath={basePath} onNavigate={onNavigate} shape={buttonShape} size="sm">
+      {children}
+    </CtaPill>
+  );
+  const campaignLink: CampaignRenderLink = (link, props, children) => (
+    <CtaLink link={link} basePath={basePath} onNavigate={onNavigate} className={props.className ?? ""} style={props.style}>
+      {children}
+    </CtaLink>
+  );
+  const campaignProps = {
+    // Bara på en riktig sajt eller i redigeraren, inte i miniatyrerna.
+    campaigns: basePath || editable ? content.campaigns : undefined,
+    pagePath: page.path,
+    accent,
+    editable: !!editable,
+    renderButton: campaignButton,
+    renderLink: campaignLink,
+  };
+
   return (
     // "@container": gör att alla @3xl:-klasser nedan (ersätter de gamla
     // md:-klasserna) mäter mot DEN HÄR rutans egen bredd istället för hela
@@ -579,6 +602,7 @@ function SitePreviewInner({
           : {}),
       }}
     >
+      {!hideChrome && <CampaignSlot slot="bar" {...campaignProps} />}
       <div className={overlayHeader ? "relative" : undefined}>
         {!hideChrome && (
         <Header
@@ -645,6 +669,7 @@ function SitePreviewInner({
           </div>
         )}
       </div>
+      {!hideChrome && <CampaignSlot slot="top" {...campaignProps} />}
       {cancelToken ? (
         <CancelBookingBlock token={cancelToken} palette={palette} accent={accent} shape={buttonShape} />
       ) : isPrivacyPolicyPage ? (
@@ -731,6 +756,7 @@ function SitePreviewInner({
           </div>
         ))
       )}
+      {!hideChrome && <CampaignSlot slot="bottom" {...campaignProps} />}
       {!hideChrome && (
       <Footer
         siteName={content.footerName || siteName}
@@ -747,6 +773,7 @@ function SitePreviewInner({
         photoCredits={creditsInUse(content)}
       />
       )}
+      {!hideChrome && <CampaignSlot slot="float" {...campaignProps} cookieOpen={showCookieBanner && cookieChoice === "pending"} />}
       {showCookieBanner && cookieChoice === "pending" && (
         <CookieBanner
           palette={palette}

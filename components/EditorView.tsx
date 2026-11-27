@@ -29,6 +29,7 @@ import SettingsPanel from "@/components/editor/SettingsPanel";
 import LanguageSection from "@/components/editor/LanguageSection";
 import PanelFrame from "@/components/editor/PanelFrame";
 import NewsPanel from "@/components/editor/NewsPanel";
+import CampaignPanel from "@/components/editor/CampaignPanel";
 import BookingClient from "@/app/bokningar/BookingClient";
 import PagesManager from "@/components/PagesManager";
 import ImproveManager from "@/components/ImproveManager";
@@ -285,6 +286,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
   const locale = useLocale();
   const [site, setSite] = useState<SiteMeta | null>(null);
   const [dockMenu, setDockMenu] = useState<null | "edit" | "tips">(null);
+  const campaignsPin = useNewPin("campaigns-2026-11", (site as { created_at?: string | null } | null)?.created_at);
   const editPin = useNewPin("dock-menus-2026-11", (site as { created_at?: string | null } | null)?.created_at);
   const [content, setContent] = useState<SiteContent | null>(null);
   const [activePath, setActivePath] = useState("/");
@@ -2002,7 +2004,8 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
       <Rail
         siteId={site?.id}
         panel={panel}
-        onPanel={setPanel}
+        onPanel={(p) => { if (p === "campaigns") campaignsPin.dismiss(); setPanel(p); }}
+        campaignsPin={<NewPin id="campaigns-2026-11" show={campaignsPin.show} onDismiss={campaignsPin.dismiss} />}
         canUndo={undoStack.length > 0}
         undoing={undoing}
         onUndo={undo}
@@ -2111,6 +2114,7 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
               [t("Sidor"), () => setPanel("pages")],
               [t("Design"), () => setPanel("design")],
               [t("Nyheter"), () => setPanel("news")],
+              [t("Kampanjer"), () => setPanel("campaigns")],
               ...(demo ? [] : [[t("Bokningar"), () => setPanel("bookings")] as [string, () => void]]),
               [t("Förbättra"), () => setPanel("improve")],
               ...(demo ? [] : [[t("Inställningar"), () => setPanel("settings")] as [string, () => void]]),
@@ -2250,6 +2254,17 @@ export default function EditorView({ demo = false }: { demo?: boolean }) {
               {panel === "news" && site && (
                 <PanelFrame title={t("Nyheter")} subtitle={t("Skriv och publicera nyheter. En publicerad nyhet syns genast i nyhetslistan på sajten.")} onClose={() => setPanel(null)}>
                   <NewsPanel key={site.id} siteId={site.id} />
+                </PanelFrame>
+              )}
+              {panel === "campaigns" && (
+                <PanelFrame title={t("Kampanjer")} subtitle={t("Toppremsor, textband och rutor som du schemalägger själv. Texterna ändrar du här.")} onClose={() => setPanel(null)}>
+                  <CampaignPanel
+                    key={site?.id}
+                    siteId={site?.id}
+                    campaigns={content.campaigns ?? []}
+                    pages={content.pages.map((p) => ({ path: p.path, label: p.label }))}
+                    onSaved={(next) => { setUndoStack((st) => [...st.slice(-9), content]); setContent(next); }}
+                  />
                 </PanelFrame>
               )}
               {panel === "bookings" && site && (

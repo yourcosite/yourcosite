@@ -17,6 +17,7 @@ export const features = [
   { icon: "bulb", title: msg("Förbättra"), body: msg("En checklista som visar vad som kan bli bättre på sajten. Fixa det med Millie med ett klick.") },
   { icon: "image", title: msg("Dina bilder"), body: msg("Ladda upp bilder en gång. Millie kan använda dem, byta ut dem och skriva bildtexter åt dig.") },
   { icon: "design", title: msg("Design på ett ställe"), body: msg("Byt färger, typsnitt, knappar och layout för hela sajten. Formulär och knappar följer med.") },
+  { icon: "bell", title: msg("Kampanjer med schema"), body: msg("Lägg in en toppremsa, ett rullande textband, en kampanjhero eller en ruta som glider in. Du skriver texten själv, väljer start och slut, och sajten sköter resten. Med eller utan nedräkning."), },
   { icon: "crop", title: msg("Beskär bilden där du vill"), body: msg("Välj vilken del av en bild som ska synas, just på den ytan, och se förhandsvisningen innan du sparar. Samma bild kan beskäras olika på olika ställen."), },
   { icon: "trash", title: msg("Ta bort med ett klick"), body: msg("Markera en text, knapp, ruta, bild eller hel sektion och tryck Ta bort. Går att ångra direkt."), },
   { icon: "layout", title: msg("Mallar för bilder och sektioner"), body: msg("Byt layout med ett klick: stående eller liggande bilder, med eller utan text, och bildtexter. Passar innehållet inte föreslår systemet en bättre mall."), },
@@ -25,4 +26,4 @@ export const features = [
 ];
 
 // De sex som visas på startsidan (byt ut de som blivit mindre nya).
-export const homeFeatureIcons = ["globe", "pointer", "crop", "layout", "search", "bookings"];
+export const homeFeatureIcons = ["globe", "pointer", "crop", "bell", "search", "bookings"];
